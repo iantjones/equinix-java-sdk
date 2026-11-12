@@ -14,7 +14,7 @@ import java.util.Objects;
  * <p>A provider legitimately publishes several service profiles at the same metro (a hosted
  * Direct-Connect profile capped at 500&nbsp;Mbps and a dedicated profile that lists 1G/10G/100G, for
  * example). The optimizer resolves a single <em>outranks</em> winner for scoring and region
- * preference, but that winner is chosen with zero knowledge of the connection's eventual bandwidth —
+ * preference, but that winner is chosen with zero knowledge of the connection's eventual bandwidth - 
  * so a hosted profile can win for a metro and then be paired with a 3000&nbsp;Mbps connection it
  * cannot build. To let the wizard choose a covering profile once the bandwidth is known, EVERY
  * matching profile's capability for the metro is carried forward as one of these options.</p>
@@ -23,13 +23,13 @@ import java.util.Objects;
  * ({@code PlanValidator.checkProfile}) bit-for-bit, so a profile the selector accepts is exactly a
  * profile the validator will not reject, and vice-versa: the per-metro ceiling
  * ({@code vcBandwidthMax}) must not be exceeded, AND the bandwidth must be one
- * of the discrete {@code supportedBandwidths} tiers — unless the profile
+ * of the discrete {@code supportedBandwidths} tiers - unless the profile
  * {@code allowCustomBandwidth} allows custom bandwidth or publishes no discrete tier list at
  * all, either of which lifts the discrete-tier constraint.</p>
  *
  * <p>{@link #covers(int)} answers the <em>exact</em> question ("can this profile build a VC at exactly
- * this speed?"). Bandwidth <em>round-up</em> — the owner's rule that a requirement with no exact tier
- * selects the smallest tier that satisfies it (3000&nbsp;&rarr;&nbsp;5000, never an error) — is a
+ * this speed?"). Bandwidth <em>round-up</em> - the owner's rule that a requirement with no exact tier
+ * selects the smallest tier that satisfies it (3000&nbsp;&rarr;&nbsp;5000, never an error) - is a
  * separate primitive, {@link #coveringTier(int)}: the smallest thing this profile can actually build
  * that is not below the requirement. The wizard stamps the connection at that covering tier (which
  * {@code covers()} then accepts exactly), so the round-up selection and the Layer-1 tier check stay in
@@ -41,7 +41,7 @@ public class ServiceProfileOption {
 
     /**
      * The {@link #coveringTier(int)} sentinel returned when a profile cannot build the requested
-     * bandwidth even after rounding up — the requirement exceeds its largest tier (and its per-metro
+     * bandwidth even after rounding up - the requirement exceeds its largest tier (and its per-metro
      * ceiling). Chosen negative so it sorts below every real tier in a smallest-fit comparator.
      */
     public static final int NO_COVERING_TIER = -1;
@@ -51,7 +51,7 @@ public class ServiceProfileOption {
 
     /**
      * The seller regions this profile publishes in the metro. Paired with
-     * {@link #serviceProfileUuid} — the wizard pins the z-side uuid and seller region together from
+     * {@link #serviceProfileUuid} - the wizard pins the z-side uuid and seller region together from
      * the SAME option, never spliced across profiles.
      */
     List<String> sellerRegions;
@@ -93,13 +93,13 @@ public class ServiceProfileOption {
 
     /**
      * The smallest bandwidth this profile can actually build that <em>satisfies</em> (is not below) the
-     * requested speed — the bandwidth round-up primitive. This is what the wizard stamps the connection
+     * requested speed - the bandwidth round-up primitive. This is what the wizard stamps the connection
      * at when the exact requirement is not an offered tier:
      * <ul>
      *   <li>a discrete-tier profile returns its smallest published tier {@code >= mbps} (so 3000 against
      *       {@code [1000, 5000, 10000]} returns 5000);</li>
      *   <li>a custom-bandwidth ({@code allowCustomBandwidth}) or tierless profile returns {@code mbps}
-     *       itself — the exact speed is buildable, so nothing is rounded;</li>
+     *       itself - the exact speed is buildable, so nothing is rounded;</li>
      *   <li>in either case the result is clamped to the per-metro ceiling
      *       ({@code vcBandwidthMax}): a tier above the ceiling is not selectable.</li>
      * </ul>
@@ -138,7 +138,7 @@ public class ServiceProfileOption {
     }
 
     /**
-     * Whether this profile can carry the requested bandwidth <em>after rounding up</em> — i.e.
+     * Whether this profile can carry the requested bandwidth <em>after rounding up</em> - i.e.
      * whether {@link #coveringTier(int)} finds a satisfying tier. Distinct from
      * {@link #covers(int)}, which is the exact-tier test: a 3000&nbsp;Mbps request has
      * {@code covers()==false} but {@code canCover()==true} on a profile publishing a
@@ -152,7 +152,7 @@ public class ServiceProfileOption {
     }
 
     /**
-     * The largest bandwidth this profile can build in Mbps — its largest published tier clamped to the
+     * The largest bandwidth this profile can build in Mbps - its largest published tier clamped to the
      * per-metro ceiling, the ceiling itself for a custom/tierless profile, or {@link Integer#MAX_VALUE}
      * when it is unbounded. Used to phrase the "requirement exceeds every profile" error with the real
      * maximum a customer could ask for instead.
@@ -172,7 +172,7 @@ public class ServiceProfileOption {
 
     /**
      * A capacity yardstick for "smallest-capable-first" selection: the largest discrete tier this
-     * profile publishes, or — for a custom-bandwidth/tierless profile — its per-metro ceiling, or
+     * profile publishes, or - for a custom-bandwidth/tierless profile - its per-metro ceiling, or
      * {@link Integer#MAX_VALUE} when it is unbounded. A smaller value is a tighter fit, so a request
      * both a hosted ([50..500]) and a dedicated profile could carry prefers the hosted one.
      *
@@ -187,7 +187,7 @@ public class ServiceProfileOption {
     }
 
     /**
-     * How many discrete tiers this profile publishes strictly above {@code mbps} — the tie-break for
+     * How many discrete tiers this profile publishes strictly above {@code mbps} - the tie-break for
      * two profiles with the same {@link #capacityCeiling()}: the fewer wasted tiers, the tighter.
      *
      * @param mbps the requested connection bandwidth in Mbps

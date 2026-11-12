@@ -3,7 +3,9 @@ package com.eqixiac.equinix.fabric.wiremock;
 import com.eqixiac.equinix.Fabric;
 import com.eqixiac.equinix.core.WireMockTestBase;
 import com.eqixiac.equinix.core.exception.*;
+import com.eqixiac.equinix.core.http.response.PaginatedFilteredList;
 import com.eqixiac.equinix.core.http.response.PaginatedList;
+import com.eqixiac.equinix.fabric.model.implementation.filter.Filter;
 import com.eqixiac.equinix.fabric.enums.ChargeFrequency;
 import com.eqixiac.equinix.fabric.enums.ConnectionType;
 import com.eqixiac.equinix.fabric.enums.PrecisionTimePackageCode;
@@ -224,9 +226,9 @@ class FabricPrecisionTimesWireMockTest extends WireMockTestBase {
     class ListServices {
 
         @Test
-        @DisplayName("GETs /timeServices and returns the paginated services")
+        @DisplayName("POSTs /timeServices/search (the spec has no GET collection) and returns the services")
         void listsTimeServices() {
-            stubPaginatedGet(wireMock, "/fabric/v4/timeServices",
+            stubPaginatedPost(wireMock, "/fabric/v4/timeServices/search",
                     "/json/fabric/paginated_time_services.json");
 
             PaginatedList<PrecisionTime> services = fabric.precisionTimes().list();
@@ -235,7 +237,23 @@ class FabricPrecisionTimesWireMockTest extends WireMockTestBase {
             assertEquals(2, services.size());
             assertEquals("f6a7b8c9-d0e1-2345-fabc-567890123def", services.get(0).getUuid());
             assertEquals("Staging-PTP-Service", services.get(1).getName());
-            wireMock.verify(getRequestedFor(urlPathEqualTo("/fabric/v4/timeServices")));
+            wireMock.verify(postRequestedFor(urlPathEqualTo("/fabric/v4/timeServices/search")));
+            wireMock.verify(0, getRequestedFor(urlPathEqualTo("/fabric/v4/timeServices")));
+        }
+
+        @Test
+        @DisplayName("search() sends the project filter and pagination in the body")
+        void searchSendsProjectFilter() {
+            stubPaginatedPost(wireMock, "/fabric/v4/timeServices/search",
+                    "/json/fabric/paginated_time_services.json");
+
+            PaginatedFilteredList<PrecisionTime> services = fabric.precisionTimes().search(
+                    Filter.filter().and().equals("/project/projectId", "995072000433550"), null);
+
+            assertEquals(2, services.size());
+            wireMock.verify(postRequestedFor(urlPathEqualTo("/fabric/v4/timeServices/search"))
+                    .withRequestBody(matchingJsonPath("$.filter.and[0].property", equalTo("/project/projectId")))
+                    .withRequestBody(matchingJsonPath("$.pagination.offset")));
         }
     }
 

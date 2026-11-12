@@ -49,7 +49,36 @@ public class PublicKeyClientImpl extends ResourceClientBase<PublicKey, PublicKey
         return nestedList.getData();
     }
 
+    /**
+     * {@code POST /ne/v1/publicKeys}. Live (2026-11-11) the service answers {@code 201} with an
+     * empty body and the new id only in the {@code Location} header ({@code /v1/publicKeys/{uuid}});
+     * the spec documents a {@code PublicKeyResponse} body. The key is therefore read back from the
+     * list by that id.
+     */
     public PublicKeyJson create(PublicKeyCreatorJson publicKeyCreatorJson) {
-        return postOne("CreatePublicKey", publicKeyCreatorJson);
+        String uuid = createReturningLocationUuid("CreatePublicKey", null, null, publicKeyCreatorJson);
+        if (uuid == null) {
+            throw new com.eqixiac.equinix.core.exception.EquinixClientException(
+                    "POST /ne/v1/publicKeys returned no Location header with the new key id");
+        }
+        List<PublicKeyJson> keys = list(publicKeyCreatorJson.getAccountUcmId());
+        if (keys != null) {
+            for (PublicKeyJson key : keys) {
+                if (uuid.equalsIgnoreCase(key.getUuid())) {
+                    return key;
+                }
+            }
+        }
+        return PublicKeyJson.of(uuid, publicKeyCreatorJson.getKeyName(), publicKeyCreatorJson.getKeyValue(),
+                publicKeyCreatorJson.getKeyType());
+    }
+
+    /**
+     * {@code DELETE /ne/v1/publicKeys/{uuid}}: not in the published network-edgev1 spec; answers
+     * {@code 204} live (observed 2026-11-11).
+     */
+    public Boolean delete(String uuid) {
+        return booleanOp("DeletePublicKey", com.eqixiac.equinix.core.enums.RequestType.SINGLE,
+                Map.of("uuid", uuid), null, null);
     }
 }

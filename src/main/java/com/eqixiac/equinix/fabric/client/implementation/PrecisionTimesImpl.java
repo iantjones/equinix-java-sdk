@@ -18,7 +18,11 @@ package com.eqixiac.equinix.fabric.client.implementation;
 
 import com.eqixiac.equinix.core.http.ResponseHandler;
 import com.eqixiac.equinix.core.http.response.Page;
+import com.eqixiac.equinix.core.http.response.PaginatedFilteredList;
 import com.eqixiac.equinix.core.http.response.PaginatedList;
+import com.eqixiac.equinix.fabric.model.implementation.filter.Filter;
+import com.eqixiac.equinix.fabric.model.implementation.filter.FilterPropertyList;
+import com.eqixiac.equinix.fabric.model.implementation.sort.SortPropertyList;
 import com.eqixiac.equinix.fabric.client.PrecisionTimes;
 import com.eqixiac.equinix.fabric.client.internal.PrecisionTimeClient;
 import com.eqixiac.equinix.fabric.enums.PrecisionTimePackageCode;
@@ -39,9 +43,15 @@ public class PrecisionTimesImpl implements PrecisionTimes {
     private final PrecisionTimeClient<PrecisionTime> serviceClient;
 
     public PaginatedList<PrecisionTime> list() {
-        Page<PrecisionTimeJson> responsePage = this.serviceClient.list();
+        Page<PrecisionTimeJson> responsePage = this.serviceClient.search(Filter.filter().empty(), null);
         PaginatedList<PrecisionTime> precisionTimeList = ResponseHandler.mapPaginatedList(responsePage.getItems(), this.serviceClient, PrecisionTimeWrapper::new);
         return new PaginatedList<>(precisionTimeList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
+    }
+
+    public PaginatedFilteredList<PrecisionTime> search(FilterPropertyList filter, SortPropertyList sort) {
+        Page<PrecisionTimeJson> responsePage = this.serviceClient.search(filter, sort);
+        PaginatedFilteredList<PrecisionTime> services = ResponseHandler.mapPaginatedFilteredList(responsePage.getItems(), this.serviceClient, PrecisionTimeWrapper::new);
+        return new PaginatedFilteredList<>(services, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
     }
 
     public PrecisionTime getByUuid(String uuid) {

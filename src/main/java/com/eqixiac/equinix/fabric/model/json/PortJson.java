@@ -139,8 +139,6 @@ public final class PortJson {
     @JsonProperty("package")
     private PackageRef portPackage;
 
-    @JsonProperty("settings")
-    PortSettings settings;
 
     @JsonProperty("physicalPorts")
     List<PhysicalPort> physicalPorts;

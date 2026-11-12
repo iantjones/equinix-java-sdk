@@ -22,7 +22,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 /**
  * RIR justification question asked for a provider-assigned IP block (spec schema
  * {@code IpBlockQuestions}, property {@code type}). {@link #UNKNOWN} is a read-side fallback for
- * values added after this SDK release — never send it.
+ * values added after this SDK release - never send it.
  */
 public enum IpBlockQuestionType implements APIParam {
     PRIVATE_SPACE_CONSIDERED,

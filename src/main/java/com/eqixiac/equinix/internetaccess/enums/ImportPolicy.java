@@ -22,8 +22,8 @@ import com.eqixiac.equinix.core.model.APIParam;
  * Customer-route import policy of an Equinix Internet Access (EIA) v1 routing configuration.
  *
  * <ul>
- *   <li>{@code PI} — provider-independent address space.</li>
- *   <li>{@code PA} — provider-aggregatable address space.</li>
+ *   <li>{@code PI} - provider-independent address space.</li>
+ *   <li>{@code PA} - provider-aggregatable address space.</li>
  * </ul>
  */
 public enum ImportPolicy implements APIParam {

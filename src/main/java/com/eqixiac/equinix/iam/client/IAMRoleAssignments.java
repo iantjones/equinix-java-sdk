@@ -21,7 +21,7 @@ import com.eqixiac.equinix.iam.model.json.RoleAssignmentList;
 import com.eqixiac.equinix.iam.model.json.creators.CreateRoleAssignmentRequest;
 
 /**
- * Client interface for IAM role assignments — associating a principal with a role within a scope.
+ * Client interface for IAM role assignments - associating a principal with a role within a scope.
  *
  * <p>Supports listing assignments for a scope
  * ({@code GET /v1/roleAssignments}, operationId {@code listRoleAssignments}), creating an

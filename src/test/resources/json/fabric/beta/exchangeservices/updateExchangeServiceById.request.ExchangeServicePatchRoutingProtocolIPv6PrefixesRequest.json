@@ -1,0 +1,10 @@
+[
+  {
+    "op": "replace",
+    "path": "/routingProtocol/bgpIpv6/prefixes",
+    "value": [
+      "2001:db8:10::/48",
+      "2001:db8:20::/48"
+    ]
+  }
+]

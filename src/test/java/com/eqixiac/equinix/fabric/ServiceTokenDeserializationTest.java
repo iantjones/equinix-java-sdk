@@ -62,21 +62,11 @@ class ServiceTokenDeserializationTest {
     }
 
     @Test
-    void issuerSide_isDeserialized() {
-        assertEquals("z", serviceToken.getIssuerSide());
-    }
-
-    @Test
     void project_isDeserialized() {
         assertNotNull(serviceToken.getProject());
         assertEquals("44f4c4f8-2f39-494a-838c-5350c32f0a2e", serviceToken.getProject().getProjectId());
         assertEquals("https://api.equinix.com/resourceManager/v1/projects/44f4c4f8-2f39-494a-838c-5350c32f0a2e",
                 serviceToken.getProject().getHref());
-    }
-
-    @Test
-    void expiry_isDeserialized() {
-        assertEquals(30, serviceToken.getExpiry());
     }
 
     @Test

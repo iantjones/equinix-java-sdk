@@ -42,7 +42,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * The unified POST/GET paging-advance semantics shared by {@link PaginatedFilteredList} and
  * {@link PaginatedList}:
  * <ul>
- *   <li>any body implementing {@code PaginatedPostBody} pages — through EITHER list type
+ *   <li>any body implementing {@code PaginatedPostBody} pages - through EITHER list type
  *       (previously {@code PaginatedList.fetchNextPage} hard-cast the request to
  *       {@code PaginatedRequest} and POST-search pages wrapped in a {@code PaginatedList} threw
  *       {@code ClassCastException} on page 2);</li>
@@ -123,7 +123,7 @@ class PaginatedFilteredListPagingTest {
     void bodyOffsetAdvancesFromServerReportedPagination_notTheRequestedPageSize() throws Exception {
         // Caller asks for 500 per page; the server clamps to 100 (e.g. Fabric caps limit at 100).
         // The next page must start where the server's page ENDED (offset 100), not at the caller's
-        // requested page size (offset 500) — otherwise records 100..499 are silently skipped.
+        // requested page size (offset 500) - otherwise records 100..499 are silently skipped.
         FilteredPaginatedPost<String> body = new FilteredPaginatedPost<>("filter");
         body.getPagination().setLimit(500);
 
@@ -268,7 +268,7 @@ class PaginatedFilteredListPagingTest {
     void paginatedListAdvancesOffsetFromServerReportedPagination_notTheRequestedPageSize() throws Exception {
         // Server-clamp regression: caller requests limit=500, server clamps to 100 and reports
         // pagination {offset:0, limit:100}. Page 2 must be requested at offset 100 (server offset
-        // + server limit), NOT offset 500 — the old nextPage() advanced by the requested pageSize.
+        // + server limit), NOT offset 500 - the old nextPage() advanced by the requested pageSize.
         PaginatedRequest<String> request = new PaginatedRequest<>();
         request.addSingleQueryParameter("offset", "0");
         request.addSingleQueryParameter("limit", "500");

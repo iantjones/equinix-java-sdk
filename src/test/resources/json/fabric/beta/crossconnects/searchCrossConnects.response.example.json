@@ -1,0 +1,132 @@
+{
+  "pagination": {
+    "offset": 0,
+    "limit": 25,
+    "total": 1
+  },
+  "sort": [
+    {
+      "property": "/changeLog/updatedDateTime",
+      "direction": "DESC"
+    }
+  ],
+  "data": [
+    {
+      "href": "https://api.equinix.com/fabric/v4/crossConnects/46bb1a31-c28f-4197-8b10-06e0e03d0743",
+      "type": "XC",
+      "uuid": "46bb1a31-c28f-4197-8b10-06e0e03d0743",
+      "name": "My-CC-service",
+      "state": "PROVISIONING",
+      "serialNumber": "234567890",
+      "redundancy": {
+        "group": "7cf39156-9dec-40f7-a254-9bb401342e83",
+        "priority": "PRIMARY"
+      },
+      "aSide": {
+        "demarcationPoint": {
+          "patchPanelId": "CP:Demarc:1259684",
+          "patchPanelPortA": 35,
+          "patchPanelPortB": 32,
+          "connectorType": "SC",
+          "cageUniqueSpaceId": "SV1:00:000000",
+          "cabinetUniqueSpaceId": "SV1:00:000000:0100"
+        },
+        "location": {
+          "ibxCode": "SV1"
+        }
+      },
+      "zSide": {
+        "loa": {
+          "href": "https://api.equinix.com/fabric/v4/loas/b51f485e-3094-42de-8797-0ef19a51df79",
+          "uuid": "c61f485e-3094-42de-8797-0ef19a51df79"
+        },
+        "location": {
+          "ibxCode": "SV1"
+        }
+      },
+      "account": {
+        "accountNumber": 123456
+      },
+      "notifications": [
+        {
+          "type": "ORDERING",
+          "emails": [
+            "abc@test.com"
+          ],
+          "phone": [
+            {
+              "type": "MOBILE",
+              "number": "+14085551234",
+              "contactPreference": {
+                "timezone": "PST",
+                "availability": "ANYTIME"
+              }
+            }
+          ]
+        },
+        {
+          "type": "TECHNICAL",
+          "emails": [
+            "abc@test.com"
+          ],
+          "phone": [
+            {
+              "type": "MOBILE",
+              "number": "+14085551234",
+              "contactPreference": {
+                "timezone": "PST",
+                "availability": "ANYTIME"
+              }
+            }
+          ]
+        },
+        {
+          "type": "NOTIFICATION",
+          "emails": [
+            "abc@test.com"
+          ]
+        }
+      ],
+      "order": {
+        "orderNumber": "1-1234567890",
+        "customerReferenceId": "12345"
+      },
+      "links": [
+        {
+          "href": "https://api.equinix.com/fabric/v4/crossConnects/46bb1a31-c28f-4197-8b10-06e0e03d0743/schedules",
+          "rel": "getCrossConnectSchedulesByUuid",
+          "method": "GET",
+          "contentType": "application/json",
+          "authenticate": true
+        },
+        {
+          "href": "https://api.equinix.com/fabric/v4/crossConnects/46bb1a31-c28f-4197-8b10-06e0e03d0743/services",
+          "rel": "getCrossConnectServicesByUuid",
+          "method": "GET",
+          "contentType": "application/json",
+          "authenticate": true
+        },
+        {
+          "href": "https://api.equinix.com/fabric/v4/crossConnects/46bb1a31-c28f-4197-8b10-06e0e03d0743/notes",
+          "rel": "getCrossConnectNotesByUuid",
+          "method": "GET",
+          "contentType": "application/json",
+          "authenticate": true
+        },
+        {
+          "href": "https://api.equinix.com/fabric/v4/crossConnects/46bb1a31-c28f-4197-8b10-06e0e03d0743/attachments",
+          "rel": "getCrossConnectAttachmentsByUuid",
+          "method": "GET",
+          "contentType": "application/json",
+          "authenticate": true
+        }
+      ],
+      "changeLog": {
+        "createdDateTime": "2026-02-26T07:21:39Z",
+        "createdBy": "testuser",
+        "updatedDateTime": "2026-02-28T07:21:39Z",
+        "updatedBy": "1234"
+      }
+    }
+  ]
+}

@@ -12,7 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Unit tests for {@link RetryPolicy}, in particular the HTTP-method idempotency gating:
- * POST and PATCH are non-idempotent (RFC 5789 — the SDK sends RFC 6902 'add' operations that
+ * POST and PATCH are non-idempotent (RFC 5789 - the SDK sends RFC 6902 'add' operations that
  * must not be applied twice) and are not retried unless explicitly opted in.
  */
 class RetryPolicyTest {
@@ -61,7 +61,7 @@ class RetryPolicyTest {
     }
 
     @Test
-    @DisplayName("429 is retryable for every method — the server did not process the request")
+    @DisplayName("429 is retryable for every method - the server did not process the request")
     void status429_isRetryableRegardlessOfMethod() {
         RetryPolicy policy = RetryPolicy.defaultPolicy();
 

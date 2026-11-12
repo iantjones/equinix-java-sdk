@@ -24,8 +24,8 @@ import com.eqixiac.equinix.core.model.PaginatedPostBody;
 
 /**
  * The single paging-advance path shared by {@link PaginatedList} and
- * {@link PaginatedFilteredList}. Seeks the carried request's pagination state — wherever that
- * state lives — from the <em>server-reported</em> pagination of the page currently held:
+ * {@link PaginatedFilteredList}. Seeks the carried request's pagination state - wherever that
+ * state lives - from the <em>server-reported</em> pagination of the page currently held:
  *
  * <ul>
  *   <li>a {@link PaginatedPostRequest} whose body implements {@link PaginatedPostBody} pages by

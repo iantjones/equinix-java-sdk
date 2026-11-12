@@ -29,7 +29,7 @@ public enum WorkloadType {
     /** OLTP and payment-style systems: HIGH latency sensitivity. */
     TRANSACTIONAL(WorkloadProfile.of(LatencySensitivity.HIGH, false, false, false)),
 
-    /** Warm standby/DR: LOW latency sensitivity — distance from users is acceptable. */
+    /** Warm standby/DR: LOW latency sensitivity - distance from users is acceptable. */
     DISASTER_RECOVERY(WorkloadProfile.of(LatencySensitivity.LOW, false, false, false)),
 
     /** Archival storage: LOW latency sensitivity. */

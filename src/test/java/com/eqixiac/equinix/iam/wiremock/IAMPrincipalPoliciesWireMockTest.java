@@ -84,7 +84,7 @@ class IAMPrincipalPoliciesWireMockTest extends WireMockTestBase {
     }
 
     // ------------------------------------------------------------------
-    // Principal policies — list / getByUuid / update / enable / disable
+    // Principal policies - list / getByUuid / update / enable / disable
     // ------------------------------------------------------------------
 
     @Nested
@@ -165,7 +165,7 @@ class IAMPrincipalPoliciesWireMockTest extends WireMockTestBase {
         @DisplayName("404 throws EquinixNotFoundException")
         void notFound() {
             stubErrorInline(wireMock, "/v1/projects/.*/principalPolicies/.*",
-                    404, "{\"errorCode\":\"IAM-404\",\"errorMessage\":\"Principal policy not found\"}");
+                    404, "{\"error\":{\"errorCode\":\"principal-policy-not-found\"}}");
 
             assertThrows(EquinixNotFoundException.class,
                     () -> iam.principalPolicies().getByUuid(PROJECT_ID, "user:ghost"));
@@ -202,7 +202,7 @@ class IAMPrincipalPoliciesWireMockTest extends WireMockTestBase {
         @DisplayName("409 throws EquinixConflictException (stale lastRev)")
         void conflict() {
             stubErrorInline(wireMock, "/v1/projects/.*/principalPolicies/.*",
-                    409, "{\"errorCode\":\"IAM-409\",\"errorMessage\":\"Revision conflict\"}");
+                    409, "{\"error\":{\"errorCode\":\"revision-conflict\"}}");
 
             assertThrows(EquinixConflictException.class,
                     () -> iam.principalPolicies().update(PROJECT_ID, USER_PRINCIPAL,
@@ -245,7 +245,7 @@ class IAMPrincipalPoliciesWireMockTest extends WireMockTestBase {
     }
 
     // ------------------------------------------------------------------
-    // Policy masks — list / create / getByUuid / update / delete / toggle
+    // Policy masks - list / create / getByUuid / update / delete / toggle
     // ------------------------------------------------------------------
 
     @Nested
@@ -360,7 +360,7 @@ class IAMPrincipalPoliciesWireMockTest extends WireMockTestBase {
         @DisplayName("404 throws EquinixNotFoundException")
         void notFound() {
             stubErrorInline(wireMock, "/v1/projects/.*/policyMasks/.*",
-                    404, "{\"errorCode\":\"IAM-404\",\"errorMessage\":\"Policy mask not found\"}");
+                    404, "{\"error\":{\"errorCode\":\"policy-mask-not-found\"}}");
 
             assertThrows(EquinixNotFoundException.class,
                     () -> iam.policyMasks().getByUuid(PROJECT_ID, "policymask:ghost"));
@@ -416,7 +416,7 @@ class IAMPrincipalPoliciesWireMockTest extends WireMockTestBase {
         @DisplayName("409 throws EquinixConflictException (stale lastRev)")
         void conflict() {
             stubErrorInline(wireMock, "/v1/projects/.*/policyMasks/.*",
-                    409, "{\"errorCode\":\"IAM-409\",\"errorMessage\":\"Revision conflict\"}");
+                    409, "{\"error\":{\"errorCode\":\"revision-conflict\"}}");
 
             assertThrows(EquinixConflictException.class,
                     () -> iam.policyMasks().delete(PROJECT_ID, POLICY_MASK_ID, "stale"));
@@ -465,7 +465,7 @@ class IAMPrincipalPoliciesWireMockTest extends WireMockTestBase {
         @DisplayName("500 on list throws EquinixServerException")
         void serverError() {
             stubErrorInline(wireMock, "/v1/projects/.*/policyMasks",
-                    500, "{\"errorCode\":\"IAM-500\",\"errorMessage\":\"Internal server error\"}");
+                    500, "{\"error\":{\"errorCode\":\"internal-server-error\"}}");
 
             assertThrows(EquinixServerException.class,
                     () -> iam.policyMasks().list(PROJECT_ID));

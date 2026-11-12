@@ -209,7 +209,8 @@ class MulticloudWizardDocContractTest {
             assertTrue(outcome.getResources().isEmpty());
             assertEquals(1, outcome.getInformational().size());
             assertFalse(outcome.getInformational().get(0).isRecoverable());
-            assertTrue(linkOnly.rollback(outcome).isEmpty(), "rollback has nothing to delete for a native link");
+            assertTrue(linkOnly.rollback(outcome).removed().isEmpty() && linkOnly.rollback(outcome).isClean(),
+                    "rollback has nothing to delete for a native link");
         }
 
         /**

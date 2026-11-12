@@ -22,9 +22,9 @@ import com.eqixiac.equinix.core.model.APIParam;
  * Billing model of an Equinix Internet Access (EIA) v1 bandwidth configuration.
  *
  * <ul>
- *   <li>{@code FIXED} — a fixed, flat-rate bandwidth charge.</li>
- *   <li>{@code USAGE_BASED} — charged on metered usage.</li>
- *   <li>{@code BURST_BASED} — charged on burst above a committed level.</li>
+ *   <li>{@code FIXED} - a fixed, flat-rate bandwidth charge.</li>
+ *   <li>{@code USAGE_BASED} - charged on metered usage.</li>
+ *   <li>{@code BURST_BASED} - charged on burst above a committed level.</li>
  * </ul>
  */
 public enum BillingType implements APIParam {

@@ -63,9 +63,6 @@ public class ConnectionCreatorJson {
         @JsonProperty("marketplaceSubscription")
         private MarketplaceSubscriptionRef marketplaceSubscription;
 
-        @JsonProperty("endCustomer")
-        private EndCustomer endCustomer;
-
         @AllArgsConstructor(access = AccessLevel.PACKAGE)
         @NoArgsConstructor(access = AccessLevel.PROTECTED)
         public static class ConnectionSide {
@@ -89,6 +86,5 @@ public class ConnectionCreatorJson {
                 this.project = connectionBuilder.getProject();
                 this.additionalInfo = connectionBuilder.getAdditionalInfo();
                 this.marketplaceSubscription = connectionBuilder.getMarketplaceSubscription();
-                this.endCustomer = connectionBuilder.getEndCustomer();
         }
 }

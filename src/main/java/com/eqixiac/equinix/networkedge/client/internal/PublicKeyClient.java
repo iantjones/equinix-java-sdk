@@ -31,4 +31,6 @@ public interface PublicKeyClient<T> extends Pageable<T> {
     List<PublicKeyJson> list(String accountUcmId);
 
     PublicKeyJson create(PublicKeyCreatorJson publicKeyCreatorJson);
+
+    Boolean delete(String uuid);
 }

@@ -21,7 +21,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
 /**
- * Port change operation data (the Fabric v4 {@code PortChangeOperation} schema) — a
+ * Port change operation data (the Fabric v4 {@code PortChangeOperation} schema) - a
  * JSON-Patch-style triple of operation name, document path and new value.
  *
  * @author ianjones

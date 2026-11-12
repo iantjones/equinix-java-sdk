@@ -50,13 +50,13 @@ public interface PolicyMask {
     Map<String, String> getTags();
 
     /**
-     * @return the managed policies as a lossless {@link PolicyExpression} — either the string
+     * @return the managed policies as a lossless {@link PolicyExpression} - either the string
      *         {@code "none"} or an array of {@code managedpolicy:} ids
      */
     PolicyExpression getManagedPolicies();
 
     /**
-     * @return the managed permission sets as a lossless {@link PolicyExpression} — either the string
+     * @return the managed permission sets as a lossless {@link PolicyExpression} - either the string
      *         {@code "none"} or an array of {@code managedset:} ids
      */
     PolicyExpression getManagedPermissionSets();

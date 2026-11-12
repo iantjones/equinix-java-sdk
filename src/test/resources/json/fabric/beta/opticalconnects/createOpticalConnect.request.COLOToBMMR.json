@@ -1,0 +1,34 @@
+{
+  "type": "OC",
+  "bandwidth": 100000,
+  "connectionDestinationType": "BMMR",
+  "pathType": "UNPROTECTED",
+  "bmmrType": "EQUINIX",
+  "aSide": {
+    "demarcationPoint": {
+      "patchPanelId": "PP:Demarc:1259684",
+      "patchPanelPortA": "10",
+      "patchPanelPortB": "11",
+      "connectorType": "SC"
+    }
+  },
+  "zSide": {
+    "location": {
+      "ibxCode": "SV2"
+    },
+    "loa": {
+      "uuid": "64de7e5-7fe7-41e6-b984-80d5aa159a0e"
+    }
+  },
+  "order": {
+    "purchaseOrderNumber": "156576"
+  },
+  "notifications": [
+    {
+      "type": "NOTIFICATION",
+      "emails": [
+        "test@test.com"
+      ]
+    }
+  ]
+}

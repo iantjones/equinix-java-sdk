@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * A project-scoped IAM access policy — a set of permissions that may be granted to principals,
+ * A project-scoped IAM access policy - a set of permissions that may be granted to principals,
  * groups or other projects. Returned by the access policy operations
  * ({@code listAccessPolicies}, {@code createAccessPolicy}, {@code getAccessPolicy},
  * {@code updateAccessPolicy}, {@code enableAccessPolicy}, {@code disableAccessPolicy}).

@@ -1,0 +1,22 @@
+{
+  "functionalAreas": {
+    "CoreTest": {
+      "uriFormat": "/coretest/v{$version}/{$rootUri}/{$requestUri}",
+      "defaultVersion": 1,
+      "Things": {
+        "rootUri": "things",
+        "serviceEndpoints": {
+          "Get": { "httpMethod": "GET", "requestUri": "{$id}" },
+          "Create": { "httpMethod": "POST" }
+        }
+      },
+      "PublicThings": {
+        "rootUri": "public",
+        "unauthenticated": true,
+        "serviceEndpoints": {
+          "Get": { "httpMethod": "GET", "requestUri": "{$id}" }
+        }
+      }
+    }
+  }
+}

@@ -88,7 +88,7 @@ public class RouteAggregationRuleClientImpl extends ResourceClientBase<RouteAggr
     }
 
     public Page<RouteAggregationRuleJson> search(String routeAggregationId, FilterPropertyList filter, SortPropertyList sort) {
-        // POST /routeAggregations/{routeAggregationId}/routeAggregationRules/search — searchPage cannot carry
+        // POST /routeAggregations/{routeAggregationId}/routeAggregationRules/search - searchPage cannot carry
         // path params, so build the paginated-post request manually (mirrors RouteAggregation.search otherwise).
         EquinixRequest<RouteAggregationRule> request = buildRequestWithPathParams("SearchRouteAggregationRules", RequestType.PAGINATED_POST,
                 Map.of("routeAggregationId", routeAggregationId), RouteAggregationRuleJson.class);

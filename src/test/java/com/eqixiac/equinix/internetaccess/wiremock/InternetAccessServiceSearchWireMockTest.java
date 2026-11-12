@@ -4,6 +4,9 @@ import com.eqixiac.equinix.InternetAccess;
 import com.eqixiac.equinix.core.WireMockTestBase;
 import com.eqixiac.equinix.core.http.response.PaginatedFilteredList;
 import com.eqixiac.equinix.internetaccess.model.InternetAccessService;
+import com.eqixiac.equinix.core.enums.SortOrder;
+import com.eqixiac.equinix.internetaccess.enums.ServiceSearchSortProperty;
+import com.eqixiac.equinix.internetaccess.enums.ServiceState;
 import com.eqixiac.equinix.internetaccess.model.json.creators.ServiceSearchRequest;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -13,7 +16,9 @@ import org.junit.jupiter.api.Test;
 
 import static com.eqixiac.equinix.core.ResponseStubs.stubPaginatedPost;
 import static com.eqixiac.equinix.core.ResponseStubs.stubSingleton;
+import static com.github.tomakehurst.wiremock.client.WireMock.absent;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.notMatching;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalToJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
@@ -23,6 +28,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -106,34 +112,45 @@ class InternetAccessServiceSearchWireMockTest extends WireMockTestBase {
                     "/json/internetaccess/paginated_services.json");
 
             ServiceSearchRequest request = new ServiceSearchRequest()
-                    .equals("/state", "ACTIVE")
-                    .equals("/type", "SINGLE");
+                    .state(ServiceState.ACTIVE, ServiceState.PROVISIONING)
+                    .equals("/locations/metroCode", "DC");
 
             internetAccess.services().search(request);
 
             wireMock.verify(postRequestedFor(urlPathEqualTo(SEARCH_PATH))
+                    .withQueryParam("sort", absent())
                     .withRequestBody(equalToJson(
                             "{ \"filter\": { \"and\": ["
-                                    + "{ \"property\": \"/state\", \"operator\": \"=\", \"values\": [\"ACTIVE\"] },"
-                                    + "{ \"property\": \"/type\", \"operator\": \"=\", \"values\": [\"SINGLE\"] }"
+                                    + "{ \"property\": \"/state\", \"operator\": \"=\", \"values\": [\"ACTIVE\", \"PROVISIONING\"] },"
+                                    + "{ \"property\": \"/locations/metroCode\", \"operator\": \"=\", \"values\": [\"DC\"] }"
                                     + "] } }")));
         }
 
         @Test
-        void searchWithMultipleValuesSerializesValuesArray() {
+        void sendsSortAsQueryParameterNotInBody() {
             stubPaginatedPost(wireMock, SEARCH_PATH,
                     "/json/internetaccess/paginated_services.json");
 
             ServiceSearchRequest request = new ServiceSearchRequest()
-                    .equals("/type", "SINGLE", "REDUNDANT");
+                    .state(ServiceState.ACTIVE)
+                    .sort(ServiceSearchSortProperty.NAME, SortOrder.ASC)
+                    .sort(ServiceSearchSortProperty.STATE, SortOrder.DESC);
 
             internetAccess.services().search(request);
 
+            // Spec: sort=/name,-/type style; /name and -/state accepted live 2026-11-11.
             wireMock.verify(postRequestedFor(urlPathEqualTo(SEARCH_PATH))
-                    .withRequestBody(equalToJson(
-                            "{ \"filter\": { \"and\": ["
-                                    + "{ \"property\": \"/type\", \"operator\": \"=\", \"values\": [\"SINGLE\", \"REDUNDANT\"] }"
-                                    + "] } }")));
+                    .withQueryParam("sort", equalTo("/name,-/state"))
+                    .withRequestBody(notMatching("(?s).*\"sort\".*")));
+        }
+
+        @Test
+        void typeFilterIsRejectedBeforeAnyRequest() {
+            // Live: /type answers HTTP 400 EQ-7108002 "Invalid value" for every value (2026-11-11).
+            assertThrows(IllegalArgumentException.class,
+                    () -> new ServiceSearchRequest().equals("/type", "SINGLE"));
+            assertThrows(IllegalArgumentException.class,
+                    () -> new ServiceSearchRequest().state(ServiceState.UNKNOWN));
         }
     }
 
@@ -160,7 +177,7 @@ class InternetAccessServiceSearchWireMockTest extends WireMockTestBase {
         @Test
         void loadAllFetchesSecondPageByAdvancingTheQueryOffset() {
             // Regression: the services search body carries no pagination (per spec), so
-            // multi-page was previously impossible by design — page 2 threw from the paging pipeline.
+            // multi-page was previously impossible by design - page 2 threw from the paging pipeline.
             wireMock.stubFor(post(urlPathEqualTo(SEARCH_PATH))
                     .withQueryParam("offset", equalTo("0"))
                     .willReturn(okJson(PAGE_1)));

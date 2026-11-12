@@ -9,7 +9,7 @@ import java.util.List;
  * Composite score for a metro recommendation, decomposed into individually
  * inspectable {@link ScoreComponent} dimensions.
  *
- * <p>All scores — the composite and every per-category component — are on a 0&ndash;100
+ * <p>All scores - the composite and every per-category component - are on a 0&ndash;100
  * scale, higher is better. The composite is the sum of each component's score multiplied
  * by its normalized weight.</p>
  */

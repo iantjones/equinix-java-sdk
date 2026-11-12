@@ -2,6 +2,7 @@ package com.eqixiac.equinix.design.optimizer.wizard.model;
 
 import com.eqixiac.equinix.design.value.ratecard.PriceSource;
 import lombok.Builder;
+import lombok.extern.jackson.Jacksonized;
 import lombok.Value;
 
 import java.math.BigDecimal;
@@ -14,14 +15,14 @@ import java.util.Map;
  *
  * <p><strong>Currency honesty.</strong> A plan can legitimately span metros priced in different
  * currencies (live Fabric pricing quotes EUR in Frankfurt next to USD in Ashburn). Amounts are only
- * ever summed within a single currency — the wizard's {@code CurrencyReconciler} rule:</p>
+ * ever summed within a single currency - the wizard's {@code CurrencyReconciler} rule:</p>
  * <ul>
  *   <li>{@code monthlyTotal}/{@code setupTotal}/{@code currency} are set only when the whole plan
  *       reconciles to one currency; when it is mixed they are {@code null} and
  *       {@code monthlyByCurrency} carries the per-currency subtotals instead.</li>
  *   <li>Each category figure ({@code routerMonthlyCost}, {@code providerConnectionMonthlyCost},
  *       {@code backboneMonthlyCost}) is likewise kept only when that category reconciles to one
- *       currency — its code in the matching {@code *Currency} field — and is {@code null} when the
+ *       currency - its code in the matching {@code *Currency} field - and is {@code null} when the
  *       category itself is mixed, with the truth in the matching {@code *MonthlyByCurrency} map.
  *       A raw cross-currency category sum is never reported.</li>
  * </ul>
@@ -34,20 +35,21 @@ import java.util.Map;
  */
 @Value
 @Builder(toBuilder = true)
+@Jacksonized
 public class PlanPricing {
 
     /**
-     * The whole-plan monthly recurring cost — {@code null} when the plan spans currencies
+     * The whole-plan monthly recurring cost - {@code null} when the plan spans currencies
      * (see {@code monthlyByCurrency}) so a cross-currency sum is never fabricated.
      */
     BigDecimal monthlyTotal;
 
-    /** The whole-plan one-time setup cost — {@code null} when the plan spans currencies. */
+    /** The whole-plan one-time setup cost - {@code null} when the plan spans currencies. */
     BigDecimal setupTotal;
 
     /**
      * The ISO&nbsp;4217 code of {@code monthlyTotal}/{@code setupTotal}. Defaults to {@code "USD"},
-     * but the wizard sets it {@code null} for a mixed-currency plan — check it before rendering a
+     * but the wizard sets it {@code null} for a mixed-currency plan - check it before rendering a
      * symbol next to a total.
      */
     @Builder.Default
@@ -56,7 +58,7 @@ public class PlanPricing {
     /** Whole-plan monthly subtotals per currency, in first-seen order; the source of truth when mixed. */
     Map<String, BigDecimal> monthlyByCurrency;
 
-    /** Monthly Cloud Router cost — {@code null} when the router category spans currencies. */
+    /** Monthly Cloud Router cost - {@code null} when the router category spans currencies. */
     BigDecimal routerMonthlyCost;
 
     /** The currency of {@code routerMonthlyCost}; {@code null} when that figure is mixed/absent. */
@@ -65,7 +67,7 @@ public class PlanPricing {
     /** Per-currency monthly router subtotals (the reconciler's convention for a mixed category). */
     Map<String, BigDecimal> routerMonthlyByCurrency;
 
-    /** Monthly provider-connection cost — {@code null} when the category spans currencies. */
+    /** Monthly provider-connection cost - {@code null} when the category spans currencies. */
     BigDecimal providerConnectionMonthlyCost;
 
     /** The currency of {@code providerConnectionMonthlyCost}; {@code null} when mixed/absent. */
@@ -74,7 +76,7 @@ public class PlanPricing {
     /** Per-currency monthly provider-connection subtotals. */
     Map<String, BigDecimal> providerConnectionMonthlyByCurrency;
 
-    /** Monthly backbone cost — {@code null} when the backbone category spans currencies. */
+    /** Monthly backbone cost - {@code null} when the backbone category spans currencies. */
     BigDecimal backboneMonthlyCost;
 
     /** The currency of {@code backboneMonthlyCost}; {@code null} when that figure is mixed/absent. */
@@ -86,9 +88,25 @@ public class PlanPricing {
     /**
      * Monthly cost per connection, keyed by the <em>planned connection name</em> (the same name
      * that appears on {@code PlannedConnection.getName()}, in {@link ExecutionInputs}, and in the
-     * Terraform export). Each figure is in that connection's own quote currency.
+     * Terraform export). Each figure is in the plan currency ({@code currency}) when a rate source covers the
+     * connection's quote currency, else in its own quote currency (see {@code lines}).
      */
     Map<String, BigDecimal> perConnectionCost;
+
+    /**
+     * Every priced item (Cloud Routers, then provider connections, then backbone links), in the plan currency
+     * where a rate source covers the item's currency. A converted line keeps its original amount and currency, the
+     * rate, the rate's source and date in {@code conversion()}. {@code null} on plans priced before this field
+     * existed.
+     */
+    List<com.eqixiac.equinix.design.spi.CostLine> lines;
+
+    /**
+     * What happened to currencies: how many lines were converted and at which rates, any line left in its own
+     * currency for want of a rate, and any rate source that fell back. Empty when every price was already in the
+     * plan currency.
+     */
+    List<String> currencyNotes;
 
     /**
      * Dominant provenance of these figures: {@link PriceSource#EQUINIX_LIVE} when every line
@@ -101,8 +119,8 @@ public class PlanPricing {
     @Builder.Default
     String disclaimer = "Estimates based on published Fabric pricing. Actual costs may vary based on contract terms, volume discounts, and promotional offers.";
 
-    // ── Native multicloud links (Beta). Billed by the cloud providers, never by Equinix. None of
-    //    the figures below is part of monthlyTotal, setupTotal or any category figure above. ──
+    // Native multicloud links (Beta). Billed by the cloud providers, never by Equinix. None of
+    //    the figures below is part of monthlyTotal, setupTotal or any category figure above. --
 
     /**
      * <b>Beta.</b> The monthly fees of the native multicloud links the plan depends on (role

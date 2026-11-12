@@ -21,7 +21,7 @@ import com.eqixiac.equinix.internetaccess.model.SignaturePolicy;
 
 /**
  * Client interface for the Equinix Internet Access (EIA) v1 signature-policies lookup
- * ({@code GET /internetAccess/v1/signaturePolicies}) — the signature policies governing order
+ * ({@code GET /internetAccess/v1/signaturePolicies}) - the signature policies governing order
  * acceptance.
  */
 public interface InternetAccessSignaturePolicies {

@@ -1,0 +1,267 @@
+openapi: 3.0.0
+x-eqx-api-linter-skip-rules:
+  - 3
+info:
+  version: '2.0.0'
+  termsOfService: https://www.equinix.com/about/legal/terms
+  contact:
+    name: Equinix API Support 
+    url: https://docs.equinix.com/api-support.htm
+  title: Project APIs
+  description: |
+    API documentation for project APIs
+servers:
+  - url: https://api.equinix.com
+    description: Equinix API
+
+externalDocs:
+  url: https://developer.equinix.com
+  description: Find more information on Equinix Developer Portal
+
+security:
+  - BearerAuth: []
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    limitParam:
+      name: limit
+      in: query
+      description: Limits the number of returned results
+      required: false
+      schema:
+        type: integer
+        default: 20
+        minimum: 1
+        maximum: 100
+        example: 50
+    offsetParam:
+      name: offset
+      in: query
+      description: Offset from which start returned results
+      required: false
+      schema:
+        type: integer
+        default: 0
+        minimum: 0
+        example: 0
+  schemas:
+    Pagination:
+      type: object
+      title: Pagination
+      properties:
+        offset:
+          type: integer
+          description: the data items would be fetched from the user input offset point
+          example: 0
+        limit:
+          type: integer
+          description: max number of data items that can be fetched in current request
+          example: 20
+          default: 20
+        total:
+          type: integer
+          description: total number of data items available
+          example: 50
+        previous:
+          type: string
+          description: Url to fetch previous set of paginated data
+          example: "/resourceManager/v2/organizations/search?orgLike=Micro&offset=0&limit=20"
+        next:
+          type: string
+          description: Url to fetch next set of paginated data
+          example: "/resourceManager/v2/organizations/search?orgLike=Micro&offset=10&limit=40"
+    ErrorModelList:
+      type: array
+      description: List of error message
+      items:
+        $ref: "#/components/schemas/ErrorModel"
+    ErrorModel:
+      type: object
+      properties:
+        errorCode:
+          type: string
+          example: EQ-1301100
+        errorMessage:
+          type: string
+          example: Error message
+        correlationId:
+          type: string
+          example: '123456789'
+        details:
+          type: string
+        help:
+          type: string
+        additionalInfo:
+          type: array
+          items:
+            type: object
+            additionalProperties:
+               type: string
+      required:
+        - errorCode
+        - errorMessage
+        - correlationId
+    ProjectV2PaginatedResponse:
+        type: object
+        properties:
+          pagination:
+            allOf:
+              - $ref: '#/components/schemas/Pagination'
+              - type: object
+                properties:
+                  previous:
+                    example: "/resourceManager/v2/projects?offset=0&limit=20"
+                  next:
+                    example: "/resourceManager/v2/projects?offset=10&limit=20"
+          data:
+            type: array
+            items:
+              $ref: '#/components/schemas/ProjectV2Response'
+      
+    ProjectV2Response:
+      type: object
+      properties:
+        projectId:
+          type: string
+          example: '1234'
+          description: Project id
+        projectName:
+          type: string
+          example: Default project
+          description: Project name
+        inboxResource:
+          type: boolean
+          example: true
+          description: Inbox project or not
+        parentOrganizationId:
+          type: string
+          example: '1234'
+          description: Parent organization id
+        labels:
+          type: object
+          example:
+            application: Network Edge
+          description: 'Resource Labels as JSON key, value pairs'
+          additionalProperties:
+            type: string
+        silentProject:
+          type: boolean
+          example: true
+          description: Whether the returned project is a SILENT project or not
+        permissions:
+          type: array
+          description: Available user permissions on the project resource, if requested by query param
+          items:
+            type: object
+            properties:
+              actions:
+                type: array
+                description: Permission
+                items:
+                  type: string
+                example:
+                  - resourcemanager.project.read
+                  - fabric.l3connection.create
+              resourceType:
+                type: string
+                description: Resource type
+                example: L2_CONNECTION
+tags:
+  - name: Project
+    description: Project related APIs
+paths:
+  /resourceManager/v2/projects:
+    get:
+      tags:
+        - Project
+      summary: To retrieve projects of a root organization
+      description: To get projects associated to a root organization based on the user permissions
+      operationId: getAllProjects
+      parameters:
+        - name: includePermissions
+          in: query
+          description: whether to include the user permissions on the project resource
+          example: false
+          required: false
+          schema:
+            type: boolean
+            default: false
+        - name: includeInbox
+          in: query
+          description: Whether to include the projects with inbox classification or not
+          required: false
+          example: false
+          schema:
+            type: boolean
+            default: false
+        - $ref: "#/components/parameters/limitParam"
+        - $ref: "#/components/parameters/offsetParam"
+      responses:
+        "200":
+          description: List of projects
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProjectV2PaginatedResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModelList'
+              examples:
+                invalidProperty:
+                  value:
+                    - errorCode: EQ-1301115
+                      errorMessage: 'A bad request; generally, one or more parameters passed in were incorrect or missing.'
+                      correlationId: f3f7c8ea-3de0-48ae-b95d-45e0c15e3eb3
+                      additionalInfo:  
+                        - timestamp : 2020-09-17T22:39:26.839Z
+        "401":
+          description: Unauthorized 
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModelList'
+              examples:
+                invalidProperty:
+                  value:
+                    - errorCode: EQ-1301116
+                      errorMessage: You are not authorized to view the resource.
+                      correlationId: f3f7c8ea-3de0-48ae-b95d-45e0c15e3eb3
+                      additionalInfo:  
+                        - timestamp : 2020-09-17T22:39:26.839Z
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModelList'
+              examples:
+                invalidProperty:
+                  value:
+                    - errorCode: EQ-1301117
+                      errorMessage: Forbidden Access Error.
+                      correlationId: f3f7c8ea-3de0-48ae-b95d-45e0c15e3eb3
+                      additionalInfo:  
+                        - timestamp : 2020-09-17T22:39:26.839Z
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorModelList'
+              examples:
+                invalidProperty:
+                  value:
+                    - errorCode: EQ-1301119
+                      errorMessage: 'Some internal server error occurred while processing the request, please contact Equinix support for more details.'
+                      correlationId: f3f7c8ea-3de0-48ae-b95d-45e0c15e3eb3
+                      additionalInfo:  
+                        - timestamp : 2020-09-17T22:39:26.839Z
+      deprecated: false

@@ -54,12 +54,12 @@ import static org.mockito.Mockito.when;
  * label-null-safety fixes:
  *
  * <ul>
- *   <li>a customer metro with ZERO analyzed-ASN presence is excluded from blast scoring —
+ *   <li>a customer metro with ZERO analyzed-ASN presence is excluded from blast scoring - 
  *       having nothing at a site must never score as perfect resilience;</li>
  *   <li>failover paths are RANKED (diversity desc, capacity desc, route server) instead of
  *       leaking PeeringDB iteration order;</li>
  *   <li>one peering opportunity per (target ASN, IX) with capacity aggregated across parallel
- *       sessions — no duplicates per netixlan row;</li>
+ *       sessions - no duplicates per netixlan row;</li>
  *   <li>blast-radius labels are null-safe for {@code addAsn(long)} targets registered without
  *       a label (the request map stores a null VALUE, so getOrDefault returned null).</li>
  * </ul>
@@ -96,7 +96,7 @@ class PeeringResiliencyAndOpportunityFixesTest {
             // DC impact is total (1/1); ZZ has NOTHING to lose and must be excluded, so the blast
             // factor is 1 - 1.0 = 0. With one HIGH correlation (-0.1), unknown-diversity neutral
             // (0.5 x 0.3) and the +0.2 base: 0*0.5 + 0.15 - 0.1 + 0.2 = 0.25. The pre-fix code
-            // averaged ZZ's 0 impact in (blast factor 0.5) and yielded 0.5 — rewarding absence.
+            // averaged ZZ's 0 impact in (blast factor 0.5) and yielded 0.5 - rewarding absence.
             assertEquals(0.25, resiliency.getOverallScore(), 1e-9,
                     "the empty ZZ metro must not dilute (improve) the blast score");
 
@@ -163,7 +163,7 @@ class PeeringResiliencyAndOpportunityFixesTest {
         @DisplayName("at equal diversity, capacity ranks first and route-server availability breaks the last tie")
         void rankedByCapacityThenRouteServer() {
             // AA/BB/CC share identical coordinates (identical diversity from DC). Sessions are
-            // inserted AA(10G, no RS), CC(10G, RS), BB(40G, no RS) — expected BB, CC, AA.
+            // inserted AA(10G, no RS), CC(10G, RS), BB(40G, no RS) - expected BB, CC, AA.
             StubClient stub = StubClient.tiedDiversityPresence();
             PeeringRequest request = PeeringRequest.builder()
                     .targetAsns(Map.of(TARGET, "AWS"))
@@ -208,7 +208,7 @@ class PeeringResiliencyAndOpportunityFixesTest {
 
             List<PeeringOpportunity> opportunities = result.getPeeringOpportunities();
             assertEquals(2, opportunities.size(),
-                    "one opportunity per shared IX — two parallel ports at Ashburn must not duplicate");
+                    "one opportunity per shared IX - two parallel ports at Ashburn must not duplicate");
 
             PeeringOpportunity ashburn = opportunities.stream()
                     .filter(o -> o.getIxId() == 100).findFirst().orElseThrow();

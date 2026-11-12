@@ -75,6 +75,29 @@ class IBXSmartViewPowerEventsWireMockTest extends WireMockTestBase {
     }
 
     @Test
+    @DisplayName("search() reads the live {data, pagination{offset,limit,total}} page shape")
+    void powerEventsLiveShape() {
+        // Shape observed live 2026-11-11 (the spec documents items/limit/offset/totalCount); values synthetic.
+        wireMock.stubFor(get(urlPathEqualTo("/dcim/v3/powerEvents/search"))
+                .withQueryParam("offset", equalTo("0"))
+                .willReturn(okJson("{\"data\":[{\"id\":7,\"status\":\"ACTIVE\"}],"
+                        + "\"pagination\":{\"offset\":0,\"limit\":1,\"total\":2}}")));
+        wireMock.stubFor(get(urlPathEqualTo("/dcim/v3/powerEvents/search"))
+                .withQueryParam("offset", equalTo("1"))
+                .willReturn(okJson("{\"data\":[{\"id\":8}],"
+                        + "\"pagination\":{\"offset\":1,\"limit\":1,\"total\":2}}")));
+
+        PaginatedList<PowerEvent> events = ibxSmartView.powerEvents().search(null, null, null, 0, 1);
+        assertEquals(1, events.size());
+        assertEquals(7L, events.get(0).getId());
+        assertTrue(events.hasNextPage());
+
+        events.loadAll();
+        assertEquals(2, events.size());
+        assertEquals(8L, events.get(1).getId());
+    }
+
+    @Test
     @DisplayName("searchAlertConfigurations().loadAll() pages the nested response without ClassCastException")
     void alertConfigurationsLoadAll() {
         wireMock.stubFor(get(urlPathEqualTo("/dcim/v3/powerEvents/configurations/search"))

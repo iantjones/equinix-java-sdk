@@ -23,7 +23,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
  * Trust status of an OIDC identity provider (STS v1 spec schema {@code ProviderStatus}):
  * {@code ENABLED} means token exchange is enabled, {@code SUSPENDED} means token exchange for ID
  * tokens from this provider is currently disabled. {@link #UNKNOWN} is a read-side fallback for
- * values added after this SDK release — never send it.
+ * values added after this SDK release - never send it.
  */
 public enum ProviderStatus implements APIParam {
     ENABLED,

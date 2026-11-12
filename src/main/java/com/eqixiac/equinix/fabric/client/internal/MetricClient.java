@@ -23,7 +23,6 @@ import com.eqixiac.equinix.fabric.model.implementation.filter.FilterPropertyList
 import com.eqixiac.equinix.fabric.model.implementation.sort.SortPropertyList;
 import com.eqixiac.equinix.fabric.model.json.MetricJson;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -50,16 +49,4 @@ public interface MetricClient<T> extends PageablePost<T> {
      * @return the matching metrics
      */
     List<Metric> getMetricsByName(String name, String value);
-
-    /**
-     * Retrieves metrics for a specific asset ({@code GET /fabric/v4/{asset}/{assetId}/metrics}).
-     *
-     * @param asset the asset type (for example {@code ports}, {@code connections}, or {@code metros})
-     * @param assetId the asset uuid
-     * @param name the metric name (required)
-     * @param fromDateTime optional start of the time range, or {@code null}
-     * @param toDateTime optional end of the time range, or {@code null}
-     * @return the matching metrics for the asset
-     */
-    List<Metric> getMetricsByAssetId(String asset, String assetId, String name, LocalDateTime fromDateTime, LocalDateTime toDateTime);
 }

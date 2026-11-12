@@ -1,0 +1,14 @@
+{
+  "type": "PATCH_PANEL_PORT_LOA",
+  "name": "LOA-Equinix-SV1-2026",
+  "description": "Authorization for patch panel port access to Equinix at SV1",
+  "authorizedProductType": "XC",
+  "issuer": {
+    "email": "user@org2.com",
+    "orgId": 95901,
+    "orgName": "organizationName2"
+  },
+  "location": {
+    "ibxCode": "SV11"
+  }
+}

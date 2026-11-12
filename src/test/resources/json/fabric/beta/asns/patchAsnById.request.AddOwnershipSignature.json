@@ -1,0 +1,7 @@
+[
+  {
+    "op": "replace",
+    "path": "/ownershipChallengeDetails/signature",
+    "value": "MEUCIQCrExampleBase64SignatureValue7h4Yg=="
+  }
+]

@@ -44,7 +44,7 @@
     {
       "type": "VIRTUAL_CONNECTION_PRODUCT",
       "currency": "XYZ",
-      "code": "EVPL_VC_XX_YY_5000",
+      "code": "EVPL_VC_DC_YY_5000",
       "name": "EVPL Virtual Connection 5Gbps (unknown currency)",
       "charges": [
         { "type": "MONTHLY_RECURRING", "price": 500.00 },

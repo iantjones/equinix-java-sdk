@@ -347,8 +347,8 @@ class NetworkEdgeVPNsWireMockTest extends WireMockTestBase {
         @Test
         @DisplayName("re-GETs the VPN and updates the wrapper's state in place")
         void refreshesInPlace() {
-            // First GET returns the original state; the second GET — triggered by
-            // wrapper.refresh() — returns a DIFFERENT payload (renamed config, new peerIp).
+            // First GET returns the original state; the second GET - triggered by
+            // wrapper.refresh() - returns a DIFFERENT payload (renamed config, new peerIp).
             wireMock.stubFor(get(urlPathEqualTo(PATH))
                     .inScenario("vpn-refresh")
                     .whenScenarioStateIs(com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED)

@@ -26,6 +26,10 @@ import com.eqixiac.equinix.networkedge.model.json.creators.BGPPeeringOperator;
  * Client interface for managing BGP peering sessions on Network Edge devices. Provides
  * operations to list, retrieve, and create BGP peering configurations for dynamic routing.
  *
+ * <p><b>Provenance.</b> {@code /ne/v1/bgp*} is not in the published network-edgev1 spec (1.0.0); these
+ * endpoints exist live ({@code GET /ne/v1/bgp} answered HTTP 403 for the validation account (endpoint present, permission missing) on 2026-11-11). Request and response
+ * shapes follow the earlier Network Edge API reference and may change without a spec notice.</p>
+ *
  * @author ianjones
  */
 public interface BGPPeerings {

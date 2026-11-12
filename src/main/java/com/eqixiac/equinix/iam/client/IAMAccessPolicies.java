@@ -28,14 +28,14 @@ import com.eqixiac.equinix.iam.model.json.creators.UpdateAccessPolicyRequest;
  * Client interface for project-scoped IAM access policies and their grants
  * ({@code /v1/projects/{projectId}/accessPolicies}).
  *
- * <p>Provides the access policy lifecycle — list / create / get / update / delete and the
- * enable/disable lifecycle toggles — plus management of the policy's grants (which principals,
+ * <p>Provides the access policy lifecycle - list / create / get / update / delete and the
+ * enable/disable lifecycle toggles - plus management of the policy's grants (which principals,
  * groups or projects the policy is granted to). All operations are scoped to a {@code projectId}.</p>
  *
  * <p><b>ERN addressing.</b> The single-policy operations (get / update / enable / disable / grants)
  * additionally accept the spec's ERN-addressing form, where {@code projectId} is the literal
- * {@code "*"} and {@code accessPolicyId} is an Equinix Resource Name (ERN) — or a managed-policy id
- * — rather than a local {@code accesspolicy:} id. Because an ERN contains reserved characters
+ * {@code "*"} and {@code accessPolicyId} is an Equinix Resource Name (ERN) - or a managed-policy id
+ * - rather than a local {@code accesspolicy:} id. Because an ERN contains reserved characters
  * ({@code :} and {@code /}), the API requires it to be URL-encoded when used as a path segment.
  * This SDK does not provide a dedicated {@code byErn} overload: the shared core path-substitution
  * layer does not percent-encode individual path segments, and adding that encoding would require a
@@ -47,7 +47,10 @@ public interface IAMAccessPolicies {
     /**
      * Lists the access policies of a project (first page).
      *
-     * @param projectId the project identifier
+     * @param projectId the IAM project id, {@code project:<id>} (for example {@code project:abc-123}); a bare
+     *                  Resource Manager UUID is rejected, convert it with {@link ProjectIds#of(String)}.
+     *                  Project-scoped endpoints need an STS access-policy token
+     *                  ({@code new IAM(BearerTokenProvider)})
      * @return the first page of access policies
      */
     AccessPolicyList list(String projectId);
@@ -55,7 +58,10 @@ public interface IAMAccessPolicies {
     /**
      * Lists the access policies of a project, controlling pagination.
      *
-     * @param projectId the project identifier
+     * @param projectId the IAM project id, {@code project:<id>} (for example {@code project:abc-123}); a bare
+     *                  Resource Manager UUID is rejected, convert it with {@link ProjectIds#of(String)}.
+     *                  Project-scoped endpoints need an STS access-policy token
+     *                  ({@code new IAM(BearerTokenProvider)})
      * @param pageToken the opaque page token from a prior response, or {@code null} for the first page
      * @param pageSize the maximum number of results per page, or {@code null} for the server default
      * @return the requested page of access policies
@@ -65,7 +71,10 @@ public interface IAMAccessPolicies {
     /**
      * Creates a new access policy in a project.
      *
-     * @param projectId the project identifier
+     * @param projectId the IAM project id, {@code project:<id>} (for example {@code project:abc-123}); a bare
+     *                  Resource Manager UUID is rejected, convert it with {@link ProjectIds#of(String)}.
+     *                  Project-scoped endpoints need an STS access-policy token
+     *                  ({@code new IAM(BearerTokenProvider)})
      * @param request the access policy to create
      * @return the created access policy
      */
@@ -74,7 +83,10 @@ public interface IAMAccessPolicies {
     /**
      * Retrieves a single access policy by id.
      *
-     * @param projectId the project identifier
+     * @param projectId the IAM project id, {@code project:<id>} (for example {@code project:abc-123}); a bare
+     *                  Resource Manager UUID is rejected, convert it with {@link ProjectIds#of(String)}.
+     *                  Project-scoped endpoints need an STS access-policy token
+     *                  ({@code new IAM(BearerTokenProvider)})
      * @param accessPolicyId the access policy identifier
      * @return the matching access policy
      */
@@ -83,7 +95,10 @@ public interface IAMAccessPolicies {
     /**
      * Updates an access policy.
      *
-     * @param projectId the project identifier
+     * @param projectId the IAM project id, {@code project:<id>} (for example {@code project:abc-123}); a bare
+     *                  Resource Manager UUID is rejected, convert it with {@link ProjectIds#of(String)}.
+     *                  Project-scoped endpoints need an STS access-policy token
+     *                  ({@code new IAM(BearerTokenProvider)})
      * @param accessPolicyId the access policy identifier
      * @param request the update (the request's {@code lastRev} guards against concurrent updates)
      * @return the updated access policy
@@ -96,7 +111,10 @@ public interface IAMAccessPolicies {
      * <p>The spec requires the policy's last-known revision in the request body for
      * optimistic-concurrency-controlled deletion.</p>
      *
-     * @param projectId the project identifier
+     * @param projectId the IAM project id, {@code project:<id>} (for example {@code project:abc-123}); a bare
+     *                  Resource Manager UUID is rejected, convert it with {@link ProjectIds#of(String)}.
+     *                  Project-scoped endpoints need an STS access-policy token
+     *                  ({@code new IAM(BearerTokenProvider)})
      * @param accessPolicyId the access policy identifier
      * @param lastRev the last-known revision of the policy (required; from {@link AccessPolicy#getRev()})
      * @return {@code true} if the deletion request was accepted
@@ -106,7 +124,10 @@ public interface IAMAccessPolicies {
     /**
      * Enables a previously disabled access policy.
      *
-     * @param projectId the project identifier
+     * @param projectId the IAM project id, {@code project:<id>} (for example {@code project:abc-123}); a bare
+     *                  Resource Manager UUID is rejected, convert it with {@link ProjectIds#of(String)}.
+     *                  Project-scoped endpoints need an STS access-policy token
+     *                  ({@code new IAM(BearerTokenProvider)})
      * @param accessPolicyId the access policy identifier
      * @param lastRev the last-known revision of the policy (for concurrency control), or {@code null}
      * @return the updated access policy
@@ -116,7 +137,10 @@ public interface IAMAccessPolicies {
     /**
      * Disables an access policy.
      *
-     * @param projectId the project identifier
+     * @param projectId the IAM project id, {@code project:<id>} (for example {@code project:abc-123}); a bare
+     *                  Resource Manager UUID is rejected, convert it with {@link ProjectIds#of(String)}.
+     *                  Project-scoped endpoints need an STS access-policy token
+     *                  ({@code new IAM(BearerTokenProvider)})
      * @param accessPolicyId the access policy identifier
      * @param lastRev the last-known revision of the policy (for concurrency control), or {@code null}
      * @return the updated access policy
@@ -126,7 +150,10 @@ public interface IAMAccessPolicies {
     /**
      * Lists the grants of an access policy (first page).
      *
-     * @param projectId the project identifier
+     * @param projectId the IAM project id, {@code project:<id>} (for example {@code project:abc-123}); a bare
+     *                  Resource Manager UUID is rejected, convert it with {@link ProjectIds#of(String)}.
+     *                  Project-scoped endpoints need an STS access-policy token
+     *                  ({@code new IAM(BearerTokenProvider)})
      * @param accessPolicyId the access policy identifier
      * @return the first page of grants
      */
@@ -135,7 +162,10 @@ public interface IAMAccessPolicies {
     /**
      * Lists the grants of an access policy, controlling pagination.
      *
-     * @param projectId the project identifier
+     * @param projectId the IAM project id, {@code project:<id>} (for example {@code project:abc-123}); a bare
+     *                  Resource Manager UUID is rejected, convert it with {@link ProjectIds#of(String)}.
+     *                  Project-scoped endpoints need an STS access-policy token
+     *                  ({@code new IAM(BearerTokenProvider)})
      * @param accessPolicyId the access policy identifier
      * @param pageToken the opaque page token from a prior response, or {@code null} for the first page
      * @param pageSize the maximum number of results per page, or {@code null} for the server default
@@ -146,7 +176,10 @@ public interface IAMAccessPolicies {
     /**
      * Adds a grant to an access policy.
      *
-     * @param projectId the project identifier
+     * @param projectId the IAM project id, {@code project:<id>} (for example {@code project:abc-123}); a bare
+     *                  Resource Manager UUID is rejected, convert it with {@link ProjectIds#of(String)}.
+     *                  Project-scoped endpoints need an STS access-policy token
+     *                  ({@code new IAM(BearerTokenProvider)})
      * @param accessPolicyId the access policy identifier
      * @param request the grant to add (the grantee and optional {@code lastRev})
      * @return the created grant
@@ -156,7 +189,10 @@ public interface IAMAccessPolicies {
     /**
      * Removes a grant from an access policy.
      *
-     * @param projectId the project identifier
+     * @param projectId the IAM project id, {@code project:<id>} (for example {@code project:abc-123}); a bare
+     *                  Resource Manager UUID is rejected, convert it with {@link ProjectIds#of(String)}.
+     *                  Project-scoped endpoints need an STS access-policy token
+     *                  ({@code new IAM(BearerTokenProvider)})
      * @param accessPolicyId the access policy identifier
      * @param grantId the grant identifier
      * @return {@code true} if the removal request was accepted

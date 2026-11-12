@@ -18,14 +18,16 @@ package com.eqixiac.equinix.core.waiter;
 
 import org.junit.jupiter.api.Test;
 
+import com.eqixiac.equinix.core.ManualClock;
+
 import java.time.Duration;
-import java.util.concurrent.TimeUnit;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ResourceWaiterTest {
 
@@ -78,18 +80,39 @@ class ResourceWaiterTest {
     void timeoutIsNotOverrunByAFullPollInterval() {
         // Timeout far smaller than the poll interval: the final sleep must be clamped to the
         // remaining budget instead of sleeping the whole interval past the deadline.
-        long startNanos = System.nanoTime();
+        ManualClock clock = new ManualClock();
+        List<Long> sleeps = new ArrayList<>();
 
         assertThrows(WaiterTimeoutException.class, () ->
                 ResourceWaiter.forResource(() -> "PROVISIONING")
                         .until("PROVISIONED"::equals)
                         .timeout(Duration.ofMillis(100))
                         .pollInterval(Duration.ofSeconds(30))
+                        .clock(clock)
+                        .sleeper(ms -> { sleeps.add(ms); clock.advanceMillis(ms); })
                         .await());
 
-        long elapsedMillis = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNanos);
-        assertTrue(elapsedMillis < 5_000,
-                "await() slept " + elapsedMillis + "ms for a 100ms timeout; the last sleep must be clamped to the remaining budget");
+        assertEquals(List.of(100L), sleeps, "the only sleep must be clamped to the 100ms budget");
+    }
+
+    @Test
+    void pollsOnTheIntervalUntilTheTimeoutElapses() {
+        ManualClock clock = new ManualClock();
+        AtomicInteger calls = new AtomicInteger();
+        List<Long> sleeps = new ArrayList<>();
+
+        assertThrows(WaiterTimeoutException.class, () ->
+                ResourceWaiter.forResource(() -> { calls.incrementAndGet(); return "PROVISIONING"; })
+                        .until("PROVISIONED"::equals)
+                        .timeout(Duration.ofSeconds(25))
+                        .pollInterval(Duration.ofSeconds(10))
+                        .clock(clock)
+                        .sleeper(ms -> { sleeps.add(ms); clock.advanceMillis(ms); })
+                        .await());
+
+        // Fetches at t=0, 10s, 20s, 25s; sleeps 10s, 10s, then the clamped 5s.
+        assertEquals(List.of(10_000L, 10_000L, 5_000L), sleeps);
+        assertEquals(4, calls.get());
     }
 
     @Test

@@ -27,7 +27,6 @@ import com.eqixiac.equinix.networkedge.enums.ACLInterfaceType;
 import com.eqixiac.equinix.networkedge.enums.Connectivity;
 import com.eqixiac.equinix.networkedge.enums.DeviceManagementType;
 import com.eqixiac.equinix.networkedge.enums.DeviceStatus;
-import com.eqixiac.equinix.networkedge.enums.IPAssignment;
 import com.eqixiac.equinix.networkedge.enums.LicenseType;
 import com.eqixiac.equinix.networkedge.enums.SSHUserAction;
 import com.eqixiac.equinix.networkedge.model.ACLTemplate;
@@ -96,7 +95,6 @@ public class DeviceOperator extends ResourceImpl<Device> {
         private String orderingContact;
         private List<ACLDetail> aclDetails;
         private String siteId;
-        private IPAssignment ipType;
         private String systemIpAddress;
         private Integer sshInterfaceId;
         private Integer interfaceCount;
@@ -312,11 +310,6 @@ public class DeviceOperator extends ResourceImpl<Device> {
 
         public DeviceBuilder withSiteId(String siteId) {
             this.siteId = siteId;
-            return this;
-        }
-
-        public DeviceBuilder withIpType(IPAssignment ipType) {
-            this.ipType = ipType;
             return this;
         }
 

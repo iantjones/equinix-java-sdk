@@ -77,7 +77,7 @@ public class NetworkClientImpl extends ResourceClientBase<Network, NetworkJson> 
     }
 
     public NetworkJson create(NetworkCreatorJson networkCreatorJson) {
-        // apiParams names this operation PostNetwork (not CreateNetwork) — explicit.
+        // apiParams names this operation PostNetwork (not CreateNetwork) - explicit.
         return postOne("PostNetwork", networkCreatorJson);
     }
 
@@ -96,6 +96,8 @@ public class NetworkClientImpl extends ResourceClientBase<Network, NetworkJson> 
     }
 
     public NetworkJson update(String uuid, List<PatchOperation> operations) {
+        // json-patch+json (spec). Live 2026-11-12 on an own sdk-probe network: json-patch+json 200;
+        // application/json 400 EQ-3152006 "Media type not supported".
         return patchOne("UpdateNetwork", uuid, operations);
     }
 

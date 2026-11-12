@@ -1,0 +1,1627 @@
+{
+    "openapi": "3.0.0",
+    "x-eqx-api-linter-skip-rules": [
+        3,
+        24
+    ],
+    "info": {
+        "title": "Tickets",
+        "description": "Tickets should be entered for requests that require an immediate response based on interruption or loss of your service. If the service loss or interruption was caused by Equinix, it will not incur any charges. If the issue was not caused by Equinix, there will be additional Smart Hands charges.",
+        "version": "2.0-beta",
+        "termsOfService": "https://www.equinix.com/about/legal/terms",
+        "contact": {
+            "name": "Equinix API Support",
+            "url": "https://docs.equinix.com/api-support.htm"
+        }
+    },
+    "servers": [
+        {
+            "url": "https://api.equinix.com"
+        },
+        {
+            "url": "https://sandboxapi.equinix.com"
+        }
+    ],
+    "tags": [
+        {
+            "name": "Tickets",
+            "description": "Tickets"
+        }
+    ],
+    "paths": {
+        "/v2/tickets": {
+            "post": {
+                "tags": [
+                    "Tickets"
+                ],
+                "summary": "Create a Ticket",
+                "operationId": "Create a Ticket",
+                "description": "This method creates a ticket at locations where a user has trouble ticket ordering permission.",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Tickets_Create"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "headers": {
+                            "Location": {
+                                "description": "Location of a ticket.",
+                                "schema": {
+                                    "type": "string"
+                                },
+                                "example": "/tickets/1-23232322"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                },
+                                "example": [
+                                    {
+                                        "errorCode": "EQ-2019025",
+                                        "errorMessage": "Selected value is not in allowed list of values",
+                                        "correlationId": "100087013727518",
+                                        "additionalInfo": [
+                                            {
+                                                "property": "code",
+                                                "reason": "Selected code is invalid. Allowed list is 0000-0000, 0000-0001, 0000-0002, 0001-0000, 0001-0001, 0001-0002, 0001-0003, 0002-0000, 0002-0001, 0003-0000, 0003-0001, 0003-0002, 0003-0003, 0004-0000, 0005-0000, 0005-0001, 0007-0000, 0007-0001, 0007-0002, 0007-0003, 0007-0004, 0008-0000, 0008-0001, 0008-0002, 0008-0003, 0008-0004, 0008-0005, 0008-0006, 0008-0007, 0008-0008, 0008-0009, 0008-0010",
+                                                "value": "0000-00001231"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                },
+                                "example": [
+                                    {
+                                        "errorCode": "EQ-2019006",
+                                        "errorMessage": "Permission denied to place the ticket",
+                                        "correlationId": "100087008963544",
+                                        "additionalInfo": [
+                                            {
+                                                "property": "primaryId/secondaryId",
+                                                "reason": "primaryId or combination of primaryId and secondaryId is not valid",
+                                                "value": {
+                                                    "primaryId": "PP:0000:000000"
+                                                }
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                },
+                                "example": [
+                                    {
+                                        "errorCode": "EQ-2019030",
+                                        "errorMessage": "The server has encountered an unexpected exception. We apologize for the inconvenience and suggest trying again later.",
+                                        "correlationId": "200929150051795"
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v2/tickets/{id}": {
+            "get": {
+                "tags": [
+                    "Tickets"
+                ],
+                "summary": "Retrieve a ticket",
+                "operationId": "Retrieve a ticket",
+                "description": "This method retrieves a ticket by its ID for a user with permission to view this request.",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Identifier of the ticket.",
+                        "required": true,
+                        "style": "simple",
+                        "explode": false,
+                        "schema": {
+                            "maximum": 100,
+                            "minimum": 1,
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Ok",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Tickets"
+                                },
+                                "example": [
+                                    {
+                                        "category": "Network",
+                                        "subCategory": "General Network connectivity  Issue",
+                                        "description": "None",
+                                        "primaryId": "SG0:00:000000",
+                                        "occurredDateTime": "2020-12-12T18:17:04.000Z",
+                                        "id": "1-20001234567",
+                                        "resolutionDateTime": "2020-12-12T18:19:44Z",
+                                        "resolutions": [
+                                            {
+                                                "id": "5-20001234567",
+                                                "type": "Trouble",
+                                                "status": "Resolved - Equinix Caused"
+                                            }
+                                        ],
+                                        "status": "CLOSED",
+                                        "contacts": [
+                                            {
+                                                "registeredUser": "john_doe",
+                                                "firstName": "John",
+                                                "lastName": "Doe",
+                                                "type": "ORDERING",
+                                                "details": [
+                                                    {
+                                                        "value": "john.doe1@example.com",
+                                                        "type": "EMAIL"
+                                                    },
+                                                    {
+                                                        "value": "+65-65006500",
+                                                        "type": "PHONE"
+                                                    }
+                                                ]
+                                            },
+                                            {
+                                                "registeredUser": null,
+                                                "firstName": "John",
+                                                "lastName": "Doe",
+                                                "type": "TECHNICAL",
+                                                "details": [
+                                                    {
+                                                        "value": "john.doe@example.com",
+                                                        "type": "EMAIL"
+                                                    },
+                                                    {
+                                                        "value": "+65-65006500",
+                                                        "type": "PHONE"
+                                                    },
+                                                    {
+                                                        "type": "MOBILE"
+                                                    }
+                                                ]
+                                            },
+                                            {
+                                                "registeredUser": "john_doe1",
+                                                "firstName": "John",
+                                                "lastName": "Doe",
+                                                "type": "ORDERING",
+                                                "details": [
+                                                    {
+                                                        "value": "john.doe@example.com",
+                                                        "type": "EMAIL"
+                                                    },
+                                                    {
+                                                        "value": "+65-65006500",
+                                                        "type": "PHONE"
+                                                    },
+                                                    {
+                                                        "value": "+65-65006500",
+                                                        "type": "MOBILE"
+                                                    }
+                                                ]
+                                            }
+                                        ],
+                                        "notes": [
+                                            {
+                                                "id": "1-2ABCDE0",
+                                                "createdDateTime": "2020-12-12T19:17:31Z",
+                                                "text": "Hi APNOC,\n\nAs per our site survey and correspondence with Sasee, the correct CID should be SR# not SR#-A.\n\nWe have replaced the XFP and the port is UP on .SG0. (Refer to attached images)",
+                                                "referenceId": "5-203475893464",
+                                                "author": "Equinix Support",
+                                                "type": "TECHNICIAN_QUERY",
+                                                "attachments": [
+                                                    {
+                                                        "id": "d86a88b9-bdd5-4f08-94b5-a3fe8a11e763",
+                                                        "name": "SR#  - 1-7-2 - port up.jpg"
+                                                    },
+                                                    {
+                                                        "id": "0651425c-5212-4d63-a35f-7a807d0000ac",
+                                                        "name": "SR# -  1-7-2 - port down.jpg"
+                                                    },
+                                                    {
+                                                        "id": "461dad9c-a746-4fff-9d26-5bcc8c719830",
+                                                        "name": "SR#  - 1-7-2 - faulty XFP.jpg"
+                                                    }
+                                                ]
+                                            }
+                                        ],
+                                        "details": {
+                                            "callFromCage": false,
+                                            "availability": "ANYTIME"
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                },
+                                "example": [
+                                    {
+                                        "errorCode": "EQ-2019005",
+                                        "errorMessage": "Unable to access or locate ticket",
+                                        "correlationId": "200929150051795"
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                },
+                                "example": [
+                                    {
+                                        "errorCode": "EQ-2019030",
+                                        "errorMessage": "The server has encountered an unexpected exception. We apologize for the inconvenience and suggest trying again later.",
+                                        "correlationId": "200929150051795"
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "tags": [
+                    "Tickets"
+                ],
+                "operationId": "Update a ticket",
+                "summary": "Update a Ticket",
+                "description": "This method updates a ticket by its ID for a user with permission to view this request.",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Identifier of the ticket.",
+                        "required": true,
+                        "style": "simple",
+                        "explode": false,
+                        "schema": {
+                            "maxLength": 100,
+                            "minLength": 1,
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "description": "The ticket to be updated",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Tickets_Modify"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "202": {
+                        "description": "Accepted",
+                        "headers": {
+                            "Location": {
+                                "description": "Location of a ticket.",
+                                "schema": {
+                                    "type": "string"
+                                },
+                                "example": "/tickets/1-23232322"
+                            }
+                        }
+                    },
+                    "204": {
+                        "description": "No Content",
+                        "headers": {
+                            "Location": {
+                                "description": "Location of a ticket.",
+                                "schema": {
+                                    "type": "string"
+                                },
+                                "example": "/tickets/1-23232322"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                },
+                                "example": [
+                                    {
+                                        "errorCode": "EQ-2019011",
+                                        "errorMessage": "Missing mandatory fields/properties",
+                                        "correlationId": "100087070263603",
+                                        "additionalInfo": [
+                                            {
+                                                "property": "contacts",
+                                                "reason": "contacts is required"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                },
+                                "example": [
+                                    {
+                                        "errorCode": "EQ-2019005",
+                                        "errorMessage": "Unable to access or locate ticket",
+                                        "correlationId": "200929150051795"
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                },
+                                "example": [
+                                    {
+                                        "errorCode": "EQ-2019030",
+                                        "errorMessage": "The server has encountered an unexpected exception. We apologize for the inconvenience and suggest trying again later.",
+                                        "correlationId": "200929150051795"
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v2/tickets/{id}/notes": {
+            "post": {
+                "tags": [
+                    "Tickets"
+                ],
+                "operationId": "Add notes to ticket",
+                "summary": "Add notes to ticket",
+                "description": "This method adds notes to a ticket by its ID for a user with permission to view this request.",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Identifier of the ticket",
+                        "required": true,
+                        "style": "simple",
+                        "explode": false,
+                        "schema": {
+                            "maxLength": 100,
+                            "minLength": 1,
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "description": "Add a note",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/NoteRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "headers": {
+                            "Location": {
+                                "description": "Location of a ticket",
+                                "schema": {
+                                    "type": "string"
+                                },
+                                "example": "/tickets/1-23232322"
+                            }
+                        }
+                    },
+                    "202": {
+                        "description": "Accepted",
+                        "headers": {
+                            "Location": {
+                                "description": "Location of a ticket",
+                                "schema": {
+                                    "type": "string"
+                                },
+                                "example": "/tickets/1-23232322"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                },
+                                "example": [
+                                    {
+                                        "errorCode": "EQ-2019011",
+                                        "errorMessage": "Missing mandatory fields/properties",
+                                        "correlationId": "100087087431624",
+                                        "additionalInfo": [
+                                            {
+                                                "property": "text",
+                                                "reason": "text is required"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                },
+                                "example": [
+                                    {
+                                        "errorCode": "EQ-2019005",
+                                        "errorMessage": "Unable to access or locate ticket",
+                                        "correlationId": "200929150051795"
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                },
+                                "example": [
+                                    {
+                                        "errorCode": "EQ-2019030",
+                                        "errorMessage": "The server has encountered an unexpected exception. We apologize for the inconvenience and suggest trying again later.",
+                                        "correlationId": "200929150051795"
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v2/tickets/{id}/cancel": {
+            "post": {
+                "tags": [
+                    "Tickets"
+                ],
+                "operationId": "Cancel a ticket",
+                "summary": "Cancel a ticket",
+                "description": "This method cancels a ticket by its ID for a user with permission to view this request.",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Identifier of the ticket.",
+                        "required": true,
+                        "style": "simple",
+                        "explode": false,
+                        "schema": {
+                            "maxLength": 100,
+                            "minLength": 1,
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "description": "The ticket to be cancelled.",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Tickets_Cancel"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "202": {
+                        "description": "Accepted",
+                        "headers": {
+                            "Location": {
+                                "description": "Location of a ticket",
+                                "schema": {
+                                    "type": "string"
+                                },
+                                "example": "/tickets/1-23232322"
+                            }
+                        }
+                    },
+                    "204": {
+                        "description": "No Content",
+                        "headers": {
+                            "Location": {
+                                "description": "Location of a ticket",
+                                "schema": {
+                                    "type": "string"
+                                },
+                                "example": "/tickets/1-23232322"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                },
+                                "example": [
+                                    {
+                                        "errorCode": "EQ-2019011",
+                                        "errorMessage": "Missing mandatory fields/properties",
+                                        "correlationId": "100087106961325",
+                                        "additionalInfo": [
+                                            {
+                                                "property": "reason",
+                                                "reason": "reason is required"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                },
+                                "example": [
+                                    {
+                                        "errorCode": "EQ-2019005",
+                                        "errorMessage": "Unable to access or locate ticket",
+                                        "correlationId": "200929150051795"
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                },
+                                "example": [
+                                    {
+                                        "errorCode": "EQ-2019030",
+                                        "errorMessage": "The server has encountered an unexpected exception. We apologize for the inconvenience and suggest trying again later.",
+                                        "correlationId": "200929150051795"
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "securitySchemes": {
+            "BearerAuth": {
+                "type": "http",
+                "scheme": "bearer",
+                "bearerFormat": "JWT"
+            }
+        },
+        "schemas": {
+            "Tickets": {
+                "type": "object",
+                "properties": {
+                    "category": {
+                        "maxLength": 100,
+                        "minLength": 10,
+                        "type": "string",
+                        "description": "Tickets Category.",
+                        "example": "Network"
+                    },
+                    "subCategory": {
+                        "maxLength": 100,
+                        "minLength": 10,
+                        "type": "string",
+                        "description": "Tickets Sub Category.",
+                        "example": "NE Connectivity Issue"
+                    },
+                    "description": {
+                        "maxLength": 4000,
+                        "minLength": 10,
+                        "type": "string",
+                        "description": "Description of the trouble or issue.",
+                        "example": "Trouble Descriptions of network connections"
+                    },
+                    "primaryId": {
+                        "maxLength": 100,
+                        "minLength": 10,
+                        "type": "string",
+                        "description": "Primary reference identifier associated with the troubled asset, such as cage identifier.",
+                        "example": "AM0:000:00000"
+                    },
+                    "occurredDateTime": {
+                        "type": "string",
+                        "description": "Date and time the issue occurred.",
+                        "format": "date-time"
+                    },
+                    "id": {
+                        "maxLength": 20,
+                        "minLength": 10,
+                        "type": "string",
+                        "description": "Unique identifier of the ticket.",
+                        "example": "1-9808089098"
+                    },
+                    "secondaryId": {
+                        "maxLength": 100,
+                        "minLength": 10,
+                        "type": "string",
+                        "description": "Secondary reference identifier associated with the troubled asset.",
+                        "example": "AM0:000:00000:000"
+                    },
+                    "customerReferenceId": {
+                        "maxLength": 100,
+                        "minLength": 10,
+                        "type": "string",
+                        "description": "Customer Reference Number / External Reference Number.",
+                        "example": "External Reference Number"
+                    },
+                    "resolutionDateTime": {
+                        "type": "string",
+                        "description": "The resolution date and time",
+                        "format": "date-time"
+                    },
+                    "resolutions": {
+                        "type": "array",
+                        "description": "Resolution Details.",
+                        "items": {
+                            "$ref": "#/components/schemas/Resolutions"
+                        }
+                    },
+                    "status": {
+                        "type": "string",
+                        "description": "The current status of the ticket.",
+                        "enum": [
+                            "RECEIVED",
+                            "IN_PROGRESS",
+                            "ON_HOLD",
+                            "CLOSED",
+                            "CANCELLED"
+                        ]
+                    },
+                    "details": {
+                        "description": "List of additional details or requirements to support ticket resolution, depending on the trouble category you are facing.",
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/LAYER1_0000_XXXX"
+                            },
+                            {
+                                "$ref": "#/components/schemas/NETWORK_0001_XXXX"
+                            },
+                            {
+                                "$ref": "#/components/schemas/POWER_0002_XXXX"
+                            },
+                            {
+                                "$ref": "#/components/schemas/ENVIRONMENT_0003_XXXX"
+                            },
+                            {
+                                "$ref": "#/components/schemas/HARDWARE_0004_XXXX"
+                            },
+                            {
+                                "$ref": "#/components/schemas/SECURITY_0005_XXXX"
+                            },
+                            {
+                                "$ref": "#/components/schemas/MANAGED_SERVICE_0006_XXXX"
+                            },
+                            {
+                                "$ref": "#/components/schemas/SMARTVIEW_0007_XXXX"
+                            },
+                            {
+                                "$ref": "#/components/schemas/SMARTKEY_0008XXXX"
+                            },
+                            {
+                                "$ref": "#/components/schemas/BILLING_0010XXXX"
+                            },
+                            {
+                                "$ref": "#/components/schemas/METROCONNECT_0012_XXXX"
+                            }
+                        ]
+                    },
+                    "notes": {
+                        "type": "array",
+                        "description": "The note(s) that are associated to the ticket.",
+                        "items": {
+                            "$ref": "#/components/schemas/Note"
+                        }
+                    },
+                    "attachments": {
+                        "maxItems": 5,
+                        "type": "array",
+                        "description": "File(s) attached to the ticket",
+                        "items": {
+                            "$ref": "#/components/schemas/Attachment"
+                        }
+                    },
+                    "contacts": {
+                        "type": "array",
+                        "description": "List of persons who will be contacted for this ticket.",
+                        "items": {
+                            "$ref": "#/components/schemas/Contacts"
+                        }
+                    }
+                },
+                "description": "A ticket is a record of an issue in a ticket management system."
+            },
+            "Tickets_Create": {
+                "required": [
+                    "code",
+                    "description",
+                    "occurredDateTime",
+                    "primaryId"
+                ],
+                "type": "object",
+                "properties": {
+                    "code": {
+                        "type": "string",
+                        "description": "Ticket Code.",
+                        "example": "0001-0000",
+                        "enum": [
+                            "0000-0000",
+                            "0000-0001",
+                            "0000-0002",
+                            "0001-0000",
+                            "0001-0001",
+                            "0001-0002",
+                            "0001-0003",
+                            "0002-0000",
+                            "0002-0001",
+                            "0003-0000",
+                            "0003-0001",
+                            "0003-0002",
+                            "0003-0003",
+                            "0004-0000",
+                            "0005-0000",
+                            "0005-0001",
+                            "0007-0000",
+                            "0007-0001",
+                            "0007-0002",
+                            "0007-0003",
+                            "0007-0004",
+                            "0008-0000",
+                            "0008-0001",
+                            "0008-0002",
+                            "0008-0003",
+                            "0008-0004",
+                            "0008-0005",
+                            "0008-0006",
+                            "0008-0007",
+                            "0008-0008",
+                            "0008-0009",
+                            "0008-0010",
+                            "0012-0000",
+                            "0012-0001",
+                            "0012-0002",
+                            "0012-0003",
+                            "0012-0004",
+                            "0012-0005"
+                        ]
+                    },
+                    "description": {
+                        "minLength": 5,
+                        "maxLength": 4000,
+                        "type": "string",
+                        "description": "Description of the trouble or issue.",
+                        "example": "Description of the trouble or issue"
+                    },
+                    "primaryId": {
+                        "type": "string",
+                        "description": "Primary reference identifier.",
+                        "minLength": 1,
+                        "maxLength": 100,
+                        "example": "AM0:000:00000"
+                    },
+                    "occurredDateTime": {
+                        "type": "string",
+                        "description": "Date and time the issue occurred.",
+                        "format": "date-time",
+                        "example": "2020-05-22T19:23:51Z"
+                    },
+                    "secondaryId": {
+                        "type": "string",
+                        "description": "Secondary reference identifier",
+                        "minLength": 1,
+                        "maxLength": 100,
+                        "example": "AM0:000:00000:000"
+                    },
+                    "customerReferenceId": {
+                        "type": "string",
+                        "description": "Customer Reference Number / External Reference Number.",
+                        "minLength": 1,
+                        "maxLength": 40,
+                        "example": "External Reference Number"
+                    },
+                    "attachments": {
+                        "type": "array",
+                        "description": "File(s) attached to the ticket. e.g. picture of broken device, scanned copy of bill or charge. To learn about including attachments in your request, see POST Attachments API.",
+                        "maxItems": 5,
+                        "items": {
+                            "$ref": "#/components/schemas/Attachment"
+                        }
+                    },
+                    "contacts": {
+                        "type": "array",
+                        "description": "List of persons who will be contacted for this ticket.",
+                        "items": {
+                            "oneOf": [
+                                {
+                                    "$ref": "#/components/schemas/ContactRequestRegisteredUser"
+                                },
+                                {
+                                    "$ref": "#/components/schemas/ContactRequestNonRegisteredUser"
+                                }
+                            ]
+                        }
+                    },
+                    "details": {
+                        "description": "List of additional details or requirements to support ticket resolution, depending on the trouble category you are facing.",
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/LAYER1_0000_XXXX"
+                            },
+                            {
+                                "$ref": "#/components/schemas/NETWORK_0001_XXXX"
+                            },
+                            {
+                                "$ref": "#/components/schemas/POWER_0002_XXXX"
+                            },
+                            {
+                                "$ref": "#/components/schemas/ENVIRONMENT_0003_XXXX"
+                            },
+                            {
+                                "$ref": "#/components/schemas/HARDWARE_0004_XXXX"
+                            },
+                            {
+                                "$ref": "#/components/schemas/SECURITY_0005_XXXX"
+                            },
+                            {
+                                "$ref": "#/components/schemas/MANAGED_SERVICE_0006_XXXX"
+                            },
+                            {
+                                "$ref": "#/components/schemas/SMARTVIEW_0007_XXXX"
+                            },
+                            {
+                                "$ref": "#/components/schemas/SMARTKEY_0008XXXX"
+                            },
+                            {
+                                "$ref": "#/components/schemas/BILLING_0010XXXX"
+                            },
+                            {
+                                "$ref": "#/components/schemas/METROCONNECT_0012_XXXX"
+                            }
+                        ]
+                    }
+                },
+                "description": "A ticket is a record of an issue in a ticket management system."
+            },
+            "Tickets_Modify": {
+                "type": "object",
+                "required": [
+                    "contacts"
+                ],
+                "properties": {
+                    "contacts": {
+                        "type": "array",
+                        "description": "List of persons who will be contacted for this ticket.",
+                        "maxItems": 1,
+                        "items": {
+                            "$ref": "#/components/schemas/ContactRequestRegisteredUser_Update"
+                        }
+                    }
+                },
+                "description": "Modifying a ticket"
+            },
+            "Tickets_Cancel": {
+                "type": "object",
+                "required": [
+                    "reason"
+                ],
+                "properties": {
+                    "reason": {
+                        "type": "string",
+                        "description": "Description of the trouble or issue.",
+                        "example": "Duplicate ticket was raised, and issue was already resolved. Refer to ticket id 1-100000000000.",
+                        "minLength": 5,
+                        "maxLength": 4000
+                    },
+                    "attachments": {
+                        "type": "array",
+                        "description": "File(s) attached to the ticket. e.g. picture of broken device, scanned copy of bill or charge. To learn about including attachments in your request, see POST Attachments API.",
+                        "maxItems": 5,
+                        "items": {
+                            "$ref": "#/components/schemas/Attachment"
+                        }
+                    }
+                },
+                "description": "Cancelling a ticket"
+            },
+            "NoteRequest": {
+                "type": "object",
+                "required": [
+                    "text"
+                ],
+                "properties": {
+                    "text": {
+                        "maxLength": 4000,
+                        "minLength": 5,
+                        "type": "string",
+                        "description": "The text of the note.",
+                        "example": "More details to the ticket"
+                    },
+                    "referenceId": {
+                        "maxLength": 50,
+                        "minLength": 1,
+                        "type": "string",
+                        "description": "Reference identification related to troubleshooting activity.",
+                        "example": "5-2000000000"
+                    },
+                    "attachments": {
+                        "maxItems": 5,
+                        "type": "array",
+                        "description": "File(s) attached to the ticket. e.g. picture of broken device, scanned copy of bill or charge. To learn about including attachments in your request, see POST Attachments API.",
+                        "items": {
+                            "$ref": "#/components/schemas/Attachment"
+                        }
+                    }
+                },
+                "description": "Additional notes about a given entity."
+            },
+            "Note": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "maxLength": 100,
+                        "minLength": 10,
+                        "type": "string",
+                        "description": "Identifier of the note",
+                        "example": "1-ABCDE6IS"
+                    },
+                    "createdDateTime": {
+                        "type": "string",
+                        "description": "The date and time the note was created.",
+                        "format": "date-time"
+                    },
+                    "text": {
+                        "maxLength": 4000,
+                        "minLength": 5,
+                        "type": "string",
+                        "description": "The text of the note",
+                        "example": "Provide more details to understand the issue."
+                    },
+                    "author": {
+                        "minLength": 5,
+                        "type": "string",
+                        "description": "Username or system name that created the note.",
+                        "example": "Equinix Support"
+                    },
+                    "referenceId": {
+                        "maxLength": 50,
+                        "minLength": 1,
+                        "type": "string",
+                        "description": "Reference identification related to troubleshooting activity.",
+                        "example": "5-2000000000"
+                    },
+                    "type": {
+                        "type": "string",
+                        "description": "Type of notes.",
+                        "example": "TECHNICIAN_QUERY",
+                        "enum": [
+                            "CUSTOMER_QUERY",
+                            "CUSTOMER_NOTES",
+                            "TECHNICIAN_QUERY",
+                            "TECHNICIAN_NOTES"
+                        ]
+                    },
+                    "attachments": {
+                        "type": "array",
+                        "description": "File(s) attached to the ticket. e.g. picture of broken device, scanned copy of bill or charge. To learn about including attachments in your request, see POST Attachments API.",
+                        "items": {
+                            "$ref": "#/components/schemas/Attachment"
+                        }
+                    }
+                }
+            },
+            "Contacts": {
+                "type": "object",
+                "properties": {
+                    "registeredUser": {
+                        "type": "string",
+                        "description": "Username of a registered user.",
+                        "example": "john_doe"
+                    },
+                    "firstName": {
+                        "type": "string",
+                        "description": "First name of the contact.",
+                        "example": "John"
+                    },
+                    "lastName": {
+                        "type": "string",
+                        "description": "Last name of the contact.",
+                        "example": "Doe"
+                    },
+                    "type": {
+                        "type": "string",
+                        "description": "Communications type",
+                        "enum": [
+                            "ORDERING",
+                            "NOTIFICATION",
+                            "TECHNICAL"
+                        ]
+                    },
+                    "details": {
+                        "type": "array",
+                        "description": "Communications Details.",
+                        "items": {
+                            "$ref": "#/components/schemas/ContactsDetails"
+                        }
+                    }
+                },
+                "description": "Contact information."
+            },
+            "ContactRequestRegisteredUser": {
+                "required": [
+                    "registeredUsers",
+                    "type"
+                ],
+                "type": "object",
+                "properties": {
+                    "registeredUsers": {
+                        "description": "Username of a registered user.",
+                        "maxItems": 10,
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "example": "john_doe"
+                        }
+                    },
+                    "type": {
+                        "type": "string",
+                        "description": "Type of contact.",
+                        "default": "NOTIFICATION",
+                        "enum": [
+                            "NOTIFICATION",
+                            "TECHNICAL"
+                        ]
+                    }
+                },
+                "description": "Contact information of a registered user."
+            },
+            "ContactRequestNonRegisteredUser": {
+                "required": [
+                    "details",
+                    "name",
+                    "type"
+                ],
+                "type": "object",
+                "properties": {
+                    "firstName": {
+                        "type": "string",
+                        "description": "First name of the contact.",
+                        "example": "John"
+                    },
+                    "lastName": {
+                        "type": "string",
+                        "description": "Last name of the contact.",
+                        "example": "Doe"
+                    },
+                    "type": {
+                        "type": "string",
+                        "description": "Type of contact.",
+                        "default": "TECHNICAL",
+                        "enum": [
+                            "TECHNICAL"
+                        ]
+                    },
+                    "details": {
+                        "maxItems": 3,
+                        "minItems": 2,
+                        "type": "array",
+                        "description": "Communications Details.",
+                        "items": {
+                            "$ref": "#/components/schemas/ContactsRequestDetails"
+                        }
+                    }
+                },
+                "description": "Contact information of a non-registered contact."
+            },
+            "ContactsRequestDetails": {
+                "required": [
+                    "type",
+                    "value"
+                ],
+                "type": "object",
+                "properties": {
+                    "type": {
+                        "type": "string",
+                        "description": "Communications Type.",
+                        "example": "PHONE",
+                        "enum": [
+                            "PHONE",
+                            "MOBILE",
+                            "EMAIL"
+                        ]
+                    },
+                    "value": {
+                        "type": "string",
+                        "description": "Value of communications type.",
+                        "example": "+1-4601231122"
+                    }
+                },
+                "description": "Contact details."
+            },
+            "ContactsDetails": {
+                "type": "object",
+                "properties": {
+                    "type": {
+                        "type": "string",
+                        "description": "Communications Type.",
+                        "example": "PHONE",
+                        "enum": [
+                            "PHONE",
+                            "EMAIL"
+                        ]
+                    },
+                    "value": {
+                        "type": "string",
+                        "description": "Value of communications type.",
+                        "example": "+1-4601231122"
+                    }
+                },
+                "description": "Contact details."
+            },
+            "Attachment": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "maxLength": 36,
+                        "minLength": 36,
+                        "type": "string",
+                        "description": "Identifier of the attachment.",
+                        "example": "c77c5f58-a7ea-4e88-9fc4-1a2900027425"
+                    },
+                    "name": {
+                        "maxLength": 100,
+                        "minLength": 5,
+                        "type": "string",
+                        "description": "Name of the attachment.",
+                        "example": "error-log"
+                    }
+                },
+                "description": "Attachment refers to extensions or additional parts that is or may be attached to something (agreements, contracts, appointments) to perform a particular function. They can be communication attachments, documents and other."
+            },
+            "Error": {
+                "title": "Error Info",
+                "type": "array",
+                "items": {
+                    "title": "Error details",
+                    "type": "object",
+                    "properties": {
+                        "errorCode": {
+                            "type": "string",
+                            "example": "EQ-20YYXXX"
+                        },
+                        "errorMessage": {
+                            "type": "string",
+                            "example": "Error message"
+                        },
+                        "details": {
+                            "type": "string",
+                            "example": "Error details"
+                        },
+                        "correlationId": {
+                            "type": "string",
+                            "example": "Correlation ID to trace the error back"
+                        },
+                        "help": {
+                            "type": "string",
+                            "example": "URL to a help page for the corresponding errorCode"
+                        },
+                        "additionalInfo": {
+                            "title": "Error details",
+                            "type": "object",
+                            "properties": {
+                                "property": {
+                                    "type": "string",
+                                    "example": "id"
+                                },
+                                "reason": {
+                                    "type": "string",
+                                    "example": "missing id"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "Resolutions": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "description": "Identifier of an activity.",
+                        "example": "5-2000000000"
+                    },
+                    "type": {
+                        "type": "string",
+                        "description": "type of event.",
+                        "example": "Trouble"
+                    },
+                    "status": {
+                        "type": "string",
+                        "example": "Open - Dispatch"
+                    },
+                    "description": {
+                        "type": "string",
+                        "description": "type of description.",
+                        "example": "Network issue"
+                    },
+                    "price": {
+                        "type": "string",
+                        "description": "charges.",
+                        "example": "40.00"
+                    },
+                    "hours": {
+                        "type": "string",
+                        "description": "hours",
+                        "example": "10"
+                    }
+                },
+                "description": "Resolution events."
+            },
+            "BILLING_0010XXXX": {
+                "type": "object",
+                "properties": {
+                    "invoiceId": {
+                        "maxLength": 100,
+                        "minLength": 5,
+                        "type": "string",
+                        "description": "Invoice number / Identifier"
+                    },
+                    "paymentId": {
+                        "maxLength": 100,
+                        "minLength": 5,
+                        "type": "string",
+                        "description": "Payment number / Identifier"
+                    }
+                },
+                "description": "Provide Billing Tickets product specific details to support faster trouble resolution."
+            },
+            "SMARTKEY_0008XXXX": {
+                "type": "object",
+                "properties": {
+                    "purchaseOrderNumber": {
+                        "maxLength": 100,
+                        "minLength": 5,
+                        "type": "string",
+                        "description": "Purchase order number"
+                    }
+                },
+                "description": "Provide SmartKey Tickets product specific details to support faster trouble resolution."
+            },
+            "LAYER1_0000_XXXX": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/COMMON_REQUEST_CODE_0000-0008"
+                    }
+                ]
+            },
+            "NETWORK_0001_XXXX": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/COMMON_REQUEST_CODE_0000-0008"
+                    }
+                ]
+            },
+            "POWER_0002_XXXX": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/COMMON_REQUEST_CODE_0000-0008"
+                    }
+                ]
+            },
+            "ENVIRONMENT_0003_XXXX": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/COMMON_REQUEST_CODE_0000-0008"
+                    }
+                ]
+            },
+            "HARDWARE_0004_XXXX": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/COMMON_REQUEST_CODE_0000-0008"
+                    }
+                ]
+            },
+            "SECURITY_0005_XXXX": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/COMMON_REQUEST_CODE_0000-0008"
+                    }
+                ]
+            },
+            "MANAGED_SERVICE_0006_XXXX": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/COMMON_REQUEST_CODE_0000-0008"
+                    }
+                ]
+            },
+            "SMARTVIEW_0007_XXXX": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/COMMON_REQUEST_CODE_0000-0008"
+                    }
+                ]
+            },
+            "METROCONNECT_0012_XXXX": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/COMMON_REQUEST_CODE_0000-0008"
+                    }
+                ]
+            },
+            "COMMON_REQUEST_CODE_0000-0008": {
+                "type": "object",
+                "properties": {
+                    "callFromCage": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "Requirement for the IBX technician to call the technical contact from the cage. If true, IBX technician will call the technical contact from the cage."
+                    },
+                    "availability": {
+                        "type": "string",
+                        "default": "ANYTIME",
+                        "enum": [
+                            "WORK_HOURS",
+                            "ANYTIME"
+                        ],
+                        "description": "Availability type if call from cage is set as true."
+                    },
+                    "timezone": {
+                        "$ref": "#/components/schemas/TIME_ZONE_LIST"
+                    },
+                    "submarineEngineerRequired": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "Requirement for submarine cable station engineering support."
+                    }
+                },
+                "description": "Details or requirements to support ticket resolution, depending on the trouble category you are facing."
+            },
+            "TIME_ZONE_LIST": {
+                "type": "string",
+                "description": "Time Zone Enum values.",
+                "example": "America/Los_Angeles",
+                "enum": [
+                    "Atlantic/Canary",
+                    "Europe/Dublin",
+                    "Europe/London",
+                    "Europe/Lisbon",
+                    "Africa/Algiers",
+                    "Europe/Berlin",
+                    "Europe/Amsterdam",
+                    "Europe/Copenhagen",
+                    "Europe/Madrid",
+                    "Europe/Paris",
+                    "Europe/Stockholm",
+                    "Europe/Zurich",
+                    "Europe/Warsaw",
+                    "Africa/Cairo",
+                    "Africa/Johannesburg",
+                    "Africa/Lagos",
+                    "Europe/Sofia",
+                    "Africa/Nairobi",
+                    "Asia/Jerusalem",
+                    "Europe/Istanbul",
+                    "Europe/Moscow",
+                    "Asia/Riyadh",
+                    "Asia/Dubai",
+                    "Asia/Kabul",
+                    "Asia/Tehran",
+                    "Asia/Karachi",
+                    "Indian/Maldives",
+                    "Asia/Kolkata",
+                    "Asia/Kathmandu",
+                    "Asia/Omsk",
+                    "Asia/Rangoon",
+                    "Asia/Jakarta",
+                    "Asia/Ho_Chi_Minh",
+                    "Asia/Brunei",
+                    "Asia/Hong_Kong",
+                    "Asia/Kuala_Lumpur",
+                    "Asia/Manila",
+                    "Asia/Shanghai",
+                    "Asia/Singapore",
+                    "Asia/Taipei",
+                    "Australia/Perth",
+                    "Asia/Seoul",
+                    "Asia/Tokyo",
+                    "Australia/Darwin",
+                    "Australia/Brisbane",
+                    "Pacific/Guam",
+                    "Australia/Adelaide",
+                    "Australia/Sydney",
+                    "Pacific/Auckland",
+                    "Pacific/Chatham",
+                    "Indian/Christmas",
+                    "America/Scoresbysund",
+                    "Atlantic/South_Georgia",
+                    "America/Sao_Paulo",
+                    "America/Detroit",
+                    "America/New_York",
+                    "America/Puerto_Rico",
+                    "America/Toronto",
+                    "America/Bogota",
+                    "America/Chicago",
+                    "America/Winnipeg",
+                    "America/Denver",
+                    "America/Edmonton",
+                    "America/Mexico_City",
+                    "America/Los_Angeles",
+                    "America/Vancouver",
+                    "America/Phoenix",
+                    "America/Anchorage",
+                    "America/Halifax",
+                    "America/Lima",
+                    "America/Monterrey",
+                    "Pacific/Gambier",
+                    "Pacific/Marquesas",
+                    "Pacific/Honolulu",
+                    "Pacific/Fiji",
+                    "Asia/Muscat",
+                    "America/Argentina/Buenos_Aires",
+                    "America/Caracas",
+                    "Etc/GMT+12",
+                    "UTC",
+                    "GMT",
+                    "America/Santiago",
+                    "America/St_Johns",
+                    "Asia/Almaty",
+                    "Asia/Bangkok",
+                    "Asia/Calcutta",
+                    "Asia/Magadan",
+                    "Asia/Yekaterinburg",
+                    "Australia/Eucla",
+                    "Australia/Lord_Howe",
+                    "Europe/Bratislava",
+                    "Europe/Brussels",
+                    "Europe/Prague",
+                    "Europe/Rome",
+                    "Europe/Helsinki",
+                    "Pacific/Kiritimati",
+                    "Pacific/Midway",
+                    "Pacific/Tongatapu",
+                    "Australia/Melbourne",
+                    "Australia/NSW",
+                    "Australia/Queensland",
+                    "Australia/South",
+                    "Australia/Victoria",
+                    "Australia/West",
+                    "Australia/Canberra"
+                ]
+            },
+            "ContactRequestRegisteredUser_Update": {
+                "type": "object",
+                "description": "Contact information.",
+                "required": [
+                    "registeredUsers",
+                    "type"
+                ],
+                "properties": {
+                    "registeredUsers": {
+                        "description": "Username of a registered user.",
+                        "type": "array",
+                        "maxItems": 10,
+                        "items": {
+                            "type": "string",
+                            "example": "username@mail.com"
+                        },
+                        "minItems": 1
+                    },
+                    "type": {
+                        "type": "string",
+                        "description": "Type of contact",
+                        "enum": [
+                            "NOTIFICATION"
+                        ]
+                    }
+                }
+            }
+        }
+    }
+}

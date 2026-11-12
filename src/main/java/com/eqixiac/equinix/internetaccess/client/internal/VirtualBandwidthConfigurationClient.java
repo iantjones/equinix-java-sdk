@@ -25,7 +25,7 @@ import com.eqixiac.equinix.internetaccess.model.json.VirtualBandwidthConfigurati
 
 /**
  * Internal client for the Equinix Internet Access (EIA) v1 virtual-bandwidth-configuration lookup:
- * {@code GET /internetAccess/v1/virtualBandwidthConfigurations} — the allowed virtual-bandwidth
+ * {@code GET /internetAccess/v1/virtualBandwidthConfigurations} - the allowed virtual-bandwidth
  * configurations for a given use case and billing model.
  */
 public interface VirtualBandwidthConfigurationClient extends Pageable<VirtualBandwidthConfiguration> {

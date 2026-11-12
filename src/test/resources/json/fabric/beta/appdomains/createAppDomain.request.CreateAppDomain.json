@@ -1,0 +1,8 @@
+{
+  "type": "APP_DOMAIN",
+  "name": "atlassian.net",
+  "description": "Atlassian Domain",
+  "project": {
+    "projectId": "71b55fef-fd2e-402f-ae3c-01d5f00bf2d4"
+  }
+}

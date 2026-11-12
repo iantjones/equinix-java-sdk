@@ -17,7 +17,7 @@
 /**
  * Latency physics: {@link com.eqixiac.equinix.design.geo.SpeedOfLightLatency} computes
  * speed-of-light-in-fibre latency floors (one-way or round-trip) and haversine great-circle
- * distances between IBXes, metros, or raw coordinates — fully offline once the endpoints'
+ * distances between IBXes, metros, or raw coordinates - fully offline once the endpoints'
  * coordinates are known.
  *
  * <p>The figures are physical lower bounds (configurable fibre refractive index and route

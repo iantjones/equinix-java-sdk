@@ -50,8 +50,8 @@ public class WorkloadSpec {
      *
      * <p>{@link #latencySensitivity} used to be consulted <em>only</em> when there was no
      * {@code profileOverride} at all. Every single-field setter on
-     * {@code MetroOptimizer.WorkloadBuilder} — {@code maxLatencyToleranceMs},
-     * {@code requiresHighPowerDensity}, {@code requiresLiquidCooling} — synthesizes a
+     * {@code MetroOptimizer.WorkloadBuilder} - {@code maxLatencyToleranceMs},
+     * {@code requiresHighPowerDensity}, {@code requiresLiquidCooling} - synthesizes a
      * {@code profileOverride}, so the common call shape
      * {@code .latencySensitivity(CRITICAL).maxLatencyToleranceMs(20)} (and the equivalent
      * {@code design_optimize_placement} payload, which sets both from one workload object) silently

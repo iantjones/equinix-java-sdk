@@ -3,8 +3,8 @@ package com.eqixiac.equinix.design.value.savings;
 import java.math.BigDecimal;
 
 /**
- * Unit of data volume for egress inputs. Conversions use decimal (SI) factors —
- * 1 TB = 1000 GB — consistent with how cloud providers meter data transfer.
+ * Unit of data volume for egress inputs. Conversions use decimal (SI) factors - 
+ * 1 TB = 1000 GB - consistent with how cloud providers meter data transfer.
  */
 public enum DataUnit {
 

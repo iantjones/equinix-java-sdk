@@ -23,7 +23,7 @@ import com.eqixiac.equinix.fabric.model.implementation.Change;
 import com.eqixiac.equinix.fabric.model.implementation.ChangeLog;
 import com.eqixiac.equinix.fabric.model.json.creators.RouteFilterRuleOperator;
 
-public interface RouteFilterRule {
+public interface RouteFilterRule extends DeletableResource {
 
     String getUuid();
 

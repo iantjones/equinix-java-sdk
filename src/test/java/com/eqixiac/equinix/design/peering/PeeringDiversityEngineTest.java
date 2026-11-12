@@ -11,6 +11,9 @@ import com.eqixiac.equinix.design.peering.client.PeeringDbNetFac;
 import com.eqixiac.equinix.design.peering.client.PeeringDbNetIxlan;
 import com.eqixiac.equinix.design.peering.client.PeeringDbNetwork;
 import com.eqixiac.equinix.design.peering.model.DiversityScore;
+import com.eqixiac.equinix.design.geo.RouteFactorCalibration;
+import com.eqixiac.equinix.design.optimizer.context.LatencyFigure;
+import com.eqixiac.equinix.fabric.model.implementation.ConnectedMetro;
 import com.eqixiac.equinix.design.peering.model.PeeringIntelligenceResult;
 import com.eqixiac.equinix.design.peering.model.PeeringRequest;
 import com.eqixiac.equinix.fabric.client.Metros;
@@ -34,8 +37,8 @@ import static org.mockito.Mockito.when;
 
 /**
  * End-to-end test of the Peering Intelligence engine's geographic-diversity path
- * ({@code computeDiversity} → {@code resolveCoordinates}) with a stubbed {@link PeeringDbClient} and a
- * mocked {@link FabricGateway} — no network, and <em>no PeeringDB API key required</em> (the client is
+ * ({@code computeDiversity} -> {@code resolveCoordinates}) with a stubbed {@link PeeringDbClient} and a
+ * mocked {@link FabricGateway} - no network, and <em>no PeeringDB API key required</em> (the client is
  * stubbed, so the optional key is irrelevant here; in production it only raises PeeringDB's rate limit).
  *
  * <p>It proves the IBX-to-IBX grounding introduced with the speed-of-light calculator: the diversity
@@ -44,7 +47,7 @@ import static org.mockito.Mockito.when;
  * coordinates. It also confirms {@code estimatedRttMs} is the round-trip speed-of-light floor for that
  * distance.</p>
  */
-@DisplayName("Peering diversity engine — IBX-grounded distance (end-to-end, stubbed)")
+@DisplayName("Peering diversity engine - IBX-grounded distance (end-to-end, stubbed)")
 class PeeringDiversityEngineTest {
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
@@ -78,7 +81,7 @@ class PeeringDiversityEngineTest {
         assertNotNull(result.getResiliency(), "resiliency assessment should be produced");
         List<DiversityScore> scores = result.getResiliency().getDiversityScores();
 
-        // DC <-> SV: both metros have facility coordinates → distance uses the facility centroids.
+        // DC <-> SV: both metros have facility coordinates -> distance uses the facility centroids.
         DiversityScore dcSv = find(scores, "DC", "SV");
         double facilityBased = SpeedOfLightLatency.distanceKm(DC_FAC_LAT, DC_FAC_LON, SV_FAC_LAT, SV_FAC_LON);
         double centroidBased = SpeedOfLightLatency.distanceKm(DC_METRO_LAT, DC_METRO_LON, SV_METRO_LAT, SV_METRO_LON);
@@ -87,16 +90,45 @@ class PeeringDiversityEngineTest {
         assertEquals(facilityBased, dcSv.getDistanceKm(), 0.5,
                 "DC<->SV distance should come from the IBX facility centroids, not the Fabric metro centroid");
 
-        // RTT is the round-trip speed-of-light floor for that (IBX-grounded) distance.
+        // The floor is the round-trip speed-of-light figure for that (IBX-grounded) distance; with no Fabric
+        // measurement for the pair, the round trip is the floor times the optimiser's route factor (the default
+        // 1.75 here: the stub catalogue publishes no measured pair to fit from).
         assertEquals(SpeedOfLightLatency.roundTrip().millisForKm(dcSv.getDistanceKm()),
-                dcSv.getEstimatedRttMs(), 1e-9);
+                dcSv.getRttFloorMs(), 1e-9);
+        assertEquals(dcSv.getRttFloorMs() * RouteFactorCalibration.DEFAULT_FACTOR, dcSv.getEstimatedRttMs(), 1e-9);
+        assertEquals(LatencyFigure.Basis.ESTIMATED, dcSv.getRttBasis());
 
-        // DC <-> DA: DA's only facility has no coordinates → DA falls back to its Fabric metro centroid,
+        // DC <-> DA: DA's only facility has no coordinates -> DA falls back to its Fabric metro centroid,
         // while DC still uses its facility centroid.
         DiversityScore dcDa = find(scores, "DC", "DA");
         double dcFacToDaCentroid = SpeedOfLightLatency.distanceKm(DC_FAC_LAT, DC_FAC_LON, DA_METRO_LAT, DA_METRO_LON);
         assertEquals(dcFacToDaCentroid, dcDa.getDistanceKm(), 0.5,
                 "a metro whose facilities lack coordinates falls back to its Fabric metro centroid");
+    }
+
+    @Test
+    @DisplayName("a pair Fabric measures carries the measured round trip (connectedMetros.avgLatency), not an estimate")
+    void measuredPairUsesFabricFigure() throws Exception {
+        FabricGateway fabric = stubFabric(Map.of("DC", Map.of("SV", 65.8)));
+        PeeringRequest request = PeeringRequest.builder()
+                .targetAsns(Map.of(16509L, "AWS"))
+                .customerMetros(new LinkedHashSet<>(List.of(MetroId.of("DC"), MetroId.of("SV"), MetroId.of("DA"))))
+                .includeResiliency(true)
+                .build();
+        List<DiversityScore> scores = new PeeringIntelligenceEngine(fabric, new StubPeeringDbClient(), request)
+                .execute().getResiliency().getDiversityScores();
+
+        DiversityScore dcSv = find(scores, "DC", "SV");
+        assertEquals(65.8, dcSv.getEstimatedRttMs(), 1e-9, "Fabric's live-measured SV-DC figure (2026-11-11 shape)");
+        assertEquals(LatencyFigure.Basis.MEASURED, dcSv.getRttBasis());
+        assertTrue(dcSv.getExplanation().contains("65.8 ms (measured)"), dcSv.getExplanation());
+
+        // DC-DA is not measured: estimated with the factor fitted from the one measured pair (DC-SV, centroids).
+        DiversityScore dcDa = find(scores, "DC", "DA");
+        double fitted = 65.8 / SpeedOfLightLatency.roundTrip().millisForKm(
+                SpeedOfLightLatency.distanceKm(DC_METRO_LAT, DC_METRO_LON, SV_METRO_LAT, SV_METRO_LON));
+        assertEquals(LatencyFigure.Basis.ESTIMATED, dcDa.getRttBasis());
+        assertEquals(dcDa.getRttFloorMs() * fitted, dcDa.getEstimatedRttMs(), 1e-6);
     }
 
     // ---- helpers ----
@@ -110,10 +142,22 @@ class PeeringDiversityEngineTest {
     }
 
     private static FabricGateway stubFabric() throws Exception {
+        return stubFabric(Map.of());
+    }
+
+    private static FabricGateway stubFabric(Map<String, Map<String, Double>> measured) throws Exception {
         List<Metro> metros = List.of(
                 metro("DC", DC_METRO_LAT, DC_METRO_LON, List.of("DC11", "DC5")),
                 metro("SV", SV_METRO_LAT, SV_METRO_LON, List.of("SV1", "SV5")),
                 metro("DA", DA_METRO_LAT, DA_METRO_LON, List.of("DA1")));
+        for (Metro m : metros) {
+            List<ConnectedMetro> connected = new java.util.ArrayList<>();
+            for (Map.Entry<String, Double> e : measured.getOrDefault(m.metroId().code(), Map.of()).entrySet()) {
+                connected.add(MAPPER.readValue("{\"code\":\"" + e.getKey() + "\",\"avgLatency\":" + e.getValue() + "}",
+                        ConnectedMetro.class));
+            }
+            when(m.getConnectedMetros()).thenReturn(connected);
+        }
 
         Metros metrosClient = mock(Metros.class);
         when(metrosClient.list()).thenReturn(new PaginatedList<>(metros, null, null, null, null));

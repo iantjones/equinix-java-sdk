@@ -35,9 +35,10 @@ public interface Hierarchy {
      * Retrieves the location hierarchy for an account/IBX, returned as a tree of recursive nodes
      * spanning ibx, zone, cage, cabinet and sensor levels.
      *
-     * @param accountNo the Equinix account number
+     * @param accountNo the Equinix account number (required; the service answers HTTP 400 without it)
      * @param ibx the IBX code identifying the data center (optional; may be {@code null} for all entitled IBXs)
      * @return the top-level location hierarchy nodes
+     * @throws IllegalArgumentException if a parameter the spec marks required is null or blank
      */
     List<HierarchyNode> getLocationHierarchy(String accountNo, String ibx);
 
@@ -45,9 +46,10 @@ public interface Hierarchy {
      * Retrieves the power hierarchy for an account/IBX, returned as a tree of recursive nodes
      * spanning ibx, cage, cabinet and circuit levels.
      *
-     * @param accountNo the Equinix account number
+     * @param accountNo the Equinix account number (required; the service answers HTTP 400 without it)
      * @param ibx the IBX code identifying the data center (optional; may be {@code null} for all entitled IBXs)
      * @return the top-level power hierarchy nodes
+     * @throws IllegalArgumentException if a parameter the spec marks required is null or blank
      */
     List<PowerHierarchyNode> getPowerHierarchy(String accountNo, String ibx);
 }

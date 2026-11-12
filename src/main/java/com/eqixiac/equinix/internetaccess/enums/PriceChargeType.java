@@ -19,7 +19,7 @@ package com.eqixiac.equinix.internetaccess.enums;
 import com.eqixiac.equinix.core.model.APIParam;
 
 /**
- * Charge type of an Equinix Internet Access (EIA) v1 price charge — whether the charge recurs
+ * Charge type of an Equinix Internet Access (EIA) v1 price charge - whether the charge recurs
  * monthly or is a one-off (non-recurring) charge.
  */
 public enum PriceChargeType implements APIParam {

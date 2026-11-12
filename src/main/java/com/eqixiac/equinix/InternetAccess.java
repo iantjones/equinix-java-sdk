@@ -57,40 +57,47 @@ import com.eqixiac.equinix.internetaccess.client.implementation.InternetAccessTe
  * data centers. The {@link #services()} accessor exposes the full EIA v2 service lifecycle
  * (create / get / update / delete / search) and the {@link #ibxs()} accessor exposes the EIA v2
  * product-availability lookup ({@code GET /internetAccess/v2/ibxs}). The remaining accessors expose
- * the EIA v1 read API used when building EIA requests — price search, accounts/agreements, terms and
+ * the EIA v1 read API used when building EIA requests - price search, accounts/agreements, terms and
  * conditions, operational units, signature policies, the attribute/default-configuration lookups,
  * purchase orders, the product-availability inventory (cages/cabinets/patch panels/connection
  * services), order history, and a single-IBX get.</p>
  *
- * <p>Each accessor uses lazy initialization — the internal client is created on first access and
+ * <p>Each accessor uses lazy initialization - the internal client is created on first access and
  * reused for subsequent calls.</p>
  *
  * <h3>Scope (v1 selective)</h3>
  * <p>This domain surfaces the EIA v2 service lifecycle plus the read-only EIA v1 API. The v1 surfaces
  * exposed are:</p>
  * <ul>
- *   <li>{@link #prices() Price search} — {@code POST /internetAccess/v1/prices/search}.</li>
- *   <li>{@link #accounts() Accounts} — {@code GET /internetAccess/v1/accounts},
+ *   <li>{@link #prices() Price search} - {@code POST /internetAccess/v1/prices/search}.</li>
+ *   <li>{@link #accounts() Accounts} - {@code GET /internetAccess/v1/accounts},
  *       {@code .../{accountNumber}} and {@code .../{accountNumber}/agreements}.</li>
- *   <li>{@link #termsAndConditions() Terms and conditions} — {@code GET /internetAccess/v1/terms}.</li>
- *   <li>{@link #operationalUnits() Operational units} — {@code GET /internetAccess/v1/operationalUnits}.</li>
- *   <li>{@link #signaturePolicies() Signature policies} — {@code GET /internetAccess/v1/signaturePolicies}.</li>
- *   <li>{@link #productConfigurations() Attribute/default configurations} —
+ *   <li>{@link #termsAndConditions() Terms and conditions} - {@code GET /internetAccess/v1/terms}.</li>
+ *   <li>{@link #operationalUnits() Operational units} - {@code GET /internetAccess/v1/operationalUnits}.</li>
+ *   <li>{@link #signaturePolicies() Signature policies} - {@code GET /internetAccess/v1/signaturePolicies}.</li>
+ *   <li>{@link #productConfigurations() Attribute/default configurations} - 
  *       {@code routingProtocolConfigurations}, {@code dedicatedBandwidthConfigurations},
  *       {@code virtualBandwidthConfigurations}, {@code virtualConnectionDefaultConfigurations},
  *       {@code customerRouteConfigurations}, {@code dedicatedPortDefaultConfigurations} and
  *       {@code portConfigurations} (all under {@code GET /internetAccess/v1/}).</li>
- *   <li>{@link #purchaseOrders() Purchase orders} —
+ *   <li>{@link #purchaseOrders() Purchase orders} - 
  *       {@code GET /internetAccess/v1/accounts/{accountNumber}/purchaseOrders} and {@code .../{number}}.</li>
- *   <li>Product-availability inventory — {@link #cages() cages}, {@link #cabinets() cabinets},
+ *   <li>Product-availability inventory - {@link #cages() cages}, {@link #cabinets() cabinets},
  *       {@link #patchPanels() patch panels} and {@link #connectionServices() connection services}
  *       (all under {@code GET /internetAccess/v1/}).</li>
- *   <li>{@link #orders() Order history} — {@code GET /internetAccess/v1/orders/{orderUUID}}.</li>
- *   <li>Single-IBX get — {@code GET /internetAccess/v1/ibxs/{ibx}}, via
+ *   <li>{@link #orders() Order history} - {@code GET /internetAccess/v1/orders/{orderUUID}}.</li>
+ *   <li>Single-IBX get - {@code GET /internetAccess/v1/ibxs/{ibx}}, via
  *       {@link InternetAccessIbxs#getByCode(String) ibxs().getByCode(...)}.</li>
  * </ul>
  * <p>The v1 service create/delete/search/details operations are intentionally <strong>not</strong>
  * exposed, as they are superseded by the {@link #services() v2 service lifecycle}.</p>
+ *
+ * <h3>Unified EIA API (Fabric v4)</h3>
+ * <p>Since 2026-07 the Unified EIA API lives in Fabric v4: {@link #unifiedServices()}
+ * ({@code /fabric/v4/internetAccessServices}) and {@link #ipBlocks()} ({@code /fabric/v4/ipBlocks}).
+ * They are the {@link Fabric#eiaServices()} and {@link Fabric#ipBlocks()} clients, reachable here
+ * over the same core client. IP Blocks are standalone since 2026-05 and survive the termination of
+ * the service that uses them.</p>
  *
  * <h3>Quick Start</h3>
  * <pre>{@code
@@ -140,6 +147,9 @@ public final class InternetAccess extends EquinixClient {
     private InternetAccessPatchPanels patchPanels;
 
     private InternetAccessConnectionServices connectionServices;
+
+    /** Fabric view over this client's core client, created on first use of a Fabric v4 EIA accessor. */
+    private Fabric fabricView;
 
     final private InternetAccessConfigImpl internetAccessConfig;
 
@@ -238,7 +248,7 @@ public final class InternetAccess extends EquinixClient {
     }
 
     /**
-     * Returns the client for the Equinix Internet Access product-availability IBX lookups — the
+     * Returns the client for the Equinix Internet Access product-availability IBX lookups - the
      * v2 list of IBXs where EIA is available ({@code GET /internetAccess/v2/ibxs}) and the v1
      * single-IBX get ({@code GET /internetAccess/v1/ibxs/{ibx}}).
      *
@@ -266,7 +276,7 @@ public final class InternetAccess extends EquinixClient {
     }
 
     /**
-     * Returns the client for the Equinix Internet Access v1 accounts lookups — the accounts
+     * Returns the client for the Equinix Internet Access v1 accounts lookups - the accounts
      * available for EIA ordering ({@code GET /internetAccess/v1/accounts}), a single account
      * ({@code .../{accountNumber}}) and account agreement statuses
      * ({@code .../{accountNumber}/agreements}).
@@ -321,7 +331,7 @@ public final class InternetAccess extends EquinixClient {
 
     /**
      * Returns the client for the Equinix Internet Access v1 attribute-eligibility / default
-     * configuration lookups — routing, dedicated/virtual bandwidth, virtual-connection default,
+     * configuration lookups - routing, dedicated/virtual bandwidth, virtual-connection default,
      * customer-route, dedicated-port default and port configurations (all under
      * {@code GET /internetAccess/v1/}).
      *
@@ -343,7 +353,7 @@ public final class InternetAccess extends EquinixClient {
     }
 
     /**
-     * Returns the client for the Equinix Internet Access v1 purchase-order lookups — the purchase
+     * Returns the client for the Equinix Internet Access v1 purchase-order lookups - the purchase
      * orders for an account ({@code GET /internetAccess/v1/accounts/{accountNumber}/purchaseOrders})
      * and a single purchase order ({@code .../{number}}).
      *
@@ -419,5 +429,42 @@ public final class InternetAccess extends EquinixClient {
             this.connectionServices = new InternetAccessConnectionServicesImpl(this.internetAccessConfig.getConnectionServiceClient(), this);
         }
         return connectionServices;
+    }
+
+    /**
+     * Returns the client for the <b>Unified EIA API</b> in Fabric v4
+     * ({@code /fabric/v4/internetAccessServices}), available since 2026-07.
+     *
+     * <p>This is the same client as {@link Fabric#eiaServices()}, created over this client's core
+     * client (same OAuth token and connection pool); it adds no new endpoints. New EIA integrations
+     * should prefer it to the EIA v2 {@link #services()} lifecycle under
+     * {@code /internetAccess/v2/services}, which remains available while its spec is published.</p>
+     *
+     * @return the Fabric v4 {@link com.eqixiac.equinix.fabric.client.EiaServices} client
+     */
+    public com.eqixiac.equinix.fabric.client.EiaServices unifiedServices() {
+        return fabricView().eiaServices();
+    }
+
+    /**
+     * Returns the client for Fabric v4 IP Blocks ({@code /fabric/v4/ipBlocks}), the address space
+     * used by Unified EIA services.
+     *
+     * <p>The same client as {@link Fabric#ipBlocks()}, created over this client's core client. Since
+     * 2026-05 IP Blocks are standalone resources: an IP Block is not deleted when the EIA service
+     * that uses it is terminated, and can be attached to another service. Delete an IP Block
+     * explicitly when it is no longer needed.</p>
+     *
+     * @return the Fabric v4 {@link com.eqixiac.equinix.fabric.client.IpBlocks} client
+     */
+    public com.eqixiac.equinix.fabric.client.IpBlocks ipBlocks() {
+        return fabricView().ipBlocks();
+    }
+
+    private Fabric fabricView() {
+        if (this.fabricView == null) {
+            this.fabricView = new Fabric(this.equinixClient, null);
+        }
+        return this.fabricView;
     }
 }

@@ -55,6 +55,7 @@ public class LatencyMatrix {
         if (mi < 0) return OptionalDouble.empty();
         return matrix.get(mi).stream()
                 .mapToDouble(LatencyEntry::getLatencyMs)
+                .filter(Double::isFinite) // NaN = unknown (no measurement, no coordinates)
                 .max();
     }
 
@@ -70,50 +71,8 @@ public class LatencyMatrix {
         if (mi < 0) return OptionalDouble.empty();
         return matrix.get(mi).stream()
                 .mapToDouble(LatencyEntry::getLatencyMs)
+                .filter(Double::isFinite) // NaN = unknown (no measurement, no coordinates)
                 .average();
-    }
-
-    // ──────────────────────────────────────────────────────────────────────────────────────
-    //  Legacy sentinel accessors — NOT public API.
-    //
-    //  These are retained solely so MetroOptimizerLatencySentinelTest can pin the sentinel
-    //  semantics it was written to outlaw; nothing in src/main calls them. They cannot be made
-    //  package-private because that suite lives one package up, in
-    //  com.eqixiac.equinix.design.optimizer. Treat them as removed: do not call them from new
-    //  code, and delete them together with the assertions in that suite.
-    // ──────────────────────────────────────────────────────────────────────────────────────
-
-    /**
-     * Worst-case latency from a metro to any site, using {@link Double#MAX_VALUE} as an
-     * out-of-band "no data" sentinel.
-     *
-     * @param metro the metro to measure from
-     * @return the highest latency to any site, or {@code Double.MAX_VALUE} when the metro is
-     *         absent or the request defined no sites
-     * @deprecated <strong>Internal; scheduled for deletion, not part of the supported API.</strong>
-     *         The {@code Double.MAX_VALUE} sentinel reads as a real measurement and has been
-     *         formatted into user-facing text as such. Use {@link #worstCaseMs(MetroId)}, which
-     *         makes the absent case explicit.
-     */
-    @Deprecated
-    public double worstCase(MetroId metro) {
-        return worstCaseMs(metro).orElse(Double.MAX_VALUE);
-    }
-
-    /**
-     * Average latency from a metro to all sites, using {@link Double#MAX_VALUE} as an
-     * out-of-band "no data" sentinel.
-     *
-     * @param metro the metro to measure from
-     * @return the mean latency across all sites, or {@code Double.MAX_VALUE} when the metro
-     *         is absent or the request defined no sites
-     * @deprecated <strong>Internal; scheduled for deletion, not part of the supported API.</strong>
-     *         The {@code Double.MAX_VALUE} sentinel reads as a real measurement. Use
-     *         {@link #averageMs(MetroId)}, which makes the absent case explicit.
-     */
-    @Deprecated
-    public double average(MetroId metro) {
-        return averageMs(metro).orElse(Double.MAX_VALUE);
     }
 
     /**
@@ -154,14 +113,15 @@ public class LatencyMatrix {
             sb.append(String.format("%-" + metroColWidth + "s", metros.get(mi).code()));
             for (int si = 0; si < siteLabels.size(); si++) {
                 LatencyEntry entry = matrix.get(mi).get(si);
-                String val = String.format("%.1f%s", entry.getLatencyMs(),
-                        entry.isEstimated() ? "*" : "");
+                String val = Double.isFinite(entry.getLatencyMs())
+                        ? String.format("%.1f%s", entry.getLatencyMs(), entry.isEstimated() ? "*" : "")
+                        : "?";
                 sb.append(" | ").append(String.format("%" + siteColWidths[si] + "s", val));
             }
             sb.append("\n");
         }
 
-        sb.append("\n* = estimated (no direct latency data available)");
+        sb.append("\nRound-trip ms. * = estimated from distance (no measured Fabric latency); ? = unknown (no coordinates)");
         return sb.toString();
     }
 }

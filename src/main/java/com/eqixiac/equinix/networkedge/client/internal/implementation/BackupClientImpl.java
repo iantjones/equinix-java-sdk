@@ -36,7 +36,7 @@ import java.util.Map;
 
 /**
  * Internal client for Network Edge device Backups. Plumbing/paging come from {@link ResourceClientBase};
- * Network Edge's non-standard contracts (create→UUIDResult→refetch, update→refetch, Boolean delete/restore,
+ * Network Edge's non-standard contracts (create->UUIDResult->refetch, update->refetch, Boolean delete/restore,
  * String download, secondary restore-analysis type) use the generic helpers on {@code ClientBase}.
  *
  * @author ianjones

@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
  * the {@link MetroCode} enum, so the enum can be brought up to date.
  *
  * <p>Credentials are read from the program arguments, or the {@code EQUINIX_CLIENT_ID} /
- * {@code EQUINIX_CLIENT_SECRET} environment variables — nothing is hardcoded, so this file carries no
+ * {@code EQUINIX_CLIENT_SECRET} environment variables - nothing is hardcoded, so this file carries no
  * secrets. Run it from your IDE ("Run 'MetroEnumUpdater.main()'") or:</p>
  *
  * <pre>{@code
@@ -69,11 +69,11 @@ public final class MetroEnumUpdater {
         System.out.println(String.join(" ", liveCodes));
 
         System.out.println();
-        System.out.println("=== NEW — add these to MetroCode (" + newCodes.size() + ") ===");
+        System.out.println("=== NEW - add these to MetroCode (" + newCodes.size() + ") ===");
         System.out.println(String.join(" ", newCodes));
 
         System.out.println();
-        System.out.println("=== STALE — in enum but not returned (" + staleCodes.size() + ") ===");
+        System.out.println("=== STALE - in enum but not returned (" + staleCodes.size() + ") ===");
         System.out.println(String.join(" ", staleCodes));
     }
 }

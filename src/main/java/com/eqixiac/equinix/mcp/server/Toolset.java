@@ -26,20 +26,35 @@ import java.util.Set;
  * {@code EquinixMcpServer.builder().toolsets(...)}, the {@code EQUINIX_MCP_TOOLSETS}
  * environment variable, or the {@code --toolsets} launch argument (comma-separated ids,
  * e.g. {@code design,ibx}). When nothing is selected every <em>read-only</em> toolset is
- * served ({@link #defaults()}); the {@link #MUTATE mutate} toolset — the Safe Mutation
- * Broker — is never on by default and must be named explicitly (e.g.
+ * served ({@link #defaults()}); the {@link #MUTATE mutate} toolset - the Safe Mutation
+ * Broker - is never on by default and must be named explicitly (e.g.
  * {@code --toolsets design,mutate}).
+ *
+ * <p>{@link #DESIGN} reads public catalogue and pricing data and this process's own stores (plus
+ * the read-only drift comparison of a stored plan); {@link #ESTATE} reads the customer's own deployed
+ * inventory and is a separate id so an operator can serve design tools without inventory access.
+ * {@link #FABRIC} selects both.</p>
  */
 public enum Toolset {
 
-    /** The design engines: optimizer, wizard, latency, TCO, savings, peering, Terraform export. */
+    /**
+     * The spec-driven design tools: spec template and validation, optimization, resilience, growth and
+     * terms, TCO, egress savings, latency, cloud-to-cloud (Beta), peering, and the plan lifecycle
+     * (plan, get, drift, Terraform export).
+     */
     DESIGN("design"),
 
-    /** Fabric-backed cross-domain intelligence (currently served by the design engines). */
+    /**
+     * Read-only analysis of an existing estate ({@code design_analyze_estate}): reads the customer's
+     * deployed Fabric inventory and metrics, always scoped to named projects.
+     */
+    ESTATE("estate"),
+
+    /** Everything Fabric-backed: selects {@link #DESIGN} and {@link #ESTATE}. */
     FABRIC("fabric"),
 
-    /** Customer Portal reach: open tickets, billing summary. */
-    PORTAL("portal"),
+    /** Data center operations reach: open tickets, billing summary. */
+    OPS("ops"),
 
     /** Network Edge reach: virtual device inventory. */
     NE("ne"),
@@ -50,7 +65,7 @@ public enum Toolset {
     /**
      * The Safe Mutation Broker: dry-run-first two-phase creates
      * ({@code fabric_propose_change} / {@code fabric_confirm_change}). <strong>Off by
-     * default</strong> — excluded from {@link #defaults()}, so it is served only when the
+     * default</strong> - excluded from {@link #defaults()}, so it is served only when the
      * operator names it explicitly in the toolset selection.
      */
     MUTATE("mutate");
@@ -70,7 +85,7 @@ public enum Toolset {
 
     /**
      * The default selection: every toolset <em>except</em> {@link #MUTATE}. The Safe Mutation
-     * Broker is strictly opt-in — a default launch serves only read-only tools.
+     * Broker is strictly opt-in - a default launch serves only read-only tools.
      *
      * @return all read-only toolsets
      */
@@ -91,13 +106,13 @@ public enum Toolset {
                 .filter(t -> t.id.equals(normalized))
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException(
-                        "Unknown toolset '" + value + "'. Valid toolsets: design, fabric, portal, ne, "
-                                + "ibx, mutate."));
+                        "Unknown toolset '" + value + "'. Valid toolsets: design, estate, fabric, "
+                                + "ops, ne, ibx, mutate."));
     }
 
     /**
      * Parses a comma-separated toolset list ({@code "design,ibx"}). Blank input selects the
-     * {@link #defaults() defaults} — every toolset except {@code mutate}, which must always
+     * {@link #defaults() defaults} - every toolset except {@code mutate}, which must always
      * be named explicitly.
      *
      * @param csv the comma-separated ids, possibly {@code null} or blank

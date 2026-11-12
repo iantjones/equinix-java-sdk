@@ -16,27 +16,40 @@
 
 package com.eqixiac.equinix.core.exception;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
 import java.io.Serializable;
 
 /**
- * A property-level error annotation nested inside an {@link ExceptionDetail}. {@link Serializable}
+ * A property-level error annotation nested inside an {@link ExceptionDetail} (the Fabric / Network
+ * Edge {@code additionalInfo[{property, reason}]} entries). Immutable and {@link Serializable}
  * because it is carried by the (serializable) {@link EquinixServiceException} family.
  *
  * @author ianjones
  */
 @Getter
-public class ExceptionAdditionalInfo implements Serializable {
-    private static final long serialVersionUID = 1L;
+public final class ExceptionAdditionalInfo implements Serializable {
+    private static final long serialVersionUID = 2L;
 
-    @JsonProperty("property")
-    private String property;
+    /** The request property the annotation refers to, for example {@code $.notifications}. */
+    private final String property;
 
-    @JsonProperty("reason")
-    private String reason;
+    /** Why the property was rejected. */
+    private final String reason;
 
-    @JsonProperty("value")
-    private String value;
+    /** The rejected value, when the service echoes it. */
+    private final String value;
+
+    /**
+     * Creates an annotation.
+     *
+     * @param property the request property; may be {@code null}
+     * @param reason   why it was rejected; may be {@code null}
+     * @param value    the rejected value; may be {@code null}
+     */
+    public ExceptionAdditionalInfo(String property, String reason, String value) {
+        this.property = property;
+        this.reason = reason;
+        this.value = value;
+    }
 }

@@ -28,7 +28,7 @@ import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Unit tests for {@link PresenceMatrix} — the ASN x Metro grid that forms
+ * Unit tests for {@link PresenceMatrix} - the ASN x Metro grid that forms
  * the core of the peering intelligence analysis.
  */
 @DisplayName("Presence Matrix")

@@ -16,7 +16,7 @@
 
 /**
  * STS client interfaces for the Equinix Java SDK. Provides typed access to the Equinix Security
- * Token Service API (STS v1) — the OAuth 2.0 / RFC&nbsp;8693 token exchange and granted-policy
+ * Token Service API (STS v1) - the OAuth 2.0 / RFC&nbsp;8693 token exchange and granted-policy
  * listing, management of trusted OIDC providers within a root project, and the unauthenticated
  * discovery endpoints (JWKS and the OpenID Connect discovery document).
  *

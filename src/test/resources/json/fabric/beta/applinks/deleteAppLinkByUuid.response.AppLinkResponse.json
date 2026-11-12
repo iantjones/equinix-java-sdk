@@ -1,0 +1,27 @@
+{
+  "href": "https://api.equinix.com/fabric/v4/appLinks/23cd19ab-d3bb-478b-9f25-bd12a3af1914",
+  "uuid": "23cd19ab-d3bb-478b-9f25-bd12a3af1914",
+  "type": "APP_LINK",
+  "name": "Atlassian App Link",
+  "description": "Atlassian App Link in SV",
+  "state": "DEPROVISIONING",
+  "router": {
+    "href": "https://api.equinix.com/fabric/v4/routers/36204584-2ae1-44f6-980f-08ecd555d9c6",
+    "uuid": "36204584-2ae1-44f6-980f-08ecd555d9c6",
+    "type": "XF_ROUTER"
+  },
+  "ipv4Subnet": "192.168.10.0/29",
+  "ipv4Address": "192.168.10.3",
+  "bandwidth": 1000,
+  "project": {
+    "projectId": "71b55fef-fd2e-402f-ae3c-01d5f00bf2d4"
+  },
+  "changeLog": {
+    "createdBy": "test",
+    "createdDateTime": "2026-06-27T04:20:55.471Z",
+    "updatedBy": "test",
+    "updatedDateTime": "2026-06-28T04:20:55.471Z",
+    "deletedBy": "test",
+    "deletedDateTime": "2026-06-29T04:20:55.471Z"
+  }
+}

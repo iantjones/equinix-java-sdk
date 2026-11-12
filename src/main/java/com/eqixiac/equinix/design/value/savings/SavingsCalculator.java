@@ -2,6 +2,9 @@ package com.eqixiac.equinix.design.value.savings;
 
 import com.eqixiac.equinix.FabricGateway;
 import com.eqixiac.equinix.core.enums.MetroCode;
+import com.eqixiac.equinix.design.spec.DesignSpec;
+import com.eqixiac.equinix.design.spi.MetroPortfolio;
+import com.eqixiac.equinix.design.value.SpecInputs;
 import com.eqixiac.equinix.fabric.enums.ConnectionType;
 import com.eqixiac.equinix.fabric.model.implementation.cloud.CloudProviderType;
 import com.eqixiac.equinix.design.value.ratecard.MulticloudLinkQuote;
@@ -30,9 +33,9 @@ import com.eqixiac.equinix.design.value.ratecard.Term;
  * System.out.println(s.toMarkdown());
  * }</pre>
  *
- * <p>When no {@link RateCard} is supplied, the standard layered chain applies —
+ * <p>When no {@link RateCard} is supplied, the standard layered chain applies - 
  * live Equinix Fabric pricing first, then the bundled
- * {@code ReferenceRateCard}, which also supplies indicative cloud-egress rates —
+ * {@code ReferenceRateCard}, which also supplies indicative cloud-egress rates - 
  * so the calculator works out of the box. Supply a card (e.g. a
  * {@link com.eqixiac.equinix.design.value.ratecard.CustomRateCard} with your own
  * figures) to replace that chain. All outputs are design-time estimates, not
@@ -73,6 +76,38 @@ public final class SavingsCalculator {
     }
 
     /**
+     * A builder preset from a {@link DesignSpec} the way the optimiser's {@code RateCardCostModel} prices it
+     * (see {@link SpecInputs}): provider, region and egress volume from the cloud; bandwidth from the
+     * workloads reaching it, rounded up to the Fabric tier; the chosen portfolio's metro; the spec's term
+     * (on demand when unset); an {@code IP_VC} from a STANDARD Fabric Cloud Router. The estimate carries the
+     * spec fingerprint and the assumptions made.
+     *
+     * @param fabric  the Fabric client for live pricing (may be {@code null} with a supplied rate card)
+     * @param spec    the design spec
+     * @param cloudId the cloud, or {@code null} for the first cloud with a provider
+     * @param chosen  the portfolio a run chose, or {@code null}
+     * @return the preset builder
+     */
+    public static Builder forSpec(FabricGateway fabric, DesignSpec spec, String cloudId, MetroPortfolio chosen) {
+        SpecInputs in = SpecInputs.derive(spec, cloudId, chosen);
+        Builder b = new Builder(fabric)
+                .egress(in.egressGb(), DataUnit.GIGABYTE)
+                .fromCloud(in.provider())
+                .inRegion(in.region())
+                .bandwidthMbps(in.bandwidthMbps())
+                .connectionType(ConnectionType.IP_VC)
+                .includeCloudRouter("STANDARD")
+                .term(in.term());
+        if (in.metro() != null) {
+            b.viaMetro(in.metro());
+        }
+        b.currency(spec.commercial().currencyOrDefault()).exchangeRates(spec.commercial().exchangeRates());
+        b.specFingerprint = in.fingerprint();
+        b.specAssumptions = in.assumptions();
+        return b;
+    }
+
+    /**
      * Fluent configuration for a savings estimate, terminated by {@link #calculate()}.
      * Setters validate eagerly (fail-fast {@link IllegalArgumentException}s), so a
      * mistake surfaces at the call site rather than as a wrong number later.
@@ -94,6 +129,12 @@ public final class SavingsCalculator {
 
         private final FabricGateway fabric;
 
+        private String specFingerprint;
+        private java.util.List<String> specAssumptions = java.util.List.of();
+        private String currency = "USD";
+        private com.eqixiac.equinix.design.spec.CommercialTerms.ExchangeRates exchangeRates;
+        private com.eqixiac.equinix.design.spi.CurrencyConverter currencyConverter;
+        private com.eqixiac.equinix.design.spi.CurrencyConverter defaultRates;
         private double egressAmount;
         private DataUnit egressUnit = DataUnit.GIGABYTE;
         private CloudProviderType provider;
@@ -150,7 +191,7 @@ public final class SavingsCalculator {
         }
 
         /**
-         * Sets the cloud provider the egress leaves — the provider whose internet and
+         * Sets the cloud provider the egress leaves - the provider whose internet and
          * private egress rates are compared.
          *
          * @param provider the cloud provider
@@ -326,8 +367,8 @@ public final class SavingsCalculator {
 
         /**
          * Adds a Fabric Cloud Router of the given package to the interconnect cost
-         * (none is included by default). If the rate card cannot price the package — or
-         * prices it in a different currency from the connection — the interconnect
+         * (none is included by default). If the rate card cannot price the package - or
+         * prices it in a different currency from the connection - the interconnect
          * figures stay <em>partial</em> (connection only), {@code isEquinixPriced()}
          * flips false, and the estimate's disclaimer names the excluded router; the
          * router is never silently dropped from an estimate reported as complete.
@@ -362,10 +403,57 @@ public final class SavingsCalculator {
         }
 
         /**
+         * Sets the currency every figure is compared in (default USD). Figures quoted in another currency are
+         * converted: rates pinned with {@link #exchangeRates}, then {@link #currencyConverter}, then live ECB
+         * reference rates (one call), then the SDK's bundled table. Only a currency no source covers is unpriced.
+         * @param currency ISO 4217 code
+         * @return this builder for method chaining
+         */
+        public Builder currency(String currency) {
+            if (currency == null || currency.isBlank()) {
+                throw new IllegalArgumentException("currency must not be blank");
+            }
+            java.util.Currency.getInstance(currency);
+            this.currency = currency;
+            return this;
+        }
+
+        /**
+         * Pins exchange rates to {@link #currency(String)}; they take precedence over every other source.
+         * @param rates the rates, or {@code null} for none
+         * @return this builder for method chaining
+         */
+        public Builder exchangeRates(com.eqixiac.equinix.design.spec.CommercialTerms.ExchangeRates rates) {
+            this.exchangeRates = rates;
+            return this;
+        }
+
+        /**
+         * Supplies a converter (for example a live FX feed) ranked below pinned rates and above the defaults.
+         * @param converter the converter, or {@code null} for none
+         * @return this builder for method chaining
+         */
+        public Builder currencyConverter(com.eqixiac.equinix.design.spi.CurrencyConverter converter) {
+            this.currencyConverter = converter;
+            return this;
+        }
+
+        /**
+         * Replaces the default rate sources (live ECB rates, then the bundled table), for example with
+         * {@code CurrencyConverters.bundledOnly()} for an offline run.
+         * @param defaults the fallback converter, or {@code null} for the defaults
+         * @return this builder for method chaining
+         */
+        public Builder defaultRates(com.eqixiac.equinix.design.spi.CurrencyConverter defaults) {
+            this.defaultRates = defaults;
+            return this;
+        }
+
+        /**
          * Sets the rate card that prices both egress and Equinix interconnect resources. When
          * omitted, the standard layered chain ({@code RateCard.standardChain(fabric)}) applies:
          * live Equinix Fabric pricing first, then the bundled {@code ReferenceRateCard}, which
-         * also supplies indicative cloud-egress rates — so egress savings are computed out of the
+         * also supplies indicative cloud-egress rates - so egress savings are computed out of the
          * box with no card supplied. A supplied card <em>replaces</em> that chain entirely (it is
          * not layered over the defaults); to keep the defaults as a fallback behind your own
          * figures, pass {@code RateCard.layered(customCard, RateCard.standardChain(fabric))}.
@@ -423,7 +511,13 @@ public final class SavingsCalculator {
 
         // Package-private accessors for the engine.
 
+        String getCurrency() { return currency; }
+        com.eqixiac.equinix.design.spec.CommercialTerms.ExchangeRates getExchangeRates() { return exchangeRates; }
+        com.eqixiac.equinix.design.spi.CurrencyConverter getCurrencyConverter() { return currencyConverter; }
+        com.eqixiac.equinix.design.spi.CurrencyConverter getDefaultRates() { return defaultRates; }
         FabricGateway getFabric() { return fabric; }
+        String getSpecFingerprint() { return specFingerprint; }
+        java.util.List<String> getSpecAssumptions() { return specAssumptions; }
         double getEgressAmount() { return egressAmount; }
         DataUnit getEgressUnit() { return egressUnit; }
         CloudProviderType getProvider() { return provider; }

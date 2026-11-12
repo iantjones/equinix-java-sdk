@@ -1,0 +1,14 @@
+{
+  "AccountNumber": "123456",
+  "Resource": "TroubleTicket.ManagedService",
+  "Verb": "Update",
+  "Message": {
+    "RequestorID": "123456789",
+    "CustomerContact": "demo@equinix.com",
+    "Description": "Update Trouble Ticket",
+    "ShortDescription": "Update case",
+    "Impact": "Medium",
+    "Urgency": "Medium",
+    "SupplierTicketNumber": "123456789"
+  }
+}

@@ -42,7 +42,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * WireMock-backed tests for the Equinix Internet Access (EIA) v1 Patch Panels read surface — the
+ * WireMock-backed tests for the Equinix Internet Access (EIA) v1 Patch Panels read surface - the
  * {@code PatchPanelsV1} group in {@code apiParams_InternetAccess.json}. Covers the
  * {@code list(ibx, accountNumber, cageSpaceId, cabinetSpaceId)} four-arg overload and the
  * {@code list(..., mediaTypesName)} five-arg overload. Both route through the shared uriFormat

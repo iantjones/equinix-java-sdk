@@ -1,0 +1,29 @@
+version: 2
+updates:
+  - package-ecosystem: maven
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 10
+    groups:
+      test-and-build:
+        patterns:
+          - "org.junit*"
+          - "org.mockito*"
+          - "org.wiremock*"
+          - "org.jacoco*"
+          - "org.apache.maven.plugins*"
+          - "org.codehaus.mojo*"
+          - "org.owasp*"
+    ignore:
+      # Pinned on purpose; see the comments in pom.xml.
+      - dependency-name: "com.azure:azure-messaging-servicebus"
+        update-types: ["version-update:semver-minor"]
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns:
+          - "*"

@@ -10,6 +10,8 @@ import com.eqixiac.equinix.design.optimizer.wizard.enums.BandwidthStrategy;
 import com.eqixiac.equinix.design.optimizer.wizard.enums.CloudToCloudStrategy;
 import com.eqixiac.equinix.design.optimizer.wizard.model.DeploymentPlan;
 import com.eqixiac.equinix.design.optimizer.wizard.model.PlanPricing;
+import com.eqixiac.equinix.design.optimizer.wizard.model.PlannedInterconnect;
+import com.eqixiac.equinix.design.spec.DesignSpec;
 import com.eqixiac.equinix.design.optimizer.wizard.model.PlannedMulticloudInterconnect;
 import com.eqixiac.equinix.design.value.ratecard.MulticloudLinkQuote;
 import com.eqixiac.equinix.design.value.ratecard.RateCard;
@@ -26,7 +28,7 @@ import java.util.stream.Stream;
 /**
  * Entry point for the Deployment Wizard. Takes an {@link OptimizationResult} and produces
  * an executable {@link DeploymentPlan} with Cloud Routers, provider connections, inter-metro
- * backbone links, and routing protocol configurations — all with bandwidth sizing that
+ * backbone links, and routing protocol configurations - all with bandwidth sizing that
  * drives accurate pricing.
  *
  * <h3>Example Usage</h3>
@@ -48,7 +50,7 @@ import java.util.stream.Stream;
  * System.out.println(plan.toMarkdown());
  *
  * // Plans are immutable: dryRun() returns a NEW plan with refreshed validation state,
- * // so reassign the result — calling it without using the return value validates nothing
+ * // so reassign the result - calling it without using the return value validates nothing
  * // the caller can see.
  * plan = plan.dryRun();
  *
@@ -112,7 +114,7 @@ public final class DeploymentWizard {
         private final FabricGateway fabric;
         private final OptimizationResult optimizationResult;
 
-        /** The deployable package tiers — every {@link GatewayPackageCode} except {@code UNKNOWN}. */
+        /** The deployable package tiers - every {@link GatewayPackageCode} except {@code UNKNOWN}. */
         private static final String VALID_PACKAGE_CODES = Stream.of(GatewayPackageCode.values())
                 .filter(code -> code != GatewayPackageCode.UNKNOWN)
                 .map(Enum::name)
@@ -123,7 +125,7 @@ public final class DeploymentWizard {
         private String routerNamePrefix = "FCR";
 
         // Connection settings. Every wizard-planned connection originates on a Fabric Cloud Router
-        // A-side, and Fabric accepts an FCR-originated virtual connection only as IP_VC — the old
+        // A-side, and Fabric accepts an FCR-originated virtual connection only as IP_VC - the old
         // EVPL_VC default flowed a port-only type into every create/dry-run body and the exported
         // HCL (FCR A-side => IP_VC).
         private ConnectionType providerConnectionType = ConnectionType.IP_VC;
@@ -159,19 +161,31 @@ public final class DeploymentWizard {
         private MulticloudEnvironmentCatalog multicloudEnvironments;
         private int multicloudPathTier = MulticloudLinkQuote.DEFAULT_PATH_TIER;
 
+        // Plan identity and non-executable elements
+        private String deploymentName;
+        private String specFingerprint;
+        private DesignSpec designSpec;
+        private final List<PlannedInterconnect> interconnects = new ArrayList<>();
+
+        // Currency: every plan figure is restated in one currency
+        private String currency;
+        private com.eqixiac.equinix.design.spi.CurrencyConverter currencyConverter;
+        private com.eqixiac.equinix.design.spi.CurrencyConverter defaultRates;
+        private com.eqixiac.equinix.design.cost.CurrencyConverters.Chain converter;
+
         Builder(FabricGateway fabric, OptimizationResult optimizationResult) {
             this.fabric = fabric;
             this.optimizationResult = optimizationResult;
         }
 
-        // ── Cloud Router Settings ──
+        // Cloud Router Settings
 
         /**
          * Sets the Cloud Router package code from its string form, leniently: the value is
          * trimmed and upper-cased before being resolved (so {@code "standard"} and
          * {@code " Premium "} both work). Defaults to {@link GatewayPackageCode#STANDARD}.
          *
-         * <p>The code is validated here — once, at plan time — so a bad value fails fast
+         * <p>The code is validated here - once, at plan time - so a bad value fails fast
          * instead of surfacing as an {@code IllegalArgumentException} mid-deployment in
          * {@link DeploymentPlan#execute()} after some routers have already been provisioned.</p>
          *
@@ -240,10 +254,10 @@ public final class DeploymentWizard {
             return this;
         }
 
-        // ── Connection Settings ──
+        // Connection Settings
 
         /**
-         * Sets the Fabric connection type for provider connections. Defaults to {@code IP_VC} — the
+         * Sets the Fabric connection type for provider connections. Defaults to {@code IP_VC} - the
          * only type Fabric accepts for a connection whose A-side is a Cloud Router, which every
          * wizard-planned provider connection has. Setting a type incompatible with an FCR A-side
          * (e.g. the port-based {@code EVPL_VC}) is flagged by the plan's Layer-1 validation
@@ -258,7 +272,7 @@ public final class DeploymentWizard {
         }
 
         /**
-         * Sets the Fabric connection type for backbone links. Defaults to {@code IP_VC} — a backbone
+         * Sets the Fabric connection type for backbone links. Defaults to {@code IP_VC} - a backbone
          * link is Cloud Router to Cloud Router, and Fabric accepts an FCR-originated virtual
          * connection only as {@code IP_VC}. An incompatible type is flagged by the plan's Layer-1
          * validation (FCR A-side =&gt; IP_VC).
@@ -271,7 +285,7 @@ public final class DeploymentWizard {
             return this;
         }
 
-        // ── Backbone Settings ──
+        // Backbone Settings
 
         /**
          * Sets the bandwidth for inter-metro backbone links in Mbps. Defaults to 10,000 Mbps.
@@ -297,7 +311,7 @@ public final class DeploymentWizard {
             return this;
         }
 
-        // ── Bandwidth Strategy ──
+        // Bandwidth Strategy
 
         /**
          * Sets the bandwidth sizing strategy for provider connections.
@@ -323,18 +337,18 @@ public final class DeploymentWizard {
          * @param bandwidthMap the custom bandwidth mapping
          * @return this builder for method chaining
          * @throws IllegalArgumentException if the map is {@code null} or any of its values is
-         *         {@code null} — a null bandwidth cannot size a connection, so it fails fast here
+         *         {@code null} - a null bandwidth cannot size a connection, so it fails fast here
          *         naming the offending key instead of surfacing as an NPE mid-plan
          */
         public Builder customBandwidthMap(Map<String, Integer> bandwidthMap) {
             if (bandwidthMap == null) {
-                throw new IllegalArgumentException("customBandwidthMap must not be null — omit the "
+                throw new IllegalArgumentException("customBandwidthMap must not be null - omit the "
                         + "call (or use bandwidthStrategy) when no custom sizing is wanted.");
             }
             for (Map.Entry<String, Integer> entry : bandwidthMap.entrySet()) {
                 if (entry.getValue() == null) {
                     throw new IllegalArgumentException("customBandwidthMap value for key '"
-                            + entry.getKey() + "' is null — every entry must carry a bandwidth in Mbps.");
+                            + entry.getKey() + "' is null - every entry must carry a bandwidth in Mbps.");
                 }
             }
             this.customBandwidthMap = new HashMap<>(bandwidthMap);
@@ -342,7 +356,7 @@ public final class DeploymentWizard {
             return this;
         }
 
-        // ── Routing Protocol Settings ──
+        // Routing Protocol Settings
 
         /**
          * Sets the customer ASN for BGP peering. Defaults to 65100.
@@ -362,7 +376,7 @@ public final class DeploymentWizard {
          *
          * <p><strong>Cross-plan reuse caveat:</strong> allocation is scoped to a single plan, so
          * every plan restarts from this base. Plans executed into the <em>same</em> project would
-         * therefore reuse the same peering addresses — give each such plan a distinct base (e.g.
+         * therefore reuse the same peering addresses - give each such plan a distinct base (e.g.
          * {@code .subnetBase("10.200.0.0")}) to keep their /30s disjoint.</p>
          *
          * @param subnetBase an IPv4 dotted-quad base network, e.g. {@code "10.200.0.0"} (the fourth
@@ -413,7 +427,7 @@ public final class DeploymentWizard {
             return this;
         }
 
-        // ── Account Settings ──
+        // Account Settings
 
         /**
          * Sets the account number for billing. Applied to all created resources.
@@ -440,10 +454,10 @@ public final class DeploymentWizard {
         /**
          * Adds notification email addresses for provisioning updates. <strong>Every</strong> address
          * is applied to every planned Cloud Router and connection (Fabric mandates at least one
-         * recipient per Cloud Router, error {@code EQ-3040013}) — all of them are sent on the wire
+         * recipient per Cloud Router, error {@code EQ-3040013}) - all of them are sent on the wire
          * bodies and rendered into exported HCL, never just the first.
          *
-         * <p>Repeated calls accumulate — addresses from every call are kept, none replaced.
+         * <p>Repeated calls accumulate - addresses from every call are kept, none replaced.
          * A plan built with no recipient at all fails Layer-1 validation.</p>
          *
          * @param emails one or more email addresses
@@ -461,7 +475,7 @@ public final class DeploymentWizard {
             return this;
         }
 
-        // ── Pricing ──
+        // Pricing
 
         /**
          * Sets the rate card used to price the plan. When omitted, the wizard
@@ -493,7 +507,58 @@ public final class DeploymentWizard {
             return this;
         }
 
-        // ── Cloud-to-cloud flows (Beta) ──
+        /**
+         * Sets the currency the plan is priced in. Every Cloud Router, connection and backbone price quoted in
+         * another currency (live Fabric pricing quotes London in GBP and Frankfurt in EUR) is restated in it
+         * through {@code CurrencyConverters}: rates pinned in the design spec, then {@link #currencyConverter},
+         * then the default sources (live ECB rates, then the bundled table). Each converted line keeps its
+         * original amount and currency, the rate, its source and date ({@code PlanPricing.getLines()}). A price
+         * whose currency no source covers stays in its own currency and the plan reports per-currency subtotals.
+         * Defaults to the design spec's {@code commercial.currency} ({@link #designSpec}, else the optimisation
+         * result's spec), else USD.
+         *
+         * @param currency an ISO 4217 code
+         * @return this builder for method chaining
+         * @throws IllegalArgumentException if {@code currency} is not an ISO 4217 code
+         */
+        public Builder currency(String currency) {
+            try {
+                java.util.Currency.getInstance(currency);
+            } catch (RuntimeException e) {
+                throw new IllegalArgumentException("currency must be an ISO 4217 code: " + currency);
+            }
+            this.currency = currency;
+            this.converter = null;
+            return this;
+        }
+
+        /**
+         * Supplies exchange rates ranked below rates pinned in the design spec and above the default sources.
+         *
+         * @param converter the converter, or {@code null} for none
+         * @return this builder for method chaining
+         */
+        public Builder currencyConverter(com.eqixiac.equinix.design.spi.CurrencyConverter converter) {
+            this.currencyConverter = converter;
+            this.converter = null;
+            return this;
+        }
+
+        /**
+         * Replaces the default rate sources (live ECB rates via Frankfurter, then the bundled table), for example
+         * with {@code CurrencyConverters.bundledOnly()} offline, or {@code CurrencyConverters.none()} to convert
+         * nothing (prices in other currencies are then reported as per-currency subtotals).
+         *
+         * @param defaults the fallback converter; {@code null} restores the default
+         * @return this builder for method chaining
+         */
+        public Builder defaultRates(com.eqixiac.equinix.design.spi.CurrencyConverter defaults) {
+            this.defaultRates = defaults;
+            this.converter = null;
+            return this;
+        }
+
+        // Cloud-to-cloud flows (Beta)
 
         /**
          * Sets how the plan treats a flow between two clouds (a workload that depends on both).
@@ -512,7 +577,7 @@ public final class DeploymentWizard {
          */
         public Builder cloudToCloudStrategy(CloudToCloudStrategy strategy) {
             if (strategy == null) {
-                throw new IllegalArgumentException("cloudToCloudStrategy must not be null — use "
+                throw new IllegalArgumentException("cloudToCloudStrategy must not be null - use "
                         + "CloudToCloudStrategy.EQUINIX_ONLY to plan without native multicloud links.");
             }
             this.cloudToCloudStrategy = strategy;
@@ -535,7 +600,7 @@ public final class DeploymentWizard {
          */
         public Builder multicloudEnvironments(MulticloudEnvironmentCatalog catalog) {
             if (catalog == null) {
-                throw new IllegalArgumentException("multicloudEnvironments must not be null — use "
+                throw new IllegalArgumentException("multicloudEnvironments must not be null - use "
                         + "MulticloudEnvironmentCatalog.empty() to match nothing.");
             }
             this.multicloudEnvironments = catalog;
@@ -562,7 +627,78 @@ public final class DeploymentWizard {
             return this;
         }
 
-        // ── Build ──
+        // Plan identity
+
+        /**
+         * Records the design spec the plan is derived from: its {@code fingerprint()} is stamped on the
+         * plan, and its {@code name} becomes the deployment name unless {@link #deploymentName(String)}
+         * sets one.
+         *
+         * @param spec the design spec
+         * @return this builder for method chaining
+         * @throws IllegalArgumentException if {@code spec} is {@code null}
+         */
+        public Builder designSpec(DesignSpec spec) {
+            if (spec == null) {
+                throw new IllegalArgumentException("designSpec must not be null");
+            }
+            this.specFingerprint = spec.fingerprint();
+            this.designSpec = spec;
+            this.converter = null;
+            if (this.deploymentName == null && spec.name() != null && !spec.name().isBlank()) {
+                this.deploymentName = spec.name().trim();
+            }
+            return this;
+        }
+
+        /**
+         * Records the fingerprint of the design spec the plan is derived from, when the spec itself is
+         * not at hand (for example one carried on an optimization result).
+         *
+         * @param fingerprint the {@code DesignSpec.fingerprint()}
+         * @return this builder for method chaining
+         */
+        public Builder specFingerprint(String fingerprint) {
+            this.specFingerprint = fingerprint;
+            return this;
+        }
+
+        /**
+         * Sets the deployment name: the identity that survives edits of the plan. Checkpoints are kept
+         * under it and every connection the plan creates carries it in {@code additionalInfo}, so two
+         * deployments in one project must use different names. Defaults to the design spec's name,
+         * else the router name prefix.
+         *
+         * @param name a non-blank name
+         * @return this builder for method chaining
+         * @throws IllegalArgumentException if {@code name} is blank
+         */
+        public Builder deploymentName(String name) {
+            if (name == null || name.isBlank()) {
+                throw new IllegalArgumentException("deploymentName must not be blank");
+            }
+            this.deploymentName = name.trim();
+            return this;
+        }
+
+        /**
+         * Adds a Fabric Interconnect to the plan. It is rendered and priced as unknown and is never
+         * executed: the public API has no endpoint that creates one (see {@link PlannedInterconnect}).
+         * A key is assigned when the element has none.
+         *
+         * @param interconnect the planned Interconnect
+         * @return this builder for method chaining
+         * @throws IllegalArgumentException if {@code interconnect} is {@code null}
+         */
+        public Builder interconnect(PlannedInterconnect interconnect) {
+            if (interconnect == null) {
+                throw new IllegalArgumentException("interconnect must not be null");
+            }
+            this.interconnects.add(interconnect);
+            return this;
+        }
+
+        // Build
 
         /**
          * Generates the deployment plan from the optimization result using the configured settings.
@@ -578,14 +714,14 @@ public final class DeploymentWizard {
         /**
          * Reprices a plan whose connections changed (e.g. an MCP profile choice altered a billable
          * tier) and returns the result as a <em>new</em> {@link DeploymentPlan}: the argument is
-         * never mutated (plans are immutable values), so callers must use the returned copy — whose
+         * never mutated (plans are immutable values), so callers must use the returned copy - whose
          * monthly and setup totals match the plan's <em>current</em> connections rather than the
          * tiers they were originally priced at.
          *
          * <p>The plan's current Cloud Routers, provider connections and backbone links are re-priced
-         * against <em>this</em> builder's rate card and commitment term — the same configuration the plan
-         * was built with — through the wizard's single pricing authority
-         * ({@code DeploymentWizardEngine.estimatePricing}), so per-metro currency reconciliation is
+         * against <em>this</em> builder's rate card and commitment term - the same configuration the plan
+         * was built with - through the wizard's single pricing authority
+         * ({@code PlanPricer.estimatePricing}), so per-metro currency reconciliation is
          * preserved exactly as at plan time. The plan's {@code pricing} is replaced and, when the plan
          * carries native multicloud links, so is each link's {@code pricing} and
          * {@code recommendation} (<b>Beta</b>): the native quote, the Equinix-path cost for the same
@@ -600,17 +736,17 @@ public final class DeploymentWizard {
          */
         public DeploymentPlan reprice(DeploymentPlan plan) {
             if (plan.multicloudLinksOrEmpty().isEmpty()) {
-                PlanPricing pricing = DeploymentWizardEngine.estimatePricing(
+                PlanPricing pricing = PlanPricer.estimatePricing(
                         this, plan.getCloudRouters(), plan.getProviderConnections(), plan.getBackboneLinks());
                 return plan.toBuilder().pricing(pricing).build();
             }
             // One rate-card instance for the links and the plan, as at plan time.
-            RateCard resolved = DeploymentWizardEngine.resolveRateCard(this);
+            RateCard resolved = PlanPricer.resolveRateCard(this);
             List<PlannedMulticloudInterconnect> links = MulticloudLinkPlanner.price(
                     this, resolved, plan.getMulticloudLinks(), plan.getCloudRouters(), plan.getProviderConnections(),
                     plan.getBackboneLinks(),
                     plan.getSourceOptimization() != null ? plan.getSourceOptimization().getRequest() : null);
-            PlanPricing pricing = DeploymentWizardEngine.estimatePricing(
+            PlanPricing pricing = PlanPricer.estimatePricing(
                     this, resolved, plan.getCloudRouters(), plan.getProviderConnections(), plan.getBackboneLinks(),
                     links);
             return plan.toBuilder().multicloudLinks(links).pricing(pricing).build();
@@ -640,5 +776,40 @@ public final class DeploymentWizard {
         CloudToCloudStrategy getCloudToCloudStrategy() { return cloudToCloudStrategy; }
         MulticloudEnvironmentCatalog getMulticloudEnvironments() { return multicloudEnvironments; }
         int getMulticloudPathTier() { return multicloudPathTier; }
+        String getDeploymentName() { return deploymentName; }
+        String getSpecFingerprint() { return specFingerprint; }
+        List<PlannedInterconnect> getInterconnects() { return interconnects; }
+
+        /** The spec whose commercial terms price the plan: {@link #designSpec}, else the optimisation result's. */
+        private DesignSpec pricingSpec() {
+            if (designSpec != null) {
+                return designSpec;
+            }
+            return optimizationResult == null ? null : optimizationResult.getSpec();
+        }
+
+        /** The currency the plan is priced in: {@link #currency}, else the spec's, else USD. */
+        String getPlanCurrency() {
+            if (currency != null) {
+                return currency;
+            }
+            DesignSpec spec = pricingSpec();
+            return spec == null ? "USD" : spec.commercial().currencyOrDefault();
+        }
+
+        /** The converter for {@link #getPlanCurrency()}: spec-pinned rates, the supplied converter, the defaults. */
+        synchronized com.eqixiac.equinix.design.cost.CurrencyConverters.Chain getConverter() {
+            if (converter == null) {
+                DesignSpec spec = pricingSpec();
+                com.eqixiac.equinix.design.spec.CommercialTerms terms = com.eqixiac.equinix.design.spec.CommercialTerms
+                        .builder().currency(getPlanCurrency())
+                        .exchangeRates(spec != null && getPlanCurrency().equals(spec.commercial().currencyOrDefault())
+                                ? spec.commercial().exchangeRates() : null)
+                        .build();
+                converter = com.eqixiac.equinix.design.cost.CurrencyConverters.forTerms(terms, currencyConverter,
+                        defaultRates);
+            }
+            return converter;
+        }
     }
 }

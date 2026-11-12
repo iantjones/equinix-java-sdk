@@ -12,7 +12,7 @@ package com.eqixiac.equinix.design.value.ratecard;
  *   <tr><td>{@link #INTERNET}</td><td>provider internet data-transfer-out rate</td><td>none</td></tr>
  *   <tr><td>{@link #PRIVATE}</td><td>provider private-interconnect rate</td>
  *       <td>Fabric connection, Cloud Router, CSP port ({@code RateCard.connection},
- *       {@code RateCard.cloudRouter}, {@code ReferenceRateCard.cspInterconnectPortMonthly})</td></tr>
+ *       {@code RateCard.cloudRouter}, {@code ReferenceRateCard.providerConnection})</td></tr>
  *   <tr><td>{@link #MULTICLOUD_INTERCONNECT}</td><td>per-GB rate on a native provider-to-provider
  *       link (zero on the products bundled in {@code ReferenceRateCard})</td>
  *       <td>two flat hourly fees, one per provider ({@code RateCard.multicloudLink})</td></tr>
@@ -20,12 +20,12 @@ package com.eqixiac.equinix.design.value.ratecard;
  */
 public enum EgressPath {
 
-    /** Egress to the public internet — the provider's headline per-GB data-transfer-out rate. */
+    /** Egress to the public internet - the provider's headline per-GB data-transfer-out rate. */
     INTERNET,
 
     /**
-     * Egress over a dedicated private interconnect — AWS Direct Connect, Azure ExpressRoute,
-     * Google Cloud Interconnect, or OCI FastConnect — typically reached via an Equinix Fabric
+     * Egress over a dedicated private interconnect - AWS Direct Connect, Azure ExpressRoute,
+     * Google Cloud Interconnect, or OCI FastConnect - typically reached via an Equinix Fabric
      * connection and billed at a substantially lower per-GB rate.
      */
     PRIVATE,

@@ -1,0 +1,2084 @@
+{
+ "_comment": "Baseline of spec violations found by the first sweep (2026-11-12) that are not yet triaged. Owners fix the fixture (or move the entry to fixture-deviations.json with a live observation); never add new entries here to make a new fixture pass.",
+ "pending": [
+  {
+   "fixture": "core/errors/iam_400.json",
+   "pointer": "/error/message",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "core",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "core/errors/iam_400.json",
+   "pointer": "/error/details",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "core",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "core/errors/iam_400.json",
+   "pointer": "/error/traceId",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "core",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "core/errors/smartview_v1_400.json",
+   "pointer": "/payLoad",
+   "kind": "type",
+   "detail": "expected object, got str",
+   "date": "2026-11-12",
+   "owner": "core",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "core/errors/smartview_v1_400.json",
+   "pointer": "/status/error",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "core",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "core/errors/smartview_v2_400.json",
+   "pointer": "/*",
+   "kind": "required",
+   "detail": "missing required property \"errorMessage\"",
+   "date": "2026-11-12",
+   "owner": "core",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "core/errors/smartview_v2_400.json",
+   "pointer": "/*/title",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "core",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "core/errors/smartview_v2_400.json",
+   "pointer": "/*/message",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "core",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "core/errors/smartview_v2_400.json",
+   "pointer": "/*/developerMessage",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "core",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "core/errors/smartview_v2_400.json",
+   "pointer": "/*/fieldName",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "core",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "core/errors/sts_400.json",
+   "pointer": "/error_description",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "core",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "core/oauth_token_response.json",
+   "pointer": "/token_timeout",
+   "kind": "type",
+   "detail": "expected string, got int",
+   "date": "2026-11-12",
+   "owner": "core",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "core/oauth_token_response.json",
+   "pointer": "/refresh_token_timeout",
+   "kind": "type",
+   "detail": "expected string, got int",
+   "date": "2026-11-12",
+   "owner": "core",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "operations/asset_response.json",
+   "pointer": "/productDetails",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "operations",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "operations/billing_account_response.json",
+   "pointer": "/billingContact",
+   "kind": "required",
+   "detail": "missing required property \"firstName\"",
+   "date": "2026-11-12",
+   "owner": "operations",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "operations/billing_account_response.json",
+   "pointer": "/billingContact/name",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "operations",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "operations/billing_account_response.json",
+   "pointer": "/billingContact/phone",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "operations",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "operations/billing_account_response.json",
+   "pointer": "/invoices/*",
+   "kind": "required",
+   "detail": "missing required property \"date\"",
+   "date": "2026-11-12",
+   "owner": "operations",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "operations/billing_account_response.json",
+   "pointer": "/invoices/*/invoiceDate",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "operations",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "operations/billing_account_response.json",
+   "pointer": "/invoices/*/currencyCode",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "operations",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "operations/billing_account_response.json",
+   "pointer": "/invoices/*/totalAmount",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "operations",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "operations/digital_loa_response.json",
+   "pointer": "/state",
+   "kind": "enum",
+   "detail": "value not in spec enum",
+   "date": "2026-11-12",
+   "owner": "operations",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "operations/digital_loa_response.json",
+   "pointer": "/products/*/ibx",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "operations",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "operations/digital_loa_response.json",
+   "pointer": "/products/*/crossConnect",
+   "kind": "required",
+   "detail": "missing required property \"zSide\"",
+   "date": "2026-11-12",
+   "owner": "operations",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "operations/digital_loa_response.json",
+   "pointer": "/requestor",
+   "kind": "required",
+   "detail": "missing required property \"type\"",
+   "date": "2026-11-12",
+   "owner": "operations",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "operations/digital_loa_response.json",
+   "pointer": "/requestor/name",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "operations",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "operations/digital_loa_response.json",
+   "pointer": "/requestor/accountNumber",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "operations",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "operations/digital_loa_response.json",
+   "pointer": "/provider",
+   "kind": "required",
+   "detail": "missing required property \"type\"",
+   "date": "2026-11-12",
+   "owner": "operations",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "operations/digital_loa_response.json",
+   "pointer": "/provider/name",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "operations",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "operations/digital_loa_response.json",
+   "pointer": "/provider/accountNumber",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "operations",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "operations/order_history_search_response.json",
+   "pointer": "/content/*/submittedDate",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "operations",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "operations/paginated_assets.json",
+   "pointer": "/pagination",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "operations",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "operations/paginated_assets.json",
+   "pointer": "/data/*/productDetails",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "operations",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "operations/paginated_attachments.json",
+   "pointer": "/",
+   "kind": "required",
+   "detail": "missing required property \"_links\"",
+   "date": "2026-11-12",
+   "owner": "operations",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "operations/paginated_attachments.json",
+   "pointer": "/page/next",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "operations",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "operations/paginated_attachments.json",
+   "pointer": "/page/previous",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "operations",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "operations/paginated_billing_accounts.json",
+   "pointer": "/",
+   "kind": "required",
+   "detail": "missing required property \"_links\"",
+   "date": "2026-11-12",
+   "owner": "operations",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "operations/paginated_billing_accounts.json",
+   "pointer": "/page/next",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "operations",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "operations/paginated_billing_accounts.json",
+   "pointer": "/page/previous",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "operations",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "operations/paginated_billing_accounts_v2.json",
+   "pointer": "/pagination/next",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "operations",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "operations/paginated_billing_accounts_v2.json",
+   "pointer": "/pagination/previous",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "operations",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "operations/paginated_invoice_summaries.json",
+   "pointer": "/data/*/customerDetails/legalEntity",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "operations",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "operations/paginated_invoice_summaries.json",
+   "pointer": "/data/*/customerDetails/countryCode",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "operations",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "operations/paginated_reports.json",
+   "pointer": "/",
+   "kind": "required",
+   "detail": "missing required property \"_links\"",
+   "date": "2026-11-12",
+   "owner": "operations",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "operations/paginated_unified_notifications.json",
+   "pointer": "/data/*/id",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "operations",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "operations/paginated_unified_notifications.json",
+   "pointer": "/data/*/contacts/*/email",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "operations",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "operations/report_definitions_response.json",
+   "pointer": "/*/categories/*",
+   "kind": "enum",
+   "detail": "value not in spec enum",
+   "date": "2026-11-12",
+   "owner": "operations",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "operations/report_response.json",
+   "pointer": "/createdBy",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "operations",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "operations/report_response.json",
+   "pointer": "/createdDate",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "operations",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "operations/report_response.json",
+   "pointer": "/startTime",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "operations",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "operations/report_response.json",
+   "pointer": "/endTime",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "operations",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "operations/report_response.json",
+   "pointer": "/numberOfAttempts",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "operations",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "operations/report_response.json",
+   "pointer": "/parameters",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "operations",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "operations/scheduled_reports_response.json",
+   "pointer": "/",
+   "kind": "required",
+   "detail": "missing required property \"_links\"",
+   "date": "2026-11-12",
+   "owner": "operations",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "operations/scheduled_reports_response.json",
+   "pointer": "/data/*",
+   "kind": "required",
+   "detail": "missing required property \"lastAttemptedDate\"",
+   "date": "2026-11-12",
+   "owner": "operations",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "operations/support_case_response.json",
+   "pointer": "/attachments/*",
+   "kind": "type",
+   "detail": "expected array, got dict",
+   "date": "2026-11-12",
+   "owner": "operations",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "operations/support_case_response.json",
+   "pointer": "/email/*",
+   "kind": "type",
+   "detail": "expected array, got dict",
+   "date": "2026-11-12",
+   "owner": "operations",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "design/estate/connections_search_page1.json",
+   "pointer": "/data/*/state",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "design",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "design/estate/connections_search_page1.json",
+   "pointer": "/data/*/order/isBillable",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "design",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "design/estate/connections_search_page2.json",
+   "pointer": "/data/*/state",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "design",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "design/estate/connections_search_page2.json",
+   "pointer": "/data/*/order/isBillable",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "design",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "design/estate/metrics_connection_search_response.json",
+   "pointer": "/data/*/subject",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "design",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "design/estate/metrics_empty_search_response.json",
+   "pointer": "/data/*/subject",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "design",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "design/estate/ne_device_response.json",
+   "pointer": "/termLength",
+   "kind": "type",
+   "detail": "expected string, got int",
+   "date": "2026-11-12",
+   "owner": "design",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "design/estate/ne_device_response.json",
+   "pointer": "/createdDate",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "design",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "design/estate/ports_list_response.json",
+   "pointer": "/data/*/cvpId",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "design",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "design/estate/ports_list_response.json",
+   "pointer": "/data/*/serviceCode",
+   "kind": "enum",
+   "detail": "value not in spec enum",
+   "date": "2026-11-12",
+   "owner": "design",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/cloud_router_command_response.json",
+   "pointer": "/state",
+   "kind": "enum",
+   "detail": "value not in spec enum",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/cloud_router_not_provisioned_response.json",
+   "pointer": "/type",
+   "kind": "enum",
+   "detail": "value not in spec enum",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/cloud_router_package_response.json",
+   "pointer": "/changeLog/createdBy",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/cloud_router_provisioning_response.json",
+   "pointer": "/type",
+   "kind": "enum",
+   "detail": "value not in spec enum",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/cloud_router_response.json",
+   "pointer": "/type",
+   "kind": "enum",
+   "detail": "value not in spec enum",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/connection_provisioned_response.json",
+   "pointer": "/",
+   "kind": "required",
+   "detail": "missing required property \"aSide\"",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/connection_provisioned_response.json",
+   "pointer": "/state",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/connection_response.json",
+   "pointer": "/state",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/eia_service_response.json",
+   "pointer": "/",
+   "kind": "required",
+   "detail": "missing required property \"change\"",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/ip_block_response.json",
+   "pointer": "/order/purchaseOrderNumber",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/ip_block_response.json",
+   "pointer": "/order/orderLine",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/metro_single_response.json",
+   "pointer": "/ibxs",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/network_change_response.json",
+   "pointer": "/information",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/network_changes_response.json",
+   "pointer": "/data/*/information",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/network_response.json",
+   "pointer": "/",
+   "kind": "required",
+   "detail": "missing required property \"notifications\"",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/network_response.json",
+   "pointer": "/change/type",
+   "kind": "enum",
+   "detail": "value not in spec enum",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/network_response.json",
+   "pointer": "/change/status",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/network_response.json",
+   "pointer": "/change/data",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/network_response.json",
+   "pointer": "/change/information",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/network_response.json",
+   "pointer": "/change/createdDateTime",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/network_response.json",
+   "pointer": "/change/updatedDateTime",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/paginated_cloud_router_commands.json",
+   "pointer": "/data/*/state",
+   "kind": "enum",
+   "detail": "value not in spec enum",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/paginated_cloud_routers.json",
+   "pointer": "/data/*/type",
+   "kind": "enum",
+   "detail": "value not in spec enum",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/paginated_connections.json",
+   "pointer": "/data/*/state",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/paginated_eia_services.json",
+   "pointer": "/",
+   "kind": "required",
+   "detail": "missing required property \"sort\"",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/paginated_eia_services.json",
+   "pointer": "/data/*",
+   "kind": "required",
+   "detail": "missing required property \"change\"",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/paginated_ip_blocks.json",
+   "pointer": "/data/*",
+   "kind": "required",
+   "detail": "missing required property \"project\"",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/paginated_metros_forward_compat.json",
+   "pointer": "/data/*/ibxs",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/paginated_metros_list.json",
+   "pointer": "/data/*/ibxs",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/paginated_networks.json",
+   "pointer": "/data/*",
+   "kind": "required",
+   "detail": "missing required property \"changeLog\"",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/paginated_prices_fidelity.json",
+   "pointer": "/data/*/type",
+   "kind": "enum",
+   "detail": "value not in spec enum",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/paginated_prices_fidelity.json",
+   "pointer": "/data/*/metroConnect",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/paginated_prices_structured.json",
+   "pointer": "/data/*/router/package/code",
+   "kind": "enum",
+   "detail": "value not in spec enum",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/paginated_route_aggregations.json",
+   "pointer": "/data/*/state",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/paginated_route_filters.json",
+   "pointer": "/data/*/state",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/paginated_routing_protocols.json",
+   "pointer": "/data/*/uuid",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/paginated_routing_protocols.json",
+   "pointer": "/data/*/href",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/paginated_routing_protocols.json",
+   "pointer": "/data/*/name",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/paginated_routing_protocols.json",
+   "pointer": "/data/*/state",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/paginated_routing_protocols.json",
+   "pointer": "/data/*/bgpIpv4",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/paginated_routing_protocols.json",
+   "pointer": "/data/*/customerAsn",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/paginated_routing_protocols.json",
+   "pointer": "/data/*/equinixAsn",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/paginated_routing_protocols.json",
+   "pointer": "/data/*/directIpv4",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/paginated_stream_alert_rules.json",
+   "pointer": "/data/*/type",
+   "kind": "enum",
+   "detail": "value not in spec enum",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/precision_time_response.json",
+   "pointer": "/pricing",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/route_aggregation_change_response.json",
+   "pointer": "/type",
+   "kind": "enum",
+   "detail": "value not in spec enum",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/route_aggregation_changes_response.json",
+   "pointer": "/data/*/type",
+   "kind": "enum",
+   "detail": "value not in spec enum",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/route_aggregation_changes_response.json",
+   "pointer": "/data/*/status",
+   "kind": "enum",
+   "detail": "value not in spec enum",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/route_aggregation_response.json",
+   "pointer": "/state",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/route_filter_change_response.json",
+   "pointer": "/type",
+   "kind": "enum",
+   "detail": "value not in spec enum",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/route_filter_changes_response.json",
+   "pointer": "/data/*/type",
+   "kind": "enum",
+   "detail": "value not in spec enum",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/route_filter_changes_response.json",
+   "pointer": "/data/*/status",
+   "kind": "enum",
+   "detail": "value not in spec enum",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/route_filter_response.json",
+   "pointer": "/state",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/route_filter_response.json",
+   "pointer": "/changeLog",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/route_filter_response.json",
+   "pointer": "/change/type",
+   "kind": "enum",
+   "detail": "value not in spec enum",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/route_filter_response.json",
+   "pointer": "/change/status",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/route_filter_response.json",
+   "pointer": "/change/data",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/route_filter_response.json",
+   "pointer": "/change/information",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/route_filter_response.json",
+   "pointer": "/change/createdDateTime",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/route_filter_response.json",
+   "pointer": "/change/updatedDateTime",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/route_filter_rule_response.json",
+   "pointer": "/change/type",
+   "kind": "enum",
+   "detail": "value not in spec enum",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/route_filter_rule_response.json",
+   "pointer": "/change/status",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/route_filter_rule_response.json",
+   "pointer": "/change/information",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/route_filter_rule_response.json",
+   "pointer": "/change/createdDateTime",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/route_filter_rule_response.json",
+   "pointer": "/change/updatedDateTime",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/routing_protocol_response.json",
+   "pointer": "/directIpv4",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/routing_protocol_response.json",
+   "pointer": "/directIpv6",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/routing_protocol_response.json",
+   "pointer": "/project/href",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/routing_protocol_response.json",
+   "pointer": "/change/status",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/routing_protocol_response.json",
+   "pointer": "/change/information",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/routing_protocol_response.json",
+   "pointer": "/change/createdDateTime",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/routing_protocol_response.json",
+   "pointer": "/change/updatedDateTime",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/routing_protocols_bulk_response.json",
+   "pointer": "/data/*/uuid",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/routing_protocols_bulk_response.json",
+   "pointer": "/data/*/href",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/routing_protocols_bulk_response.json",
+   "pointer": "/data/*/name",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/routing_protocols_bulk_response.json",
+   "pointer": "/data/*/state",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/routing_protocols_bulk_response.json",
+   "pointer": "/data/*/bgpIpv4",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/routing_protocols_bulk_response.json",
+   "pointer": "/data/*/customerAsn",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/routing_protocols_bulk_response.json",
+   "pointer": "/data/*/equinixAsn",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/routing_protocols_bulk_response.json",
+   "pointer": "/data/*/directIpv4",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/service_profile_environments_response.json",
+   "pointer": "/data/*/region",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/service_profile_environments_response.json",
+   "pointer": "/data/*/metros/*/href",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/service_profile_environments_response.json",
+   "pointer": "/data/*/metros/*/metroCode",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/service_profile_environments_response.json",
+   "pointer": "/data/*/metros/*/type",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/service_profile_response.json",
+   "pointer": "/metros/*/href",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/service_token_response.json",
+   "pointer": "/project/href",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/stream_device_attaching_response.json",
+   "pointer": "/interfaces",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/stream_device_detaching_response.json",
+   "pointer": "/interfaces",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "fabric/stream_device_response.json",
+   "pointer": "/interfaces",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "fabric",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "iam/access_policy_response.json",
+   "pointer": "/permissions/*",
+   "kind": "type",
+   "detail": "expected string, got dict",
+   "date": "2026-11-12",
+   "owner": "iam",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "iam/access_policy_response.json",
+   "pointer": "/intersect",
+   "kind": "type",
+   "detail": "expected object, got list",
+   "date": "2026-11-12",
+   "owner": "iam",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "iam/access_policy_response.json",
+   "pointer": "/subtract/*",
+   "kind": "type",
+   "detail": "expected object, got str",
+   "date": "2026-11-12",
+   "owner": "iam",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "iam/action_list_response.json",
+   "pointer": "/list/*/attributes",
+   "kind": "type",
+   "detail": "expected object, got list",
+   "date": "2026-11-12",
+   "owner": "iam",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "iam/permission_set.json",
+   "pointer": "/intersect",
+   "kind": "type",
+   "detail": "expected object, got list",
+   "date": "2026-11-12",
+   "owner": "iam",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "iam/principal_policy_list.json",
+   "pointer": "/list/*/permissions/*",
+   "kind": "type",
+   "detail": "expected object, got str",
+   "date": "2026-11-12",
+   "owner": "iam",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "iam/principal_policy_response.json",
+   "pointer": "/permissions/*",
+   "kind": "type",
+   "detail": "expected object, got str",
+   "date": "2026-11-12",
+   "owner": "iam",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "iam/resource_type_list_response.json",
+   "pointer": "/list/*/attributes",
+   "kind": "type",
+   "detail": "expected object, got list",
+   "date": "2026-11-12",
+   "owner": "iam",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "ibxsmartview/affected_assets_response.json",
+   "pointer": "/status/type",
+   "kind": "enum",
+   "detail": "value not in spec enum",
+   "date": "2026-11-12",
+   "owner": "ibxsmartview",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "ibxsmartview/asset_details_get_response.json",
+   "pointer": "/status/type",
+   "kind": "enum",
+   "detail": "value not in spec enum",
+   "date": "2026-11-12",
+   "owner": "ibxsmartview",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "ibxsmartview/asset_details_response.json",
+   "pointer": "/status/type",
+   "kind": "enum",
+   "detail": "value not in spec enum",
+   "date": "2026-11-12",
+   "owner": "ibxsmartview",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "ibxsmartview/assets_list_response.json",
+   "pointer": "/payLoad/categories/*/templates/*/assets/*/assetId",
+   "kind": "enum",
+   "detail": "value not in spec enum",
+   "date": "2026-11-12",
+   "owner": "ibxsmartview",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "ibxsmartview/assets_list_response.json",
+   "pointer": "/payLoad/categories/*/templates/*/assets/*/assetLabel",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "ibxsmartview",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "ibxsmartview/assets_list_response.json",
+   "pointer": "/status/type",
+   "kind": "enum",
+   "detail": "value not in spec enum",
+   "date": "2026-11-12",
+   "owner": "ibxsmartview",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "ibxsmartview/assets_search_response.json",
+   "pointer": "/status/type",
+   "kind": "enum",
+   "detail": "value not in spec enum",
+   "date": "2026-11-12",
+   "owner": "ibxsmartview",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "ibxsmartview/current_tag_point_response.json",
+   "pointer": "/status/type",
+   "kind": "enum",
+   "detail": "value not in spec enum",
+   "date": "2026-11-12",
+   "owner": "ibxsmartview",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "ibxsmartview/current_tag_points_response.json",
+   "pointer": "/status/type",
+   "kind": "enum",
+   "detail": "value not in spec enum",
+   "date": "2026-11-12",
+   "owner": "ibxsmartview",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "ibxsmartview/environment_trending_response.json",
+   "pointer": "/status",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "ibxsmartview",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "ibxsmartview/power_current_get_response.json",
+   "pointer": "/status/type",
+   "kind": "enum",
+   "detail": "value not in spec enum",
+   "date": "2026-11-12",
+   "owner": "ibxsmartview",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "ibxsmartview/power_current_ibx_response.json",
+   "pointer": "/status/type",
+   "kind": "enum",
+   "detail": "value not in spec enum",
+   "date": "2026-11-12",
+   "owner": "ibxsmartview",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "ibxsmartview/power_trending_response.json",
+   "pointer": "/payLoad/interval",
+   "kind": "enum",
+   "detail": "value not in spec enum",
+   "date": "2026-11-12",
+   "owner": "ibxsmartview",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "ibxsmartview/power_trending_response.json",
+   "pointer": "/status/type",
+   "kind": "enum",
+   "detail": "value not in spec enum",
+   "date": "2026-11-12",
+   "owner": "ibxsmartview",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "ibxsmartview/subscription_data_response.json",
+   "pointer": "/powerMessageData/*/data",
+   "kind": "required",
+   "detail": "missing required property \"asset\"",
+   "date": "2026-11-12",
+   "owner": "ibxsmartview",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "ibxsmartview/subscription_data_response.json",
+   "pointer": "/environmentMessageData/*/data",
+   "kind": "required",
+   "detail": "missing required property \"asset\"",
+   "date": "2026-11-12",
+   "owner": "ibxsmartview",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "ibxsmartview/subscription_data_response.json",
+   "pointer": "/environmentMessageData/*/data/accountNumber",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "ibxsmartview",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "ibxsmartview/system_alerts_search_response.json",
+   "pointer": "/items",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "ibxsmartview",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "ibxsmartview/system_alerts_search_response.json",
+   "pointer": "/limit",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "ibxsmartview",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "ibxsmartview/system_alerts_search_response.json",
+   "pointer": "/offset",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "ibxsmartview",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "ibxsmartview/system_alerts_search_response.json",
+   "pointer": "/totalCount",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "ibxsmartview",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "internetaccess/internet_access_service_response.json",
+   "pointer": "/order",
+   "kind": "required",
+   "detail": "missing required property \"changeLog\"",
+   "date": "2026-11-12",
+   "owner": "internetaccess",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "internetaccess/paginated_connection_services.json",
+   "pointer": "/data/*/mediaTypes/*/connectorTypes/*",
+   "kind": "required",
+   "detail": "missing required property \"optionalPorts\"",
+   "date": "2026-11-12",
+   "owner": "internetaccess",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "internetaccess/paginated_ibxs.json",
+   "pointer": "/data/*/metroName",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "internetaccess",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "internetaccess/paginated_prices.json",
+   "pointer": "/data/*",
+   "kind": "required",
+   "detail": "missing required property \"charges\"",
+   "date": "2026-11-12",
+   "owner": "internetaccess",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "internetaccess/paginated_purchase_orders.json",
+   "pointer": "/data/*/account/accountName",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "internetaccess",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "internetaccess/paginated_services.json",
+   "pointer": "/",
+   "kind": "required",
+   "detail": "missing required property \"sort\"",
+   "date": "2026-11-12",
+   "owner": "internetaccess",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "internetaccess/paginated_services.json",
+   "pointer": "/data/*",
+   "kind": "required",
+   "detail": "missing required property \"account\"",
+   "date": "2026-11-12",
+   "owner": "internetaccess",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "internetaccess/paginated_services.json",
+   "pointer": "/data/*/type",
+   "kind": "enum",
+   "detail": "value not in spec enum",
+   "date": "2026-11-12",
+   "owner": "internetaccess",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "networkedge/account_list_response.json",
+   "pointer": "/data/*/accountStatus",
+   "kind": "enum",
+   "detail": "value not in spec enum",
+   "date": "2026-11-12",
+   "owner": "networkedge",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "networkedge/agreement_status_response.json",
+   "pointer": "/status",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "networkedge",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "networkedge/backup_list_response.json",
+   "pointer": "/pagination/next",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "networkedge",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "networkedge/backup_list_response.json",
+   "pointer": "/pagination/previous",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "networkedge",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "networkedge/device_list_response.json",
+   "pointer": "/data/*/deviceTypeCode",
+   "kind": "enum",
+   "detail": "value not in spec enum",
+   "date": "2026-11-12",
+   "owner": "networkedge",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "networkedge/device_list_response.json",
+   "pointer": "/data/*/accountNumber",
+   "kind": "type",
+   "detail": "expected string, got int",
+   "date": "2026-11-12",
+   "owner": "networkedge",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "networkedge/device_response.json",
+   "pointer": "/deviceTypeCode",
+   "kind": "enum",
+   "detail": "value not in spec enum",
+   "date": "2026-11-12",
+   "owner": "networkedge",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "networkedge/device_response.json",
+   "pointer": "/deviceTypeName",
+   "kind": "enum",
+   "detail": "value not in spec enum",
+   "date": "2026-11-12",
+   "owner": "networkedge",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "networkedge/device_response.json",
+   "pointer": "/deviceTypeVendor",
+   "kind": "enum",
+   "detail": "value not in spec enum",
+   "date": "2026-11-12",
+   "owner": "networkedge",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "networkedge/device_response.json",
+   "pointer": "/licenseStatus",
+   "kind": "enum",
+   "detail": "value not in spec enum",
+   "date": "2026-11-12",
+   "owner": "networkedge",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "networkedge/device_response.json",
+   "pointer": "/accountNumber",
+   "kind": "type",
+   "detail": "expected string, got int",
+   "date": "2026-11-12",
+   "owner": "networkedge",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "networkedge/device_response.json",
+   "pointer": "/termLength",
+   "kind": "type",
+   "detail": "expected string, got int",
+   "date": "2026-11-12",
+   "owner": "networkedge",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "networkedge/device_response.json",
+   "pointer": "/additionalBandwidth",
+   "kind": "type",
+   "detail": "expected string, got int",
+   "date": "2026-11-12",
+   "owner": "networkedge",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "networkedge/device_response_refreshed.json",
+   "pointer": "/deviceTypeCode",
+   "kind": "enum",
+   "detail": "value not in spec enum",
+   "date": "2026-11-12",
+   "owner": "networkedge",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "networkedge/device_response_refreshed.json",
+   "pointer": "/deviceTypeName",
+   "kind": "enum",
+   "detail": "value not in spec enum",
+   "date": "2026-11-12",
+   "owner": "networkedge",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "networkedge/device_response_refreshed.json",
+   "pointer": "/deviceTypeVendor",
+   "kind": "enum",
+   "detail": "value not in spec enum",
+   "date": "2026-11-12",
+   "owner": "networkedge",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "networkedge/device_response_refreshed.json",
+   "pointer": "/licenseStatus",
+   "kind": "enum",
+   "detail": "value not in spec enum",
+   "date": "2026-11-12",
+   "owner": "networkedge",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "networkedge/device_response_refreshed.json",
+   "pointer": "/accountNumber",
+   "kind": "type",
+   "detail": "expected string, got int",
+   "date": "2026-11-12",
+   "owner": "networkedge",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "networkedge/device_response_refreshed.json",
+   "pointer": "/termLength",
+   "kind": "type",
+   "detail": "expected string, got int",
+   "date": "2026-11-12",
+   "owner": "networkedge",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "networkedge/device_response_refreshed.json",
+   "pointer": "/additionalBandwidth",
+   "kind": "type",
+   "detail": "expected string, got int",
+   "date": "2026-11-12",
+   "owner": "networkedge",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "networkedge/device_type_list_response.json",
+   "pointer": "/data/*/deviceTypeCode",
+   "kind": "enum",
+   "detail": "value not in spec enum",
+   "date": "2026-11-12",
+   "owner": "networkedge",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "networkedge/device_type_list_response.json",
+   "pointer": "/data/*/deviceManagementTypes",
+   "kind": "type",
+   "detail": "expected array, got dict",
+   "date": "2026-11-12",
+   "owner": "networkedge",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "networkedge/devicelink_list_response.json",
+   "pointer": "/pagination/next",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "networkedge",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "networkedge/devicelink_list_response.json",
+   "pointer": "/pagination/previous",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "networkedge",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "networkedge/downloadable_image_list_response.json",
+   "pointer": "/*/deviceType",
+   "kind": "enum",
+   "detail": "value not in spec enum",
+   "date": "2026-11-12",
+   "owner": "networkedge",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "networkedge/network_interface_list_response.json",
+   "pointer": "/*/id",
+   "kind": "type",
+   "detail": "expected number, got str",
+   "date": "2026-11-12",
+   "owner": "networkedge",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "networkedge/network_interface_list_response.json",
+   "pointer": "/*/assignedType",
+   "kind": "enum",
+   "detail": "value not in spec enum",
+   "date": "2026-11-12",
+   "owner": "networkedge",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "networkedge/pricing_response.json",
+   "pointer": "/primary/charges/*/monthlyRecurringCharges",
+   "kind": "type",
+   "detail": "expected string, got float",
+   "date": "2026-11-12",
+   "owner": "networkedge",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "networkedge/pricing_response.json",
+   "pointer": "/secondary/charges/*/monthlyRecurringCharges",
+   "kind": "type",
+   "detail": "expected string, got float",
+   "date": "2026-11-12",
+   "owner": "networkedge",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "networkedge/reload_history_response.json",
+   "pointer": "/",
+   "kind": "required",
+   "detail": "missing required property \"pagination\"",
+   "date": "2026-11-12",
+   "owner": "networkedge",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "networkedge/restore_feasibility_response.json",
+   "pointer": "/deviceBackup/uuid",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "networkedge",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "networkedge/restore_feasibility_response.json",
+   "pointer": "/deviceBackup/name",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "networkedge",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "networkedge/restore_feasibility_response.json",
+   "pointer": "/deviceBackup/version",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "networkedge",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "networkedge/restore_feasibility_response.json",
+   "pointer": "/deviceBackup/deleteAllowed",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "owner": "networkedge",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "networkedge/upgrade_history_response.json",
+   "pointer": "/",
+   "kind": "required",
+   "detail": "missing required property \"pagination\"",
+   "date": "2026-11-12",
+   "owner": "networkedge",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "sts/oidc_provider_patched_response.json",
+   "pointer": "/",
+   "kind": "required",
+   "detail": "missing required property \"jwks\"",
+   "date": "2026-11-12",
+   "owner": "sts",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "sts/oidc_providers_page1.json",
+   "pointer": "/list/*",
+   "kind": "required",
+   "detail": "missing required property \"jwks\"",
+   "date": "2026-11-12",
+   "owner": "sts",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  },
+  {
+   "fixture": "sts/oidc_providers_page2.json",
+   "pointer": "/list/*",
+   "kind": "required",
+   "detail": "missing required property \"jwks\"",
+   "date": "2026-11-12",
+   "owner": "sts",
+   "reason": "recorded by the first spec-conformance sweep; not yet triaged as fixture defect, spec defect or live shape"
+  }
+ ]
+}

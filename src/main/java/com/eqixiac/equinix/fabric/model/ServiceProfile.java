@@ -24,7 +24,7 @@ import com.eqixiac.equinix.fabric.model.json.MetroJson;
 
 import java.util.List;
 
-public interface ServiceProfile extends AccessPointable {
+public interface ServiceProfile extends AccessPointable, DeletableResource {
 
     String getUuid();
 

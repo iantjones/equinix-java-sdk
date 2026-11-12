@@ -15,7 +15,7 @@ import java.util.Map;
  * the archetype should be treated as unavailable rather than free.
  *
  * <p>{@code getTotalOverTerm()} is the archetype's cost over the full commitment
- * term — {@code monthlyTotal × term months + setupTotal} — and is the figure the
+ * term - {@code monthlyTotal × term months + setupTotal} - and is the figure the
  * comparison ranks archetypes by, so one-time setup charges are never ignored.</p>
  */
 @Value
@@ -32,7 +32,7 @@ public class CostBreakdown {
     BigDecimal totalOverTerm;
 
     /**
-     * The currency this breakdown's own components reconciled to — which can differ from the
+     * The currency this breakdown's own components reconciled to - which can differ from the
      * comparison-wide currency when, e.g., live Fabric pricing quotes an EMEA metro in EUR.
      */
     String currency;
@@ -40,9 +40,22 @@ public class CostBreakdown {
     /** Named line items summing to the monthly total, in insertion order. */
     Map<String, BigDecimal> lineItems;
 
+    /**
+     * {@code true} only when the breakdown is complete: every component it should contain was priced in
+     * one currency. An archetype with any entry in {@code getUnpriced()} is not priced and is never
+     * recommended.
+     */
     boolean priced;
 
     String note;
+
+    /**
+     * Every component left out of the totals, one entry per component, each with its reason (no figure,
+     * no reference row, or a currency that cannot be combined without an exchange rate). Empty when the
+     * breakdown is complete. Never silently shorter than the archetype's component list.
+     */
+    @Builder.Default
+    List<String> unpriced = List.of();
 
     /**
      * Per-line price provenance: for each figure that needs it, the source URL, retrieval date,

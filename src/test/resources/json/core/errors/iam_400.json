@@ -1,0 +1,10 @@
+{
+  "error": {
+    "errorCode": "invalid-argument",
+    "message": "Project arg only supported when using an access-policy auth token",
+    "details": {
+      "projectId": ["Project arg only supported when using an access-policy auth token"]
+    },
+    "traceId": "7c3f2a1e9b"
+  }
+}

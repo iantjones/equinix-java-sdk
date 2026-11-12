@@ -29,6 +29,8 @@ public class StreamSubscriptionWrapper extends ResourceImpl<StreamSubscription> 
 
     @Delegate(excludes = StreamSubscriptionMutability.class)
     private StreamSubscriptionJson jsonObject;
+
+    private boolean deleted;
     @Getter
     private final Pageable<StreamSubscription> serviceClient;
 
@@ -42,8 +44,17 @@ public class StreamSubscriptionWrapper extends ResourceImpl<StreamSubscription> 
     }
 
     public Boolean delete(String streamId) {
-        this.jsonObject = ((StreamSubscriptionClientImpl)this.serviceClient).delete(streamId, this.getUuid());
+        StreamSubscriptionJson response = ((StreamSubscriptionClientImpl)this.serviceClient).delete(streamId, this.getUuid());
+        if (response != null) {
+            this.jsonObject = response;
+        }
+        this.deleted = true;
         return true;
+    }
+
+    @Override
+    public boolean isDeleted() {
+        return this.deleted;
     }
 
     public void refresh(String streamId) {

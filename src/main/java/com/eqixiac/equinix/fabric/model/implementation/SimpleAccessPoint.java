@@ -27,6 +27,7 @@ import com.eqixiac.equinix.fabric.model.Network;
 import com.eqixiac.equinix.fabric.model.Port;
 import com.eqixiac.equinix.fabric.model.ServiceProfile;
 import com.eqixiac.equinix.fabric.model.implementation.cloud.CloudProviderConnectionAdapter;
+import com.eqixiac.equinix.core.enums.MetroCode;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -39,12 +40,6 @@ public class SimpleAccessPoint {
 
     @JsonProperty("type")
     private AccessPointType type;
-
-    /**
-     * Deprecated in the spec but still accepted on service-token selectors.
-     */
-    @JsonProperty("hideAssetInfo")
-    private Boolean hideAssetInfo;
 
     @JsonProperty("port")
     private SimplifiedMetadataEntity port;
@@ -94,15 +89,39 @@ public class SimpleAccessPoint {
     @JsonProperty("virtualNetwork")
     private VirtualNetwork virtualNetwork;
 
-    @JsonProperty("interconnection")
-    private MetalInterconnection interconnection;
-
     @JsonProperty("role")
     private AccessPointRole role;
 
+    /**
+     * {@code AccessPoint.location}. Every service-provider z-side example in the Fabric v4 spec
+     * (Colo, virtual device and Cloud Router to AWS, Azure, Google and Oracle) sends
+     * {@code "location": {"metroCode": ...}} to name the metro the provider is reached in.
+     */
+    @JsonProperty("location")
+    private AccessPointLocation location;
+
+    /** {@code providerIdentifier}: the provider's identifier for this access point (spec 4.34.0). */
+    @JsonProperty("providerIdentifier")
+    private String providerIdentifier;
+
+    /** {@code productOffering} (z-side only, spec 4.34.0). */
+    @JsonProperty("productOffering")
+    private ProductOffering productOffering;
+
+    /** {@code bandwidthCommit} in Mbps (0-100000, spec 4.34.0). */
+    @JsonProperty("bandwidthCommit")
+    private Integer bandwidthCommit;
+
+    /** {@code address} (spec 4.34.0). */
+    @JsonProperty("address")
+    private AccessPointAddress address;
+
+    /** {@code interconnect} of an {@code IC} access point (live shape, 2026-11-11). */
+    @JsonProperty("interconnect")
+    private InterconnectRef interconnect;
+
     protected SimpleAccessPoint(AccessPointBuilder accessPointBuilder) {
         this.type = accessPointBuilder.type;
-        this.hideAssetInfo = accessPointBuilder.hideAssetInfo;
         this.port = accessPointBuilder.port;
         this.profile = accessPointBuilder.profile;
         this.virtualDevice = accessPointBuilder.virtualDevice;
@@ -116,8 +135,13 @@ public class SimpleAccessPoint {
         this.router = accessPointBuilder.router;
         this.network = accessPointBuilder.network;
         this.virtualNetwork = accessPointBuilder.virtualNetwork;
-        this.interconnection = accessPointBuilder.interconnection;
         this.role = accessPointBuilder.role;
+        this.location = accessPointBuilder.location;
+        this.providerIdentifier = accessPointBuilder.providerIdentifier;
+        this.productOffering = accessPointBuilder.productOffering;
+        this.bandwidthCommit = accessPointBuilder.bandwidthCommit;
+        this.address = accessPointBuilder.address;
+        this.interconnect = accessPointBuilder.interconnect;
     }
 
     public SimpleAccessPoint setLinkProtocol(LinkProtocol linkProtocol) {
@@ -150,8 +174,6 @@ public class SimpleAccessPoint {
 
         private final AccessPointType type;
 
-        private Boolean hideAssetInfo;
-
         private SimplifiedMetadataEntity port;
 
         private ServiceProfileRef profile;
@@ -178,9 +200,19 @@ public class SimpleAccessPoint {
 
         private VirtualNetwork virtualNetwork;
 
-        private MetalInterconnection interconnection;
-
         private AccessPointRole role;
+
+        private AccessPointLocation location;
+
+        private String providerIdentifier;
+
+        private ProductOffering productOffering;
+
+        private Integer bandwidthCommit;
+
+        private AccessPointAddress address;
+
+        private InterconnectRef interconnect;
 
         protected AccessPointBuilder(AccessPointType type) {
             this.type = type;
@@ -197,17 +229,6 @@ public class SimpleAccessPoint {
 
         public AccessPointBuilder port(String portUuid) {
             this.port = new SimplifiedMetadataEntity(portUuid);
-            return this;
-        }
-
-        /**
-         * Hides asset information from the token recipient. Deprecated in the spec but still accepted.
-         *
-         * @param hideAssetInfo whether to hide asset information
-         * @return this builder for chaining
-         */
-        public AccessPointBuilder hideAssetInfo(Boolean hideAssetInfo) {
-            this.hideAssetInfo = hideAssetInfo;
             return this;
         }
 
@@ -361,14 +382,31 @@ public class SimpleAccessPoint {
             return this;
         }
 
-        public AccessPointBuilder interconnection(String interconnectionUuid) {
-            this.interconnection = new MetalInterconnection(interconnectionUuid);
-            return this;
-        }
-
         public AccessPointBuilder role(AccessPointRole role) {
             this.role = role;
             return this;
+        }
+
+        /**
+         * Sets {@code location.metroCode}: the metro in which this access point is reached. The
+         * Fabric v4 spec's service-provider connection examples send it on the z-side.
+         *
+         * @param metroCode the metro code, e.g. {@code "SV"}; {@code null} clears it
+         * @return this builder for chaining
+         */
+        public AccessPointBuilder metro(String metroCode) {
+            this.location = metroCode != null ? new AccessPointLocation(metroCode) : null;
+            return this;
+        }
+
+        /**
+         * Sets {@code location.metroCode} from a {@link MetroCode}.
+         *
+         * @param metroCode the metro; {@code null} clears it
+         * @return this builder for chaining
+         */
+        public AccessPointBuilder metro(MetroCode metroCode) {
+            return metro(metroCode != null ? metroCode.name() : null);
         }
 
         /**
@@ -398,11 +436,87 @@ public class SimpleAccessPoint {
             if (adapter.getPreferredLinkProtocol() != null) {
                 this.linkProtocol = adapter.getPreferredLinkProtocol();
             }
+            if (adapter.getMetroCode() != null) {
+                metro(adapter.getMetroCode());
+            }
+            return this;
+        }
+
+        /**
+         * Sets {@code providerIdentifier} (spec 4.34.0 {@code AccessPoint}).
+         *
+         * @param providerIdentifier the provider identifier
+         * @return this builder for chaining
+         */
+        public AccessPointBuilder providerIdentifier(String providerIdentifier) {
+            this.providerIdentifier = providerIdentifier;
+            return this;
+        }
+
+        /**
+         * Sets {@code productOffering} (spec: z-side only).
+         *
+         * @param productOffering the offering
+         * @return this builder for chaining
+         */
+        public AccessPointBuilder productOffering(ProductOffering productOffering) {
+            this.productOffering = productOffering;
+            return this;
+        }
+
+        /**
+         * Sets {@code bandwidthCommit} in Mbps.
+         *
+         * @param bandwidthCommitMbps the committed bandwidth, 0 to 100000
+         * @return this builder for chaining
+         */
+        public AccessPointBuilder bandwidthCommit(Integer bandwidthCommitMbps) {
+            if (bandwidthCommitMbps != null && (bandwidthCommitMbps < 0 || bandwidthCommitMbps > 100000)) {
+                throw new IllegalArgumentException("bandwidthCommit must be 0..100000 Mbps (spec AccessPoint)");
+            }
+            this.bandwidthCommit = bandwidthCommitMbps;
+            return this;
+        }
+
+        /**
+         * Sets {@code address}.
+         *
+         * @param address the address
+         * @return this builder for chaining
+         */
+        public AccessPointBuilder address(AccessPointAddress address) {
+            this.address = address;
+            return this;
+        }
+
+        /**
+         * Sets {@code interconnect.uuid} for an {@link AccessPointType#IC} access point (Fabric
+         * Interconnect). Live IC a-sides read back as {@code {"type":"IC","interconnect":{...},
+         * "router":{"uuid":...}}} (observed 2026-11-11); the spec publishes no create example with an
+         * IC access point, so which properties a create needs is unverified. Build the request with
+         * {@code ConnectionBuilder.dryRun()} first and check the validation result before a live create.
+         *
+         * @param interconnectUuid the interconnect uuid
+         * @return this builder for chaining
+         */
+        public AccessPointBuilder interconnect(String interconnectUuid) {
+            this.interconnect = interconnectUuid != null ? new InterconnectRef(interconnectUuid) : null;
             return this;
         }
 
         public SimpleAccessPoint create() {
             return new SimpleAccessPoint(this);
+        }
+    }
+
+    /** The {@code location} of an access point on a create request: {@code {"metroCode": "SV"}}. */
+    @Getter
+    public static final class AccessPointLocation {
+        @JsonProperty("metroCode")
+        private final String metroCode;
+
+        public AccessPointLocation(String metroCode) {
+            this.metroCode = metroCode;
         }
     }
 

@@ -42,7 +42,7 @@ import com.eqixiac.equinix.design.value.tco.TcoCalculator;
  * including connections, ports, service tokens, cloud routers, routing protocols, route filters,
  * streams, precision time services, networks, and more.</p>
  *
- * <p>All resource accessors use lazy initialization — internal clients are created on first access
+ * <p>All resource accessors use lazy initialization - internal clients are created on first access
  * and reused for subsequent calls.</p>
  *
  * <h3>Quick Start</h3>
@@ -67,10 +67,9 @@ import com.eqixiac.equinix.design.value.tco.TcoCalculator;
  *
  * <h3>Resource Chaining</h3>
  * <pre>{@code
- * // Port -> Connection -> Statistics pipeline
- * Port port = fabric.ports().list().get(0);
- * ConnectionStatistic stats = fabric.connections().getStatistics(
- *     connectionUuid, startTime, endTime);
+ * // Connection -> Metrics (POST /metrics/search; subject and name are required)
+ * List<Metric> usage = fabric.metrics().forConnection(connectionUuid, startTime, endTime,
+ *     "equinix.fabric.connection.bandwidth_tx.usage");
  *
  * // Cloud Router -> Routing Protocol -> Route Filter chain
  * PaginatedFilteredList<CloudRouter> routers = fabric.cloudRouters().search();
@@ -152,6 +151,8 @@ public final class Fabric extends EquinixClient implements FabricGateway {
 
     private HealthStatus healthStatus;
 
+    private volatile com.eqixiac.equinix.fabric.beta.client.FabricBeta beta;
+
     final private FabricConfigImpl fabricConfig;
 
     /**
@@ -217,6 +218,7 @@ public final class Fabric extends EquinixClient implements FabricGateway {
 
         String paramFile = "json/apiParams_Fabric.json";
         equinixClient.appendApiParams(paramFile);
+        equinixClient.appendApiParams("json/apiParams_FabricBeta.json");
 
         this.fabricConfig = new FabricConfigImpl(equinixClient);
     }
@@ -230,11 +232,12 @@ public final class Fabric extends EquinixClient implements FabricGateway {
     Fabric(com.eqixiac.equinix.core.client.EquinixClient sharedCore, EquinixConfig sessionConfig) {
         super(sharedCore, sessionConfig);
         equinixClient.appendApiParams("json/apiParams_Fabric.json");
+        equinixClient.appendApiParams("json/apiParams_FabricBeta.json");
         this.fabricConfig = new FabricConfigImpl(equinixClient);
     }
 
     /**
-     * Performs OAuth2 authentication and, when metro auto-loading is enabled (the default — see
+     * Performs OAuth2 authentication and, when metro auto-loading is enabled (the default - see
      * {@code EquinixConfig.isAutoLoadMetros()} on {@link EquinixConfig}), eagerly loads the {@link #metroRegistry()} so the
      * full metro catalogue (metros, their IBXs, coordinates, region, and inter-metro latencies) is
      * resolved up front rather than lazily on first access. The catalogue load is best-effort: a
@@ -280,7 +283,7 @@ public final class Fabric extends EquinixClient implements FabricGateway {
      *
      * <p>When {@code EquinixConfig.enrichMetroRegistry} is enabled, the load also pulls the EIA
      * per-IBX catalogue (the only Equinix API with per-data-center coordinates) over this client's
-     * own transport and exposes it via {@code MetroRegistry.ibx(String)} — see
+     * own transport and exposes it via {@code MetroRegistry.ibx(String)} - see
      * {@code EquinixConfig.isEnrichMetroRegistry()}.</p>
      *
      * @return the metro registry
@@ -295,7 +298,7 @@ public final class Fabric extends EquinixClient implements FabricGateway {
     /**
      * Refreshes the {@link #metroRegistry()} in place from a fresh Metros API call (re-running EIA
      * enrichment when configured), picking up any metros or IBXes added since it was last loaded.
-     * Existing references to the registry see the fresh data — this delegates to
+     * Existing references to the registry see the fresh data - this delegates to
      * {@code MetroRegistry.refresh()}.
      *
      * @return the refreshed metro registry
@@ -312,7 +315,7 @@ public final class Fabric extends EquinixClient implements FabricGateway {
     /**
      * Best-effort fetch of the EIA per-IBX catalogue for registry enrichment, unioned across both
      * EIA connection types (the {@code /internetAccess/v2/ibxs} listing is scoped per connection
-     * type). A failure never fails the registry load — it just leaves the registry un-enriched.
+     * type). A failure never fails the registry load - it just leaves the registry un-enriched.
      */
     private java.util.List<Ibx> fetchIbxDetails() {
         java.util.List<Ibx> details = new java.util.ArrayList<>();
@@ -351,21 +354,21 @@ public final class Fabric extends EquinixClient implements FabricGateway {
     }
 
     /**
-     * Returns the client for managing Fabric ports and port statistics.
+     * Returns the client for managing Fabric ports (port metrics: {@link #metrics()}).
      * Ports represent physical network interfaces at Equinix data centers and serve
      * as access points for Fabric connections.
      *
-     * @return the {@link Ports} client for listing ports and retrieving port statistics
+     * @return the {@link Ports} client for listing and managing ports
      */
     public Ports ports() {
         if (this.ports == null) {
-            this.ports = new PortsImpl(this.fabricConfig.getPortsClient(), this.fabricConfig.getPortStatisticsClient());
+            this.ports = new PortsImpl(this.fabricConfig.getPortsClient());
         }
         return ports;
     }
 
     /**
-     * Returns the client for managing Fabric connections and connection statistics.
+     * Returns the client for managing Fabric connections (connection metrics: {@link #metrics()}).
      * Connections are the core resource in Fabric, representing virtual circuits between
      * two access points (ports, service profiles, cloud providers, or network endpoints).
      * Supports dry-run validation and fluent builder creation.
@@ -382,7 +385,7 @@ public final class Fabric extends EquinixClient implements FabricGateway {
     /**
      * Returns the client for querying Equinix Fabric metrics.
      * The Metrics API provides time-series measurements (such as bandwidth usage) for Fabric
-     * assets and supersedes the deprecated per-asset {@code /stats} statistics endpoints.
+     * connections, ports and metros through {@code POST /metrics/search}.
      *
      * @return the {@link Metrics} client for searching Fabric metrics
      */
@@ -697,6 +700,23 @@ public final class Fabric extends EquinixClient implements FabricGateway {
     }
 
     /**
+     * Returns the hub for the Fabric v4 families the spec marks <strong>Beta</strong> (ASNs, Internet
+     * Exchange services, Application Connect, Optical Metro Connects, cross connects, digital LOAs, tag
+     * lookup and logos), one typed client per family. Beta endpoints may change without notice and need
+     * the account to be entitled to them.
+     *
+     * @return the {@link com.eqixiac.equinix.fabric.beta.client.FabricBeta} hub
+     */
+    public com.eqixiac.equinix.fabric.beta.client.FabricBeta beta() {
+        com.eqixiac.equinix.fabric.beta.client.FabricBeta b = this.beta;
+        if (b == null) {
+            b = new com.eqixiac.equinix.fabric.beta.client.implementation.FabricBetaImpl(equinixClient);
+            this.beta = b;
+        }
+        return b;
+    }
+
+    /**
      * Begins a metro optimization session. Returns a fluent builder for defining
      * workforce locations, provider requirements, workloads, and constraints, then
      * computes optimal Equinix metro placements with ranked recommendations.
@@ -721,7 +741,7 @@ public final class Fabric extends EquinixClient implements FabricGateway {
     /**
      * Creates a Deployment Wizard from a completed optimization result. The wizard
      * generates an executable deployment plan with Cloud Routers, provider connections,
-     * inter-metro backbone links, and routing protocol configurations — all with
+     * inter-metro backbone links, and routing protocol configurations - all with
      * bandwidth sizing that drives accurate pricing.
      *
      * <pre>{@code
@@ -814,8 +834,8 @@ public final class Fabric extends EquinixClient implements FabricGateway {
 
     /**
      * Begins a total-cost-of-ownership comparison across the three deployment
-     * archetypes — public cloud over the internet, on-prem, and Equinix-
-     * interconnected — for a given egress/bandwidth workload.
+     * archetypes - public cloud over the internet, on-prem, and Equinix-
+     * interconnected - for a given egress/bandwidth workload.
      *
      * <pre>{@code
      * TcoComparison tco = fabric.tcoComparison()

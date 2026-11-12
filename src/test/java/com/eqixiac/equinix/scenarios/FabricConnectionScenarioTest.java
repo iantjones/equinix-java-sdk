@@ -7,6 +7,7 @@ import com.eqixiac.equinix.core.http.response.PaginatedList;
 import com.eqixiac.equinix.fabric.enums.*;
 import com.eqixiac.equinix.fabric.model.*;
 import com.eqixiac.equinix.fabric.model.implementation.LinkProtocol;
+import java.util.List;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.Tag;
 
@@ -43,7 +44,7 @@ class FabricConnectionScenarioTest extends IntegrationTestBase {
         if (fabric != null) fabric.close();
     }
 
-    // ── Dry-Run Tests ───────────────────────────────────────────────────
+    // Dry-Run Tests
 
     @Test
     @Order(1)
@@ -93,7 +94,7 @@ class FabricConnectionScenarioTest extends IntegrationTestBase {
         }
     }
 
-    // ── Port Discovery ──────────────────────────────────────────────────
+    // Port Discovery
 
     @Test
     @Order(3)
@@ -102,7 +103,7 @@ class FabricConnectionScenarioTest extends IntegrationTestBase {
         Assumptions.assumeTrue(isFullCrudEnabled(), "Full CRUD mode not enabled");
 
         try {
-            PaginatedList<Port> ports = timedCall("Fabric", "list", "Port", "GET",
+            List<Port> ports = timedCall("Fabric", "list", "Port", "GET",
                     () -> fabric.ports().list());
             int found = 0;
             for (Port port : ports) {
@@ -245,11 +246,11 @@ class FabricConnectionScenarioTest extends IntegrationTestBase {
                 "Connection should return 404 after deletion");
     }
 
-    // ── Helper Methods ──────────────────────────────────────────────────
+    // Helper Methods
 
     private String findFirstDot1qPortUuid() {
         try {
-            PaginatedList<Port> ports = fabric.ports().list();
+            List<Port> ports = fabric.ports().list();
             for (Port port : ports) {
                 if (port.getEncapsulation() != null
                         && port.getEncapsulation().getType() == EncapsulationType.DOT1Q) {

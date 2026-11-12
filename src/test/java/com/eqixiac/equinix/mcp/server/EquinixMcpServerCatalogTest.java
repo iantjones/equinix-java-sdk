@@ -36,21 +36,45 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@DisplayName("EquinixMcpServer catalog — the 14 built-in tools, toolset filtering, and the seam")
+@DisplayName("EquinixMcpServer catalog - the 22 built-in tools, toolset filtering, and the seam")
 class EquinixMcpServerCatalogTest {
 
-    private static final List<String> LAUNCH_CATALOG = List.of(
-            "design_optimize_placement",
-            "design_plan_deployment",
-            "design_estimate_latency",
+    static final List<String> DESIGN_TOOLS = List.of(
+            "design_spec_template",
+            "design_validate_spec",
+            "design_optimize",
+            "design_analyze_resilience",
+            "design_growth_and_terms",
             "design_estimate_tco",
             "design_compare_cloud_egress",
+            "design_estimate_latency",
             "design_compare_cloud_to_cloud",
             "design_list_multicloud_environments",
             "design_analyze_peering",
-            "design_export_terraform",
-            "portal_list_open_tickets",
-            "portal_get_billing_summary",
+            "design_plan_deployment",
+            "design_get_plan",
+            "design_plan_drift",
+            "design_export_terraform", "design_decision_record");
+
+    private static final List<String> LAUNCH_CATALOG = List.of(
+            "design_spec_template",
+            "design_validate_spec",
+            "design_optimize",
+            "design_analyze_resilience",
+            "design_growth_and_terms",
+            "design_estimate_tco",
+            "design_compare_cloud_egress",
+            "design_estimate_latency",
+            "design_compare_cloud_to_cloud",
+            "design_list_multicloud_environments",
+            "design_analyze_peering",
+            "design_plan_deployment",
+            "design_get_plan",
+            "design_plan_drift",
+            "design_export_terraform", "design_decision_record",
+            "design_analyze_estate",
+            "ops_list_open_tickets",
+            "ops_get_billing_summary",
             "ne_list_devices",
             "ibx_get_environmentals",
             "ibx_list_power_events");
@@ -60,7 +84,7 @@ class EquinixMcpServerCatalogTest {
     }
 
     @Test
-    @DisplayName("the full catalog is exactly the 14 built-in tools, in order")
+    @DisplayName("the full catalog is exactly the 22 built-in tools, in order")
     void fullCatalog() {
         assertEquals(LAUNCH_CATALOG, names(EquinixMcpServer.catalog(EnumSet.allOf(Toolset.class))));
     }
@@ -70,7 +94,7 @@ class EquinixMcpServerCatalogTest {
     void catalogRules() {
         for (ToolRegistration tool : EquinixMcpServer.catalog(EnumSet.allOf(Toolset.class))) {
             assertTrue(tool.isReadOnly(), tool.getName() + " must be read-only");
-            assertTrue(tool.getName().matches("^(design|portal|ne|ibx)_[a-z0-9_]+$"),
+            assertTrue(tool.getName().matches("^(design|ops|ne|ibx)_[a-z0-9_]+$"),
                     tool.getName() + " must be domain-prefixed snake_case");
             String lower = tool.getName().toLowerCase(Locale.ROOT);
             assertFalse(lower.contains("delete") || lower.contains("remove"),
@@ -83,7 +107,7 @@ class EquinixMcpServerCatalogTest {
     }
 
     @Test
-    @DisplayName("openWorldHint is set exactly where external services are called")
+    @DisplayName("openWorldHint is false only for tools that work on this process's own data")
     void openWorldHonesty() {
         Map<String, Boolean> openWorld = EquinixMcpServer.catalog(EnumSet.allOf(Toolset.class)).stream()
                 .collect(java.util.stream.Collectors.toMap(ToolRegistration::getName, ToolRegistration::isOpenWorld));
@@ -93,23 +117,36 @@ class EquinixMcpServerCatalogTest {
                 "it fetches live cloud egress rates for both ends, so it is open-world");
         assertFalse(openWorld.get("design_list_multicloud_environments"),
                 "it reads the catalog bundled with the SDK and calls nothing");
-        assertFalse(openWorld.get("design_estimate_latency"));
-        assertFalse(openWorld.get("portal_list_open_tickets"));
-        assertFalse(openWorld.get("ibx_list_power_events"));
+        assertFalse(openWorld.get("design_export_terraform"), "it renders a plan from this process's memory");
+        assertFalse(openWorld.get("design_get_plan"), "it reads this process's plan store");
+        assertFalse(openWorld.get("design_spec_template"), "a bundled template");
+        assertFalse(openWorld.get("design_validate_spec"), "validation is local");
+        assertTrue(openWorld.get("design_plan_drift"), "it reads live Fabric state");
+        assertTrue(openWorld.get("design_analyze_estate"), "it reads the live inventory");
+        assertTrue(openWorld.get("design_analyze_resilience"), "it reads the live catalogue");
+        assertTrue(openWorld.get("design_growth_and_terms"), "it reads live prices");
+        // Every tool that sends requests to a live remote service (the Equinix APIs included) is open-world.
+        assertTrue(openWorld.get("design_plan_deployment"),
+                "it sends Cloud Router dry-run requests and reads live pricing");
+        assertTrue(openWorld.get("design_optimize"));
+        assertTrue(openWorld.get("design_estimate_latency"), "it reads the live Fabric metro catalogue");
+        assertTrue(openWorld.get("ops_list_open_tickets"));
+        assertTrue(openWorld.get("ibx_list_power_events"));
     }
 
     @Test
     @DisplayName("toolset filtering selects the matching subsets")
     void toolsetFiltering() {
-        assertEquals(9, EquinixMcpServer.catalog(EnumSet.of(Toolset.DESIGN)).size());
-        assertEquals(9, EquinixMcpServer.catalog(EnumSet.of(Toolset.FABRIC)).size(),
-                "the fabric id serves the same engine tools");
-        assertEquals(List.of("portal_list_open_tickets", "portal_get_billing_summary"),
-                names(EquinixMcpServer.catalog(EnumSet.of(Toolset.PORTAL))));
+        assertEquals(DESIGN_TOOLS, names(EquinixMcpServer.catalog(EnumSet.of(Toolset.DESIGN))));
+        assertEquals(List.of("design_analyze_estate"), names(EquinixMcpServer.catalog(EnumSet.of(Toolset.ESTATE))));
+        assertEquals(17, EquinixMcpServer.catalog(EnumSet.of(Toolset.FABRIC)).size(),
+                "the fabric id serves the design and estate tools");
+        assertEquals(List.of("ops_list_open_tickets", "ops_get_billing_summary"),
+                names(EquinixMcpServer.catalog(EnumSet.of(Toolset.OPS))));
         assertEquals(List.of("ne_list_devices"), names(EquinixMcpServer.catalog(EnumSet.of(Toolset.NE))));
         assertEquals(List.of("ibx_get_environmentals", "ibx_list_power_events"),
                 names(EquinixMcpServer.catalog(EnumSet.of(Toolset.IBX))));
-        assertEquals(11, EquinixMcpServer.catalog(EnumSet.of(Toolset.DESIGN, Toolset.IBX)).size());
+        assertEquals(18, EquinixMcpServer.catalog(EnumSet.of(Toolset.DESIGN, Toolset.IBX)).size());
     }
 
     @Test
@@ -185,7 +222,7 @@ class EquinixMcpServerCatalogTest {
     @DisplayName("a context without a session fails lazily, per facade, with a clear message")
     void lazyFacadeFailure() {
         ServerContext context = ServerContext.builder().environment(Map.of()).build();
-        IllegalStateException e = assertThrows(IllegalStateException.class, context::customerPortal);
-        assertTrue(e.getMessage().contains("Customer Portal"), e.getMessage());
+        IllegalStateException e = assertThrows(IllegalStateException.class, context::operations);
+        assertTrue(e.getMessage().contains("Operations"), e.getMessage());
     }
 }

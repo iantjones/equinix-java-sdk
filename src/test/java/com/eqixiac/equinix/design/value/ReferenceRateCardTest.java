@@ -73,7 +73,7 @@ class ReferenceRateCardTest {
                 "the raw $0.02/GiB list price must be stored converted to per-GB");
         assertTrue(privatePath.getNote().contains("converted from per-GiB list price"));
 
-        // AWS and Azure quote their list prices in decimal GB already — no conversion applied.
+        // AWS and Azure quote their list prices in decimal GB already - no conversion applied.
         assertEquals(0, new BigDecimal("0.09").compareTo(
                 CARD.egress(CloudProviderType.AWS, null, EgressPath.INTERNET, Term.MONTH_12).orElseThrow().getPricePerGb()));
     }
@@ -116,7 +116,7 @@ class ReferenceRateCardTest {
                 "an exact package match carries no substitution label: " + exact.getNote());
 
         // An unlisted package still falls back to the STANDARD figure, but the substitution must
-        // be named in the note — never silently passed off as a genuine package-specific figure.
+        // be named in the note - never silently passed off as a genuine package-specific figure.
         PriceQuote substituted = CARD.cloudRouter("NONEXISTENT", null, Term.MONTH_12).orElseThrow();
         assertEquals(0, new BigDecimal("1200").compareTo(substituted.getMonthlyRecurring()),
                 "unknown package falls back to STANDARD");
@@ -129,33 +129,13 @@ class ReferenceRateCardTest {
         assertEquals(0, new BigDecimal("0.75").compareTo(CARD.onPrem("transitPerMbpsMonth").orElseThrow()));
         assertEquals(0, new BigDecimal("195").compareTo(CARD.onPrem("powerPerKwMonth").orElseThrow()));
         assertEquals(0, new BigDecimal("300").compareTo(CARD.equinixCrossConnectMonthly().orElseThrow()));
-        assertEquals(0, new BigDecimal("1642.50").compareTo(
-                CARD.cspInterconnectPortMonthly(CloudProviderType.AWS, 10_000).orElseThrow()));
+        // AWS Direct Connect 10G hosted connection: 2.48 USD/h x 730 h (aws.amazon.com/directconnect/pricing,
+        // retrieved 2026-11-12).
+        assertEquals(0, new BigDecimal("1810.40").compareTo(
+                CARD.cspInterconnectPortMonthlyQuote(CloudProviderType.AWS, 10_000).orElseThrow().getMonthlyRecurring()));
         assertNotNull(CARD.disclaimer());
-        assertEquals("2026-06", CARD.asOf());
-    }
-
-    @Test
-    void cspPortAboveTopTierIsExtrapolatedAndTaggedNotSilentlyFloored() {
-        // 40 Gbps exceeds AWS's largest tabulated Direct Connect tier (10 Gbps @ 1642.50). It
-        // must NOT floor back to the 10G flat price (the old bug: a 100G requirement priced as a
-        // single 10G circuit). Mirroring connection(), it is extrapolated linearly from the top
-        // tier's per-Mbps rate: 1642.50 × 40000 / 10000 = 6570.00.
-        assertEquals(0, new BigDecimal("6570.00").compareTo(
-                CARD.cspInterconnectPortMonthly(CloudProviderType.AWS, 40_000).orElseThrow()),
-                "above-top-tier bandwidth must extrapolate, not floor to the 10G flat price");
-
-        // The quote variant tags the extrapolation so it is never mistaken for a tabulated rate.
-        PriceQuote quote = CARD.cspInterconnectPortMonthlyQuote(CloudProviderType.AWS, 40_000).orElseThrow();
-        assertEquals(0, new BigDecimal("6570.00").compareTo(quote.getMonthlyRecurring()));
-        assertTrue(quote.getNote().toLowerCase().contains("extrapolat"),
-                "an above-top-tier CSP port price must be clearly tagged as extrapolated");
-        assertEquals(PriceSource.REFERENCE, quote.getSource());
-
-        // At or below a tabulated tier the figure is the tabulated one, untagged.
-        PriceQuote tabulated = CARD.cspInterconnectPortMonthlyQuote(CloudProviderType.AWS, 10_000).orElseThrow();
-        assertEquals(0, new BigDecimal("1642.50").compareTo(tabulated.getMonthlyRecurring()));
-        assertFalse(tabulated.getNote().toLowerCase().contains("extrapolat"));
+        assertEquals("2026-11", CARD.asOf());
+        assertEquals("2026-11-12", CARD.retrieved());
     }
 
     @Test
@@ -173,6 +153,7 @@ class ReferenceRateCardTest {
         assertEquals(0, new BigDecimal("1000").compareTo(s.getPrivateEgressMonthlyCost()));
         assertEquals(0, new BigDecimal("3500").compareTo(s.getMonthlyEgressSavings()));
         assertEquals(0, new BigDecimal("350").compareTo(s.getEquinixMonthlyCost()), "reference 10G VC");
-        assertEquals(0, new BigDecimal("3150").compareTo(s.getNetMonthlySavings()), "3500 − 350");
+        assertEquals(0, new BigDecimal("1339.60").compareTo(s.getNetMonthlySavings()),
+                "3500 - 350 - 1810.40 (reference AWS 10G Direct Connect hosted connection, 2.48 USD/h x 730 h)");
     }
 }

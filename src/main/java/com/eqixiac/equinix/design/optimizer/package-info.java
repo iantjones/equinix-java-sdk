@@ -15,34 +15,27 @@
  */
 
 /**
- * The Metro Optimization Engine: scores, ranks, and selects Equinix metros for a deployment
- * from user sites, provider requirements, workloads, and constraints, against live Fabric
- * catalog data.
+ * The Metro Optimizer: which set of Equinix metros best serves a
+ * {@link com.eqixiac.equinix.design.spec.DesignSpec}, as a multi-objective search.
  *
- * <p>{@link com.eqixiac.equinix.design.optimizer.MetroOptimizer} is the public entry point — a
- * fluent builder reached via {@code fabric.optimizeMetros()} or
- * {@code Design.over(fabric).optimizeMetros()}. Its {@code optimize()} call runs the internal
- * engine pipeline (candidate filtering, five-dimension weighted scoring, redundancy-aware
- * selection, workload placement, risk analysis, cost estimation) and returns an
- * {@link com.eqixiac.equinix.design.optimizer.model.OptimizationResult} with ranked
- * recommendations, a latency matrix, a risk assessment, and cost estimates.</p>
+ * <p>{@link com.eqixiac.equinix.design.optimizer.MetroOptimizer#forSpec} is the entry point
+ * ({@code Design.over(fabric).optimizeMetros(spec)} is the facade equivalent; the fluent
+ * {@code MetroOptimizer.builder(fabric)} only assembles a spec). A run gathers the facts once
+ * ({@code context} sub-package), measures the built-in objectives ({@code design.objective}: latency,
+ * cost, provider coverage, resilience, compliance), applies the built-in constraints
+ * ({@code design.constraint}), searches every admissible set of metros
+ * ({@code design.solve.ExhaustiveSolver}), analyses the answer's sensitivity
+ * ({@code design.solve.SensitivityAnalysis}) and places the workloads ({@code design.placement}).
+ * Money comes from one cost model ({@code design.cost.RateCardCostModel}).</p>
  *
- * <p>Scoring dimensions are latency, provider coverage, cost, redundancy, and compliance,
- * weighted per {@link com.eqixiac.equinix.design.optimizer.enums.OptimizationStrategy} and
- * overridable via {@link com.eqixiac.equinix.design.optimizer.model.ScoringWeights}. Workload
- * provider dependencies are a hard placement constraint; per-workload latency ceilings come from
- * an explicit tolerance or the
- * {@link com.eqixiac.equinix.design.optimizer.enums.LatencySensitivity} tier's threshold.</p>
+ * <p>The {@link com.eqixiac.equinix.design.optimizer.model.OptimizationResult} carries the recommended
+ * option, the Pareto frontier, every constraint verdict, the sensitivity report, the placement and the
+ * calibrated latency factor, plus the views the Deployment Wizard, the exporters and the MCP server read.</p>
  *
  * <p><b>Beta.</b> When a workload depends on two clouds for which
  * {@link com.eqixiac.equinix.design.optimizer.model.MulticloudEnvironmentCatalog} lists a native
- * provider-to-provider environment, the risk assessment carries an informational
- * {@code NATIVE_MULTICLOUD_ALTERNATIVE} finding (severity {@code INFO}, no score deduction). The
- * engine still recommends metros; it does not evaluate a deployment with none. The Deployment
- * Wizard prices the native link against the Equinix path.</p>
- *
- * <p>Sub-packages: {@code model} (request/result value types), {@code enums} (strategies,
- * tiers, categories), {@code wizard} (turning a result into an executable deployment plan).</p>
+ * provider-to-provider environment, the result carries an informational
+ * {@code NATIVE_MULTICLOUD_ALTERNATIVE} finding.</p>
  *
  * @see com.eqixiac.equinix.design.optimizer.MetroOptimizer
  * @see com.eqixiac.equinix.design.optimizer.model.OptimizationResult

@@ -1,0 +1,28 @@
+{
+  "pagination": {
+    "limit": 20,
+    "offset": 0,
+    "total": 1
+  },
+  "data": [
+    {
+      "href": "https://api.equinix.com/fabric/v4/appServices/5008a109-9d1c-485c-b0ba-de9736f283c2/appLinks/23cd19ab-d3bb-478b-9f25-bd12a3af1914",
+      "type": "APP_LINK",
+      "uuid": "23cd19ab-d3bb-478b-9f25-bd12a3af1914",
+      "name": "Atlassian App Link",
+      "description": "Atlassian App Link in SV",
+      "state": "PROVISIONED",
+      "router": {
+        "href": "https://api.equinix.com/fabric/v4/routers/36204584-2ae1-44f6-980f-08ecd555d9c6",
+        "type": "XF_ROUTER",
+        "uuid": "36204584-2ae1-44f6-980f-08ecd555d9c6"
+      },
+      "bandwidth": 1000,
+      "ipv4Subnet": "192.168.10.0/29",
+      "ipv4Address": "192.168.10.3",
+      "project": {
+        "projectId": "71b55fef-fd2e-402f-ae3c-01d5f00bf2d4"
+      }
+    }
+  ]
+}

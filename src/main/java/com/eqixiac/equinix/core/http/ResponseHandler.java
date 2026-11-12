@@ -69,7 +69,7 @@ public final class ResponseHandler {
     /**
      * Deserializes a paginated list/search response into a {@link Page} of raw JSON items and
      * attaches the request/response pair for lazy paging. The request may be typed over the
-     * public model or the JSON model — only the page's item type {@code <J>} matters here.
+     * public model or the JSON model - only the page's item type {@code <J>} matters here.
      *
      * @param <J> the page's item (JSON model) type
      * @throws com.eqixiac.equinix.core.exception.EquinixClientException if any.
@@ -105,7 +105,7 @@ public final class ResponseHandler {
      */
     public static <S, T> S handleSingletonResponse(EquinixResponse<T> equinixResponse, EquinixRequest<T> equinixRequest) throws EquinixClientException  {
         // An empty 2xx body (e.g. a DELETE/action that returns 202/204 with no content) has nothing
-        // to map — treat as success with no object rather than attempting (and failing) a parse.
+        // to map - treat as success with no object rather than attempting (and failing) a parse.
         // Detected structurally (status/entity/content-length) rather than by matching Jackson's
         // exception message text, which is not a stable API contract.
         if (isEmptyBody(equinixResponse)) {
@@ -192,7 +192,23 @@ public final class ResponseHandler {
      */
     public static <T> HashMap<String, String> handleMapResponse(EquinixRequest<T> equinixRequest, EquinixResponse<T> equinixResponse) throws EquinixClientException  {
         try {
-            return readResponseBody(equinixResponse, equinixRequest);
+            // A success with no body (e.g. 202/204) maps to an empty map instead of failing the
+            // call after the server has already applied it.
+            java.io.InputStream content = equinixResponse.getContent();
+            if (content == null) {
+                return new HashMap<>();
+            }
+            byte[] bytes = content.readAllBytes();
+            if (new String(bytes, java.nio.charset.StandardCharsets.UTF_8).isBlank()) {
+                return new HashMap<>();
+            }
+            if (equinixRequest.getJavaType() != null) {
+                return Constants.mapper().readValue(bytes, equinixRequest.getJavaType());
+            }
+            @SuppressWarnings("unchecked")
+            HashMap<String, String> map = (HashMap<String, String>) Constants.mapper().readValue(bytes,
+                    (com.fasterxml.jackson.core.type.TypeReference<Object>) equinixRequest.getTypeReference());
+            return map;
         }
         catch (Exception ioe) {
             throw new EquinixClientException(Constants.JSON_DESERIALIZE_EXCEPTION, ioe);

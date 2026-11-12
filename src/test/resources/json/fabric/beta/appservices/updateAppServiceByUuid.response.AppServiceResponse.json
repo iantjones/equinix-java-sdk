@@ -1,0 +1,35 @@
+{
+  "href": "https://api.equinix.com/fabric/v4/appServices/5008a109-9d1c-485c-b0ba-de9736f283c2",
+  "uuid": "5008a109-9d1c-485c-b0ba-de9736f283c2",
+  "type": "APP_SERVICE",
+  "name": "Updated Atlassian App Service",
+  "description": "Atlassian App Service in SV",
+  "state": "REPROVISIONING",
+  "endpoint": "equinixjira.atlassian.net",
+  "sourceDomains": [
+    "equinix.com"
+  ],
+  "project": {
+    "projectId": "71b55fef-fd2e-402f-ae3c-01d5f00bf2d4"
+  },
+  "change": {
+    "uuid": "531c4ab5-43b0-4352-8975-ee9045325841",
+    "type": "APP_SERVICE_UPDATE",
+    "status": "REQUESTED",
+    "createdDateTime": "2026-06-27T04:20:55.471Z",
+    "updatedDateTime": "2026-06-28T04:20:55.471Z",
+    "data": [
+      {
+        "op": "replace",
+        "path": "/name",
+        "value": "Updated Atlassian App Service"
+      }
+    ]
+  },
+  "changeLog": {
+    "createdBy": "test",
+    "createdDateTime": "2026-06-27T04:20:55.471Z",
+    "updatedBy": "test",
+    "updatedDateTime": "2026-06-28T04:20:55.471Z"
+  }
+}

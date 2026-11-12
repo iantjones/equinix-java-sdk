@@ -1,6 +1,7 @@
 package com.eqixiac.equinix.design.optimizer.wizard.model;
 
 import lombok.Builder;
+import lombok.extern.jackson.Jacksonized;
 import lombok.Value;
 
 import java.util.Map;
@@ -13,15 +14,16 @@ import java.util.Map;
  * <p>This records the requirement, not the bill: when the requirement is rounded up to the
  * selected service profile's nearest billable tier, {@code totalMbps} here keeps the raw
  * requirement while the billed tier lives on {@code PlannedConnection.bandwidthMbps} /
- * {@code ProfileSelection.selectedTierMbps} — so a reader always sees both the ask and the
+ * {@code ProfileSelection.selectedTierMbps} - so a reader always sees both the ask and the
  * charge.</p>
  */
 @Value
 @Builder(toBuilder = true)
+@Jacksonized
 public class BandwidthAllocation {
 
     /**
-     * The derived bandwidth requirement in Mbps — before any service-profile tier round-up
+     * The derived bandwidth requirement in Mbps - before any service-profile tier round-up
      * (the billed tier is on the connection, not here). Never below the 1000&nbsp;Mbps floor.
      */
     int totalMbps;
@@ -35,7 +37,7 @@ public class BandwidthAllocation {
     Map<String, Integer> perWorkload;
 
     /**
-     * A human-readable explanation of the sizing — which strategy applied, whether a
+     * A human-readable explanation of the sizing - which strategy applied, whether a
      * custom-map key matched (or which keys were tried and missed), and, appended at profile
      * selection, any tier round-up with its billable impact.
      */

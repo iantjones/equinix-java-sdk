@@ -27,7 +27,7 @@ import lombok.Getter;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Getter
 public class ClusteringDetail {
-    
+
     @JsonProperty("clusteringEnabled")
     private Boolean clusteringEnabled;
 

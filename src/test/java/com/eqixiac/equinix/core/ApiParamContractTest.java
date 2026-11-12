@@ -41,7 +41,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * {@link APIParam#paramValue()}).
  *
  * <p>Historically the interface only <em>documented</em> that {@code toString()} is the wire form
- * — which the compiler cannot enforce, so an enum whose wire code differs from its constant name
+ * - which the compiler cannot enforce, so an enum whose wire code differs from its constant name
  * could silently send {@code name()} in query parameters while sending the {@code @JsonValue}
  * code in bodies. This test turns that convention into an invariant: it scans all
  * {@code com.eqixiac.equinix} classes, and for every {@code APIParam} enum with a
@@ -124,7 +124,7 @@ class ApiParamContractTest {
                                     found.add(type);
                                 }
                             } catch (Throwable ignored) {
-                                // unloadable class (missing optional dep etc.) — not an APIParam concern
+                                // unloadable class (missing optional dep etc.) - not an APIParam concern
                             }
                         });
             }

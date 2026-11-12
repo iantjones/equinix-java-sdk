@@ -1,0 +1,391 @@
+{
+  "functionalAreas": {
+    "FabricBeta": {
+      "uriFormat": "fabric/v{$version}/{$rootUri}/{$requestUri}",
+      "defaultVersion": 4,
+      "Asns": {
+        "rootUri": "asns",
+        "serviceEndpoints": {
+          "CreateAsn": {
+            "httpMethod": "POST"
+          },
+          "SearchAsns": {
+            "httpMethod": "POST",
+            "requestUri": "search"
+          },
+          "GetAsnById": {
+            "httpMethod": "GET",
+            "requestUri": "{$asnId}"
+          },
+          "PatchAsnById": {
+            "httpMethod": "PATCH",
+            "requestUri": "{$asnId}"
+          },
+          "DeleteAsnById": {
+            "httpMethod": "DELETE",
+            "requestUri": "{$asnId}"
+          }
+        }
+      },
+      "ExchangeServices": {
+        "rootUri": "exchangeServices",
+        "serviceEndpoints": {
+          "CreateExchangeService": {
+            "httpMethod": "POST"
+          },
+          "GetExchangeServiceById": {
+            "httpMethod": "GET",
+            "requestUri": "{$exchangeServiceId}"
+          },
+          "UpdateExchangeServiceById": {
+            "httpMethod": "PATCH",
+            "requestUri": "{$exchangeServiceId}"
+          },
+          "SearchExchangeService": {
+            "httpMethod": "POST",
+            "requestUri": "search"
+          },
+          "CreateExchangeServiceAction": {
+            "httpMethod": "POST",
+            "requestUri": "{$exchangeServiceId}/actions"
+          }
+        }
+      },
+      "AppDomains": {
+        "rootUri": "appDomains",
+        "serviceEndpoints": {
+          "CreateAppDomain": {
+            "httpMethod": "POST"
+          },
+          "GetAppDomainByUuid": {
+            "httpMethod": "GET",
+            "requestUri": "{$appDomainId}"
+          },
+          "DeleteAppDomainByUuid": {
+            "httpMethod": "DELETE",
+            "requestUri": "{$appDomainId}"
+          },
+          "UpdateAppDomainByUuid": {
+            "httpMethod": "PATCH",
+            "requestUri": "{$appDomainId}"
+          },
+          "SearchAppDomains": {
+            "httpMethod": "POST",
+            "requestUri": "search"
+          },
+          "GetAttachedAppLinksByAppDomainId": {
+            "httpMethod": "GET",
+            "requestUri": "{$appDomainId}/appLinks"
+          }
+        }
+      },
+      "AppLinks": {
+        "rootUri": "appLinks",
+        "serviceEndpoints": {
+          "CreateAppLink": {
+            "httpMethod": "POST"
+          },
+          "GetAppLinkByUuid": {
+            "httpMethod": "GET",
+            "requestUri": "{$appLinkId}"
+          },
+          "DeleteAppLinkByUuid": {
+            "httpMethod": "DELETE",
+            "requestUri": "{$appLinkId}"
+          },
+          "UpdateAppLinkByUuid": {
+            "httpMethod": "PATCH",
+            "requestUri": "{$appLinkId}"
+          },
+          "SearchAppLinks": {
+            "httpMethod": "POST",
+            "requestUri": "search"
+          },
+          "AttachAppDomainToAppLink": {
+            "httpMethod": "PUT",
+            "requestUri": "{$appLinkId}/appDomains/{$appDomainId}"
+          },
+          "DetachAppDomainFromAppLink": {
+            "httpMethod": "DELETE",
+            "requestUri": "{$appLinkId}/appDomains/{$appDomainId}"
+          },
+          "GetAttachedAppDomainByUuid": {
+            "httpMethod": "GET",
+            "requestUri": "{$appLinkId}/appDomains/{$appDomainId}"
+          },
+          "SearchAttachedAppDomains": {
+            "httpMethod": "POST",
+            "requestUri": "{$appLinkId}/appDomains/search"
+          },
+          "GetAttachedAppDomainsByAppLinkId": {
+            "httpMethod": "GET",
+            "requestUri": "{$appLinkId}/appDomains"
+          },
+          "AttachAppServiceToAppLink": {
+            "httpMethod": "PUT",
+            "requestUri": "{$appLinkId}/appServices/{$appServiceId}"
+          },
+          "DetachAppServiceFromAppLink": {
+            "httpMethod": "DELETE",
+            "requestUri": "{$appLinkId}/appServices/{$appServiceId}"
+          },
+          "UpdateAppServiceAttachmentToAppLink": {
+            "httpMethod": "PATCH",
+            "requestUri": "{$appLinkId}/appServices/{$appServiceId}"
+          },
+          "GetAttachedAppServiceByUuid": {
+            "httpMethod": "GET",
+            "requestUri": "{$appLinkId}/appServices/{$appServiceId}"
+          },
+          "SearchAttachedAppServices": {
+            "httpMethod": "POST",
+            "requestUri": "{$appLinkId}/appServices/search"
+          },
+          "GetAttachedAppServicesByAppLinkId": {
+            "httpMethod": "GET",
+            "requestUri": "{$appLinkId}/appServices"
+          },
+          "AttachAppProcessorToAppLink": {
+            "httpMethod": "PUT",
+            "requestUri": "{$appLinkId}/appProcessors/{$appProcessorId}"
+          },
+          "DetachAppProcessorFromAppLink": {
+            "httpMethod": "DELETE",
+            "requestUri": "{$appLinkId}/appProcessors/{$appProcessorId}"
+          },
+          "GetAttachedAppProcessor": {
+            "httpMethod": "GET",
+            "requestUri": "{$appLinkId}/appProcessors/{$appProcessorId}"
+          },
+          "SearchAttachedAppProcessors": {
+            "httpMethod": "POST",
+            "requestUri": "{$appLinkId}/appProcessors/search"
+          },
+          "GetAttachedAppProcessorsByAppLinkId": {
+            "httpMethod": "GET",
+            "requestUri": "{$appLinkId}/appProcessors"
+          }
+        }
+      },
+      "AppProcessors": {
+        "rootUri": "appProcessors",
+        "serviceEndpoints": {
+          "GetAppProcessorByUuid": {
+            "httpMethod": "GET",
+            "requestUri": "{$appProcessorId}"
+          },
+          "SearchAppProcessors": {
+            "httpMethod": "POST",
+            "requestUri": "search"
+          }
+        }
+      },
+      "AppServices": {
+        "rootUri": "appServices",
+        "serviceEndpoints": {
+          "CreateAppService": {
+            "httpMethod": "POST"
+          },
+          "GetAppServiceByUuid": {
+            "httpMethod": "GET",
+            "requestUri": "{$appServiceId}"
+          },
+          "DeleteAppServiceByUuid": {
+            "httpMethod": "DELETE",
+            "requestUri": "{$appServiceId}"
+          },
+          "UpdateAppServiceByUuid": {
+            "httpMethod": "PATCH",
+            "requestUri": "{$appServiceId}"
+          },
+          "SearchAppServices": {
+            "httpMethod": "POST",
+            "requestUri": "search"
+          },
+          "GetAttachedAppLinksByAppServiceId": {
+            "httpMethod": "GET",
+            "requestUri": "{$appServiceId}/appLinks"
+          },
+          "GetAttachedAppSubscriptionsByAppServiceId": {
+            "httpMethod": "GET",
+            "requestUri": "{$appServiceId}/appSubscriptions"
+          },
+          "SearchAttachedAppSubscriptionsByAppServiceId": {
+            "httpMethod": "POST",
+            "requestUri": "{$appServiceId}/appSubscriptions/search"
+          }
+        }
+      },
+      "AppSubscriptions": {
+        "rootUri": "appSubscriptions",
+        "serviceEndpoints": {
+          "CreateAppSubscription": {
+            "httpMethod": "POST"
+          },
+          "GetAppSubscriptionByUuid": {
+            "httpMethod": "GET",
+            "requestUri": "{$appSubscriptionId}"
+          },
+          "DeleteAppSubscriptionByUuid": {
+            "httpMethod": "DELETE",
+            "requestUri": "{$appSubscriptionId}"
+          },
+          "UpdateAppSubscriptionByUuid": {
+            "httpMethod": "PATCH",
+            "requestUri": "{$appSubscriptionId}"
+          },
+          "SearchAppSubscriptions": {
+            "httpMethod": "POST",
+            "requestUri": "search"
+          }
+        }
+      },
+      "OpticalConnects": {
+        "rootUri": "opticalConnects",
+        "serviceEndpoints": {
+          "CreateOpticalConnect": {
+            "httpMethod": "POST"
+          },
+          "CreateBulkOpticalConnect": {
+            "httpMethod": "POST",
+            "requestUri": "bulk"
+          },
+          "GetOpticalConnectByUuid": {
+            "httpMethod": "GET",
+            "requestUri": "{$opticalConnectId}"
+          },
+          "SearchOpticalConnect": {
+            "httpMethod": "POST",
+            "requestUri": "search"
+          }
+        }
+      },
+      "CrossConnects": {
+        "rootUri": "crossConnects",
+        "serviceEndpoints": {
+          "CreateCrossConnect": {
+            "httpMethod": "POST"
+          },
+          "CreateDiverseCrossConnect": {
+            "httpMethod": "POST",
+            "requestUri": "bulk"
+          },
+          "SearchCrossConnects": {
+            "httpMethod": "POST",
+            "requestUri": "search"
+          },
+          "GetCrossConnectByUuid": {
+            "httpMethod": "GET",
+            "requestUri": "{$crossConnectId}"
+          },
+          "GetCrossConnectSchedulesByUuid": {
+            "httpMethod": "GET",
+            "requestUri": "{$crossConnectId}/schedules"
+          },
+          "GetCrossConnectServicesByUuid": {
+            "httpMethod": "GET",
+            "requestUri": "{$crossConnectId}/services"
+          },
+          "GetCrossConnectAttachmentsByUuid": {
+            "httpMethod": "GET",
+            "requestUri": "{$crossConnectId}/attachments"
+          },
+          "GetCrossConnectNotesByUuid": {
+            "httpMethod": "GET",
+            "requestUri": "{$crossConnectId}/notes"
+          },
+          "PerformCrossConnectAction": {
+            "httpMethod": "POST",
+            "requestUri": "{$crossConnectId}/actions"
+          },
+          "GetCrossConnectActionByUuid": {
+            "httpMethod": "GET",
+            "requestUri": "{$crossConnectId}/actions/{$actionId}"
+          },
+          "SearchCrossConnectAction": {
+            "httpMethod": "POST",
+            "requestUri": "{$crossConnectId}/actions/search"
+          }
+        }
+      },
+      "CrossConnectSchedules": {
+        "rootUri": "crossConnectSchedules",
+        "serviceEndpoints": {
+          "SearchCrossConnectSchedules": {
+            "httpMethod": "POST",
+            "requestUri": "search"
+          }
+        }
+      },
+      "Loas": {
+        "rootUri": "loas",
+        "serviceEndpoints": {
+          "CreateLoa": {
+            "httpMethod": "POST"
+          },
+          "GetLoaByUuid": {
+            "httpMethod": "GET",
+            "requestUri": "{$loaId}"
+          },
+          "UpdateLoaByUuid": {
+            "httpMethod": "PATCH",
+            "requestUri": "{$loaId}"
+          },
+          "PerformLoaAction": {
+            "httpMethod": "POST",
+            "requestUri": "{$loaId}/actions"
+          },
+          "GetLoaActionsByUuid": {
+            "httpMethod": "GET",
+            "requestUri": "{$loaId}/actions/{$actionId}"
+          },
+          "SearchLoa": {
+            "httpMethod": "POST",
+            "requestUri": "search"
+          },
+          "SearchLoaAction": {
+            "httpMethod": "POST",
+            "requestUri": "{$loaId}/actions/search"
+          },
+          "GetLoaConsumersByLoaId": {
+            "httpMethod": "GET",
+            "requestUri": "{$loaId}/consumers"
+          },
+          "GetLoaNotesByUuid": {
+            "httpMethod": "GET",
+            "requestUri": "{$loaId}/notes"
+          },
+          "CreateLoaNoteByLoaId": {
+            "httpMethod": "POST",
+            "requestUri": "{$loaId}/notes"
+          }
+        }
+      },
+      "Tags": {
+        "rootUri": "tags",
+        "serviceEndpoints": {
+          "GetTagByUuid": {
+            "httpMethod": "GET",
+            "requestUri": "{$uuid}"
+          }
+        }
+      },
+      "Logos": {
+        "rootUri": "logos",
+        "serviceEndpoints": {
+          "CreateLogo": {
+            "httpMethod": "POST"
+          },
+          "GetLogoByUuid": {
+            "httpMethod": "GET",
+            "requestUri": "{$uuid}"
+          },
+          "DeleteLogoByUuid": {
+            "httpMethod": "DELETE",
+            "requestUri": "{$uuid}"
+          }
+        }
+      }
+    }
+  }
+}

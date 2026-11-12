@@ -28,6 +28,18 @@ import com.eqixiac.equinix.design.peering.client.PeeringDbNetwork;
 import com.eqixiac.equinix.design.peering.enums.ConnectivityType;
 import com.eqixiac.equinix.design.peering.enums.DiversityRating;
 import com.eqixiac.equinix.design.peering.model.DiversityScore;
+import com.eqixiac.equinix.core.enums.Region;
+import com.eqixiac.equinix.design.placement.WorkloadPlacer;
+import com.eqixiac.equinix.design.resilience.DesignGraph;
+import com.eqixiac.equinix.design.resilience.DesignGraphBuilder;
+import com.eqixiac.equinix.design.resilience.EdgeKind;
+import com.eqixiac.equinix.design.resilience.PeerPresence;
+import com.eqixiac.equinix.design.spec.DesignSpec;
+import com.eqixiac.equinix.design.spec.PeerIntent;
+import com.eqixiac.equinix.design.spec.SiteIntent;
+import com.eqixiac.equinix.design.spec.WorkloadIntent;
+import com.eqixiac.equinix.design.spi.FakeDesignContext;
+import com.eqixiac.equinix.design.spi.MetroPortfolio;
 import com.eqixiac.equinix.design.peering.model.IxPresenceDetail;
 import com.eqixiac.equinix.design.peering.model.PeeringIntelligenceResult;
 import com.eqixiac.equinix.design.peering.model.PeeringRequest;
@@ -49,11 +61,13 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
@@ -74,13 +88,13 @@ class PeeringHonestyFixesTest {
     private static final long CUSTOMER = 65100L;
 
     @Nested
-    @DisplayName("C3 — unknown distance is ABSENT, not 0 km")
+    @DisplayName("C3 - unknown distance is ABSENT, not 0 km")
     class UnknownDistanceTests {
 
         @Test
         @DisplayName("metros without coordinates yield an UNAVAILABLE diversity score, not a CRITICAL same-site 0 km")
         void unknownCoordinatesAreAbsent() {
-            // Customer metros ZZ/QQ exist in neither Fabric nor the Equinix facility set → no coordinates.
+            // Customer metros ZZ/QQ exist in neither Fabric nor the Equinix facility set -> no coordinates.
             PeeringRequest request = PeeringRequest.builder()
                     .targetAsns(Map.of(AWS, "AWS"))
                     .customerMetros(new LinkedHashSet<>(List.of(MetroId.of("ZZ"), MetroId.of("QQ"))))
@@ -100,8 +114,10 @@ class PeeringHonestyFixesTest {
             assertEquals(DiversityRating.UNKNOWN, score.getRating());
             assertNotEquals(DiversityRating.CRITICAL, score.getRating(),
                     "unknown distance must NOT be scored as CRITICAL same-site");
-            assertTrue(Double.isNaN(score.getDistanceKm()), "distance must be NaN, never a fabricated 0");
-            assertTrue(Double.isNaN(score.getEstimatedRttMs()), "RTT floor must be NaN when distance is unknown");
+            assertNull(score.getDistanceKm(), "unknown distance is absent, never a fabricated 0 or NaN");
+            assertNull(score.getRttFloorMs(), "no floor without a distance");
+            assertNull(score.getEstimatedRttMs(), "no round trip without a measurement or a distance");
+            assertNull(score.getRttBasis());
             assertTrue(score.getExplanation().toLowerCase().contains("unavailable"),
                     "explanation must state the distance is unavailable, not '0 km apart'");
             assertFalse(score.getExplanation().contains("0 km"),
@@ -110,6 +126,24 @@ class PeeringHonestyFixesTest {
             // Score not poisoned toward Critical by an absent-distance placeholder.
             assertNotEquals("Critical", resiliency.getOverallRating(),
                     "an unresolved distance must not drag the overall resiliency rating to Critical");
+        }
+
+        @Test
+        @DisplayName("an unknown distance serialises cleanly: no NaN, no distance field, the flag says why")
+        void unknownDistanceSerialisesWithoutNaN() throws Exception {
+            PeeringRequest request = PeeringRequest.builder()
+                    .targetAsns(Map.of(AWS, "AWS"))
+                    .customerMetros(new LinkedHashSet<>(List.of(MetroId.of("ZZ"), MetroId.of("QQ"))))
+                    .includeResiliency(true)
+                    .build();
+            DiversityScore score = new PeeringIntelligenceEngine(dcSvFabric(), new AwsStub(), request).execute()
+                    .getResiliency().getDiversityScores().get(0);
+
+            String json = new ObjectMapper().writeValueAsString(score);
+            assertFalse(json.contains("NaN"), json);
+            assertFalse(json.contains("distanceKm"), json);
+            assertFalse(json.contains("estimatedRttMs"), json);
+            assertTrue(json.contains("\"distanceUnavailable\":true"), json);
         }
 
         @Test
@@ -125,14 +159,14 @@ class PeeringHonestyFixesTest {
                     new PeeringIntelligenceEngine(dcSvFabric(), new AwsStub(), request).execute();
 
             DiversityScore score = result.getResiliency().getDiversityScores().get(0);
-            // Both metros have an unknown (unloaded) region — that must NOT read as "same region".
+            // Both metros have an unknown (unloaded) region - that must NOT read as "same region".
             assertFalse(score.isSameRegion(),
                     "two metros with unknown regions must not be reported as same-region");
         }
     }
 
     @Nested
-    @DisplayName("C5 — swallowed failures are surfaced in a warnings channel")
+    @DisplayName("C5 - swallowed failures are surfaced in a warnings channel")
     class WarningsChannelTests {
 
         @Test
@@ -177,7 +211,7 @@ class PeeringHonestyFixesTest {
     }
 
     @Nested
-    @DisplayName("C7 — dead includeFabricConnections lever removed")
+    @DisplayName("C7 - dead includeFabricConnections lever removed")
     class DeadLeverTests {
 
         @Test
@@ -196,7 +230,7 @@ class PeeringHonestyFixesTest {
     }
 
     @Nested
-    @DisplayName("C9 — capacity precision and overflow are guarded")
+    @DisplayName("C9 - capacity precision and overflow are guarded")
     class CapacityTests {
 
         @Test
@@ -292,6 +326,61 @@ class PeeringHonestyFixesTest {
         }
     }
 
+    @Nested
+    @DisplayName("forSpec: the spec is the input and the result carries its fingerprint")
+    class SpecEntryPointTests {
+
+        private DesignSpec spec() {
+            return DesignSpec.builder().name("peering-spec")
+                    .site(SiteIntent.builder().label("HQ").metro("DC").build())
+                    .site(SiteIntent.builder().label("Lab").metro("SV").build())
+                    .site(SiteIntent.builder().label("Remote").latitude(51.5).longitude(-0.1).build())
+                    .peer(PeerIntent.builder().asn(AWS).label("AWS").build())
+                    .build();
+        }
+
+        @Test
+        @DisplayName("peers become targets, site metros become customer metros, resiliency is on")
+        void primedFromSpec() {
+            DesignSpec spec = spec();
+            PeeringRequest request = PeeringIntelligence.forSpec(dcSvFabric(), spec).request();
+            assertEquals(Map.of(AWS, "AWS"), request.getTargetAsns());
+            assertEquals(Set.of(MetroId.of("DC"), MetroId.of("SV")), request.getCustomerMetros());
+            assertTrue(request.isIncludeResiliency());
+            assertEquals(spec.fingerprint(), request.getSpecFingerprint());
+        }
+
+        @Test
+        @DisplayName("the result carries the spec fingerprint and feeds peer nodes into a design graph")
+        void resultCarriesFingerprintAndFeedsGraph() {
+            DesignSpec spec = spec();
+            PeeringRequest request = PeeringIntelligence.forSpec(dcSvFabric(), spec).request();
+            PeeringIntelligenceResult result = new PeeringIntelligenceEngine(dcSvFabric(), new AwsStub(), request)
+                    .execute();
+            assertEquals(spec.fingerprint(), result.getSpecFingerprint());
+
+            List<PeerPresence> peers = DesignGraphBuilder.peers(result, spec);
+            assertEquals(1, peers.size());
+            assertEquals(Set.of("DC", "SV"), peers.get(0).metros());
+
+            DesignSpec withWorkload = spec.toBuilder().workload(WorkloadIntent.builder().label("app").build()).build();
+            FakeDesignContext ctx = new FakeDesignContext(withWorkload).metro("DC", Region.AMER, "US")
+                    .latency("DC", "HQ", 0.5);
+            DesignGraph graph = DesignGraphBuilder.build(ctx, MetroPortfolio.ofCodes("DC"),
+                    WorkloadPlacer.place(MetroPortfolio.ofCodes("DC"), ctx), null, peers);
+            assertTrue(graph.node("peer:AS" + AWS).isPresent());
+            assertEquals(1, graph.edges(EdgeKind.PEERING).size(), "only the portfolio metro DC is joined");
+            assertTrue(graph.toMermaid().contains("AWS AS16509"));
+        }
+
+        @Test
+        @DisplayName("a spec with no peers is rejected")
+        void noPeers() {
+            DesignSpec spec = DesignSpec.builder().name("x").workload(WorkloadIntent.builder().label("a").build()).build();
+            assertThrows(IllegalArgumentException.class, () -> PeeringIntelligence.forSpec(dcSvFabric(), spec));
+        }
+    }
+
     // ---- Fabric stubs ----
 
     private static FabricGateway dcSvFabric() {
@@ -377,7 +466,7 @@ class PeeringHonestyFixesTest {
         HugeCapacityStub() {
             super((String) null);
             facs.put(200, fac(200, "Equinix DC11 - Ashburn", "Ashburn", 39.0181, -77.5389));
-            // Two distinct Equinix IXes, both in Ashburn → both resolve to the DC metro.
+            // Two distinct Equinix IXes, both in Ashburn -> both resolve to the DC metro.
             ixes.put(100, ix(100, "Equinix Ashburn", "Ashburn"));
             ixes.put(110, ix(110, "Equinix Ashburn 2", "Ashburn"));
         }

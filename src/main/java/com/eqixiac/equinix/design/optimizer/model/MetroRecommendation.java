@@ -43,8 +43,8 @@ public class MetroRecommendation {
 
     /**
      * Estimated latency per user site: site label &rarr; milliseconds. Values are the engine's
-     * estimate — Equinix Fabric metro-to-metro {@code avgLatency} where published, otherwise a
-     * Haversine fiber-distance estimate — the same figures the latency score and the
+     * estimate - Equinix Fabric metro-to-metro {@code avgLatency} where published, otherwise a
+     * Haversine fiber-distance estimate - the same figures the latency score and the
      * {@code LatencyMatrix} use. Empty when the request defined no sites.
      */
     Map<String, Double> siteLatencies;
@@ -57,7 +57,7 @@ public class MetroRecommendation {
 
     /**
      * The workloads the topology phase placed in this metro; empty when none were assigned here
-     * (a valid outcome — lower-ranked metros often carry no workloads).
+     * (a valid outcome - lower-ranked metros often carry no workloads).
      */
     List<WorkloadPlacement> assignedWorkloads;
 }

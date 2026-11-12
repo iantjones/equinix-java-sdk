@@ -17,7 +17,7 @@
 /**
  * Root package for the Equinix Java SDK. Contains the main entry point classes
  * for each supported Equinix platform domain: {@link com.eqixiac.equinix.Fabric},
- * {@link com.eqixiac.equinix.NetworkEdge}, {@link com.eqixiac.equinix.CustomerPortal},
+ * {@link com.eqixiac.equinix.NetworkEdge}, {@link com.eqixiac.equinix.Operations},
  * {@link com.eqixiac.equinix.IBXSmartView}, {@link com.eqixiac.equinix.InternetAccess},
  * and {@link com.eqixiac.equinix.Projects}.
  * Each entry point extends {@link com.eqixiac.equinix.EquinixClient} and provides

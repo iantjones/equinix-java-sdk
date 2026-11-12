@@ -201,7 +201,7 @@ class NetworkEdgeDeviceLinksWireMockTest extends WireMockTestBase {
             assertNotNull(updated);
 
             // The updater is seeded from the fetched body, so the PATCH carries the whole
-            // resource with the two changed fields overlaid — assert those changed fields.
+            // resource with the two changed fields overlaid - assert those changed fields.
             wireMock.verify(patchRequestedFor(urlPathMatching("/ne/v1/links/" + UUID))
                     .withRequestBody(matchingJsonPath("$.groupName", equalTo("renamed-device-link")))
                     .withRequestBody(matchingJsonPath("$.subnet", equalTo("10.1.0.0/24"))));
@@ -240,8 +240,8 @@ class NetworkEdgeDeviceLinksWireMockTest extends WireMockTestBase {
         @Test
         @DisplayName("re-GETs the device link and updates the wrapper's state in place")
         void refreshesInPlace() {
-            // First GET returns the original state; the second GET — triggered by
-            // wrapper.refresh() — returns a DIFFERENT payload (renamed group, new subnet).
+            // First GET returns the original state; the second GET - triggered by
+            // wrapper.refresh() - returns a DIFFERENT payload (renamed group, new subnet).
             wireMock.stubFor(get(urlPathEqualTo(PATH))
                     .inScenario("devicelink-refresh")
                     .whenScenarioStateIs(com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED)

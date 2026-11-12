@@ -18,10 +18,13 @@ package com.eqixiac.equinix.fabric.model.json;
 
 import com.eqixiac.equinix.fabric.model.HealthStatus;
 import com.eqixiac.equinix.fabric.model.implementation.ApiServices;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.Getter;
+
+import java.util.List;
 
 @Getter
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -40,6 +43,20 @@ public class HealthStatusJson implements HealthStatus {
     @JsonProperty("state")
     private String state;
 
+    // The fabricv4 spec types apiServices as one object, but the live service returns an array of
+    // per-route statuses (checked 2026-11-11). Both shapes are accepted.
     @JsonProperty("apiServices")
-    private ApiServices apiServices;
+    @JsonFormat(with = JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
+    @Getter(lombok.AccessLevel.NONE)
+    private List<ApiServices> apiServices;
+
+    @Override
+    public ApiServices getApiServices() {
+        return apiServices == null || apiServices.isEmpty() ? null : apiServices.get(0);
+    }
+
+    @Override
+    public List<ApiServices> getAllApiServices() {
+        return apiServices == null ? List.of() : List.copyOf(apiServices);
+    }
 }

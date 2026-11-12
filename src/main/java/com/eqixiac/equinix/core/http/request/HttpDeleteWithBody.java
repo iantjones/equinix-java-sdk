@@ -25,7 +25,7 @@ import java.net.URI;
  *
  * <p>Apache HttpClient's {@link org.apache.http.client.methods.HttpDelete} extends
  * {@code HttpRequestBase} and therefore cannot enclose an entity. A few Equinix APIs require a body
- * on {@code DELETE} — notably IAM optimistic-concurrency deletes that take a required
+ * on {@code DELETE} - notably IAM optimistic-concurrency deletes that take a required
  * {@code lastRev} body. This variant extends {@link HttpEntityEnclosingRequestBase} so the body
  * reaches the wire while still using the {@code DELETE} method.</p>
  */

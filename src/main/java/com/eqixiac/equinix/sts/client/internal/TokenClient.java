@@ -23,8 +23,8 @@ import com.eqixiac.equinix.sts.model.json.creators.TokenRequest;
 
 /**
  * Internal client for the STS pre-auth token operations:
- * {@code POST /v1/token} (operationId {@code generateStsToken}) — the OAuth 2.0 / RFC&nbsp;8693
- * token exchange (consumes {@code application/x-www-form-urlencoded}) — and
+ * {@code POST /v1/token} (operationId {@code generateStsToken}) - the OAuth 2.0 / RFC&nbsp;8693
+ * token exchange (consumes {@code application/x-www-form-urlencoded}) - and
  * {@code POST /v1/accessPoliciesGranted} (operationId {@code listAccessPoliciesGranted}).
  */
 public interface TokenClient {

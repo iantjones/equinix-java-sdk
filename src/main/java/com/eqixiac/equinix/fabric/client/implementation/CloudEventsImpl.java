@@ -22,42 +22,65 @@ import com.eqixiac.equinix.core.http.response.PaginatedFilteredList;
 import com.eqixiac.equinix.fabric.client.CloudEvents;
 import com.eqixiac.equinix.fabric.client.internal.CloudEventClient;
 import com.eqixiac.equinix.fabric.model.CloudEvent;
+import com.eqixiac.equinix.fabric.model.implementation.filter.CloudEventQuery;
 import com.eqixiac.equinix.fabric.model.implementation.filter.Filter;
 import com.eqixiac.equinix.fabric.model.implementation.filter.FilterPropertyList;
 import com.eqixiac.equinix.fabric.model.implementation.sort.SortPropertyList;
 import com.eqixiac.equinix.fabric.model.json.CloudEventJson;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 
+/**
+ * Default {@link CloudEvents} implementation.
+ */
 @RequiredArgsConstructor
 public class CloudEventsImpl implements CloudEvents {
 
     private final CloudEventClient<CloudEvent> serviceClient;
 
-    public PaginatedFilteredList<CloudEvent> search() {
-        return search(Filter.filter().empty());
+    @Override
+    public PaginatedFilteredList<CloudEvent> search(CloudEventQuery query) {
+        return search(query, null);
     }
 
-    public PaginatedFilteredList<CloudEvent> search(FilterPropertyList filter) {
-        return search(filter, null);
+    @Override
+    public PaginatedFilteredList<CloudEvent> search(CloudEventQuery query, SortPropertyList sort) {
+        Objects.requireNonNull(query, "query");
+        return search(query.toFilter(), sort);
     }
 
-    public PaginatedFilteredList<CloudEvent> search(SortPropertyList sort) {
-        return search(null, sort);
-    }
-
+    @Override
     public PaginatedFilteredList<CloudEvent> search(FilterPropertyList filter, SortPropertyList sort) {
+        CloudEventQuery.validate(filter);
         Page<CloudEventJson> responsePage = this.serviceClient.search(filter, sort);
-        PaginatedFilteredList<CloudEvent> cloudEventList = ResponseHandler.mapPaginatedFilteredList(responsePage.getItems(), this.serviceClient, (json, client) -> json);
-        return new PaginatedFilteredList<>(cloudEventList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
+        return ResponseHandler.toPaginatedFilteredList(responsePage, this.serviceClient, (json, client) -> json);
     }
 
+    @Override
     public CloudEvent getByUuid(String uuid) {
         return this.serviceClient.getByUuid(uuid);
     }
 
-    public List<CloudEvent> getByAssetId(String asset, String assetId) {
-        return this.serviceClient.getByAssetId(asset, assetId);
+    @Override
+    public PaginatedFilteredList<CloudEvent> searchLiveEvents(String... subjects) {
+        Objects.requireNonNull(subjects, "subjects");
+        List<Object> values = new ArrayList<>();
+        for (String s : subjects) {
+            if (s == null || s.isBlank()) {
+                throw new IllegalArgumentException("subject is required");
+            }
+            if (s.contains("*")) {
+                throw new IllegalArgumentException("live events take exact subjects, not wildcards: " + s);
+            }
+            values.add(s);
+        }
+        if (values.isEmpty()) {
+            throw new IllegalArgumentException("at least one subject is required");
+        }
+        Page<CloudEventJson> responsePage = this.serviceClient.searchLiveEvents(Filter.filter().and().in(CloudEventQuery.SUBJECT, values));
+        return ResponseHandler.toPaginatedFilteredList(responsePage, this.serviceClient, (json, client) -> json);
     }
 }

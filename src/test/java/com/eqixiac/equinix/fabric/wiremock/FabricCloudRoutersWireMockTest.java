@@ -134,7 +134,7 @@ class FabricCloudRoutersWireMockTest extends WireMockTestBase {
         @Test
         @DisplayName("dryRun() sends dryRun=true on POST /routers and deserializes the echoed request")
         void dryRunCreateSendsDryRunQueryParam() {
-            // Spec (createCloudRouter): dryRun — "option to verify that API calls will succeed".
+            // Spec (createCloudRouter): dryRun - "option to verify that API calls will succeed".
             // Dry-run returns 200 with the validated request echoed back (example
             // CloudRouterResponseExampleDryRun): no uuid/href/state. The stub only matches when
             // dryRun=true is on the wire, so a dropped parameter fails the call, not just verify().
@@ -632,7 +632,7 @@ class FabricCloudRoutersWireMockTest extends WireMockTestBase {
             stubPaginatedGet(wireMock, "/fabric/v4/routers/" + ROUTER_ID + "/commands",
                     "/json/fabric/paginated_cloud_router_commands.json");
 
-            PaginatedList<CloudRouterCommand> commands = fabric.cloudRouters().commands(ROUTER_ID);
+            List<CloudRouterCommand> commands = fabric.cloudRouters().commands(ROUTER_ID);
 
             assertNotNull(commands);
             assertEquals(1, commands.size());

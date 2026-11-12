@@ -37,8 +37,8 @@ import static com.eqixiac.equinix.mcp.server.Schemas.string;
 import static com.eqixiac.equinix.mcp.server.Schemas.stringEnum;
 
 /**
- * The {@code ibx_*} tools: cross-domain reach into IBX SmartView — environmental sensor
- * readings and power events — summarized for an agent.
+ * The {@code ibx_*} tools: cross-domain reach into IBX SmartView - environmental sensor
+ * readings and power events - summarized for an agent.
  */
 final class IbxToolFactory {
 
@@ -54,7 +54,7 @@ final class IbxToolFactory {
         return List.of(getEnvironmentals(), listPowerEvents());
     }
 
-    // ── ibx_get_environmentals ──────────────────────────────────────────────
+    // ibx_get_environmentals
 
     private static ToolRegistration getEnvironmentals() {
         return ToolRegistration.builder()
@@ -98,8 +98,8 @@ final class IbxToolFactory {
                 break;
             }
             ObjectNode r = items.addObject();
-            r.put("sensor_id", reading.getSensorId());
-            r.put("zone_id", reading.getZoneId());
+            UntrustedText.put(r, "sensor_id", reading.getSensorId());
+            UntrustedText.put(r, "zone_id", reading.getZoneId());
             putReading(r, "temperature", reading.getTemperature());
             putReading(r, "humidity", reading.getHumidity());
             shown++;
@@ -124,7 +124,7 @@ final class IbxToolFactory {
         node.put("unit", String.valueOf(reading.getUnit()));
     }
 
-    // ── ibx_list_power_events ───────────────────────────────────────────────
+    // ibx_list_power_events
 
     private static ToolRegistration listPowerEvents() {
         return ToolRegistration.builder()
@@ -182,18 +182,19 @@ final class IbxToolFactory {
             if (event.getId() != null) {
                 e.put("id", event.getId());
             }
-            e.put("alert_uid", event.getAlertUid());
+            // IBX SmartView strings are remote text: labelled as untrusted data.
+            UntrustedText.put(e, "alert_uid", event.getAlertUid());
             e.put("status", String.valueOf(event.getStatus()));
-            e.put("category", event.getCategory());
-            e.put("event_type", event.getEventType());
-            e.put("condition_type", event.getConditionType());
-            e.put("trigger_value", event.getTriggerValue());
-            e.put("current_value", event.getCurrentValue());
-            e.put("account_no", event.getAccountNo());
+            UntrustedText.put(e, "category", event.getCategory());
+            UntrustedText.put(e, "event_type", event.getEventType());
+            UntrustedText.put(e, "condition_type", event.getConditionType());
+            UntrustedText.put(e, "trigger_value", event.getTriggerValue());
+            UntrustedText.put(e, "current_value", event.getCurrentValue());
+            UntrustedText.put(e, "account_no", event.getAccountNo());
             if (event.getAsset() != null) {
                 ObjectNode asset = e.putObject("asset");
-                asset.put("ibx", event.getAsset().getIbx());
-                asset.put("asset_uid", event.getAsset().getAssetUid());
+                UntrustedText.put(asset, "ibx", event.getAsset().getIbx());
+                UntrustedText.put(asset, "asset_uid", event.getAsset().getAssetUid());
             }
             shown++;
         }

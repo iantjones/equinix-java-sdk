@@ -21,7 +21,7 @@ import com.eqixiac.equinix.internetaccess.model.ConnectionService;
 
 /**
  * Client interface for the Equinix Internet Access (EIA) v1 product-availability lookup
- * ({@code GET /internetAccess/v1/connectionServices}) — the connection services available at a
+ * ({@code GET /internetAccess/v1/connectionServices}) - the connection services available at a
  * given IBX.
  */
 public interface InternetAccessConnectionServices {

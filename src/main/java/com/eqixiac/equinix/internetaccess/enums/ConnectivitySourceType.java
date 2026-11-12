@@ -19,7 +19,7 @@ package com.eqixiac.equinix.internetaccess.enums;
 import com.eqixiac.equinix.core.model.APIParam;
 
 /**
- * The connectivity source of an Equinix Internet Access (EIA) connection — where the connection
+ * The connectivity source of an Equinix Internet Access (EIA) connection - where the connection
  * originates from.
  */
 public enum ConnectivitySourceType implements APIParam {

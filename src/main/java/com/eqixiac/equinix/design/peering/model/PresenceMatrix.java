@@ -33,9 +33,9 @@ import java.util.stream.Collectors;
  *
  * <h3>Output Formats</h3>
  * <ul>
- *   <li>{@link #toTableString()} — ASCII table for console output</li>
- *   <li>{@link #toDetailedTableString()} — ASCII table with capacity annotations</li>
- *   <li>{@link #toMarkdown()} — Markdown table for reports</li>
+ *   <li>{@link #toTableString()} - ASCII table for console output</li>
+ *   <li>{@link #toDetailedTableString()} - ASCII table with capacity annotations</li>
+ *   <li>{@link #toMarkdown()} - Markdown table for reports</li>
  * </ul>
  *
  * @author ianjones
@@ -70,7 +70,7 @@ public class PresenceMatrix {
      * Returns all cells for a given ASN (row view).
      *
      * @param asn the autonomous system number
-     * @return map of metro → cell for this ASN, or empty map
+     * @return map of metro -> cell for this ASN, or empty map
      */
     public Map<MetroId, PresenceCell> forAsn(long asn) {
         return cells.getOrDefault(asn, Collections.emptyMap());
@@ -80,7 +80,7 @@ public class PresenceMatrix {
      * Returns all cells for a given metro (column view).
      *
      * @param metro the Equinix metro code
-     * @return map of ASN → cell for this metro
+     * @return map of ASN -> cell for this metro
      */
     public Map<Long, PresenceCell> forMetro(MetroId metro) {
         Map<Long, PresenceCell> column = new LinkedHashMap<>();
@@ -128,7 +128,7 @@ public class PresenceMatrix {
     /**
      * Counts how many of the target ASNs have IX peering at each metro.
      *
-     * @return map of metro → count of ASNs with IX presence
+     * @return map of metro -> count of ASNs with IX presence
      */
     public Map<MetroId, Integer> asnCountByMetro() {
         Map<MetroId, Integer> counts = new LinkedHashMap<>();

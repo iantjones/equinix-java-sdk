@@ -1,8 +1,7 @@
 {
   "coreConfig": {
     "hostName": "https://api.equinix.com",
-    "sandboxHostName": "https://sandboxapi.equinix.com",
-    "playgroundHostName": "https://playgroundapi.equinix.com"
+    "sandboxHostName": "https://sandboxapi.equinix.com"
   },
   "functionalAreas": {
     "Authentication": {

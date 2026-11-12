@@ -1,0 +1,25 @@
+{
+  "pagination": {
+    "offset": 0,
+    "limit": 25,
+    "total": 2
+  },
+  "data": [
+    {
+      "href": "https://api.equinix.com/fabric/v4/ports/29cc7878-54e3-4e1a-8651-87a61354bac2",
+      "uuid": "29cc7878-54e3-4e1a-8651-87a61354bac2",
+      "type": "XF_PORT",
+      "changeLog": {
+        "createdDateTime": "2025-07-24T06:50:46Z"
+      }
+    },
+    {
+      "href": "https://api.equinix.com/fabric/v4/ports/b7e14c2d-93f8-4a61-8d5b-c29f71e4a306",
+      "uuid": "b7e14c2d-93f8-4a61-8d5b-c29f71e4a306",
+      "type": "XF_PORT",
+      "changeLog": {
+        "createdDateTime": "2025-07-26T06:50:46Z"
+      }
+    }
+  ]
+}

@@ -235,7 +235,7 @@ class CloudToCloudStrategyMatrixTest {
         assertTrue(e.getMessage().contains("EQUINIX_ONLY"), e.getMessage());
     }
 
-    // ── Caller-supplied catalogs: the bundled one goes stale ──
+    // Caller-supplied catalogs: the bundled one goes stale
 
     @Test
     @DisplayName("a caller-extended catalog turns the absent pair into a planned alternative")

@@ -42,11 +42,11 @@ class ResiliencyTest extends WireMockTestBase {
     }
 
     @Nested
-    @DisplayName("Status code → Exception mapping")
+    @DisplayName("Status code -> Exception mapping")
     class StatusCodeMapping {
 
         @Test
-        @DisplayName("401 → EquinixAuthenticationException")
+        @DisplayName("401 -> EquinixAuthenticationException")
         void status401_throwsAuthenticationException() {
             stubErrorInline(wireMock, "/fabric/v4/connections/.*",
                     401, "[{\"errorCode\":\"ERR-401\",\"errorMessage\":\"Unauthorized\"}]");
@@ -56,7 +56,7 @@ class ResiliencyTest extends WireMockTestBase {
         }
 
         @Test
-        @DisplayName("403 → EquinixAuthorizationException")
+        @DisplayName("403 -> EquinixAuthorizationException")
         void status403_throwsAuthorizationException() {
             stubErrorInline(wireMock, "/fabric/v4/connections/.*",
                     403, "[{\"errorCode\":\"ERR-403\",\"errorMessage\":\"Forbidden\"}]");
@@ -66,7 +66,7 @@ class ResiliencyTest extends WireMockTestBase {
         }
 
         @Test
-        @DisplayName("404 → EquinixNotFoundException")
+        @DisplayName("404 -> EquinixNotFoundException")
         void status404_throwsNotFoundException() {
             stubErrorInline(wireMock, "/fabric/v4/connections/.*",
                     404, "[{\"errorCode\":\"ERR-404\",\"errorMessage\":\"Not found\"}]");
@@ -76,7 +76,7 @@ class ResiliencyTest extends WireMockTestBase {
         }
 
         @Test
-        @DisplayName("409 → EquinixConflictException")
+        @DisplayName("409 -> EquinixConflictException")
         void status409_throwsConflictException() {
             stubErrorInline(wireMock, "/fabric/v4/connections/.*",
                     409, "[{\"errorCode\":\"ERR-409\",\"errorMessage\":\"Conflict\"}]");
@@ -86,7 +86,7 @@ class ResiliencyTest extends WireMockTestBase {
         }
 
         @Test
-        @DisplayName("429 → EquinixRateLimitException")
+        @DisplayName("429 -> EquinixRateLimitException")
         void status429_throwsRateLimitException() {
             stubErrorInline(wireMock, "/fabric/v4/connections/.*",
                     429, "[{\"errorCode\":\"ERR-429\",\"errorMessage\":\"Rate limit exceeded\"}]");
@@ -96,7 +96,7 @@ class ResiliencyTest extends WireMockTestBase {
         }
 
         @Test
-        @DisplayName("500 → EquinixServerException")
+        @DisplayName("500 -> EquinixServerException")
         void status500_throwsServerException() {
             stubErrorInline(wireMock, "/fabric/v4/connections/.*",
                     500, "[{\"errorCode\":\"ERR-500\",\"errorMessage\":\"Internal server error\"}]");
@@ -106,7 +106,7 @@ class ResiliencyTest extends WireMockTestBase {
         }
 
         @Test
-        @DisplayName("502 → EquinixServerException")
+        @DisplayName("502 -> EquinixServerException")
         void status502_throwsServerException() {
             stubErrorInline(wireMock, "/fabric/v4/connections/.*",
                     502, "[{\"errorCode\":\"ERR-502\",\"errorMessage\":\"Bad gateway\"}]");
@@ -116,7 +116,7 @@ class ResiliencyTest extends WireMockTestBase {
         }
 
         @Test
-        @DisplayName("503 → EquinixServerException")
+        @DisplayName("503 -> EquinixServerException")
         void status503_throwsServerException() {
             stubErrorInline(wireMock, "/fabric/v4/connections/.*",
                     503, "[{\"errorCode\":\"ERR-503\",\"errorMessage\":\"Service unavailable\"}]");
@@ -224,24 +224,18 @@ class ResiliencyTest extends WireMockTestBase {
     }
 
     @Nested
-    @DisplayName("Timeout handling")
-    class TimeoutHandling {
+    @DisplayName("Slow responses")
+    class SlowResponses {
 
         @Test
-        @DisplayName("slow response eventually completes or throws")
-        void slowResponse_handledGracefully() {
+        @DisplayName("a response slower than a typical round trip (but within the socket timeout) is read and parsed")
+        void slowResponse_isReadAndParsed() {
             wireMock.stubFor(get(urlPathMatching("/fabric/v4/connections/.*"))
                     .willReturn(okJson(TestFixtures.load("/json/fabric/connection_response.json"))
-                            .withFixedDelay(2000)));
+                            .withFixedDelay(250)));
 
-            // Should either succeed (if timeout > 2s) or throw a client exception
-            // Either outcome is acceptable — the key is no unhandled exception
-            try {
-                fabric.connections().getByUuid("test-uuid");
-            } catch (EquinixClientException e) {
-                // Timeout-based client exception is acceptable
-                assertNotNull(e);
-            }
+            assertEquals("3a58dd05-f46d-4b1d-a154-2e85c396ea85",
+                    fabric.connections().getByUuid("test-uuid").getUuid());
         }
     }
 
@@ -308,7 +302,7 @@ class ResiliencyTest extends WireMockTestBase {
                             .withBody("[{\"errorCode\":\"ERR-503\",\"errorMessage\":\"Service Unavailable\"}]")));
 
             assertThrows(EquinixServerException.class, () -> fabric.connections().search());
-            // Exactly one POST despite the 503 being a retryable status — POST is non-idempotent.
+            // Exactly one POST despite the 503 being a retryable status - POST is non-idempotent.
             wireMock.verify(1, postRequestedFor(urlPathMatching("/fabric/v4/connections/search")));
         }
 
@@ -462,14 +456,15 @@ class ResiliencyTest extends WireMockTestBase {
                         () -> fabric.connections().getByUuid("test-uuid"));
             }
 
-            // All four calls reached the wire — the breaker never opened.
+            // All four calls reached the wire - the breaker never opened.
             wireMock.verify(4, getRequestedFor(urlPathMatching("/fabric/v4/connections/.*")));
         }
 
         @Test
         @DisplayName("after the cooldown a successful half-open probe closes the breaker")
-        void recoversViaHalfOpenProbe() throws InterruptedException {
-            fabric.getEquinixClient().setCircuitBreaker(new CircuitBreaker(1, 100));
+        void recoversViaHalfOpenProbe() {
+            ManualClock clock = new ManualClock();
+            fabric.getEquinixClient().setCircuitBreaker(new CircuitBreaker(1, 100, clock));
             stubErrorInline(wireMock, "/fabric/v4/connections/.*",
                     503, "[{\"errorCode\":\"ERR-503\",\"errorMessage\":\"Service Unavailable\"}]");
 
@@ -481,7 +476,7 @@ class ResiliencyTest extends WireMockTestBase {
             resetStubs();
             wireMock.stubFor(get(urlPathMatching("/fabric/v4/connections/.*"))
                     .willReturn(okJson(TestFixtures.load("/json/fabric/connection_response.json"))));
-            Thread.sleep(150);
+            clock.advanceMillis(100);
 
             assertNotNull(fabric.connections().getByUuid("test-uuid")); // the probe
             assertNotNull(fabric.connections().getByUuid("test-uuid")); // circuit closed again

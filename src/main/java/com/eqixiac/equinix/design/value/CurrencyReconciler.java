@@ -188,7 +188,7 @@ public final class CurrencyReconciler {
         return total;
     }
 
-    // ── Two-sided predicates for the subtract/compare sites ──
+    // Two-sided predicates for the subtract/compare sites
 
     /**
      * {@code true} only when both currencies are known and genuinely differ &mdash; the guard for

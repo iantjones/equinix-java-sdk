@@ -27,10 +27,10 @@ import java.util.Map;
  * The customer-supplied, per-connection authorization a {@link DeploymentPlan#execute(ExecutionInputs)}
  * run needs to provision cloud provider connections: the cloud-specific authentication key, the DOT1Q
  * VLAN tag, and (for Azure ExpressRoute) the peering type. A brand-new customer, who owns nothing at
- * plan time, gathers these from each cloud console and supplies them here — the wizard never fabricates
+ * plan time, gathers these from each cloud console and supplies them here - the wizard never fabricates
  * them, and enumerates exactly what to collect via {@link ConnectionInputRequirement}.
  *
- * <p>Every map is keyed by the planned connection's {@code name} — the same name that appears on the
+ * <p>Every map is keyed by the planned connection's {@code name} - the same name that appears on the
  * plan, in {@link ConnectionInputRequirement} ({@code getConnectionName()}), and in the plan's Terraform export.
  * A value supplied here fills in the field the plan deliberately left null; a field the plan already
  * carries (a lens-3b plan built with keys) wins and needs no entry here.</p>
@@ -67,7 +67,7 @@ public class ExecutionInputs {
     Map<String, PeeringType> peeringTypes;
 
     /**
-     * An empty set of inputs — for a backbone-only plan, or a plan whose provider connections already
+     * An empty set of inputs - for a backbone-only plan, or a plan whose provider connections already
      * carry their own authorization keys. {@link DeploymentPlan#execute()} uses this by default.
      *
      * @return empty execution inputs

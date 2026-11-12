@@ -25,7 +25,7 @@ import com.eqixiac.equinix.iam.model.json.creators.UpdatePrincipalPolicyRequest;
  * ({@code /v1/projects/{projectId}/principalPolicies}).
  *
  * <p>A principal policy binds a user principal to the policy that governs their access within a
- * project. Principal policies are not created or deleted directly — instead they are listed,
+ * project. Principal policies are not created or deleted directly - instead they are listed,
  * retrieved, updated, and toggled via the enable/disable lifecycle. All operations are scoped to a
  * {@code projectId}.</p>
  */
@@ -34,7 +34,10 @@ public interface IAMPrincipalPolicies {
     /**
      * Lists the principal policies of a project (first page).
      *
-     * @param projectId the project identifier
+     * @param projectId the IAM project id, {@code project:<id>} (for example {@code project:abc-123}); a bare
+     *                  Resource Manager UUID is rejected, convert it with {@link ProjectIds#of(String)}.
+     *                  Project-scoped endpoints need an STS access-policy token
+     *                  ({@code new IAM(BearerTokenProvider)})
      * @return the first page of principal policies
      */
     PrincipalPolicyList list(String projectId);
@@ -42,7 +45,10 @@ public interface IAMPrincipalPolicies {
     /**
      * Lists the principal policies of a project, controlling pagination.
      *
-     * @param projectId the project identifier
+     * @param projectId the IAM project id, {@code project:<id>} (for example {@code project:abc-123}); a bare
+     *                  Resource Manager UUID is rejected, convert it with {@link ProjectIds#of(String)}.
+     *                  Project-scoped endpoints need an STS access-policy token
+     *                  ({@code new IAM(BearerTokenProvider)})
      * @param pageToken the opaque page token from a prior response, or {@code null} for the first page
      * @param pageSize the maximum number of results per page, or {@code null} for the server default
      * @return the requested page of principal policies
@@ -52,7 +58,10 @@ public interface IAMPrincipalPolicies {
     /**
      * Retrieves the principal policy for a single user principal.
      *
-     * @param projectId the project identifier
+     * @param projectId the IAM project id, {@code project:<id>} (for example {@code project:abc-123}); a bare
+     *                  Resource Manager UUID is rejected, convert it with {@link ProjectIds#of(String)}.
+     *                  Project-scoped endpoints need an STS access-policy token
+     *                  ({@code new IAM(BearerTokenProvider)})
      * @param userPrincipal the user principal identifier
      * @return the matching principal policy
      */
@@ -61,7 +70,10 @@ public interface IAMPrincipalPolicies {
     /**
      * Updates a principal policy.
      *
-     * @param projectId the project identifier
+     * @param projectId the IAM project id, {@code project:<id>} (for example {@code project:abc-123}); a bare
+     *                  Resource Manager UUID is rejected, convert it with {@link ProjectIds#of(String)}.
+     *                  Project-scoped endpoints need an STS access-policy token
+     *                  ({@code new IAM(BearerTokenProvider)})
      * @param userPrincipal the user principal identifier
      * @param request the update (the request's {@code lastRev} guards against concurrent updates)
      * @return the updated principal policy
@@ -71,7 +83,10 @@ public interface IAMPrincipalPolicies {
     /**
      * Enables a previously disabled principal policy.
      *
-     * @param projectId the project identifier
+     * @param projectId the IAM project id, {@code project:<id>} (for example {@code project:abc-123}); a bare
+     *                  Resource Manager UUID is rejected, convert it with {@link ProjectIds#of(String)}.
+     *                  Project-scoped endpoints need an STS access-policy token
+     *                  ({@code new IAM(BearerTokenProvider)})
      * @param userPrincipal the user principal identifier
      * @param lastRev the last-known revision of the policy (for concurrency control), or {@code null}
      * @return the updated principal policy
@@ -81,7 +96,10 @@ public interface IAMPrincipalPolicies {
     /**
      * Disables a principal policy.
      *
-     * @param projectId the project identifier
+     * @param projectId the IAM project id, {@code project:<id>} (for example {@code project:abc-123}); a bare
+     *                  Resource Manager UUID is rejected, convert it with {@link ProjectIds#of(String)}.
+     *                  Project-scoped endpoints need an STS access-policy token
+     *                  ({@code new IAM(BearerTokenProvider)})
      * @param userPrincipal the user principal identifier
      * @param lastRev the last-known revision of the policy (for concurrency control), or {@code null}
      * @return the updated principal policy

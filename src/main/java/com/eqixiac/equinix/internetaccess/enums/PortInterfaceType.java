@@ -25,7 +25,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
  * (spec schema {@code DedicatedPortDefaultConfiguration...physicalPort.interface}, property
  * {@code type}). Wire values contain spaces (e.g. {@code 1G SMF}), so constants map to the spec
  * spelling via {@code getValue()}. {@link #UNKNOWN} is a read-side fallback for values added after
- * this SDK release — never send it.
+ * this SDK release - never send it.
  */
 public enum PortInterfaceType implements APIParam {
     SMF_1G("1G SMF"),

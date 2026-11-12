@@ -46,7 +46,7 @@ public interface NetworkClient<T> extends PageablePost<T> {
 
     /**
      * Dry-run variant of {@link #create(NetworkCreatorJson)}: POSTs the same body to
-     * {@code /fabric/v4/networks} with {@code dryRun=true} — per the Fabric v4 spec, an
+     * {@code /fabric/v4/networks} with {@code dryRun=true} - per the Fabric v4 spec, an
      * "option to verify that API calls will succeed". Nothing is provisioned; the API responds
      * with the validated request echoed back (no {@code uuid}/{@code href}/{@code state}).
      */

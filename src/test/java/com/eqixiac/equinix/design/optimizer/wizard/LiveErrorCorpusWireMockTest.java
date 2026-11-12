@@ -60,27 +60,27 @@ import static org.junit.jupiter.api.Assertions.*;
  * SDK/wizard's <em>classified</em> handling of it.
  *
  * <p>Why this exists: the 2026-07 defect review found that WireMock stubs tended to encode the test
- * authors' <em>assumptions</em> about API rules rather than observed reality — so a wrong assumption
+ * authors' <em>assumptions</em> about API rules rather than observed reality - so a wrong assumption
  * passed its own test while the live API rejected the SDK. This corpus inverts that: every stub body
  * below is the wire shape a live Fabric endpoint actually produced, and every assertion pins the
  * behavior the wizard is supposed to exhibit when it meets that reality again. When a new live error
- * is observed, add its real body here — never trim or "clean up" the observed shapes.</p>
+ * is observed, add its real body here - never trim or "clean up" the observed shapes.</p>
  *
  * <ul>
- *   <li>{@code EQ-3040013} — "Notifications is mandatory field" (router dry-run HTTP 400):
+ *   <li>{@code EQ-3040013} - "Notifications is mandatory field" (router dry-run HTTP 400):
  *       surfaced as a plan validation ERROR (a rejection), never a skip.</li>
- *   <li>{@code EQ-3040063} — account not supported in the metro (router dry-run HTTP 400):
- *       a validation ERROR naming the router/metro, NOT a skip — an entitlement-shaped message
+ *   <li>{@code EQ-3040063} - account not supported in the metro (router dry-run HTTP 400):
+ *       a validation ERROR naming the router/metro, NOT a skip - an entitlement-shaped message
  *       on a 400 is still a rejection of the request.</li>
- *   <li>{@code EQ-3142539} — "connection name length should be greater than 0 and less than 24
+ *   <li>{@code EQ-3142539} - "connection name length should be greater than 0 and less than 24
  *       character": the {@code PlanNames} Layer-1 guard prevents the SDK from EVER sending an
- *       oversized name — asserted on the wire, not just in the model.</li>
- *   <li>{@code EQ-3142501} — "Null value for aSide access point": connection dry-runs whose
+ *       oversized name - asserted on the wire, not just in the model.</li>
+ *   <li>{@code EQ-3142501} - "Null value for aSide access point": connection dry-runs whose
  *       A-side Cloud Router does not exist yet are DEFERRED, never sent endpoint-less. The real
  *       400 body is armed on the connections endpoint as a tripwire.</li>
  * </ul>
  */
-@DisplayName("Live Fabric error corpus — real error bodies, classified wizard handling")
+@DisplayName("Live Fabric error corpus - real error bodies, classified wizard handling")
 class LiveErrorCorpusWireMockTest extends WireMockTestBase {
 
     private static final MetroId DC = MetroId.of(MetroCode.DC);
@@ -88,9 +88,9 @@ class LiveErrorCorpusWireMockTest extends WireMockTestBase {
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
-    // ── REAL error bodies, as observed live (array-of-detail shape; do not "clean up") ──
+    // REAL error bodies, as observed live (array-of-detail shape; do not "clean up")
 
-    /** Observed live: POST /fabric/v4/routers without notifications → HTTP 400. */
+    /** Observed live: POST /fabric/v4/routers without notifications -> HTTP 400. */
     private static final String EQ_3040013_NOTIFICATIONS_MANDATORY = """
             [
               {
@@ -103,7 +103,7 @@ class LiveErrorCorpusWireMockTest extends WireMockTestBase {
               }
             ]""";
 
-    /** Observed live: POST /fabric/v4/routers with an account the metro does not support → HTTP 400. */
+    /** Observed live: POST /fabric/v4/routers with an account the metro does not support -> HTTP 400. */
     private static final String EQ_3040063_ACCOUNT_NOT_SUPPORTED_IN_METRO = """
             [
               {
@@ -117,7 +117,7 @@ class LiveErrorCorpusWireMockTest extends WireMockTestBase {
               }
             ]""";
 
-    /** Observed live: POST /fabric/v4/connections with a >= 24-character name → HTTP 400. */
+    /** Observed live: POST /fabric/v4/connections with a >= 24-character name -> HTTP 400. */
     private static final String EQ_3142539_NAME_TOO_LONG = """
             [
               {
@@ -130,7 +130,7 @@ class LiveErrorCorpusWireMockTest extends WireMockTestBase {
               }
             ]""";
 
-    /** Observed live: POST /fabric/v4/connections?dryRun=true with no A-side endpoint → HTTP 400. */
+    /** Observed live: POST /fabric/v4/connections?dryRun=true with no A-side endpoint -> HTTP 400. */
     private static final String EQ_3142501_NULL_ASIDE_ACCESS_POINT = """
             [
               {
@@ -162,9 +162,7 @@ class LiveErrorCorpusWireMockTest extends WireMockTestBase {
         resetStubs();
     }
 
-    // ══════════════════════════════════════════════
-    //  EQ-3040013 — notifications mandatory
-    // ══════════════════════════════════════════════
+    //  EQ-3040013 - notifications mandatory
 
     @Test
     @DisplayName("EQ-3040013: a live router dry-run 400 (notifications mandatory) surfaces as a validation ERROR, not a skip")
@@ -176,7 +174,7 @@ class LiveErrorCorpusWireMockTest extends WireMockTestBase {
                         .withBody(EQ_3040013_NOTIFICATIONS_MANDATORY)));
 
         // The wizard is configured WITH notifications, so the Layer-1 structural guard passes and the
-        // dry-run really goes to the wire — this test is about classifying the live 400, not the guard.
+        // dry-run really goes to the wire - this test is about classifying the live 400, not the guard.
         DeploymentPlan plan = wizard().plan();
 
         assertFalse(plan.isValid(), "a live EQ-3040013 rejection must invalidate the plan");
@@ -195,12 +193,10 @@ class LiveErrorCorpusWireMockTest extends WireMockTestBase {
         wireMock.verify(0, postRequestedFor(urlPathEqualTo("/fabric/v4/connections")));
     }
 
-    // ══════════════════════════════════════════════
-    //  EQ-3040063 — account not supported in metro
-    // ══════════════════════════════════════════════
+    //  EQ-3040063 - account not supported in metro
 
     @Test
-    @DisplayName("EQ-3040063: account-not-supported-in-metro 400 is a validation ERROR naming the router/metro — NOT a skip")
+    @DisplayName("EQ-3040063: account-not-supported-in-metro 400 is a validation ERROR naming the router/metro - NOT a skip")
     void eq3040063AccountNotSupportedInMetroIsAnErrorNamingTheMetro() {
         stubServiceProfileOk();
         // FCR-DC dry-runs clean; FCR-DA hits the real per-metro account rejection.
@@ -218,7 +214,7 @@ class LiveErrorCorpusWireMockTest extends WireMockTestBase {
         assertFalse(plan.isValid(), "a live EQ-3040063 rejection must invalidate the plan");
         // The error names the rejected router AND carries the observed body naming the metro. Even
         // though the message is entitlement-flavoured, a 400 is a REJECTION of this request in this
-        // metro — classifying it as an infeasibility skip would silently green-light a doomed plan.
+        // metro - classifying it as an infeasibility skip would silently green-light a doomed plan.
         assertTrue(plan.getValidationErrors().stream().anyMatch(e ->
                         e.contains("FCR-DA")
                                 && e.contains("EQ-3040063")
@@ -237,12 +233,10 @@ class LiveErrorCorpusWireMockTest extends WireMockTestBase {
         assertEquals(1, plan.getBackboneLinks().size());
     }
 
-    // ══════════════════════════════════════════════
-    //  EQ-3142539 — name too long (never sent)
-    // ══════════════════════════════════════════════
+    //  EQ-3142539 - name too long (never sent)
 
     @Test
-    @DisplayName("EQ-3142539: the PlanNames Layer-1 guard means an oversized name is NEVER sent — every wire body's name is <= 23 chars")
+    @DisplayName("EQ-3142539: the PlanNames Layer-1 guard means an oversized name is NEVER sent - every wire body's name is <= 23 chars")
     void eq3142539OversizedNamesAreNeverSent() throws Exception {
         stubServiceProfileOk();
         stubRouterDryRunOk();
@@ -254,7 +248,7 @@ class LiveErrorCorpusWireMockTest extends WireMockTestBase {
                         .withBody(EQ_3142539_NAME_TOO_LONG)));
 
         // A prefix far beyond PlanNames.MAX_PREFIX_LEN: the raw composition
-        // "globalpay-production-eastcoast-DC-to-aws" would be 40 characters — past the live limit.
+        // "globalpay-production-eastcoast-DC-to-aws" would be 40 characters - past the live limit.
         DeploymentPlan plan = wizard("globalpay-production-eastcoast").plan();
 
         // Model-level: EVERY generated name across all four resource kinds fits Fabric's < 24 rule
@@ -283,17 +277,15 @@ class LiveErrorCorpusWireMockTest extends WireMockTestBase {
         assertNotNull(name, "every planned resource must be named");
         assertTrue(name.length() <= 23,
                 () -> "name '" + name + "' is " + name.length()
-                        + " chars — Fabric rejects 24+ (EQ-3142539)");
+                        + " chars - Fabric rejects 24+ (EQ-3142539)");
         assertTrue(name.matches("[A-Za-z0-9_-]+"),
                 () -> "name '" + name + "' contains characters Fabric rejects");
     }
 
-    // ══════════════════════════════════════════════
-    //  EQ-3142501 — null aSide access point (deferred, never sent)
-    // ══════════════════════════════════════════════
+    //  EQ-3142501 - null aSide access point (deferred, never sent)
 
     @Test
-    @DisplayName("EQ-3142501: a connection whose A-side FCR does not exist yet is DEFERRED — the endpoint-less dry-run is never sent")
+    @DisplayName("EQ-3142501: a connection whose A-side FCR does not exist yet is DEFERRED - the endpoint-less dry-run is never sent")
     void eq3142501EndpointlessDryRunIsDeferredNeverSent() {
         stubServiceProfileOk();
         stubRouterDryRunOk();
@@ -309,7 +301,7 @@ class LiveErrorCorpusWireMockTest extends WireMockTestBase {
 
         // Zero connection POSTs: the doomed dry-run is not sent, so the real 400 never fires.
         wireMock.verify(0, postRequestedFor(urlPathEqualTo("/fabric/v4/connections")));
-        // Classified as DEFERRED — not an error, not a skip — naming the connection and the
+        // Classified as DEFERRED - not an error, not a skip - naming the connection and the
         // not-yet-existing A-side router it is waiting on.
         assertTrue(plan.isValid(), () -> "a deferred endpoint dry-run must not invalidate the plan: "
                 + plan.getValidationErrors());
@@ -323,9 +315,7 @@ class LiveErrorCorpusWireMockTest extends WireMockTestBase {
                 () -> "a deferrable connection must be deferred, not skipped: " + plan.getSkippedValidations());
     }
 
-    // ══════════════════════════════════════════════
     //  Stubs and plan helpers (mirrors DeploymentWizardConnectionValidationWireMockTest)
-    // ══════════════════════════════════════════════
 
     private static void stubRouterDryRunOk() {
         wireMock.stubFor(post(urlPathEqualTo("/fabric/v4/routers"))
@@ -352,7 +342,7 @@ class LiveErrorCorpusWireMockTest extends WireMockTestBase {
 
     /**
      * Two metros: DC with AWS available and a single AWS-dependent workload placed there, plus DA
-     * with no providers — one provider connection (FCR-DC-to-aws) and one backbone link.
+     * with no providers - one provider connection (FCR-DC-to-aws) and one backbone link.
      */
     private static OptimizationResult twoMetroResult() {
         MetroScore score = new MetroScore(90.0, Collections.emptyList());

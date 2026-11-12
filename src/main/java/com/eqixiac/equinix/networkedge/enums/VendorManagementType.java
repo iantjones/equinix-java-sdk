@@ -19,9 +19,9 @@ package com.eqixiac.equinix.networkedge.enums;
 import com.fasterxml.jackson.annotation.JsonCreator;
 
 /**
- * Vendor-specific device management type (spec {@code VendorConfig.managementType}) — how a Fortinet/Cisco
+ * Vendor-specific device management type (spec {@code VendorConfig.managementType}) - how a Fortinet/Cisco
  * FTD-style device is managed. {@link #UNKNOWN} is a read-side fallback for values added after this SDK
- * release — never send it.
+ * release - never send it.
  */
 public enum VendorManagementType {
     FMC,

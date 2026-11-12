@@ -1,0 +1,13 @@
+{
+  "type": "APP_LINK",
+  "name": "Atlassian App Link",
+  "description": "Atlassian App Link in SV",
+  "router": {
+    "uuid": "36204584-2ae1-44f6-980f-08ecd555d9c6"
+  },
+  "ipv4Subnet": "192.168.10.0/29",
+  "bandwidth": 1000,
+  "project": {
+    "projectId": "71b55fef-fd2e-402f-ae3c-01d5f00bf2d4"
+  }
+}

@@ -21,7 +21,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 /**
  * Billing-account status of a Network Edge metro account (spec {@code MetroAccountResponse.accountStatus}).
  * The live API returns mixed-case forms (e.g. {@code Active}), so parsing is case-insensitive.
- * {@link #UNKNOWN} is a read-side fallback for values added after this SDK release — never send it.
+ * {@link #UNKNOWN} is a read-side fallback for values added after this SDK release - never send it.
  */
 public enum AccountStatus {
     ACTIVE,

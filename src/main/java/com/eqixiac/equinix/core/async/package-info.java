@@ -20,7 +20,7 @@
  * <p>The central type, {@link com.eqixiac.equinix.core.async.EquinixAsync}, is a small generic
  * facade that runs any blocking SDK call on a virtual thread and returns a
  * {@link java.util.concurrent.CompletableFuture}. This deliberately avoids generating a per-method
- * {@code ...Async} mirror of every domain (Fabric, NetworkEdge, CustomerPortal, ...); one facade
+ * {@code ...Async} mirror of every domain (Fabric, NetworkEdge, Operations, ...); one facade
  * covers the whole API surface. {@link com.eqixiac.equinix.core.async.AsyncException} reports
  * interruption while awaiting completion.</p>
  *

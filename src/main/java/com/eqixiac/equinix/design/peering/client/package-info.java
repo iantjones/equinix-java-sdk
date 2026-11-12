@@ -15,14 +15,14 @@
  */
 
 /**
- * Lightweight PeeringDB REST client and its wire models — a credential and transport entirely
+ * Lightweight PeeringDB REST client and its wire models - a credential and transport entirely
  * separate from the Equinix OAuth client.
  *
  * <p>{@link com.eqixiac.equinix.design.peering.client.PeeringDbClient} is
  * {@code AutoCloseable}, supports API-key or anonymous access, batches multi-ASN lookups with
  * PeeringDB's {@code asn__in} operator, and honours 429 responses with capped
  * {@code Retry-After}-aware backoff. {@code loadEquinixCatalog()} must be called before any
- * {@code getEquinix*} method — it fetches Equinix's organization record ({@code org/2},
+ * {@code getEquinix*} method - it fetches Equinix's organization record ({@code org/2},
  * {@code depth=2}) once and caches the IX/facility catalog the presence filters run against.</p>
  *
  * <p>The remaining types ({@link com.eqixiac.equinix.design.peering.client.PeeringDbNetwork},

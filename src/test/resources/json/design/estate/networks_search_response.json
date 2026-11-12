@@ -1,0 +1,18 @@
+{
+  "pagination": { "offset": 0, "limit": 20, "total": 1 },
+  "data": [
+    {
+      "href": "https://api.equinix.com/fabric/v4/networks/n0000000-0000-4000-8000-000000000001",
+      "uuid": "n0000000-0000-4000-8000-000000000001",
+      "state": "DELETED",
+      "connectionsCount": 0,
+      "account": { "accountNumber": 100 },
+      "changeLog": { "createdDateTime": "2025-01-01T00:00:00Z" },
+      "type": "EVPLAN",
+      "name": "synthetic-network",
+      "scope": "REGIONAL",
+      "project": { "projectId": "aaaaaaaa-0000-4000-8000-000000000001" },
+      "notifications": [ { "type": "ALL", "emails": [ "noc@example.com" ] } ]
+    }
+  ]
+}

@@ -50,10 +50,11 @@ class CloudProviderAdapterTest {
             String mockAwsConnection = "aws-mock-connection-object";
 
             AwsDirectConnectAdapter<String> adapter = new AwsDirectConnectAdapter<>(
-                    mockAwsConnection, "123456789012", "us-east-1", TEST_PROFILE_UUID);
+                    mockAwsConnection, "123456789012", "us-east-1", TEST_PROFILE_UUID, "SV");
 
             assertEquals("123456789012", adapter.getAuthenticationKey());
             assertEquals("us-east-1", adapter.getSellerRegion());
+            assertEquals("SV", adapter.getMetroCode());
             assertEquals(TEST_PROFILE_UUID, adapter.getServiceProfileUuid());
             assertEquals(mockAwsConnection, adapter.getSource());
             assertEquals(CloudProviderType.AWS, adapter.getProviderType());
@@ -66,7 +67,7 @@ class CloudProviderAdapterTest {
         @DisplayName("should create adapter with static factory method")
         void shouldCreateWithStaticFactory() {
             AwsDirectConnectAdapter<Void> adapter = AwsDirectConnectAdapter.of(
-                    "123456789012", "eu-west-1", TEST_PROFILE_UUID);
+                    "123456789012", "eu-west-1", TEST_PROFILE_UUID, "SV");
 
             assertEquals("123456789012", adapter.getAuthenticationKey());
             assertEquals("eu-west-1", adapter.getSellerRegion());
@@ -78,7 +79,7 @@ class CloudProviderAdapterTest {
         @DisplayName("should produce correct description")
         void shouldDescribe() {
             AwsDirectConnectAdapter<Void> adapter = AwsDirectConnectAdapter.of(
-                    "123456789012", "us-west-2", TEST_PROFILE_UUID);
+                    "123456789012", "us-west-2", TEST_PROFILE_UUID, "SV");
 
             assertEquals("AWS Direct Connect to us-west-2", adapter.describe());
         }
@@ -97,12 +98,11 @@ class CloudProviderAdapterTest {
         void shouldCreateWithSource() {
             String mockCircuit = "azure-mock-circuit-object";
 
-            AzureExpressRouteAdapter<String> adapter = new AzureExpressRouteAdapter<>(
-                    mockCircuit, "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
-                    "Silicon Valley", TEST_PROFILE_UUID, PeeringType.PRIVATE);
+            AzureExpressRouteAdapter<String> adapter = new AzureExpressRouteAdapter<>(mockCircuit, "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx", TEST_PROFILE_UUID, PeeringType.PRIVATE, "SV");
 
             assertEquals("xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx", adapter.getAuthenticationKey());
-            assertEquals("Silicon Valley", adapter.getSellerRegion());
+            assertNull(adapter.getSellerRegion(), "Azure sends no sellerRegion (no spec Azure example does)");
+            assertEquals("SV", adapter.getMetroCode());
             assertEquals(TEST_PROFILE_UUID, adapter.getServiceProfileUuid());
             assertEquals(mockCircuit, adapter.getSource());
             assertEquals(CloudProviderType.AZURE, adapter.getProviderType());
@@ -112,11 +112,10 @@ class CloudProviderAdapterTest {
         @Test
         @DisplayName("should create adapter with static factory method")
         void shouldCreateWithStaticFactory() {
-            AzureExpressRouteAdapter<Void> adapter = AzureExpressRouteAdapter.of(
-                    "service-key-guid", "Washington DC", TEST_PROFILE_UUID, PeeringType.MICROSOFT);
+            AzureExpressRouteAdapter<Void> adapter = AzureExpressRouteAdapter.of("service-key-guid", TEST_PROFILE_UUID, PeeringType.MICROSOFT, "SV");
 
             assertEquals("service-key-guid", adapter.getAuthenticationKey());
-            assertEquals("Washington DC", adapter.getSellerRegion());
+            assertNull(adapter.getSellerRegion());
             assertEquals(PeeringType.MICROSOFT, adapter.getPreferredPeeringType());
             assertNull(adapter.getSource());
         }
@@ -124,10 +123,9 @@ class CloudProviderAdapterTest {
         @Test
         @DisplayName("should produce correct description")
         void shouldDescribe() {
-            AzureExpressRouteAdapter<Void> adapter = AzureExpressRouteAdapter.of(
-                    "key", "Silicon Valley", TEST_PROFILE_UUID, PeeringType.PRIVATE);
+            AzureExpressRouteAdapter<Void> adapter = AzureExpressRouteAdapter.of("key", TEST_PROFILE_UUID, PeeringType.PRIVATE, "SV");
 
-            assertEquals("Azure ExpressRoute to Silicon Valley", adapter.describe());
+            assertEquals("Azure ExpressRoute in metro SV", adapter.describe());
         }
     }
 
@@ -145,7 +143,7 @@ class CloudProviderAdapterTest {
             String mockAttachment = "gcp-mock-attachment-object";
 
             GoogleCloudInterconnectAdapter<String> adapter = new GoogleCloudInterconnectAdapter<>(
-                    mockAttachment, "xxxx/xxxx/xxxx/xxxx", "us-east1", TEST_PROFILE_UUID);
+                    mockAttachment, "xxxx/xxxx/xxxx/xxxx", "us-east1", TEST_PROFILE_UUID, "SV");
 
             assertEquals("xxxx/xxxx/xxxx/xxxx", adapter.getAuthenticationKey());
             assertEquals("us-east1", adapter.getSellerRegion());
@@ -158,7 +156,7 @@ class CloudProviderAdapterTest {
         @DisplayName("should create adapter with static factory method")
         void shouldCreateWithStaticFactory() {
             GoogleCloudInterconnectAdapter<Void> adapter = GoogleCloudInterconnectAdapter.of(
-                    "pairing-key", "europe-west1", TEST_PROFILE_UUID);
+                    "pairing-key", "europe-west1", TEST_PROFILE_UUID, "SV");
 
             assertEquals("pairing-key", adapter.getAuthenticationKey());
             assertEquals("europe-west1", adapter.getSellerRegion());
@@ -169,7 +167,7 @@ class CloudProviderAdapterTest {
         @DisplayName("should produce correct description")
         void shouldDescribe() {
             GoogleCloudInterconnectAdapter<Void> adapter = GoogleCloudInterconnectAdapter.of(
-                    "key", "us-east1", TEST_PROFILE_UUID);
+                    "key", "us-east1", TEST_PROFILE_UUID, "SV");
 
             assertEquals("Google Cloud Interconnect to us-east1", adapter.describe());
         }
@@ -189,7 +187,7 @@ class CloudProviderAdapterTest {
             String mockVc = "oracle-mock-virtual-circuit";
 
             OracleFastConnectAdapter<String> adapter = new OracleFastConnectAdapter<>(
-                    mockVc, "ocid1.virtualcircuit.oc1.iad.abcdef", "us-ashburn-1", TEST_PROFILE_UUID);
+                    mockVc, "ocid1.virtualcircuit.oc1.iad.abcdef", "us-ashburn-1", TEST_PROFILE_UUID, "SV");
 
             assertEquals("ocid1.virtualcircuit.oc1.iad.abcdef", adapter.getAuthenticationKey());
             assertEquals("us-ashburn-1", adapter.getSellerRegion());
@@ -202,7 +200,7 @@ class CloudProviderAdapterTest {
         @DisplayName("should create adapter with static factory method")
         void shouldCreateWithStaticFactory() {
             OracleFastConnectAdapter<Void> adapter = OracleFastConnectAdapter.of(
-                    "ocid1.virtualcircuit.oc1.uk.xyz", "uk-london-1", TEST_PROFILE_UUID);
+                    "ocid1.virtualcircuit.oc1.uk.xyz", "uk-london-1", TEST_PROFILE_UUID, "SV");
 
             assertEquals("ocid1.virtualcircuit.oc1.uk.xyz", adapter.getAuthenticationKey());
             assertEquals("uk-london-1", adapter.getSellerRegion());
@@ -213,9 +211,32 @@ class CloudProviderAdapterTest {
         @DisplayName("should produce correct description")
         void shouldDescribe() {
             OracleFastConnectAdapter<Void> adapter = OracleFastConnectAdapter.of(
-                    "ocid", "us-ashburn-1", TEST_PROFILE_UUID);
+                    "ocid", "us-ashburn-1", TEST_PROFILE_UUID, "SV");
 
             assertEquals("Oracle FastConnect to us-ashburn-1", adapter.describe());
+        }
+    }
+
+    @Nested
+    @DisplayName("Provider metro is required")
+    class MetroRequiredTests {
+
+        @Test
+        @DisplayName("each built-in adapter rejects a null or blank metro (Fabric answers HTTP 400 EQ-3142501 without one)")
+        void builtInAdaptersRequireMetro() {
+            assertThrows(IllegalArgumentException.class, () -> AwsDirectConnectAdapter.of("1", "us-east-1", TEST_PROFILE_UUID, null));
+            assertThrows(IllegalArgumentException.class, () -> AzureExpressRouteAdapter.of("k", TEST_PROFILE_UUID, PeeringType.PRIVATE, " "));
+            assertThrows(IllegalArgumentException.class, () -> GoogleCloudInterconnectAdapter.of("k", "us-east1", TEST_PROFILE_UUID, ""));
+            assertThrows(IllegalArgumentException.class, () -> OracleFastConnectAdapter.of("o", "us-ashburn-1", TEST_PROFILE_UUID, null));
+        }
+
+        @Test
+        @DisplayName("fromCloudProvider copies the adapter metro to location.metroCode")
+        void fromCloudProviderSetsLocation() {
+            SimpleAccessPoint ap = SimpleAccessPoint.define(AccessPointType.SP)
+                    .fromCloudProvider(GoogleCloudInterconnectAdapter.of("k", "us-east1", TEST_PROFILE_UUID, "DC"))
+                    .create();
+            assertEquals("DC", ap.getLocation().getMetroCode());
         }
     }
 
@@ -267,7 +288,7 @@ class CloudProviderAdapterTest {
         @DisplayName("should build access point from AWS adapter")
         void shouldBuildFromAwsAdapter() {
             AwsDirectConnectAdapter<Void> adapter = AwsDirectConnectAdapter.of(
-                    "123456789012", "us-east-1", TEST_PROFILE_UUID);
+                    "123456789012", "us-east-1", TEST_PROFILE_UUID, "SV");
 
             LinkProtocol linkProtocol = LinkProtocol.dot1q().vlanTag(1000).create();
 
@@ -287,8 +308,7 @@ class CloudProviderAdapterTest {
         @Test
         @DisplayName("should build access point from Azure adapter with peering type")
         void shouldBuildFromAzureAdapterWithPeering() {
-            AzureExpressRouteAdapter<Void> adapter = AzureExpressRouteAdapter.of(
-                    "service-key", "Silicon Valley", TEST_PROFILE_UUID, PeeringType.PRIVATE);
+            AzureExpressRouteAdapter<Void> adapter = AzureExpressRouteAdapter.of("service-key", TEST_PROFILE_UUID, PeeringType.PRIVATE, "SV");
 
             LinkProtocol linkProtocol = LinkProtocol.dot1q().vlanTag(1500).create();
 
@@ -299,7 +319,8 @@ class CloudProviderAdapterTest {
 
             assertEquals(AccessPointType.SP, ap.getType());
             assertEquals("service-key", ap.getAuthenticationKey());
-            assertEquals("Silicon Valley", ap.getSellerRegion());
+            assertNull(ap.getSellerRegion());
+            assertEquals("SV", ap.getLocation().getMetroCode());
             assertEquals(PeeringType.PRIVATE, ap.getPeeringType());
             assertNotNull(ap.getProfile());
         }
@@ -308,7 +329,7 @@ class CloudProviderAdapterTest {
         @DisplayName("should build access point from Google adapter")
         void shouldBuildFromGoogleAdapter() {
             GoogleCloudInterconnectAdapter<Void> adapter = GoogleCloudInterconnectAdapter.of(
-                    "pairing-key-12345", "us-east1", TEST_PROFILE_UUID);
+                    "pairing-key-12345", "us-east1", TEST_PROFILE_UUID, "SV");
 
             SimpleAccessPoint ap = SimpleAccessPoint.define(AccessPointType.SP)
                     .fromCloudProvider(adapter)
@@ -323,7 +344,7 @@ class CloudProviderAdapterTest {
         @DisplayName("should build access point from Oracle adapter")
         void shouldBuildFromOracleAdapter() {
             OracleFastConnectAdapter<Void> adapter = OracleFastConnectAdapter.of(
-                    "ocid1.vc.oc1.iad.abcdef", "us-ashburn-1", TEST_PROFILE_UUID);
+                    "ocid1.vc.oc1.iad.abcdef", "us-ashburn-1", TEST_PROFILE_UUID, "SV");
 
             SimpleAccessPoint ap = SimpleAccessPoint.define(AccessPointType.SP)
                     .fromCloudProvider(adapter)
@@ -367,17 +388,17 @@ class CloudProviderAdapterTest {
         @Test
         @DisplayName("the four built-in adapters return null from getActivationKey()")
         void builtInAdaptersHaveNoActivationKey() {
-            assertNull(AwsDirectConnectAdapter.of("123456789012", "us-east-1", TEST_PROFILE_UUID).getActivationKey());
-            assertNull(AzureExpressRouteAdapter.of("service-key", "eastus", TEST_PROFILE_UUID, PeeringType.PRIVATE).getActivationKey());
-            assertNull(GoogleCloudInterconnectAdapter.of("pairing-key", "us-east1", TEST_PROFILE_UUID).getActivationKey());
-            assertNull(OracleFastConnectAdapter.of("ocid1.virtualcircuit", "us-ashburn-1", TEST_PROFILE_UUID).getActivationKey());
+            assertNull(AwsDirectConnectAdapter.of("123456789012", "us-east-1", TEST_PROFILE_UUID, "SV").getActivationKey());
+            assertNull(AzureExpressRouteAdapter.of("service-key", TEST_PROFILE_UUID, PeeringType.PRIVATE, "SV").getActivationKey());
+            assertNull(GoogleCloudInterconnectAdapter.of("pairing-key", "us-east1", TEST_PROFILE_UUID, "SV").getActivationKey());
+            assertNull(OracleFastConnectAdapter.of("ocid1.virtualcircuit", "us-ashburn-1", TEST_PROFILE_UUID, "SV").getActivationKey());
         }
 
         @Test
         @DisplayName("fromCloudProvider leaves activationKey unset for a built-in adapter")
         void builtInAdapterLeavesActivationKeyUnset() {
             SimpleAccessPoint ap = SimpleAccessPoint.define(AccessPointType.SP)
-                    .fromCloudProvider(AwsDirectConnectAdapter.of("123456789012", "us-east-1", TEST_PROFILE_UUID))
+                    .fromCloudProvider(AwsDirectConnectAdapter.of("123456789012", "us-east-1", TEST_PROFILE_UUID, "SV"))
                     .create();
 
             assertEquals("123456789012", ap.getAuthenticationKey());
@@ -405,7 +426,7 @@ class CloudProviderAdapterTest {
         void builderActivationKeySurvivesAdapterWithoutOne() {
             SimpleAccessPoint ap = SimpleAccessPoint.define(AccessPointType.SP)
                     .activationKey("activation-key")
-                    .fromCloudProvider(AwsDirectConnectAdapter.of("123456789012", "us-east-1", TEST_PROFILE_UUID))
+                    .fromCloudProvider(AwsDirectConnectAdapter.of("123456789012", "us-east-1", TEST_PROFILE_UUID, "SV"))
                     .create();
 
             assertEquals("activation-key", ap.getActivationKey());

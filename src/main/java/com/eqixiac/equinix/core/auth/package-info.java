@@ -20,12 +20,12 @@
  * <p>{@link com.eqixiac.equinix.core.auth.EquinixCredentials} supplies the OAuth2 client
  * credentials (Client ID and Client Secret); {@link com.eqixiac.equinix.core.auth.BasicEquinixCredentials}
  * is the standard implementation. Credentials are resolved through the
- * {@link com.eqixiac.equinix.core.auth.EquinixCredentialsProvider} extension point — implement it
+ * {@link com.eqixiac.equinix.core.auth.EquinixCredentialsProvider} extension point - implement it
  * to source credentials from a vault, environment, or rotation scheme; the SDK ships
  * {@link com.eqixiac.equinix.core.auth.EquinixStaticCredentialsProvider} for the common static case.
  * At authentication time the SDK builds an {@link com.eqixiac.equinix.core.auth.Oauth2TokenRequest}
  * from the provided credentials and performs the OAuth2 {@code client_credentials} grant
- * ({@code POST /oauth2/v1/token}) — the only grant the Equinix token endpoint supports.</p>
+ * ({@code POST /oauth2/v1/token}) - the only grant the Equinix token endpoint supports.</p>
  *
  * @see com.eqixiac.equinix.core.auth.EquinixCredentials
  * @see com.eqixiac.equinix.core.auth.EquinixCredentialsProvider

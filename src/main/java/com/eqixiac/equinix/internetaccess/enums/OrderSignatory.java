@@ -22,9 +22,9 @@ import com.eqixiac.equinix.core.model.APIParam;
  * Signatory of the order signature attached to an Equinix Internet Access (EIA) v2 service order.
  *
  * <ul>
- *   <li>{@code SELF} — the requesting user signs the order.</li>
- *   <li>{@code DELEGATE} — the signature request is sent to a delegate.</li>
- *   <li>{@code SUPPORT} — Equinix support handles signing.</li>
+ *   <li>{@code SELF} - the requesting user signs the order.</li>
+ *   <li>{@code DELEGATE} - the signature request is sent to a delegate.</li>
+ *   <li>{@code SUPPORT} - Equinix support handles signing.</li>
  * </ul>
  */
 public enum OrderSignatory implements APIParam {

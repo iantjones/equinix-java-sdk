@@ -16,10 +16,10 @@
 
 package com.eqixiac.equinix.mcp.server;
 
-import com.eqixiac.equinix.CustomerPortal;
+import com.eqixiac.equinix.Operations;
 import com.eqixiac.equinix.core.http.response.PaginatedList;
-import com.eqixiac.equinix.customerportal.client.BillingAccounts;
-import com.eqixiac.equinix.customerportal.model.BillingAccount;
+import com.eqixiac.equinix.operations.client.BillingAccounts;
+import com.eqixiac.equinix.operations.model.BillingAccount;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -32,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-@DisplayName("AccountResolver — billingv1 auto-resolution + multi-account elicitation")
+@DisplayName("AccountResolver - billingv1 auto-resolution + multi-account elicitation")
 class AccountResolverTest {
 
     private static BillingAccount account(String number, String name) {
@@ -46,17 +46,17 @@ class AccountResolverTest {
         BillingAccounts billingAccounts = mock(BillingAccounts.class);
         when(billingAccounts.summaries()).thenReturn(
                 new PaginatedList<>(List.of(accounts), null, null, null, null));
-        CustomerPortal portal = mock(CustomerPortal.class);
+        Operations portal = mock(Operations.class);
         when(portal.billingAccounts()).thenReturn(billingAccounts);
-        return ServerContext.builder().customerPortal(portal).environment(Map.of()).build();
+        return ServerContext.builder().operations(portal).environment(Map.of()).build();
     }
 
     private static ServerContext failingContext() {
         BillingAccounts billingAccounts = mock(BillingAccounts.class);
         when(billingAccounts.summaries()).thenThrow(new RuntimeException("HTTP 403 Forbidden"));
-        CustomerPortal portal = mock(CustomerPortal.class);
+        Operations portal = mock(Operations.class);
         when(portal.billingAccounts()).thenReturn(billingAccounts);
-        return ServerContext.builder().customerPortal(portal).environment(Map.of()).build();
+        return ServerContext.builder().operations(portal).environment(Map.of()).build();
     }
 
     @Test
@@ -108,7 +108,7 @@ class AccountResolverTest {
     }
 
     @Test
-    @DisplayName("a failed lookup (403/timeout) is UNRESOLVED with the reason — never a fabricated number")
+    @DisplayName("a failed lookup (403/timeout) is UNRESOLVED with the reason - never a fabricated number")
     void failedLookupUnresolved() {
         ServerContext ctx = failingContext();
         AccountResolver.Resolution resolution = AccountResolver.resolve(ctx, StubExchanges.accepts("x"));

@@ -48,6 +48,10 @@ public class PublicKeysImpl implements PublicKeys {
         return ResponseHandler.mapList(publicKeyList, this.serviceClient, PublicKeyWrapper::new);
     }
 
+    public Boolean delete(String uuid) {
+        return serviceClient.delete(uuid);
+    }
+
     public PublicKeyOperator.PublicKeyBuilder define(String keyName, String keyValue) {
         return new PublicKeyOperator(this.serviceClient).create(keyName, keyValue);
     }

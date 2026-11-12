@@ -32,4 +32,25 @@ public interface StreamAsset {
     Boolean getMetricsEnabled();
 
     StreamAssetAttachmentStatus getAttachmentStatus();
+
+    /**
+     * The stream this asset is attached to ({@code streamUuid}; returned by the stream-asset search).
+     *
+     * @return the stream uuid, or {@code null}
+     */
+    String getStreamUuid();
+
+    /**
+     * The asset's project ({@code projectId}; returned by the stream-asset search).
+     *
+     * @return the project id, or {@code null}
+     */
+    String getProjectId();
+
+    /**
+     * The device interfaces streamed, for a {@code VIRTUAL_DEVICE} asset.
+     *
+     * @return the interfaces, or {@code null}
+     */
+    java.util.List<com.eqixiac.equinix.fabric.model.implementation.StreamDeviceInterface> getInterfaces();
 }

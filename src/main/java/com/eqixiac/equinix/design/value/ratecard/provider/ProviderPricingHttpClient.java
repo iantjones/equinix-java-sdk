@@ -36,8 +36,8 @@ import java.util.Set;
 /**
  * A minimal, fault-tolerant HTTP/JSON GET client shared by the public cloud
  * pricing adapters (Azure Retail Prices, AWS Price List, GCP Cloud Billing
- * Catalog). It mirrors the transport choices of the rest of the SDK — Apache
- * HttpClient plus Jackson — and the lightweight style of the PeeringDB client
+ * Catalog). It mirrors the transport choices of the rest of the SDK - Apache
+ * HttpClient plus Jackson - and the lightweight style of the PeeringDB client
  * in the peering-intelligence module.
  *
  * <p>Every call is best-effort: any non-200 status, transport failure, or parse
@@ -54,7 +54,7 @@ import java.util.Set;
  * rate-card lookups from the outside.</p>
  *
  * <p>Some pricing endpoints (GCP Billing Catalog) carry an API key as a query-string
- * parameter; log lines never echo a raw URL — credential-bearing query parameters are
+ * parameter; log lines never echo a raw URL - credential-bearing query parameters are
  * {@linkplain #redactCredentials(String) redacted} first.</p>
  */
 @Slf4j
@@ -151,7 +151,7 @@ final class ProviderPricingHttpClient {
 
     /**
      * Returns the URL with the value of every credential-bearing query parameter (API keys,
-     * tokens, signatures, …) replaced by {@code REDACTED}, so the URL is safe to log. URLs
+     * tokens, signatures, ...) replaced by {@code REDACTED}, so the URL is safe to log. URLs
      * without a query string are returned unchanged.
      *
      * @param url the request URL (may be {@code null})

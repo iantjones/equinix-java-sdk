@@ -21,7 +21,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
 /**
- * A service type supported in a Fabric metro (fabricv4 {@code services} — e.g.
+ * A service type supported in a Fabric metro (fabricv4 {@code services} - e.g.
  * {@code ETHERNET_IP_SERVICE}, {@code TIME_SERVICE}). The spec types this as a plain string,
  * so no enum is imposed here.
  *

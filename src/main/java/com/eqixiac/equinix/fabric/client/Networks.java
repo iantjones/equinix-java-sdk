@@ -86,10 +86,16 @@ public interface Networks {
     /**
      * Lists the connections that belong to a network.
      *
+     *
+     * Spec 4.34.0 declares no {@code offset} on this GET and the
+     * live service returns every item in one response (for {@code GET /ports}: {@code limit 999},
+     * {@code offset} and {@code limit} ignored, observed 2026-11-11), so this is a plain list, not
+     * a multi-page one.
+     *
      * @param networkId the unique identifier of the network
-     * @return a paginated list of the network's connections
+     * @return the network's connections
      */
-    PaginatedList<Connection> getConnections(String networkId);
+    List<Connection> getConnections(String networkId);
 
     /**
      * Lists the lifecycle changes recorded against a network.

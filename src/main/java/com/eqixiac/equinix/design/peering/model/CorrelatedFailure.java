@@ -24,7 +24,7 @@ import lombok.Value;
 import java.util.List;
 
 /**
- * Identifies a correlated failure — multiple connectivity paths that share a
+ * Identifies a correlated failure - multiple connectivity paths that share a
  * single failure domain and would fail simultaneously.
  *
  * <p>For example, if a customer's IX peering with AWS AND their Fabric Direct Connect
@@ -40,7 +40,7 @@ import java.util.List;
 @Builder
 public class CorrelatedFailure {
 
-    /** The failure domain kind — the engine currently emits {@link FailureScope#METRO} correlations. */
+    /** The failure domain kind - the engine currently emits {@link FailureScope#METRO} correlations. */
     FailureScope scope;
 
     /** Human-readable name of the shared failure domain (e.g. {@code "DC metro"}). */
@@ -63,7 +63,7 @@ public class CorrelatedFailure {
 
     /**
      * Severity of the correlation. Closed value set: {@code "CRITICAL"}, {@code "HIGH"},
-     * {@code "MEDIUM"}, {@code "LOW"} — the engine currently emits {@code "HIGH"} (two or fewer
+     * {@code "MEDIUM"}, {@code "LOW"} - the engine currently emits {@code "HIGH"} (two or fewer
      * analyzed ASNs) or {@code "MEDIUM"} for its single-customer-metro correlations. Unlike
      * {@code BlastRadiusReport}, there is no {@code computeSeverity()} re-derivation here; this
      * stored value is the only severity.

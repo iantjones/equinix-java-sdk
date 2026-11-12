@@ -22,7 +22,7 @@ import com.eqixiac.equinix.fabric.model.implementation.Change;
 import com.eqixiac.equinix.fabric.model.implementation.ChangeLog;
 import com.eqixiac.equinix.fabric.model.json.creators.RouteAggregationOperator;
 
-public interface RouteAggregation {
+public interface RouteAggregation extends DeletableResource {
 
     String getUuid();
 

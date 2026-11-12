@@ -29,6 +29,8 @@ public class AgentWrapper extends ResourceImpl<Agent> implements Agent {
 
     @Delegate(excludes = AgentMutability.class)
     private AgentJson jsonObject;
+
+    private boolean deleted;
     @Getter
     private final Pageable<Agent> serviceClient;
 
@@ -42,8 +44,17 @@ public class AgentWrapper extends ResourceImpl<Agent> implements Agent {
     }
 
     public Boolean delete() {
-        this.jsonObject = ((AgentClientImpl) this.serviceClient).delete(this.getUuid());
+        AgentJson response = ((AgentClientImpl) this.serviceClient).delete(this.getUuid());
+        if (response != null) {
+            this.jsonObject = response;
+        }
+        this.deleted = true;
         return true;
+    }
+
+    @Override
+    public boolean isDeleted() {
+        return this.deleted;
     }
 
     public void refresh() {

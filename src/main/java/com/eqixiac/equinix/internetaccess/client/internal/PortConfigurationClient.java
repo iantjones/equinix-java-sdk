@@ -24,7 +24,7 @@ import com.eqixiac.equinix.internetaccess.model.json.PortConfigurationJson;
 
 /**
  * Internal client for the Equinix Internet Access (EIA) v1 port-configuration lookup:
- * {@code GET /internetAccess/v1/portConfigurations} — the allowed port configurations for a given
+ * {@code GET /internetAccess/v1/portConfigurations} - the allowed port configurations for a given
  * IBX and use case.
  */
 public interface PortConfigurationClient extends Pageable<PortConfiguration> {

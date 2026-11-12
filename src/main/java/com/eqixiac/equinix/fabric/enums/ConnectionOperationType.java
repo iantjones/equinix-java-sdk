@@ -14,5 +14,7 @@ public enum ConnectionOperationType {
     ACCEPT_HOSTED_CONNECTION,
     CANCEL_EVPL_VC_DRAFT_ORDERS,
     CONNECTION_CREATION_RETRY,
-    CONNECTION_DELETION_RETRY
+    CONNECTION_DELETION_RETRY,
+    /** Spec 4.34.0 {@code Actions} value: a provider status update request. */
+    CONNECTION_PROVIDER_STATUS_UPDATE_REQUEST
 }

@@ -32,13 +32,13 @@ public class DeviceVendorConfig {
 
     @JsonProperty("siteId")
     private String siteId;
-    
+
     @JsonProperty("systemIpAddress")
     private String systemIpAddress;
-    
+
     @JsonProperty("licenseKey")
     private String licenseKey;
-    
+
     @JsonProperty("licenseSecret")
     private String licenseSecret;
 
@@ -47,40 +47,40 @@ public class DeviceVendorConfig {
 
     @JsonProperty("localId")
     private String localId;
-    
+
     @JsonProperty("remoteId")
     private String remoteId;
 
     @JsonProperty("controller1")
     private String controller1;
-    
+
     @JsonProperty("controller2")
     private String controller2;
-    
+
     @JsonProperty("serialNumber")
     private String serialNumber;
-    
+
     @JsonProperty("adminPassword")
     private String adminPassword;
-    
+
     @JsonProperty("activationKey")
     private String activationKey;
-    
+
     @JsonProperty("controllerFqdn")
     private String controllerFqdn;
-    
+
     @JsonProperty("rootPassword")
     private String rootPassword;
-    
+
     @JsonProperty("accountName")
     private String accountName;
-    
+
     @JsonProperty("hostname")
     private String hostname;
-    
+
     @JsonProperty("accountKey")
     private String accountKey;
-    
+
     @JsonProperty("applianceTag")
     private String applianceTag;
 

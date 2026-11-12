@@ -1,0 +1,27 @@
+{
+"Task": {
+    "Id": "a4f3d7e2-1a6c-4b8d-9e2f-3c5a8b7d9e1f",
+    "Source": "3e095d30-40ff-11e9-8959-5be078353003",
+    "Verb": "Update",
+    "Resource": "SmartHands",
+    "ContentType": "application/json",
+    "CreationTimeUTC": "2021-06-16T19:57:21.326Z",
+    "Version": "1.0",
+    "Body": {
+    "RequestorId": "CUSTOMER-REF-001",
+    "ServicerId": "1-205346710865",
+    "ActivityId": "1-3N5W5LYZ",
+    "State": "InProgress",
+    "Description": "Smart Hands order in progress - technician assigned",
+    "CustomerContact": "customer.contact@example.com",
+    "Location": "DC1",
+    "ServiceDetails": {
+        "scopeOfWork": "Equipment installation and cable management",
+        "startDateTime": "2021-06-17T09:00:00Z",
+        "endDateTime": "2021-06-17T11:00:00Z"
+    },
+    "Attachments": []
+    }
+},
+"Signature": "RWNobwp7CiAgIklkIjogIjM1MGFlZjcwLTc4MWItMTFlOSogIH0KfQ=="
+}

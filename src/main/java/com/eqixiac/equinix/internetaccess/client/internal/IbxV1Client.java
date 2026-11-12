@@ -21,7 +21,7 @@ import com.eqixiac.equinix.internetaccess.model.Ibx;
 
 /**
  * Internal client for the Equinix Internet Access (EIA) v1 single-IBX get:
- * {@code GET /internetAccess/v1/ibxs/{ibx}} — the detail for a single IBX data center where EIA
+ * {@code GET /internetAccess/v1/ibxs/{ibx}} - the detail for a single IBX data center where EIA
  * is available.
  */
 public interface IbxV1Client {

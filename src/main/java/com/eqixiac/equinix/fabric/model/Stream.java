@@ -21,7 +21,7 @@ import com.eqixiac.equinix.fabric.enums.StreamType;
 import com.eqixiac.equinix.fabric.model.implementation.ChangeLog;
 import com.eqixiac.equinix.fabric.model.json.creators.StreamOperator;
 
-public interface Stream {
+public interface Stream extends DeletableResource {
 
     String getUuid();
 

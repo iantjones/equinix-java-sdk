@@ -1,0 +1,45 @@
+{
+  "pagination": { "offset": 0, "limit": 10, "total": 2 },
+  "data": [
+    {
+      "type": "GAUGE",
+      "name": "equinix.fabric.connection.bandwidth_tx.usage",
+      "unit": "bit/s",
+      "interval": "PT1H",
+      "subject": "/fabric/v4/connections/c0000000-0000-4000-8000-000000000001",
+      "resource": {
+        "href": "https://api.equinix.com/fabric/v4/connections/c0000000-0000-4000-8000-000000000001",
+        "uuid": "c0000000-0000-4000-8000-000000000001",
+        "type": "EVPL_VC",
+        "state": "ACTIVE",
+        "name": "synthetic-connection-1"
+      },
+      "datapoints": [
+        { "startDateTime": "2026-11-11T00:00:00Z", "endDateTime": "2026-11-11T01:00:00Z", "value": 100000000 },
+        { "startDateTime": "2026-11-11T01:00:00Z", "endDateTime": "2026-11-11T02:00:00Z", "value": 120000000 },
+        { "startDateTime": "2026-11-11T02:00:00Z", "endDateTime": "2026-11-11T03:00:00Z", "value": 80000000 },
+        { "startDateTime": "2026-11-11T03:00:00Z", "endDateTime": "2026-11-11T04:00:00Z", "value": 90000000 }
+      ]
+    },
+    {
+      "type": "GAUGE",
+      "name": "equinix.fabric.connection.bandwidth_rx.usage",
+      "unit": "bit/s",
+      "interval": "PT1H",
+      "subject": "/fabric/v4/connections/c0000000-0000-4000-8000-000000000001",
+      "resource": {
+        "href": "https://api.equinix.com/fabric/v4/connections/c0000000-0000-4000-8000-000000000001",
+        "uuid": "c0000000-0000-4000-8000-000000000001",
+        "type": "EVPL_VC",
+        "state": "ACTIVE",
+        "name": "synthetic-connection-1"
+      },
+      "datapoints": [
+        { "startDateTime": "2026-11-11T00:00:00Z", "endDateTime": "2026-11-11T01:00:00Z", "value": 50000000 },
+        { "startDateTime": "2026-11-11T01:00:00Z", "endDateTime": "2026-11-11T02:00:00Z", "value": 200000000 },
+        { "startDateTime": "2026-11-11T02:00:00Z", "endDateTime": "2026-11-11T03:00:00Z", "value": 70000000 },
+        { "startDateTime": "2026-11-11T03:00:00Z", "endDateTime": "2026-11-11T04:00:00Z" }
+      ]
+    }
+  ]
+}

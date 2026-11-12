@@ -18,7 +18,8 @@ package com.eqixiac.equinix.fabric.client.internal.implementation;
 
 import com.eqixiac.equinix.core.client.ResourceClientBase;
 import com.eqixiac.equinix.core.http.response.Page;
-import com.eqixiac.equinix.core.model.FilteredPaginatedPost;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.eqixiac.equinix.fabric.client.implementation.FabricConfigImpl;
 import com.eqixiac.equinix.fabric.client.internal.PricingClient;
 import com.eqixiac.equinix.fabric.model.Pricing;
@@ -37,7 +38,28 @@ public class PricingClientImpl extends ResourceClientBase<Pricing, PricingJson> 
         return new PricingWrapper(json, this);
     }
 
+    /**
+     * {@code POST /fabric/v4/prices/search} with a {@code {"filter": ...}} body only. The spec's
+     * {@code FilterBody} declares no {@code pagination}, and the live service ignores one: with
+     * {@code pagination.offset=1, limit=1} it still answered {@code offset 0} (observed 2026-11-11),
+     * so the response is a single page.
+     */
     public Page<PricingJson> list(FilterPropertyList filter) {
-        return searchPage("GetPricing", new FilteredPaginatedPost<>(filter));
+        return searchPage("GetPricing", new PriceSearchBody(filter));
+    }
+
+    /** The spec's {@code FilterBody}: just {@code filter}. */
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    static final class PriceSearchBody {
+        @JsonProperty("filter")
+        private final FilterPropertyList filter;
+
+        PriceSearchBody(FilterPropertyList filter) {
+            this.filter = filter;
+        }
+
+        public FilterPropertyList getFilter() {
+            return filter;
+        }
     }
 }

@@ -30,7 +30,7 @@ public class ProviderConnectivityMap {
      * Whether the named provider is available at the metro.
      *
      * <p>The label is matched by <strong>exact, case-sensitive equality</strong> against each
-     * entry's provider label, which is the requirement's {@code displayLabel()} — the custom
+     * entry's provider label, which is the requirement's {@code displayLabel()} - the custom
      * label if one was set, else the {@code CloudProviderType} provider name, else the service
      * profile name/uuid. Pass that same label; a lowercase or partial name matches nothing.</p>
      *

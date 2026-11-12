@@ -25,7 +25,7 @@ import com.eqixiac.equinix.fabric.model.json.creators.AgentOperator;
 /**
  * A Fabric agent (for example an Autonomous Network Operations agent).
  */
-public interface Agent {
+public interface Agent extends DeletableResource {
 
     String getHref();
 

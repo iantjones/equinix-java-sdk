@@ -1,0 +1,41 @@
+{
+  "filter": {
+    "and": [
+      {
+        "property": "/state",
+        "operator": "=",
+        "values": [
+          "PENDING_ACCEPTANCE"
+        ]
+      },
+      {
+        "or": [
+          {
+            "property": "/requestor/orgName",
+            "operator": "ILIKE",
+            "values": [
+              "abc"
+            ]
+          },
+          {
+            "property": "/location/ibxCode",
+            "operator": "ILIKE",
+            "values": [
+              "MB"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "pagination": {
+    "limit": 25,
+    "offset": 0
+  },
+  "sort": [
+    {
+      "property": "/changeLog/updatedDateTime",
+      "direction": "DESC"
+    }
+  ]
+}

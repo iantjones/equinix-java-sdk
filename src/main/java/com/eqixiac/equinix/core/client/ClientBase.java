@@ -125,7 +125,7 @@ public class ClientBase {
     // Request-build helpers: the response type is derived from the resource's JSON
     // class (no hand-declared TypeReference needed). See RequestAssembler.deriveResponseType.
     // Requests that genuinely need a hand-declared TypeReference (generic response
-    // envelopes, secondary types) use the fluent builder's withTypeRef(...) instead —
+    // envelopes, secondary types) use the fluent builder's withTypeRef(...) instead - 
     // the old String+TypeReference buildRequest overloads have been removed.
     // -----------------------------------------------------------------------
 
@@ -154,7 +154,7 @@ public class ClientBase {
     }
 
     // -----------------------------------------------------------------------
-    // Generic operation helpers — build → (serialize) → invoke → handle, with the
+    // Generic operation helpers - build -> (serialize) -> invoke -> handle, with the
     // response type given explicitly. Available to ALL clients (not just CRUD ones)
     // so non-paginated / secondary-type endpoints (health, statistics, pricing,
     // agreements, legacy environment/power, bulk lists, action results) collapse to
@@ -230,7 +230,7 @@ public class ClientBase {
     }
 
     /**
-     * Execute a request for its side effect only — the response body is validated (throws on API
+     * Execute a request for its side effect only - the response body is validated (throws on API
      * error) and discarded. Useful for update/action endpoints whose result is then re-fetched
      * (e.g. {@code voidOp("UpdateX", SINGLE, pathParams, null, body); return getByUuid(uuid);}).
      */

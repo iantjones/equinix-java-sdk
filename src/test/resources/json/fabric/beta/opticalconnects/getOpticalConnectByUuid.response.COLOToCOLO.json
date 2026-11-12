@@ -1,0 +1,58 @@
+{
+  "href": "https://api.equinix.com/fabric/v4/opticalConnects/06dbb0e3-e55d-4090-8aff-fc5654abaad0",
+  "uuid": "06dbb0e3-e55d-4090-8aff-fc5654abaad0",
+  "type": "OC",
+  "name": "270848-SV1-SV2-01",
+  "state": "PROVISIONING",
+  "bandwidth": 100000,
+  "connectionDestinationType": "COLO",
+  "pathType": "UNPROTECTED",
+  "aSide": {
+    "demarcationPoint": {
+      "patchPanelId": "CP:Demarc:1259684",
+      "patchPanelPortA": "10",
+      "patchPanelPortB": "11",
+      "connectorType": "SC",
+      "cageUniqueSpaceId": "SV1:01:002174",
+      "cabinetUniqueSpaceId": "Demarc"
+    },
+    "location": {
+      "ibxCode": "SV1"
+    }
+  },
+  "zSide": {
+    "demarcationPoint": {
+      "patchPanelId": "CP:Demarc:1259690",
+      "patchPanelPortA": "20",
+      "patchPanelPortB": "21",
+      "connectorType": "SC",
+      "cageUniqueSpaceId": "SV2:01:002174",
+      "cabinetUniqueSpaceId": "Demarc"
+    },
+    "location": {
+      "ibxCode": "SV2"
+    }
+  },
+  "order": {
+    "purchaseOrderNumber": "156576",
+    "orderNumber": "1-129105284100"
+  },
+  "account": {
+    "accountNumber": 270848,
+    "orgId": 123
+  },
+  "notifications": [
+    {
+      "type": "NOTIFICATION",
+      "emails": [
+        "test@test.com"
+      ]
+    }
+  ],
+  "changeLog": {
+    "createdByEmail": "abc@xyz.com",
+    "createdDateTime": "2025-07-24T06:50:46Z",
+    "updatedByEmail": "abc@xyz.com",
+    "updatedDateTime": "2025-07-24T06:51:46Z"
+  }
+}

@@ -16,7 +16,7 @@
 
 /**
  * HTTP request model for the Equinix Java SDK.
- * {@link com.eqixiac.equinix.core.http.request.EquinixRequest} represents a typed API request —
+ * {@link com.eqixiac.equinix.core.http.request.EquinixRequest} represents a typed API request - 
  * headers, query parameters, path variables, and a single
  * {@link com.eqixiac.equinix.core.http.request.RequestBody} (JSON payload, form fields, or raw
  * bytes). {@link com.eqixiac.equinix.core.http.request.PaginatedRequest} adds offset/limit paging

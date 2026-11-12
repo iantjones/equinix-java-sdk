@@ -166,10 +166,10 @@ class FabricStreamAlertRulesWireMockTest extends WireMockTestBase {
         private static final String URL = "/fabric/v4/streams/" + STREAM_ID + "/alertRules/" + RULE_UUID;
 
         @Test
-        @DisplayName("PATCHes the full AlertRulePutRequest body as application/json")
-        void savePatchesRule() {
+        @DisplayName("PUTs the full AlertRulePutRequest body as application/json (the spec defines no PATCH)")
+        void savePutsRule() {
             stubSingleton(wireMock, URL, "/json/fabric/stream_alert_rule_response.json");
-            wireMock.stubFor(patch(urlPathEqualTo(URL))
+            wireMock.stubFor(put(urlPathEqualTo(URL))
                     .willReturn(okJson(loadFixture("/json/fabric/stream_alert_rule_response.json"))));
 
             StreamAlertRule rule = fabric.streamAlertRules().getByUuid(STREAM_ID, RULE_UUID);
@@ -180,7 +180,7 @@ class FabricStreamAlertRulesWireMockTest extends WireMockTestBase {
                     .save();
 
             assertNotNull(updated);
-            wireMock.verify(patchRequestedFor(urlPathEqualTo(URL))
+            wireMock.verify(putRequestedFor(urlPathEqualTo(URL))
                     .withHeader("Content-Type", containing("application/json"))
                     .withRequestBody(matchingJsonPath("$.type", equalTo("METRIC_ALERT")))
                     .withRequestBody(matchingJsonPath("$.name", equalTo("Renamed-Alert")))

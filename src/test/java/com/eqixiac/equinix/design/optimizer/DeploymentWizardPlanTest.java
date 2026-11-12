@@ -61,7 +61,7 @@ import static org.mockito.Mockito.when;
 /**
  * Exercises the live wizard engine end-to-end through {@link DeploymentWizard.Builder#plan()}: it feeds
  * a small hand-built {@link OptimizationResult} (three metros, two providers, three workloads) into the
- * builder and asserts the generated {@link DeploymentPlan} — Cloud Routers per metro, provider
+ * builder and asserts the generated {@link DeploymentPlan} - Cloud Routers per metro, provider
  * connections with bandwidth sized from the topology, full-mesh backbone links, and the DIRECT+BGP
  * routing-protocol pairs the engine derives for each connection.
  *
@@ -70,14 +70,14 @@ import static org.mockito.Mockito.when;
  * (the plan phase makes no HTTP calls), and pricing is pinned to a mocked {@link RateCard} that returns
  * {@link Optional#empty()} so the engine falls back to its deterministic built-in heuristic.</p>
  */
-@DisplayName("DeploymentWizard.plan() — live engine")
+@DisplayName("DeploymentWizard.plan() - live engine")
 class DeploymentWizardPlanTest {
 
     // Named MetroId constants, for readability and for asserting against.
     //
     // DeploymentTopology.forMetro() matches on VALUE, not reference identity (MetroId is a value type
     // whose factories allocate per call and never intern; DeploymentTopologyTest pins that contract).
-    // Sharing an instance between a recommendation and its placements is therefore NOT required — and
+    // Sharing an instance between a recommendation and its placements is therefore NOT required - and
     // it is deliberately avoided in the fixtures below, which build their placements with
     // distinctButEqual(...). An earlier revision of this file instructed maintainers to share the
     // instances "because forMetro matches on reference identity"; that was the very misunderstanding
@@ -89,7 +89,7 @@ class DeploymentWizardPlanTest {
     private static final MetroId SV = MetroId.of(MetroCode.SV);
 
     /**
-     * A fresh {@link MetroId} equal to — but deliberately not the same object as — the given one, so
+     * A fresh {@link MetroId} equal to - but deliberately not the same object as - the given one, so
      * the wizard has to resolve placements by value the way it must against live data. The
      * assertions guard the premise: if {@code MetroId.of} ever starts interning, this fails loudly
      * rather than letting the coverage below quietly become vacuous.
@@ -313,7 +313,7 @@ class DeploymentWizardPlanTest {
         assertTrue(plan.getBackboneLinks().isEmpty(), "no inter-metro links with a single metro");
     }
 
-    // ── customBandwidthMap / CUSTOM bandwidth strategy ──
+    // customBandwidthMap / CUSTOM bandwidth strategy
 
     @Test
     @DisplayName("customBandwidthMap() overrides per-connection bandwidth by '{metro}-{provider}' key and forces CUSTOM strategy")
@@ -342,7 +342,7 @@ class DeploymentWizardPlanTest {
         PlannedConnection azure = named(plan.getProviderConnections(), "FCR-DA-to-azure");
         assertEquals(4000, azure.getBandwidthMbps(),
                 "an unmapped (metro, provider) under CUSTOM falls back to the documented per-workload "
-                        + "aggregation (the 4000 Mbps Analytics workload at DA) — never a fabricated 1000 Mbps");
+                        + "aggregation (the 4000 Mbps Analytics workload at DA) - never a fabricated 1000 Mbps");
     }
 
     @Test
@@ -351,7 +351,7 @@ class DeploymentWizardPlanTest {
         FabricGateway fabric = mock(FabricGateway.class);
 
         // A map whose only key matches NOTHING in the plan: every connection takes the documented
-        // fallback — the normal per-workload aggregation — exactly as Builder#customBandwidthMap
+        // fallback - the normal per-workload aggregation - exactly as Builder#customBandwidthMap
         // promises ("sized by the normal per-workload aggregation instead of a fabricated default").
         DeploymentPlan plan = DeploymentWizard.builder(fabric, threeMetroResult())
                 .customBandwidthMap(Map.of("SG-GCP", 2000))
@@ -361,7 +361,7 @@ class DeploymentWizardPlanTest {
 
         PlannedConnection aws = named(plan.getProviderConnections(), "FCR-DC-to-aws");
         assertEquals(10_000, aws.getBandwidthMbps(),
-                "8000 (ML Training) + 2000 (DR Backup) — the per-workload aggregation, not 1000");
+                "8000 (ML Training) + 2000 (DR Backup) - the per-workload aggregation, not 1000");
         assertEquals(Map.of("ML Training", 8000, "DR Backup", 2000),
                 aws.getBandwidthAllocation().getPerWorkload(),
                 "the fallback carries the real per-workload breakdown, not a fake 'custom' entry");
@@ -406,10 +406,10 @@ class DeploymentWizardPlanTest {
                 "the custom map applies even when PER_WORKLOAD was previously selected");
     }
 
-    // ── connection types: FCR A-side => IP_VC ──
+    // connection types: FCR A-side => IP_VC
 
     @Test
-    @DisplayName("connection types default to IP_VC — the only type Fabric accepts on a Cloud Router A-side")
+    @DisplayName("connection types default to IP_VC - the only type Fabric accepts on a Cloud Router A-side")
     void connectionTypesDefaultToIpVc() {
         FabricGateway fabric = mock(FabricGateway.class);
         DeploymentPlan plan = DeploymentWizard.builder(fabric, threeMetroResult())
@@ -443,7 +443,7 @@ class DeploymentWizardPlanTest {
                 () -> "expected the named rule in the errors: " + plan.getValidationErrors());
     }
 
-    // ── RING topology ──
+    // RING topology
 
     @Test
     @DisplayName("a 2-metro RING degenerates to ONE link (like FULL_MESH), never a doubly-billed (0,1)+(1,0) pair")
@@ -456,7 +456,7 @@ class DeploymentWizardPlanTest {
                 .plan();
 
         assertEquals(1, plan.getBackboneLinks().size(),
-                "two metros have exactly one distinct pair — a second link would double the bill: "
+                "two metros have exactly one distinct pair - a second link would double the bill: "
                         + plan.getBackboneLinks());
         PlannedBackboneLink only = plan.getBackboneLinks().get(0);
         assertEquals(DC, only.getMetroA());
@@ -471,7 +471,7 @@ class DeploymentWizardPlanTest {
         assertEquals(3, three.getBackboneLinks().size(), "a 3-metro ring keeps its 3 links");
     }
 
-    // ── notifications: every recipient reaches every planned resource ──
+    // notifications: every recipient reaches every planned resource
 
     @Test
     @DisplayName("notifications(a, b) stamps the FULL recipient list onto every router, provider connection and backbone link")
@@ -504,7 +504,7 @@ class DeploymentWizardPlanTest {
                 () -> DeploymentWizard.builder(fabric, threeMetroResult()).notifications((String) null));
     }
 
-    // ── subnet allocation: plan-scoped, never static ──
+    // subnet allocation: plan-scoped, never static
 
     @Test
     @DisplayName("concurrent plan() calls never corrupt each other's /30 allocation (allocation is plan-scoped, not static)")
@@ -565,10 +565,10 @@ class DeploymentWizardPlanTest {
                 () -> DeploymentWizard.builder(fabric, threeMetroResult()).subnetBase("10.999.0.0"));
     }
 
-    // ── mixed-currency pricing: per-category reconciliation, no fabricated sums, no hardcoded '$' ──
+    // mixed-currency pricing: per-category reconciliation, no fabricated sums, no hardcoded '$'
 
     @Test
-    @DisplayName("a mixed-currency plan reconciles per CATEGORY: single-currency categories keep figure+currency, mixed ones are nulled with per-currency subtotals")
+    @DisplayName("with no exchange rate for EUR, a mixed-currency plan reconciles per CATEGORY: single-currency categories keep figure+currency, mixed ones are nulled with per-currency subtotals")
     void mixedCurrencyPricingReconcilesPerCategory() {
         // Routers price in USD everywhere; connections price in EUR at DA and USD elsewhere. The
         // provider-connection category (DC=USD, DA=EUR) and the backbone category (links priced at
@@ -605,6 +605,7 @@ class DeploymentWizardPlanTest {
         DeploymentPlan plan = DeploymentWizard.builder(fabric, threeMetroResult())
                 .notifications("noc@example.com")
                 .rateCard(perMetroCurrencyCard)
+                .defaultRates(com.eqixiac.equinix.design.cost.CurrencyConverters.none())
                 .plan();
         var pricing = plan.getPricing();
 
@@ -612,12 +613,12 @@ class DeploymentWizardPlanTest {
         assertNull(pricing.getMonthlyTotal(), "no single total across USD and EUR");
         assertNull(pricing.getCurrency());
 
-        // Router category: single-currency — figure kept WITH its currency.
+        // Router category: single-currency - figure kept WITH its currency.
         assertEquals(0, java.math.BigDecimal.valueOf(900).compareTo(pricing.getRouterMonthlyCost()),
                 "3 routers x USD 300");
         assertEquals("USD", pricing.getRouterCurrency());
 
-        // Provider category: DC=USD 500 + DA=EUR 400 — a raw sum of 900 would be a fabricated
+        // Provider category: DC=USD 500 + DA=EUR 400 - a raw sum of 900 would be a fabricated
         // cross-currency figure, so the single figure is nulled and the subtotals carry the truth.
         assertNull(pricing.getProviderConnectionMonthlyCost(),
                 "a mixed category must not report a raw cross-currency sum");
@@ -646,7 +647,93 @@ class DeploymentWizardPlanTest {
                 "the summary names the per-currency subtotals instead of a fabricated total: " + summary);
     }
 
-    // ── routerPackage validation (plan-time, never execute-time) ──
+    /** Prices connections in GBP at DA and in USD elsewhere; routers in USD everywhere. */
+    private static RateCard gbpAtDallasCard() {
+        return new RateCard() {
+            @Override
+            public Optional<com.eqixiac.equinix.design.value.ratecard.PriceQuote> connection(
+                    ConnectionType type, int bandwidthMbps, MetroCode metro,
+                    com.eqixiac.equinix.design.value.ratecard.Term term) {
+                boolean gbp = metro == MetroCode.DA;
+                return Optional.of(com.eqixiac.equinix.design.value.ratecard.PriceQuote.of(
+                        java.math.BigDecimal.valueOf(gbp ? 400 : 500), java.math.BigDecimal.ZERO,
+                        java.util.Currency.getInstance(gbp ? "GBP" : "USD"),
+                        com.eqixiac.equinix.design.value.ratecard.PriceSource.EQUINIX_LIVE));
+            }
+
+            @Override
+            public Optional<com.eqixiac.equinix.design.value.ratecard.PriceQuote> cloudRouter(
+                    String packageCode, MetroCode metro, com.eqixiac.equinix.design.value.ratecard.Term term) {
+                return Optional.of(com.eqixiac.equinix.design.value.ratecard.PriceQuote.of(
+                        java.math.BigDecimal.valueOf(300), java.math.BigDecimal.ZERO,
+                        java.util.Currency.getInstance("USD"),
+                        com.eqixiac.equinix.design.value.ratecard.PriceSource.EQUINIX_LIVE));
+            }
+
+            @Override
+            public com.eqixiac.equinix.design.value.ratecard.PriceSource source() {
+                return com.eqixiac.equinix.design.value.ratecard.PriceSource.EQUINIX_LIVE;
+            }
+        };
+    }
+
+    private static com.eqixiac.equinix.design.spec.DesignSpec pricingSpec(String currency, String from, String rate) {
+        return com.eqixiac.equinix.design.spec.DesignSpec.builder().name("plan-fx")
+                .cloud(com.eqixiac.equinix.design.spec.CloudIntent.builder().id("aws")
+                        .provider(com.eqixiac.equinix.fabric.model.implementation.cloud.CloudProviderType.AWS).build())
+                .commercial(com.eqixiac.equinix.design.spec.CommercialTerms.builder().currency(currency)
+                        .exchangeRates(new com.eqixiac.equinix.design.spec.CommercialTerms.ExchangeRates(
+                                Map.of(from, new java.math.BigDecimal(rate)), "2026-11-12", "treasury sheet", null))
+                        .build())
+                .build();
+    }
+
+    @Test
+    @DisplayName("a GBP + USD plan has ONE total in the spec currency; converted lines keep the original amount, rate, source and date")
+    void mixedGbpUsdPlanTotalsInSpecCurrency() {
+        FabricGateway fabric = mock(FabricGateway.class);
+        DeploymentPlan plan = DeploymentWizard.builder(fabric, threeMetroResult())
+                .notifications("noc@example.com")
+                .rateCard(gbpAtDallasCard())
+                .designSpec(pricingSpec("USD", "GBP", "1.25"))
+                .plan();
+        var pricing = plan.getPricing();
+
+        assertEquals("USD", pricing.getCurrency());
+        assertEquals(java.util.Set.of("USD"), pricing.getMonthlyByCurrency().keySet(), "no GBP subtotal survives");
+        java.math.BigDecimal sum = pricing.getLines().stream().map(com.eqixiac.equinix.design.spi.CostLine::monthly)
+                .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add);
+        assertEquals(0, sum.compareTo(pricing.getMonthlyTotal()), "the total is the sum of the USD lines");
+        var converted = pricing.getLines().stream().filter(com.eqixiac.equinix.design.spi.CostLine::converted).toList();
+        assertFalse(converted.isEmpty(), "the DA connections were priced in GBP and converted");
+        for (var line : converted) {
+            assertEquals("USD", line.currency());
+            assertEquals("GBP", line.conversion().originalCurrency());
+            assertEquals(0, new java.math.BigDecimal("400").compareTo(line.conversion().originalMonthly()));
+            assertEquals(0, new java.math.BigDecimal("1.25").compareTo(line.conversion().rate()));
+            assertEquals(com.eqixiac.equinix.design.spi.CurrencyConverter.Kind.PINNED, line.conversion().kind());
+            assertEquals("2026-11-12", line.conversion().asOf());
+            assertEquals(0, new java.math.BigDecimal("500.00").compareTo(line.monthly()), "GBP 400 x 1.25");
+            assertTrue(line.note().contains("converted from GBP 400"), line.note());
+        }
+        assertNotNull(pricing.getProviderConnectionMonthlyCost(), "the category is one currency after conversion");
+        assertTrue(pricing.getCurrencyNotes().get(0).contains("converted to USD"), pricing.getCurrencyNotes().toString());
+        assertTrue(plan.toMarkdown().contains("| **Total Monthly** | **$"), "a single USD total renders");
+        assertEquals(pricing.getLines(), DeploymentPlan.fromJson(plan.toJson()).getPricing().getLines(),
+                "the converted lines survive the plan document");
+
+        // The plan currency follows the spec: a GBP spec prices the USD items in GBP.
+        DeploymentPlan inGbp = DeploymentWizard.builder(fabric, threeMetroResult())
+                .notifications("noc@example.com")
+                .rateCard(gbpAtDallasCard())
+                .designSpec(pricingSpec("GBP", "USD", "0.8"))
+                .plan();
+        assertEquals("GBP", inGbp.getPricing().getCurrency());
+        assertEquals(0, new java.math.BigDecimal("720.00").compareTo(inGbp.getPricing().getRouterMonthlyCost()),
+                "3 routers x USD 300 x 0.8");
+    }
+
+    // routerPackage validation (plan-time, never execute-time)
 
     @Test
     @DisplayName("routerPackage(String) is lenient: lowercase and padded codes resolve to the enum at plan time")
@@ -709,7 +796,7 @@ class DeploymentWizardPlanTest {
                         .routerPackage((GatewayPackageCode) null));
     }
 
-    // ── Helpers ──
+    // Helpers
 
     private static PlannedConnection named(List<PlannedConnection> conns, String name) {
         return conns.stream().filter(c -> c.getName().equals(name)).findFirst()
@@ -720,7 +807,7 @@ class DeploymentWizardPlanTest {
      * A three-metro optimization: DC (AWS, two AWS-dependent workloads), DA (AZURE, one AZURE-dependent
      * workload), SV (no available providers). The topology places each workload at its metro using a
      * {@link #distinctButEqual} id, never the instance the recommendation carries, so the wizard's
-     * {@code forMetro} lookup has to match on value — the live shape, where
+     * {@code forMetro} lookup has to match on value - the live shape, where
      * {@code MetroRecommendation.getMetroId()} and the placement's id are separate objects.
      */
     private static OptimizationResult threeMetroResult() {
@@ -802,7 +889,7 @@ class DeploymentWizardPlanTest {
         return com.eqixiac.equinix.design.optimizer.model.ProviderRequirement.builder().label(label).build();
     }
 
-    /** A minimal two-metro result (DC, DA — no providers) for topology-shape tests. */
+    /** A minimal two-metro result (DC, DA - no providers) for topology-shape tests. */
     private static OptimizationResult twoMetroResultOf() {
         MetroScore score = new MetroScore(90.0, Collections.emptyList());
         return OptimizationResult.builder()

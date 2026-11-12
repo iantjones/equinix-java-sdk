@@ -38,6 +38,8 @@ public class LegacyPowerClientImpl extends ClientBase implements LegacyPowerClie
     }
 
     public PowerDataJson getCurrent(String accountNo, String ibx, String levelType, String levelValue) {
+        SmartViewArguments.require("power v1", "accountNo", accountNo, "ibx", ibx,
+                "levelType", levelType, "levelValue", levelValue);
         Map<String, List<String>> qParams = new HashMap<>();
         ParameterMapper.addAdditionalValue(qParams, "accountNo", accountNo);
         ParameterMapper.addAdditionalValue(qParams, "ibx", ibx);
@@ -57,6 +59,8 @@ public class LegacyPowerClientImpl extends ClientBase implements LegacyPowerClie
     public TrendingPowerDataJson getTrending(String accountNo, String ibx, String levelType,
                                              String levelValue, String interval,
                                              String fromDate, String toDate) {
+        SmartViewArguments.require("power v1", "accountNo", accountNo, "ibx", ibx, "levelType", levelType,
+                "levelValue", levelValue, "interval", interval, "fromDate", fromDate, "toDate", toDate);
         Map<String, List<String>> qParams = new HashMap<>();
         ParameterMapper.addAdditionalValue(qParams, "accountNo", accountNo);
         ParameterMapper.addAdditionalValue(qParams, "ibx", ibx);

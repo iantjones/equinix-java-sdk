@@ -29,6 +29,8 @@ public class StreamAlertRuleWrapper extends ResourceImpl<StreamAlertRule> implem
 
     @Delegate(excludes = StreamAlertRuleMutability.class)
     private StreamAlertRuleJson jsonObject;
+
+    private boolean deleted;
     @Getter
     private final Pageable<StreamAlertRule> serviceClient;
 
@@ -42,8 +44,17 @@ public class StreamAlertRuleWrapper extends ResourceImpl<StreamAlertRule> implem
     }
 
     public Boolean delete(String streamId) {
-        this.jsonObject = ((StreamAlertRuleClientImpl) this.serviceClient).delete(streamId, this.getUuid());
+        StreamAlertRuleJson response = ((StreamAlertRuleClientImpl) this.serviceClient).delete(streamId, this.getUuid());
+        if (response != null) {
+            this.jsonObject = response;
+        }
+        this.deleted = true;
         return true;
+    }
+
+    @Override
+    public boolean isDeleted() {
+        return this.deleted;
     }
 
     public void refresh(String streamId) {

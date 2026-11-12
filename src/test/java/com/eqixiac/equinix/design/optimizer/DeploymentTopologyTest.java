@@ -36,7 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  *
  * <p><strong>What broke.</strong> {@code forMetro} filtered with {@code ==}. {@link MetroId} is a
  * value type: {@code MetroId.of(...)} allocates a fresh instance on every call, and the live
- * accessors that produce one — {@code Metro.metroId()}, {@code MetroRecommendation.getMetroId()} —
+ * accessors that produce one - {@code Metro.metroId()}, {@code MetroRecommendation.getMetroId()} - 
  * re-derive it per invocation. Against real data the caller's id was therefore never the same
  * object as the one stored on the placement, so {@code forMetro} matched nothing:
  * {@code MetroRecommendation.assignedWorkloads} came back empty for every recommendation and the
@@ -44,7 +44,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * had summed the workloads' bandwidth.</p>
  *
  * <p><strong>Why it was invisible.</strong> Every existing exercise of this path built its
- * placements and its lookup key from one shared {@code MetroId} instance — either a field reused
+ * placements and its lookup key from one shared {@code MetroId} instance - either a field reused
  * across the fixture or a Mockito stub, since {@code when(m.metroId()).thenReturn(MetroId.of(code))}
  * hands back the <em>same</em> object on each call. Under those conditions {@code ==} is
  * accidentally true. Every test below therefore looks the key up with an instance that is equal to,

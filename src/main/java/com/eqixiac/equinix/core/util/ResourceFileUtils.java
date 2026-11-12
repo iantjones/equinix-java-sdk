@@ -42,7 +42,7 @@ public final class ResourceFileUtils {
      *
      * @param fileName the classpath-relative resource name (e.g. {@code "json/apiParams_Core.json"})
      * @return the parsed JSON tree; never {@code null}
-     * @throws FileNotFoundException if no such resource exists on the classpath — a missing
+     * @throws FileNotFoundException if no such resource exists on the classpath - a missing
      *         resource fails fast with the resource name rather than surfacing later as an
      *         opaque NPE during client bootstrap
      * @throws IOException if the resource exists but cannot be read or parsed

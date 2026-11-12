@@ -133,10 +133,16 @@ public interface CloudRouters {
     /**
      * Lists all diagnostic commands (ping / traceroute) issued against a Fabric Cloud Router.
      *
+     *
+     * Spec 4.34.0 declares no {@code offset} on this GET and the
+     * live service returns every item in one response (for {@code GET /ports}: {@code limit 999},
+     * {@code offset} and {@code limit} ignored, observed 2026-11-11), so this is a plain list, not
+     * a multi-page one.
+     *
      * @param routerId the unique identifier of the cloud router
-     * @return a paginated list of cloud router commands
+     * @return the cloud router commands
      */
-    PaginatedList<CloudRouterCommand> commands(String routerId);
+    List<CloudRouterCommand> commands(String routerId);
 
     /**
      * Retrieves a single Fabric Cloud Router diagnostic command by its unique identifier.

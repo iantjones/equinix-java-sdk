@@ -79,21 +79,65 @@ class EquinixRateCardWireMockTest extends WireMockTestBase {
     }
 
     @Test
-    @DisplayName("narrows the catalogue fetch server-side by price /type")
-    void sendsTypeScopedFilter() {
+    @DisplayName("sends one targeted price search per lookup, with the filters the live API requires")
+    void sendsTargetedFilter() {
         stubPaginatedPost(wireMock, "/fabric/v4/prices/search", "/json/fabric/paginated_prices.json");
+        EquinixRateCard card = EquinixRateCard.of(fabric);
 
-        // Any lookup forces the (once-cached) catalogue fetch.
-        EquinixRateCard.of(fabric).connection(ConnectionType.EVPL_VC, 100, MetroCode.DC, Term.MONTH_12);
+        card.connection(ConnectionType.EVPL_VC, 100, MetroCode.DC, Term.MONTH_12);
+        // The live API answers HTTP 400 to a /type-only catalogue scan (2026-11-11): connection type,
+        // bandwidth and both access-point types are mandatory.
+        wireMock.verify(1, postRequestedFor(urlPathEqualTo("/fabric/v4/prices/search")));
+        wireMock.verify(postRequestedFor(urlPathEqualTo("/fabric/v4/prices/search"))
+                .withRequestBody(matchingJsonPath("$.filter.and[?(@.property == '/type')].values[0]",
+                        equalTo("VIRTUAL_CONNECTION_PRODUCT")))
+                .withRequestBody(matchingJsonPath("$.filter.and[?(@.property == '/connection/type')].values[0]",
+                        equalTo("EVPL_VC")))
+                .withRequestBody(matchingJsonPath("$.filter.and[?(@.property == '/connection/bandwidth')].values[0]",
+                        equalTo("100")))
+                .withRequestBody(matchingJsonPath("$.filter.and[?(@.property == '/connection/aSide/accessPoint/type')].values[0]",
+                        equalTo("COLO")))
+                .withRequestBody(matchingJsonPath("$.filter.and[?(@.property == '/connection/aSide/accessPoint/location/metroCode')].values[0]",
+                        equalTo("DC")))
+                .withRequestBody(matchingJsonPath("$.filter.and[?(@.property == '/connection/zSide/accessPoint/type')].values[0]",
+                        equalTo("SP")))
+                // Without /termLength the live service returns only the on-demand row (observed 2026-11-12).
+                .withRequestBody(matchingJsonPath("$.filter.and[?(@.property == '/termLength')].values[0]",
+                        equalTo("12"))));
 
-        // Two type-scoped POSTs are issued — one per product family this card prices — rather
-        // than an unfiltered scan of the whole catalogue.
+        // A repeat lookup is served from the per-query cache.
+        card.connection(ConnectionType.EVPL_VC, 100, MetroCode.DC, Term.MONTH_12);
+        wireMock.verify(1, postRequestedFor(urlPathEqualTo("/fabric/v4/prices/search")));
+
+        card.cloudRouter("STANDARD", MetroCode.DC, Term.MONTH_12);
         wireMock.verify(postRequestedFor(urlPathEqualTo("/fabric/v4/prices/search"))
-                .withRequestBody(containing("/type"))
-                .withRequestBody(containing("VIRTUAL_CONNECTION_PRODUCT")));
-        wireMock.verify(postRequestedFor(urlPathEqualTo("/fabric/v4/prices/search"))
-                .withRequestBody(containing("/type"))
-                .withRequestBody(containing("CLOUD_ROUTER_PRODUCT")));
+                .withRequestBody(matchingJsonPath("$.filter.and[?(@.property == '/router/location/metroCode')].values[0]",
+                        equalTo("DC")))
+                .withRequestBody(matchingJsonPath("$.filter.and[?(@.property == '/router/package/code')].values[0]",
+                        equalTo("STANDARD")))
+                .withRequestBody(matchingJsonPath("$.filter.and[?(@.property == '/termLength')].values[0]",
+                        equalTo("12"))));
+    }
+
+    @Test
+    @DisplayName("an unpriceable lookup says why: no metro, or no live row")
+    void explainsUnpriced() {
+        EquinixRateCard card = EquinixRateCard.of(fabric);
+        assertTrue(card.connectionLookup(ConnectionType.EVPL_VC, 100, null, Term.MONTH_1).unpricedReason()
+                .startsWith("live Fabric pricing needs a metro"));
+        assertTrue(card.cloudRouterLookup("STANDARD", null, Term.MONTH_1).unpricedReason()
+                .startsWith("live Fabric pricing needs a metro and a package code"));
+    }
+
+    @Test
+    @DisplayName("a lookup the live API cannot price (no metro) sends nothing and defers")
+    void metroLessLookupDefers() {
+        stubPaginatedPost(wireMock, "/fabric/v4/prices/search", "/json/fabric/paginated_prices.json");
+        EquinixRateCard card = EquinixRateCard.of(fabric);
+
+        assertTrue(card.connection(ConnectionType.EVPL_VC, 100, null, Term.MONTH_12).isEmpty());
+        assertTrue(card.cloudRouter("STANDARD", null, Term.MONTH_12).isEmpty());
+        wireMock.verify(0, postRequestedFor(urlPathEqualTo("/fabric/v4/prices/search")));
     }
 
     @Test
@@ -147,7 +191,7 @@ class EquinixRateCardWireMockTest extends WireMockTestBase {
     void invalidCurrencyFallsBackToUsd() {
         stubPaginatedPost(wireMock, "/fabric/v4/prices/search", "/json/fabric/paginated_prices_multi.json");
         PriceQuote q = EquinixRateCard.of(fabric)
-                .connection(ConnectionType.EVPL_VC, 5000, null, Term.MONTH_12).orElseThrow();
+                .connection(ConnectionType.EVPL_VC, 5000, MetroCode.DC, Term.MONTH_12).orElseThrow();
         assertEquals("USD", q.getCurrency().getCurrencyCode());
     }
 
@@ -167,7 +211,7 @@ class EquinixRateCardWireMockTest extends WireMockTestBase {
         // Two 1 Gbps EVPL_VC rows. The first is a DC/SV "Gateway" row (999) whose name/code
         // merely CONTAINS the substring "at" (in "Gateway"); the second is the genuine AT
         // (Atlanta) row (175). Requesting metro AT must pick the real AT row via a whole-token
-        // match — never false-match "Gateway" as the AT-specific result and return 999.
+        // match - never false-match "Gateway" as the AT-specific result and return 999.
         stubPaginatedPost(wireMock, "/fabric/v4/prices/search", "/json/fabric/paginated_prices_metrotoken.json");
 
         PriceQuote q = EquinixRateCard.of(fabric)
@@ -187,13 +231,13 @@ class EquinixRateCardWireMockTest extends WireMockTestBase {
         EquinixRateCard card = EquinixRateCard.of(fabric);
 
         // 400 Mbps: only an all-null-price row exists. It must NOT resolve to a present $0
-        // EQUINIX_LIVE quote — it must be empty so the caller defers to the fallback.
+        // EQUINIX_LIVE quote - it must be empty so the caller defers to the fallback.
         Optional<PriceQuote> nullPriced = card.connection(ConnectionType.EVPL_VC, 400, MetroCode.DC, Term.MONTH_12);
         assertTrue(nullPriced.isEmpty(),
                 "a row whose charges are all null-priced must yield empty, not a phantom $0 quote");
 
         // 300 Mbps: an empty-charges row precedes a genuinely priced row. The unpriced row is
-        // skipped and the priced row (99.00) wins — proving "no priced charge" is skipped, not
+        // skipped and the priced row (99.00) wins - proving "no priced charge" is skipped, not
         // returned as $0.
         PriceQuote priced = card.connection(ConnectionType.EVPL_VC, 300, MetroCode.DC, Term.MONTH_12).orElseThrow();
         assertEquals(0, new BigDecimal("99.00").compareTo(priced.getMonthlyRecurring()),
@@ -202,7 +246,7 @@ class EquinixRateCardWireMockTest extends WireMockTestBase {
     }
 
     @Test
-    @DisplayName("C5: a failed catalogue fetch is not cached — the next lookup retries and can succeed")
+    @DisplayName("C5: a failed catalogue fetch is not cached - the next lookup retries and can succeed")
     void failedFetchIsNotCachedAndRetriesNextLookup() {
         // First fetch fails with a 500: the card yields empty and flags the live source unavailable,
         // but must NOT cache the failure for its lifetime.
@@ -216,7 +260,7 @@ class EquinixRateCardWireMockTest extends WireMockTestBase {
                 "a failed fetch must expose the 'live source unavailable' signal");
 
         // The catalogue endpoint recovers. Because the failure was not memoized, the next lookup
-        // re-fetches and now resolves the live price — a transient error did not poison the card.
+        // re-fetches and now resolves the live price - a transient error did not poison the card.
         resetStubs();
         stubPaginatedPost(wireMock, "/fabric/v4/prices/search", "/json/fabric/paginated_prices.json");
 
@@ -235,7 +279,7 @@ class EquinixRateCardWireMockTest extends WireMockTestBase {
         EquinixRateCard card = EquinixRateCard.of(fabric);
 
         // A 1-month request must NOT silently pick up the 36-month discounted figure just
-        // because it is listed first — the term-matched on-demand row wins.
+        // because it is listed first - the term-matched on-demand row wins.
         PriceQuote onDemand = card.connection(ConnectionType.EVPL_VC, 1000, MetroCode.DC, Term.MONTH_1).orElseThrow();
         assertEquals(0, new BigDecimal("180.00").compareTo(onDemand.getMonthlyRecurring()),
                 "a 1-month lookup must resolve the termLength-1 row, not the 36-month discount");
@@ -276,19 +320,17 @@ class EquinixRateCardWireMockTest extends WireMockTestBase {
         EquinixRateCard card = EquinixRateCard.of(fabric);
 
         // A Tokyo request must NOT be silently priced at Silicon Valley (or any other metro's)
-        // rates tagged EQUINIX_LIVE — empty lets a layered fallback card supply a genuine figure.
+        // rates tagged EQUINIX_LIVE - empty lets a layered fallback card supply a genuine figure.
         assertTrue(card.connection(ConnectionType.EVPL_VC, 1000, MetroCode.TY, Term.MONTH_12).isEmpty(),
                 "no TY row exists, so a TY request must fall through the layers, not price cross-metro");
 
-        // Without a requested metro the first priced type/bandwidth row is still acceptable.
-        assertEquals(0, new BigDecimal("150.00").compareTo(
-                card.connection(ConnectionType.EVPL_VC, 1000, null, Term.MONTH_12)
-                        .orElseThrow().getMonthlyRecurring()),
-                "a metro-less request keeps the any-metro behaviour");
+        // Without a requested metro the live API cannot be queried at all, so the card defers.
+        assertTrue(card.connection(ConnectionType.EVPL_VC, 1000, null, Term.MONTH_12).isEmpty(),
+                "a metro-less request defers to the next layer");
     }
 
     @Test
-    @DisplayName("cloudRouter matches the structured package code exactly — never by substring")
+    @DisplayName("cloudRouter matches the structured package code exactly - never by substring")
     void cloudRouterMatchesPackageStructurallyNotBySubstring() {
         // Row order: NONSTANDARD DC (111, listed first), PREMIUM SG (2400), STANDARD DC (1200).
         stubPaginatedPost(wireMock, "/fabric/v4/prices/search", "/json/fabric/paginated_prices_structured.json");
@@ -312,7 +354,7 @@ class EquinixRateCardWireMockTest extends WireMockTestBase {
         EquinixRateCard card = EquinixRateCard.of(fabric);
 
         // STANDARD exists only in DC: an SG request must NOT return the DC price tagged
-        // EQUINIX_LIVE — empty lets the layered card consult the next layer.
+        // EQUINIX_LIVE - empty lets the layered card consult the next layer.
         assertTrue(card.cloudRouter("STANDARD", MetroCode.SG, Term.MONTH_12).isEmpty(),
                 "an SG lookup must not be priced at DC rates");
     }

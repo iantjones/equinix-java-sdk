@@ -21,7 +21,7 @@ import com.eqixiac.equinix.internetaccess.model.OperationalUnit;
 
 /**
  * Client interface for the Equinix Internet Access (EIA) v1 operational-units lookup
- * ({@code GET /internetAccess/v1/operationalUnits}) — the Equinix operational units serving a given
+ * ({@code GET /internetAccess/v1/operationalUnits}) - the Equinix operational units serving a given
  * IBX.
  */
 public interface InternetAccessOperationalUnits {

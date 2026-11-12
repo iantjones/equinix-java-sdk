@@ -32,15 +32,15 @@ import java.util.regex.Pattern;
 
 /**
  * Bridges PeeringDB Equinix IX and facility IDs to Equinix Fabric {@link MetroId} values entirely
- * from live data — no hardcoded city table.
+ * from live data - no hardcoded city table.
  *
- * <p>Equinix names every IBX (facility) with its metro as a prefix — {@code LA3}/{@code LA4} are in
+ * <p>Equinix names every IBX (facility) with its metro as a prefix - {@code LA3}/{@code LA4} are in
  * Los Angeles, {@code SV5} in Silicon Valley, {@code DC11} in Ashburn. So a facility is resolved by
  * reading the IBX code out of its PeeringDB name and looking it up in the live IBX&rarr;metro map
  * supplied at construction (built from {@code fabric.metros().getIbxs()}); an exact IBX hit wins, and
  * the metro prefix is a fallback (accepted only when it names a metro present in the live map, so a
  * brand-new metro resolves while a stray token does not). Each resolved facility also seeds a
- * city&rarr;metro map, through which IXes — which carry only a city — resolve. This means even city
+ * city&rarr;metro map, through which IXes - which carry only a city - resolve. This means even city
  * aliases (a "San Jose" exchange co-located with the Silicon Valley {@code SV} facilities) map
  * correctly, with no static table and without depending on coordinates.</p>
  *
@@ -60,7 +60,7 @@ public class EquinixIXMapping {
 
     private final Map<String, MetroId> ibxToMetro;
 
-    /** Metro code &rarr; metro, derived from the live {@link #ibxToMetro} values; gates the prefix fallback. */
+    /** Metro code &rarr; metro, from the live metro catalogue and {@link #ibxToMetro}; gates the prefix fallback. */
     private final Map<String, MetroId> codeToMetro = new LinkedHashMap<>();
 
     private final Map<String, MetroId> cityToMetro = new LinkedHashMap<>();
@@ -75,10 +75,28 @@ public class EquinixIXMapping {
      *                  yields an empty bridge.
      */
     public EquinixIXMapping(Map<String, MetroId> ibxToMetro) {
+        this(ibxToMetro, null);
+    }
+
+    /**
+     * @param ibxToMetro live IBX-code &rarr; metro map, may be empty
+     * @param liveMetros every metro the live {@code fabric.metros()} catalogue returned. These gate
+     *                   the IBX-prefix fallback ({@code DC1} &rarr; {@code DC}). The live
+     *                   {@code /fabric/v4/metros} response carries no per-metro IBX list (checked
+     *                   2026-11-11), so without this set no PeeringDB facility could resolve.
+     */
+    public EquinixIXMapping(Map<String, MetroId> ibxToMetro, java.util.Collection<MetroId> liveMetros) {
         this.ibxToMetro = ibxToMetro != null ? ibxToMetro : Collections.emptyMap();
         for (MetroId metro : this.ibxToMetro.values()) {
             if (metro != null) {
                 codeToMetro.putIfAbsent(metro.code(), metro);
+            }
+        }
+        if (liveMetros != null) {
+            for (MetroId metro : liveMetros) {
+                if (metro != null) {
+                    codeToMetro.putIfAbsent(metro.code(), metro);
+                }
             }
         }
     }
@@ -153,7 +171,7 @@ public class EquinixIXMapping {
             tokens.add(token);
         }
         // Second pass: fall back to the IBX's metro-code prefix (e.g. LA4 -> LA), but only if that
-        // prefix is a metro we actually saw live — keeps new metros working without false positives.
+        // prefix is a metro we actually saw live - keeps new metros working without false positives.
         for (String token : tokens) {
             String prefix = token.replaceAll("\\d.*$", "");
             MetroId byPrefix = codeToMetro.get(prefix);

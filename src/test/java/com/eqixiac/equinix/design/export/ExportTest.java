@@ -192,7 +192,7 @@ class ExportTest {
             String hcl = exporter.export(plan);
             assertTrue(hcl.contains("resource \"equinix_fabric_connection\" \"conn_FCR-DC-to-AWS\""),
                     "provider connection resource block");
-            // IP_VC alongside the CLOUD_ROUTER access point — the FCR A-side => IP_VC fix: the old
+            // IP_VC alongside the CLOUD_ROUTER access point - the FCR A-side => IP_VC fix: the old
             // EVPL_VC expectation cemented a type Fabric rejects for an FCR-originated connection.
             assertTrue(hcl.contains("type = \"IP_VC\""), "connection type");
             assertTrue(hcl.contains("bandwidth = 1000"), "bandwidth raw attr");
@@ -229,7 +229,8 @@ class ExportTest {
             assertTrue(hcl.contains("equinix_iface_ip = \"10.100.0.1/30\""), "direct iface ip");
             assertTrue(hcl.contains("customer_asn = 65100"), "customer asn");
             assertTrue(hcl.contains("customer_peer_ip = \"10.100.0.2/30\""), "bgp customer peer");
-            assertTrue(hcl.contains("equinix_peer_ip = \"10.100.0.1/30\""), "bgp equinix peer");
+            // equinix_peer_ip is read-only in the equinix/equinix provider schema: never written.
+            assertFalse(hcl.contains("equinix_peer_ip"), "bgp equinix peer must not be emitted");
             assertTrue(hcl.contains("bfd {"), "bfd block");
             assertTrue(hcl.contains("interval = \"300\""), "bfd interval");
             // Routing protocol bound to its parent connection.
@@ -250,13 +251,13 @@ class ExportTest {
         }
 
         @Test
-        @DisplayName("Connection-level redundancy is rendered as redundancy { group, priority }")
+        @DisplayName("A PRIMARY's redundancy block carries only the priority: Fabric assigns the group")
         void redundancyBlock() {
             String hcl = exporter.export(plan);
             String conn = resourceBlock(hcl,
                     "resource \"equinix_fabric_connection\" \"conn_FCR-DC-to-AWS\"");
             assertTrue(conn.contains("redundancy {"), "redundancy block");
-            assertTrue(conn.contains("group = \"aws-redundant\""), "redundancy group");
+            assertFalse(conn.contains("aws-redundant"), "the plan's group token is not a Fabric group id");
             assertTrue(conn.contains("priority = \"PRIMARY\""), "redundancy priority");
         }
 
@@ -922,7 +923,7 @@ class ExportTest {
      */
     private static PlannedConnection awsConnection() {
         // IP_VC, not EVPL_VC: the A-side is a Cloud Router, which Fabric accepts only as IP_VC
-        // (FCR A-side => IP_VC fix) — the exported HCL must carry the type Fabric will accept.
+        // (FCR A-side => IP_VC fix) - the exported HCL must carry the type Fabric will accept.
         return PlannedConnection.builder()
                 .name("FCR-DC-to-AWS").connectionType(ConnectionType.IP_VC)
                 .purpose(ConnectionPurpose.PROVIDER).bandwidthMbps(1000)
@@ -1137,8 +1138,8 @@ class ExportTest {
     }
 
     /**
-     * Slices one resource block out of the generated HCL — from the given resource header to
-     * the next {@code resource} declaration (or the end of the document) — so assertions can
+     * Slices one resource block out of the generated HCL - from the given resource header to
+     * the next {@code resource} declaration (or the end of the document) - so assertions can
      * verify an attribute landed in a specific resource rather than anywhere in the file.
      */
     private static String resourceBlock(String hcl, String header) {

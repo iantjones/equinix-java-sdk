@@ -23,7 +23,7 @@
  * by {@code calculate()}, which yields a
  * {@link com.eqixiac.equinix.design.value.savings.SavingsEstimate} with the net
  * monthly/annual savings, break-even volume, and setup-payback figures. Volumes are
- * expressed via {@link com.eqixiac.equinix.design.value.savings.DataUnit} (decimal/SI —
+ * expressed via {@link com.eqixiac.equinix.design.value.savings.DataUnit} (decimal/SI - 
  * 1&nbsp;TB = 1000&nbsp;GB).
  *
  * <p>Rates come from the layered rate-card architecture in
@@ -32,7 +32,7 @@
  * the calculator works with zero configuration; supply a custom or provider-API card to
  * override. The estimate is honest about what it could not price: the
  * {@code egressPriced}/{@code equinixPriced}/{@code complete} flags and the disclaimer
- * name any missing component, and — per the layer's currency-honesty rule — figures in
+ * name any missing component, and - per the layer's currency-honesty rule - figures in
  * differing currencies are never subtracted or summed: a cross-currency interconnect
  * cost is excluded (and quoted in the disclaimer) rather than mislabelled, with the
  * derived net figures omitted instead of fabricated.</p>
@@ -40,7 +40,7 @@
  * <p><b>Beta.</b> With a peer cloud ({@code toCloud(...)}) the estimate also carries a
  * {@link com.eqixiac.equinix.design.value.savings.MulticloudPathComparison}: monthly totals for
  * the traffic between the two clouds over the public internet, the two-sided Equinix path and
- * the providers' native multicloud link, and {@code breakEvenSustainedMbps} — the sustained
+ * the providers' native multicloud link, and {@code breakEvenSustainedMbps} - the sustained
  * rate (Mbps, both directions summed, symmetric traffic, 730-hour month) at which the flat-fee
  * native link and the per-GB Equinix path cost the same. The figure is computed from the quotes
  * resolved for the estimate and is empty when any input is unpriced or the currencies differ.

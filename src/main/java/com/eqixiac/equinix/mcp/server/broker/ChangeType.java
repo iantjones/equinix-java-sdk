@@ -20,7 +20,7 @@ import java.util.Arrays;
 import java.util.Locale;
 
 /**
- * The mutations the Safe Mutation Broker can carry — deliberately the smallest honest set:
+ * The mutations the Safe Mutation Broker can carry - deliberately the smallest honest set:
  * three <em>creates</em>, each backed by a spec-documented Fabric v4 dry run the propose phase
  * exercises for real. There are no update change types at launch and, by policy, no delete
  * change types ever.

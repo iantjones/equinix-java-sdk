@@ -1,17 +1,18 @@
 == summary
-Deployment Plan: 3 Cloud Router(s), 2 provider connection(s), 3 backbone link(s), 10 routing protocol(s). Total resources: 18. Estimated monthly cost: $3400. DEFERRED TO PROVISIONING: 2 (validated at provisioning; needs your authorization keys). SKIPPED (could not validate now): 3 (offline or the API could not be reached — see the reasons).
+Deployment Plan: 3 Cloud Router(s), 2 provider connection(s), 3 backbone link(s), 10 routing protocol(s). Total resources: 18. Estimated monthly cost: $3400. DEFERRED TO PROVISIONING: 2 (validated at provisioning; needs your authorization keys). SKIPPED (could not validate now): 3 (offline or the API could not be reached - see the reasons).
 == markdown
 # Deployment Plan
 
+Plan id `34d1df4d85fc3f69`, deployment `FCR`.
 _Generated from optimization computed at 2026-09-21T00:00:00Z_
 
 **Total Resources:** 18
 
-> **DEFERRED TO PROVISIONING** — the live connection endpoint dry-run runs when the plan is applied (needs your authorization keys)
-> - Connection 'FCR-DC-to-aws' (AWS): endpoints validated structurally; the live endpoint dry-run runs at provisioning once Cloud Router 'FCR-DC' exists — you will need to supply AWS Account ID (12-digit), a VLAN tag
-> - Connection 'FCR-DA-to-azure' (AZURE): endpoints validated structurally; the live endpoint dry-run runs at provisioning once Cloud Router 'FCR-DA' exists — you will need to supply Azure ExpressRoute service key (GUID), a VLAN tag, an Azure peering type
+> **DEFERRED TO PROVISIONING** - the live connection endpoint dry-run runs when the plan is applied (needs your authorization keys)
+> - Connection 'FCR-DC-to-aws' (AWS): endpoints validated structurally; the live endpoint dry-run runs at provisioning once Cloud Router 'FCR-DC' exists - you will need to supply AWS Account ID (12-digit), a VLAN tag
+> - Connection 'FCR-DA-to-azure' (AZURE): endpoints validated structurally; the live endpoint dry-run runs at provisioning once Cloud Router 'FCR-DA' exists - you will need to supply Azure ExpressRoute service key (GUID), a VLAN tag, an Azure peering type
 
-> **SKIPPED (could not validate now)** — these checks could not be attempted; each reason says why. They do not invalidate the plan.
+> **SKIPPED (could not validate now)** - these checks could not be attempted; each reason says why. They do not invalidate the plan.
 > - Catalog validation skipped: no Service Profile catalog surface available (offline or not connected)
 > - Package-ceiling checks skipped: no Cloud Router API surface available (offline or not connected)
 > - Live router dry-run skipped: no Cloud Router API surface available (offline or not connected)
@@ -82,7 +83,7 @@ Resources will be created in this order:
 3. Backbone Links (3)
 4. Routing Protocols (10)
 
-Call `plan.dryRun()` to validate, or `plan.execute()` to provision all resources.
+Call `plan.dryRun()` to validate, `plan.diff()` to compare with live state, `plan.reconcile(...)` to create only what is missing (resumable from a checkpoint), or `plan.execute(...)` to provision everything in one run.
 
 == totalResourceCount
 18
@@ -118,7 +119,7 @@ true
 == validationErrors
 []
 == deferredValidations
-[Connection 'FCR-DC-to-aws' (AWS): endpoints validated structurally; the live endpoint dry-run runs at provisioning once Cloud Router 'FCR-DC' exists — you will need to supply AWS Account ID (12-digit), a VLAN tag, Connection 'FCR-DA-to-azure' (AZURE): endpoints validated structurally; the live endpoint dry-run runs at provisioning once Cloud Router 'FCR-DA' exists — you will need to supply Azure ExpressRoute service key (GUID), a VLAN tag, an Azure peering type]
+[Connection 'FCR-DC-to-aws' (AWS): endpoints validated structurally; the live endpoint dry-run runs at provisioning once Cloud Router 'FCR-DC' exists - you will need to supply AWS Account ID (12-digit), a VLAN tag, Connection 'FCR-DA-to-azure' (AZURE): endpoints validated structurally; the live endpoint dry-run runs at provisioning once Cloud Router 'FCR-DA' exists - you will need to supply Azure ExpressRoute service key (GUID), a VLAN tag, an Azure peering type]
 == skippedValidations
 [Catalog validation skipped: no Service Profile catalog surface available (offline or not connected), Package-ceiling checks skipped: no Cloud Router API surface available (offline or not connected), Live router dry-run skipped: no Cloud Router API surface available (offline or not connected)]
 == requiredInputs

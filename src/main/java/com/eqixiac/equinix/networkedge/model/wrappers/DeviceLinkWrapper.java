@@ -48,7 +48,7 @@ public class DeviceLinkWrapper extends ResourceImpl<DeviceLink> implements Devic
     }
 
     public Boolean save(DeviceLinkUpdaterJson updaterJson) {
-        this.json = ((DeviceLinkClientImpl)this.serviceClient).update(this.getUuid(), updaterJson);
+        this.json = WrapperState.keep(this.json, ((DeviceLinkClientImpl)this.serviceClient).update(this.getUuid(), updaterJson));
         return true;
     }
 
@@ -57,7 +57,7 @@ public class DeviceLinkWrapper extends ResourceImpl<DeviceLink> implements Devic
     }
 
     public Boolean refresh() {
-        this.json = ((DeviceLinkClientImpl)this.serviceClient).refresh(this.getUuid());
+        this.json = WrapperState.keep(this.json, ((DeviceLinkClientImpl)this.serviceClient).refresh(this.getUuid()));
         return true;
     }
 }

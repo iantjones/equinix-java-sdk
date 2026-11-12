@@ -26,7 +26,7 @@ import lombok.NoArgsConstructor;
 /**
  * Stream subscription sink settings (e.g. Splunk index, ServiceNow source, webhook format).
  *
- * <p>Prefer {@code builder()} over the positional constructor — six of the seven parameters
+ * <p>Prefer {@code builder()} over the positional constructor - six of the seven parameters
  * are {@code String}s, so builder construction is self-documenting and transposition-proof.</p>
  */
 @Getter

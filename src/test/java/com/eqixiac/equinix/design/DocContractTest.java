@@ -62,21 +62,19 @@ import static org.mockito.Mockito.when;
 /**
  * Doc-contract tests: each test enforces a <em>documented behavioral promise</em> from the
  * {@code design.*} javadoc, quoting the exact line it locks. The 2026-07 defect review found that
- * several documented promises had NO test at all — tests pinned incidental implementation behavior
+ * several documented promises had NO test at all - tests pinned incidental implementation behavior
  * while the published contract drifted. A test in this class fails when the code stops honouring
  * what its javadoc tells users; if a promise is deliberately changed, change the javadoc AND the
  * quote in the corresponding test here in the same commit.
  */
-@DisplayName("design/* — documented behavioral promises (doc contracts)")
+@DisplayName("design/* - documented behavioral promises (doc contracts)")
 class DocContractTest {
 
     private static final MetroId DC = MetroId.of(MetroCode.DC);
     private static final MetroId DA = MetroId.of(MetroCode.DA);
     private static final Currency USD = Currency.getInstance("USD");
 
-    // ══════════════════════════════════════════════
     //  RateCard / LayeredRateCard
-    // ══════════════════════════════════════════════
 
     @Nested
     @DisplayName("RateCard layering")
@@ -85,7 +83,7 @@ class DocContractTest {
         /**
          * Enforces RateCard.layered(...) javadoc: "Combines several rate cards into a single card
          * that consults each in order and returns the first non-empty quote. Earlier cards take
-         * precedence" — and LayeredRateCard's: "the earliest card that can price an item wins."
+         * precedence" - and LayeredRateCard's: "the earliest card that can price an item wins."
          */
         @Test
         @DisplayName("layered(...) consults cards in declaration order and the first non-empty quote wins")
@@ -106,7 +104,7 @@ class DocContractTest {
 
         /**
          * Enforces the same RateCard.layered(...) promise from the fall-through side: an earlier
-         * card that "cannot price that item" (empty) must NOT block later cards — "the first card
+         * card that "cannot price that item" (empty) must NOT block later cards - "the first card
          * that can price an item wins."
          */
         @Test
@@ -128,10 +126,10 @@ class DocContractTest {
          * Enforces RateCard interface javadoc: "an empty result means <em>this card cannot price
          * that item</em>, which is distinct from a zero price. That distinction lets callers fall
          * back to another source rather than silently treating 'unknown' as 'free.'" A chain with
-         * no capable card must produce empty — never a fabricated zero quote.
+         * no capable card must produce empty - never a fabricated zero quote.
          */
         @Test
-        @DisplayName("a chain that cannot price returns empty — never a fabricated zero")
+        @DisplayName("a chain that cannot price returns empty - never a fabricated zero")
         void cannotPriceIsEmptyNeverZero() {
             RateCard chain = RateCard.layered(
                     recordingCard("a", new ArrayList<>(), null),
@@ -144,7 +142,7 @@ class DocContractTest {
 
         /**
          * Enforces RateCard.egress(...) javadoc: "The default returns empty so cards that do not
-         * model egress need not override it" — and RateCard.colocation(...): "Cards that do not
+         * model egress need not override it" - and RateCard.colocation(...): "Cards that do not
          * model colocation return {@code Optional.empty()} (the default)."
          */
         @Test
@@ -170,9 +168,7 @@ class DocContractTest {
         }
     }
 
-    // ══════════════════════════════════════════════
     //  SpeedOfLightLatency
-    // ══════════════════════════════════════════════
 
     @Nested
     @DisplayName("SpeedOfLightLatency")
@@ -181,7 +177,7 @@ class DocContractTest {
         /**
          * Enforces SpeedOfLightLatency class javadoc: "Coordinates are optional in both source
          * APIs, so every typed overload throws {@code IllegalArgumentException} naming the
-         * offending IBX/metro when coordinates are missing — fail loud rather than return a bogus
+         * offending IBX/metro when coordinates are missing - fail loud rather than return a bogus
          * zero." (IBX flavour: the message must name the IBX code.)
          */
         @Test
@@ -232,7 +228,7 @@ class DocContractTest {
 
         /**
          * Enforces Builder.mode(...) javadoc: "Unlike the other two setters, a {@code null}
-         * argument does not throw — it is silently ignored and the current mode (initially
+         * argument does not throw - it is silently ignored and the current mode (initially
          * {@code Mode.ROUND_TRIP}) is kept."
          */
         @Test
@@ -243,9 +239,7 @@ class DocContractTest {
         }
     }
 
-    // ══════════════════════════════════════════════
     //  DeploymentWizard
-    // ══════════════════════════════════════════════
 
     @Nested
     @DisplayName("DeploymentWizard")
@@ -286,11 +280,11 @@ class DocContractTest {
         /**
          * Enforces DeploymentWizard.Builder.notifications(...) javadoc: "<strong>Every</strong>
          * address is applied to every planned Cloud Router and connection (Fabric mandates at
-         * least one recipient per Cloud Router, error {@code EQ-3040013}) — all of them are sent
+         * least one recipient per Cloud Router, error {@code EQ-3040013}) - all of them are sent
          * on the wire bodies ... never just the first."
          */
         @Test
-        @DisplayName("every notification address is applied to every planned Cloud Router — never just the first")
+        @DisplayName("every notification address is applied to every planned Cloud Router - never just the first")
         void everyNotificationAppliedToEveryRouter() {
             DeploymentPlan plan = offlineWizard("noc@example.com", "ops@example.com").plan();
 
@@ -341,13 +335,11 @@ class DocContractTest {
         }
     }
 
-    // ══════════════════════════════════════════════
     //  Helpers
-    // ══════════════════════════════════════════════
 
     /**
      * A minimal test card: records its consultations into {@code consulted} and quotes the given
-     * monthly figure for connections and routers — or nothing at all when {@code monthly} is null.
+     * monthly figure for connections and routers - or nothing at all when {@code monthly} is null.
      * Only the two abstract lookups are implemented, so the interface DEFAULTS for egress and
      * colocation are what this class exercises.
      */
@@ -423,7 +415,7 @@ class DocContractTest {
 
     /**
      * Two metros: DC with AWS available and one AWS-dependent workload placed there, plus DA with
-     * no providers — one provider connection and one backbone link (mirrors the wizard WireMock
+     * no providers - one provider connection and one backbone link (mirrors the wizard WireMock
      * suites' canonical two-metro fixture).
      */
     private static OptimizationResult twoMetroResult() {

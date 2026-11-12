@@ -19,6 +19,9 @@ package com.eqixiac.equinix.fabric.client.implementation;
 import com.eqixiac.equinix.core.http.ResponseHandler;
 import com.eqixiac.equinix.core.http.response.Page;
 import com.eqixiac.equinix.core.http.response.PaginatedList;
+import com.eqixiac.equinix.core.http.response.PaginatedFilteredList;
+import com.eqixiac.equinix.fabric.model.implementation.filter.FilterPropertyList;
+import com.eqixiac.equinix.fabric.model.implementation.sort.SortPropertyList;
 import com.eqixiac.equinix.fabric.client.StreamSubscriptions;
 import com.eqixiac.equinix.fabric.client.internal.StreamSubscriptionClient;
 import com.eqixiac.equinix.fabric.model.StreamSubscription;
@@ -45,5 +48,14 @@ public class StreamSubscriptionsImpl implements StreamSubscriptions {
 
     public StreamSubscriptionOperator.StreamSubscriptionBuilder define(String streamId) {
         return new StreamSubscriptionOperator(this.serviceClient).create(streamId);
+    }
+
+    @Override
+    public PaginatedFilteredList<StreamSubscription> search(FilterPropertyList filter, SortPropertyList sort) {
+        if (filter == null) {
+            throw new IllegalArgumentException("A stream-subscription search needs a filter (spec: filter is required)");
+        }
+        Page<StreamSubscriptionJson> page = this.serviceClient.search(filter, sort);
+        return ResponseHandler.toPaginatedFilteredList(page, this.serviceClient, StreamSubscriptionWrapper::new);
     }
 }

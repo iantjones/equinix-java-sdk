@@ -23,10 +23,10 @@ package com.eqixiac.equinix.core.model;
  * or how it represents pagination.
  *
  * <p>The contract is deliberately <em>behavioral</em> rather than representational: bodies with
- * heterogeneous pagination models — the core {@code Pagination {offset, limit}} object
+ * heterogeneous pagination models - the core {@code Pagination {offset, limit}} object
  * ({@link FilteredSortedPaginatedPost}, {@link FilteredPaginatedPost}), IBX SmartView's
  * {@code SearchPagination {offset, limit}}, or flat top-level {@code offset}/{@code limit} members
- * (billing accounts search) — all implement it by mapping the requested window onto their own
+ * (billing accounts search) - all implement it by mapping the requested window onto their own
  * serialized shape.</p>
  *
  * <p>The paging pipeline always seeks from the <em>server-reported</em> pagination of the page it

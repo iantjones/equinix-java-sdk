@@ -1,0 +1,26 @@
+{
+  "pagination": {
+    "offset": 0,
+    "limit": 20,
+    "total": 1,
+    "next": "/search?offset=1&limit=20",
+    "previous": "/search?offset=0&limit=20"
+  },
+  "data": [
+    {
+      "href": "https://api.equinix.com/fabric/v4/appProcessors/90ee425c-9988-454c-96d9-1128bc16350f",
+      "uuid": "90ee425c-9988-454c-96d9-1128bc16350f",
+      "type": "APP_PROCESSOR",
+      "name": "agent-gateway",
+      "description": "llm-routing, a2a-routing, mcp-routing",
+      "registryId": "agentgateway/agentgateway:1.3.0",
+      "marketplace": {
+        "visibility": "PUBLIC"
+      },
+      "state": "PROVISIONED",
+      "project": {
+        "projectId": "71b55fef-fd2e-402f-ae3c-01d5f00bf2d4"
+      }
+    }
+  ]
+}

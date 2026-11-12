@@ -51,11 +51,11 @@ import java.util.Map;
  * rather than a per-GB egress SKU, so a {@code PRIVATE} lookup returns empty and a layered card
  * falls back to another source. Every rate it returns is tagged {@link PriceSource#PROVIDER_API}.</p>
  *
- * <p>The price list is fetched once and cached for the adapter's lifetime — but only when the
+ * <p>The price list is fetched once and cached for the adapter's lifetime - but only when the
  * fetch <em>completed</em>. An incomplete fetch (a transport failure, or pagination cut short) is
  * never memoized: a SKU found in the retrieved pages is still a real datum and is cached, but a
  * <em>miss</em> over an incomplete catalogue is not authoritative and is retried on the next
- * lookup. The adapter is fault-tolerant — any fetch or parse failure yields no rate rather than
+ * lookup. The adapter is fault-tolerant - any fetch or parse failure yields no rate rather than
  * an exception.</p>
  */
 @Slf4j
@@ -99,7 +99,7 @@ public final class OracleCloudPriceListRateCard implements RateCard {
     }
 
     /**
-     * Creates an adapter against a custom endpoint — for a proxy or testing.
+     * Creates an adapter against a custom endpoint - for a proxy or testing.
      *
      * @param endpoint the full OCI Price List products URL
      */
@@ -132,7 +132,7 @@ public final class OracleCloudPriceListRateCard implements RateCard {
         Catalogue current = priceItems();
         Optional<EgressRate> resolved = resolveInternetEgress(current.items, region);
         if (resolved.isEmpty() && !current.complete) {
-            // A miss over an incomplete catalogue is not authoritative — don't cache; the next
+            // A miss over an incomplete catalogue is not authoritative - don't cache; the next
             // lookup retries. (A found SKU IS a real datum and is cached below.)
             return Optional.empty();
         }
@@ -222,7 +222,7 @@ public final class OracleCloudPriceListRateCard implements RateCard {
      * Fetches the price-list products, following ORDS pagination when the endpoint returns it.
      * The cetools handler currently serves the whole catalogue in one response (no {@code hasMore}
      * / {@code links.next}), in which case this is a single GET. If it ever paginates, every page
-     * is accumulated before the caller matches — so a "not found" is only ever reported after the
+     * is accumulated before the caller matches - so a "not found" is only ever reported after the
      * continuation has been exhausted, never off a truncated first page. A fetch failure or a
      * {@link #MAX_PAGES} trip with a live continuation marks the catalogue incomplete: matching
      * still runs over the retrieved pages (a found SKU is a real datum), but the caller treats a

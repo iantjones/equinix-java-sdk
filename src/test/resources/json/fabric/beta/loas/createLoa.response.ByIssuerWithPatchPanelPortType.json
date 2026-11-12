@@ -1,0 +1,33 @@
+{
+  "href": "https://api.equinix.com/fabric/v4/loas/29cc7878-54e3-4e1a-8651-87a61354bac2",
+  "uuid": "29cc7878-54e3-4e1a-8651-87a61354bac2",
+  "type": "PATCH_PANEL_PORT_LOA",
+  "name": "LOA-Equinix-SV1-2026",
+  "description": "Authorization for cage access to Equinix at SV1",
+  "authorizedProductType": "XC",
+  "state": "PENDING_ACCEPTANCE",
+  "requestor": {
+    "email": "user@org1.com",
+    "orgId": 95900,
+    "orgName": "organizationName1"
+  },
+  "issuer": {
+    "email": "user@org2.com",
+    "orgId": 95901,
+    "orgName": "organizationName2"
+  },
+  "demarcationPoint": {
+    "patchPanelId": "CP:Demarc:1259684",
+    "patchPanelPortA": 23,
+    "patchPanelPortB": 23,
+    "connectorType": "SC"
+  },
+  "location": {
+    "ibxCode": "SV1"
+  },
+  "changeLog": {
+    "createdDateTime": "2026-07-24T06:50:46Z",
+    "createdBy": "user",
+    "createdByEmail": "user@org2.com"
+  }
+}

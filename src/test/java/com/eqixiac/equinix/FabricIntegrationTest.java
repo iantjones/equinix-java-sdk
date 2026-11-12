@@ -12,7 +12,9 @@ import com.eqixiac.equinix.fabric.model.implementation.Change;
 import com.eqixiac.equinix.fabric.model.implementation.ConnectionSide;
 import com.eqixiac.equinix.fabric.model.implementation.LinkProtocol;
 import com.eqixiac.equinix.fabric.model.implementation.ServiceMetro;
+import com.eqixiac.equinix.fabric.model.implementation.filter.CloudEventQuery;
 import com.eqixiac.equinix.fabric.model.implementation.filter.Filter;
+import com.eqixiac.equinix.fabric.model.implementation.filter.MetricQuery;
 import com.eqixiac.equinix.fabric.model.implementation.filter.FilterPropertyList;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.Tag;
@@ -48,9 +50,9 @@ import static org.junit.jupiter.api.Assertions.*;
  *
  * <h3>Usage</h3>
  * <pre>
- * mvn test -Pintegration-readonly -DaccessKey=ID -DsecretKey=SECRET
- * mvn test -Pintegration-dryrun   -DaccessKey=ID -DsecretKey=SECRET -DtestMode=dryrun
- * mvn test -Pintegration-full     -DaccessKey=ID -DsecretKey=SECRET -DtestMode=full -DconfirmDestructive=true
+ * EQUINIX_ACCESS_KEY=ID EQUINIX_SECRET_KEY=SECRET mvn test -Pintegration-readonly
+ * EQUINIX_ACCESS_KEY=ID EQUINIX_SECRET_KEY=SECRET mvn test -Pintegration-dryrun -DtestMode=dryrun
+ * EQUINIX_ACCESS_KEY=ID EQUINIX_SECRET_KEY=SECRET mvn test -Pintegration-full -DtestMode=full -DconfirmDestructive=true
  * </pre>
  */
 @Tag("integration-readonly")
@@ -67,9 +69,9 @@ class FabricIntegrationTest extends IntegrationTestBase {
     static final LocalDateTime endDateTime = LocalDateTime.now(ZoneOffset.UTC);
     static final LocalDateTime startDateTime = endDateTime.minusDays(1);
 
-    // ── Discovery caches (one live call each, shared across data-dependent tests) ──
+    // Discovery caches (one live call each, shared across data-dependent tests)
 
-    private static PaginatedList<Port> cachedPorts;
+    private static List<Port> cachedPorts;
     private static PaginatedFilteredList<Connection> cachedConnections;
     private static PaginatedFilteredList<CloudRouter> cachedCloudRouters;
     private static PaginatedFilteredList<RouteFilter> cachedRouteFilters;
@@ -110,7 +112,7 @@ class FabricIntegrationTest extends IntegrationTestBase {
         }
     }
 
-    // ── Discovery helpers ──────────────────────────────────────────────────
+    // Discovery helpers
     //
     // Each helper runs its underlying read through requireEntitled, so a missing entitlement
     // aborts (skips) the calling test while any real API defect fails it.
@@ -121,7 +123,7 @@ class FabricIntegrationTest extends IntegrationTestBase {
         return it.hasNext() ? it.next() : null;
     }
 
-    static PaginatedList<Port> discoverPorts() {
+    static List<Port> discoverPorts() {
         if (cachedPorts == null) {
             cachedPorts = requireEntitled("Fabric", "list", "Port", "GET", () -> fabric.ports().list());
         }
@@ -150,6 +152,24 @@ class FabricIntegrationTest extends IntegrationTestBase {
                     () -> fabric.routeFilters().search());
         }
         return cachedRouteFilters;
+    }
+
+    /**
+     * The first PROVISIONED route filter (else the first one). The search also returns
+     * DEPROVISIONED filters, whose rules search answers HTTP 400 EQ-3044101 "Route filter does
+     * not exist or do not belong to user" (live, 2026-11-12), so tests must not pick those.
+     */
+    static RouteFilter usableRouteFilter() {
+        RouteFilter fallback = null;
+        for (RouteFilter filter : discoverRouteFilters()) {
+            if (filter.getState() == RouteFilterState.PROVISIONED) {
+                return filter;
+            }
+            if (fallback == null) {
+                fallback = filter;
+            }
+        }
+        return fallback;
     }
 
     static PaginatedFilteredList<RouteAggregation> discoverRouteAggregations() {
@@ -215,10 +235,14 @@ class FabricIntegrationTest extends IntegrationTestBase {
         return sideIsCloudRouter(connection.getASide()) || sideIsCloudRouter(connection.getZSide());
     }
 
-    /** First connection with a Cloud Router on either side (route/attachment endpoints need one). */
+    /**
+     * First ACTIVE connection with a Cloud Router on either side (route/attachment endpoints need
+     * one). The search also returns DEPROVISIONED connections, which answer HTTP 404 EQ-3041120
+     * "not found or already deleted" on their sub-resources (live, 2026-11-12).
+     */
     static Connection findCloudRouterConnection() {
         for (Connection connection : discoverConnections()) {
-            if (hasCloudRouterSide(connection)) {
+            if (hasCloudRouterSide(connection) && connection.getState() == ConnectionState.ACTIVE) {
                 return connection;
             }
         }
@@ -234,7 +258,7 @@ class FabricIntegrationTest extends IntegrationTestBase {
             routingProtocolDiscoveryDone = true;
             int examined = 0;
             for (Connection connection : discoverConnections()) {
-                if (!hasCloudRouterSide(connection)) {
+                if (!hasCloudRouterSide(connection) || connection.getState() != ConnectionState.ACTIVE) {
                     continue;
                 }
                 if (++examined > 10) {
@@ -274,9 +298,7 @@ class FabricIntegrationTest extends IntegrationTestBase {
         return null;
     }
 
-    // ════════════════════════════════════════════════════════════════════
     //  READONLY TESTS - every safe GET/list/search operation, per resource
-    // ════════════════════════════════════════════════════════════════════
 
     @Nested
     @Tag("integration-readonly")
@@ -341,7 +363,7 @@ class FabricIntegrationTest extends IntegrationTestBase {
         @Test
         @DisplayName("ports_list - List all ports (getPorts)")
         void ports_list() {
-            PaginatedList<Port> ports = requireEntitled("Fabric", "list", "Port", "GET",
+            List<Port> ports = requireEntitled("Fabric", "list", "Port", "GET",
                     () -> fabric.ports().list());
             assertNotNull(ports);
             assertTrue(ports.size() > 0, "Expected at least one port");
@@ -390,33 +412,20 @@ class FabricIntegrationTest extends IntegrationTestBase {
         }
 
         @Test
-        @DisplayName("ports_getMetrics - Port metrics by asset id (getMetricByAssetId)")
+        @DisplayName("ports_getMetrics - Port metrics through POST /metrics/search (searchMetrics)")
         void ports_getMetrics() {
             Port anyPort = firstOrNull(discoverPorts());
             Assumptions.assumeTrue(anyPort != null, "No ports found; skipping port metrics test");
 
             List<Metric> metrics = requireEntitled("Fabric", "getMetrics", "Metric", "GET",
-                    () -> fabric.ports().getMetrics(anyPort.getUuid(),
-                            "equinix.fabric.port.bandwidth_rx.usage", startDateTime, endDateTime));
+                    () -> fabric.metrics().forPort(anyPort.getUuid(), startDateTime, endDateTime,
+                            "equinix.fabric.port.bandwidth_rx.usage"));
             assertNotNull(metrics);
             if (!metrics.isEmpty()) {
                 Metric first = metrics.get(0);
                 assertNotNull(first.getName());
                 first.getDatapoints();
             }
-        }
-
-        @Test
-        @SuppressWarnings("deprecation")
-        @DisplayName("ports_getStatistics - Deprecated port stats endpoint still honours the contract (getPortStatsByPortUuid)")
-        void ports_getStatistics_deprecated() {
-            Port anyPort = firstOrNull(discoverPorts());
-            Assumptions.assumeTrue(anyPort != null, "No ports found; skipping port statistics test");
-
-            PortStatistic statistic = requireEntitled("Fabric", "getStatistics", "PortStatistic", "GET",
-                    () -> fabric.ports().getStatistics(anyPort.getUuid(), startDateTime, endDateTime));
-            assertNotNull(statistic);
-            statistic.getStats();
         }
 
         @Test
@@ -465,28 +474,15 @@ class FabricIntegrationTest extends IntegrationTestBase {
         }
 
         @Test
-        @DisplayName("connections_getMetrics - Connection metrics by asset id (getMetricByAssetId)")
+        @DisplayName("connections_getMetrics - Connection metrics through POST /metrics/search (searchMetrics)")
         void connections_getMetrics() {
             Connection any = firstOrNull(discoverConnections());
             Assumptions.assumeTrue(any != null, "No connections found; skipping connection metrics test");
 
             List<Metric> metrics = requireEntitled("Fabric", "getMetrics", "Metric", "GET",
-                    () -> fabric.connections().getMetrics(any.getUuid(),
-                            "equinix.fabric.connection.bandwidth_tx.usage", startDateTime, endDateTime));
+                    () -> fabric.metrics().forConnection(any.getUuid(), startDateTime, endDateTime,
+                            "equinix.fabric.connection.bandwidth_tx.usage"));
             assertNotNull(metrics);
-        }
-
-        @Test
-        @SuppressWarnings("deprecation")
-        @DisplayName("connections_getStatistics - Deprecated connection stats endpoint (getConnectionStatsByPortUuid)")
-        void connections_getStatistics_deprecated() {
-            Connection any = firstOrNull(discoverConnections());
-            Assumptions.assumeTrue(any != null, "No connections found; skipping connection statistics test");
-
-            ConnectionStatistic statistic = requireEntitled("Fabric", "getStatistics", "ConnectionStatistic", "GET",
-                    () -> fabric.connections().getStatistics(any.getUuid(), startDateTime, endDateTime));
-            assertNotNull(statistic);
-            statistic.getStats();
         }
 
         @Test
@@ -884,7 +880,7 @@ class FabricIntegrationTest extends IntegrationTestBase {
             CloudRouter router = firstOrNull(discoverCloudRouters());
             Assumptions.assumeTrue(router != null, "No cloud routers found; skipping commands list");
 
-            PaginatedList<CloudRouterCommand> commands = requireEntitled("Fabric", "commands", "CloudRouterCommand", "GET",
+            List<CloudRouterCommand> commands = requireEntitled("Fabric", "commands", "CloudRouterCommand", "GET",
                     () -> fabric.cloudRouters().commands(router.getUuid()));
             assertNotNull(commands);
             if (!commands.isEmpty()) {
@@ -901,7 +897,7 @@ class FabricIntegrationTest extends IntegrationTestBase {
             CloudRouter router = firstOrNull(discoverCloudRouters());
             Assumptions.assumeTrue(router != null, "No cloud routers found; skipping command get");
 
-            PaginatedList<CloudRouterCommand> commands = requireEntitled("Fabric", "commands", "CloudRouterCommand", "GET",
+            List<CloudRouterCommand> commands = requireEntitled("Fabric", "commands", "CloudRouterCommand", "GET",
                     () -> fabric.cloudRouters().commands(router.getUuid()));
             CloudRouterCommand any = firstOrNull(commands);
             Assumptions.assumeTrue(any != null, "No router commands recorded; skipping get");
@@ -965,7 +961,7 @@ class FabricIntegrationTest extends IntegrationTestBase {
         @Test
         @DisplayName("routeFilters_getByUuid - Get route filter by UUID (getRouteFilterByUuid)")
         void routeFilters_getByUuid() {
-            RouteFilter any = firstOrNull(discoverRouteFilters());
+            RouteFilter any = usableRouteFilter();
             Assumptions.assumeTrue(any != null, "No route filters found; skipping get");
 
             RouteFilter routeFilter = requireEntitled("Fabric", "getByUuid", "RouteFilter", "GET",
@@ -977,7 +973,7 @@ class FabricIntegrationTest extends IntegrationTestBase {
         @Test
         @DisplayName("routeFilters_getChanges - Route filter changes (getRouteFilterChanges)")
         void routeFilters_getChanges() {
-            RouteFilter any = firstOrNull(discoverRouteFilters());
+            RouteFilter any = usableRouteFilter();
             Assumptions.assumeTrue(any != null, "No route filters found; skipping changes list");
 
             List<Change> changes = requireEntitled("Fabric", "getChanges", "Change", "GET",
@@ -988,7 +984,7 @@ class FabricIntegrationTest extends IntegrationTestBase {
         @Test
         @DisplayName("routeFilters_getChange - A single route filter change (getRouteFilterChangeByUuid)")
         void routeFilters_getChange() {
-            RouteFilter any = firstOrNull(discoverRouteFilters());
+            RouteFilter any = usableRouteFilter();
             Assumptions.assumeTrue(any != null, "No route filters found; skipping change get");
 
             List<Change> changes = requireEntitled("Fabric", "getChanges", "Change", "GET",
@@ -1005,7 +1001,7 @@ class FabricIntegrationTest extends IntegrationTestBase {
         @Test
         @DisplayName("routeFilters_getConnections - Connections using a route filter (getRouteFilterConnections)")
         void routeFilters_getConnections() {
-            RouteFilter any = firstOrNull(discoverRouteFilters());
+            RouteFilter any = usableRouteFilter();
             Assumptions.assumeTrue(any != null, "No route filters found; skipping connections list");
 
             List<Connection> connections = requireEntitled("Fabric", "getConnections", "Connection", "GET",
@@ -1016,7 +1012,7 @@ class FabricIntegrationTest extends IntegrationTestBase {
         @Test
         @DisplayName("routeFilterRules_list - Rules of a route filter (getRouteFilterRules)")
         void routeFilterRules_list() {
-            RouteFilter any = firstOrNull(discoverRouteFilters());
+            RouteFilter any = usableRouteFilter();
             Assumptions.assumeTrue(any != null, "No route filters found; skipping rules list");
 
             PaginatedList<RouteFilterRule> rules = requireEntitled("Fabric", "list", "RouteFilterRule", "GET",
@@ -1033,7 +1029,7 @@ class FabricIntegrationTest extends IntegrationTestBase {
         @Test
         @DisplayName("routeFilterRules_search - Search rules of a route filter (searchRouteFilterRules)")
         void routeFilterRules_search() {
-            RouteFilter any = firstOrNull(discoverRouteFilters());
+            RouteFilter any = usableRouteFilter();
             Assumptions.assumeTrue(any != null, "No route filters found; skipping rules search");
 
             PaginatedFilteredList<RouteFilterRule> rules = requireEntitled("Fabric", "search", "RouteFilterRule", "POST",
@@ -1044,7 +1040,7 @@ class FabricIntegrationTest extends IntegrationTestBase {
         @Test
         @DisplayName("routeFilterRules_getByUuid - A single route filter rule (getRouteFilterRuleByUuid)")
         void routeFilterRules_getByUuid() {
-            RouteFilter any = firstOrNull(discoverRouteFilters());
+            RouteFilter any = usableRouteFilter();
             Assumptions.assumeTrue(any != null, "No route filters found; skipping rule get");
 
             PaginatedList<RouteFilterRule> rules = requireEntitled("Fabric", "list", "RouteFilterRule", "GET",
@@ -1061,7 +1057,7 @@ class FabricIntegrationTest extends IntegrationTestBase {
         @Test
         @DisplayName("routeFilterRules_getChanges - Route filter rule changes (getRouteFilterRuleChanges)")
         void routeFilterRules_getChanges() {
-            RouteFilter any = firstOrNull(discoverRouteFilters());
+            RouteFilter any = usableRouteFilter();
             Assumptions.assumeTrue(any != null, "No route filters found; skipping rule changes");
 
             PaginatedList<RouteFilterRule> rules = requireEntitled("Fabric", "list", "RouteFilterRule", "GET",
@@ -1077,7 +1073,7 @@ class FabricIntegrationTest extends IntegrationTestBase {
         @Test
         @DisplayName("routeFilterRules_getChange - A single rule change (getRouteFilterRuleChangeByUuid)")
         void routeFilterRules_getChange() {
-            RouteFilter any = firstOrNull(discoverRouteFilters());
+            RouteFilter any = usableRouteFilter();
             Assumptions.assumeTrue(any != null, "No route filters found; skipping rule change get");
 
             PaginatedList<RouteFilterRule> rules = requireEntitled("Fabric", "list", "RouteFilterRule", "GET",
@@ -1287,7 +1283,7 @@ class FabricIntegrationTest extends IntegrationTestBase {
             Network any = firstOrNull(discoverNetworks());
             Assumptions.assumeTrue(any != null, "No networks found; skipping connections list");
 
-            PaginatedList<Connection> connections = requireEntitled("Fabric", "getConnections", "Connection", "GET",
+            List<Connection> connections = requireEntitled("Fabric", "getConnections", "Connection", "GET",
                     () -> fabric.networks().getConnections(any.getUuid()));
             assertNotNull(connections);
         }
@@ -1486,8 +1482,10 @@ class FabricIntegrationTest extends IntegrationTestBase {
         @Test
         @DisplayName("cloudEvents_search - Search cloud events (searchCloudEvents)")
         void cloudEvents_search() {
+            Connection scope = firstOrNull(discoverConnections());
+            Assumptions.assumeTrue(scope != null, "No connections found; cloud-event search needs a subject");
             PaginatedFilteredList<CloudEvent> events = requireEntitled("Fabric", "search", "CloudEvent", "POST",
-                    () -> fabric.cloudEvents().search());
+                    () -> fabric.cloudEvents().search(CloudEventQuery.forAsset("connections", scope.getUuid())));
             assertNotNull(events);
             if (!events.isEmpty()) {
                 CloudEvent first = events.get(0);
@@ -1500,8 +1498,10 @@ class FabricIntegrationTest extends IntegrationTestBase {
         @Test
         @DisplayName("cloudEvents_getByUuid - Get a cloud event by UUID (getCloudEvent)")
         void cloudEvents_getByUuid() {
+            Connection scope = firstOrNull(discoverConnections());
+            Assumptions.assumeTrue(scope != null, "No connections found; cloud-event search needs a subject");
             PaginatedFilteredList<CloudEvent> events = requireEntitled("Fabric", "search", "CloudEvent", "POST",
-                    () -> fabric.cloudEvents().search());
+                    () -> fabric.cloudEvents().search(CloudEventQuery.forAsset("connections", scope.getUuid())));
             CloudEvent any = firstOrNull(events);
             Assumptions.assumeTrue(any != null, "No cloud events found; skipping get");
 
@@ -1512,13 +1512,13 @@ class FabricIntegrationTest extends IntegrationTestBase {
         }
 
         @Test
-        @DisplayName("cloudEvents_getByAssetId - Cloud events for an asset (getCloudEventByAssetId)")
-        void cloudEvents_getByAssetId() {
-            Connection any = firstOrNull(discoverConnections());
-            Assumptions.assumeTrue(any != null, "No connections found; skipping asset cloud events");
+        @DisplayName("cloudEvents_searchLiveEvents - Last operational event of a port (searchLastOpEvents)")
+        void cloudEvents_searchLiveEvents() {
+            Port anyPort = firstOrNull(discoverPorts());
+            Assumptions.assumeTrue(anyPort != null, "No ports found; skipping live events");
 
-            List<CloudEvent> events = requireEntitled("Fabric", "getByAssetId", "CloudEvent", "GET",
-                    () -> fabric.cloudEvents().getByAssetId("connections", any.getUuid()));
+            PaginatedFilteredList<CloudEvent> events = requireEntitled("Fabric", "searchLiveEvents", "CloudEvent", "POST",
+                    () -> fabric.cloudEvents().searchLiveEvents("/fabric/v4/ports/" + anyPort.getUuid()));
             assertNotNull(events);
         }
     }
@@ -1531,8 +1531,19 @@ class FabricIntegrationTest extends IntegrationTestBase {
         @Test
         @DisplayName("metrics_search - Search metrics (searchMetrics)")
         void metrics_search() {
+            // Spec example MetricSearchRequestExample: a port subject with port metric names.
+            Port port = null;
+            for (Port candidate : discoverPorts()) {
+                if (candidate.getState() == PortState.ACTIVE) {
+                    port = candidate;
+                    break;
+                }
+            }
+            Assumptions.assumeTrue(port != null, "No ACTIVE port to use as the metrics subject; skipping");
+            final String portUuid = port.getUuid();
             PaginatedFilteredList<Metric> metrics = requireEntitled("Fabric", "search", "Metric", "POST",
-                    () -> fabric.metrics().search());
+                    () -> fabric.metrics().search(MetricQuery.forPort(portUuid)
+                            .names("equinix.fabric.port.bandwidth_rx.usage", "equinix.fabric.port.bandwidth_tx.usage")));
             assertNotNull(metrics);
             if (!metrics.isEmpty()) {
                 Metric first = metrics.get(0);
@@ -1631,8 +1642,16 @@ class FabricIntegrationTest extends IntegrationTestBase {
         @Test
         @DisplayName("prices_search - Search catalog prices (searchPrices)")
         void prices_search() {
+            // The live service rejects a /type-only scan (HTTP 400): connection type, bandwidth, both
+            // access-point types and their metros are mandatory (checked 2026-11-11).
             FilterPropertyList filter = Filter.filter().and()
-                    .equals("/type", PriceType.VIRTUAL_CONNECTION_PRODUCT.name());
+                    .equals("/type", PriceType.VIRTUAL_CONNECTION_PRODUCT.name())
+                    .equals("/connection/type", "EVPL_VC")
+                    .in("/connection/bandwidth", java.util.List.of((Object) "1000"))
+                    .equals("/connection/aSide/accessPoint/type", "COLO")
+                    .equals("/connection/aSide/accessPoint/location/metroCode", "DC")
+                    .equals("/connection/zSide/accessPoint/type", "SP")
+                    .equals("/connection/zSide/accessPoint/location/metroCode", "DC");
 
             PaginatedFilteredList<Pricing> prices = requireEntitled("Fabric", "search", "Pricing", "POST",
                     () -> fabric.prices().list(filter));
@@ -1818,9 +1837,7 @@ class FabricIntegrationTest extends IntegrationTestBase {
         }
     }
 
-    // ════════════════════════════════════════════════════════════════════
     //  DRYRUN TESTS - dry-run creates and dedicated validate endpoints
-    // ════════════════════════════════════════════════════════════════════
 
     @Nested
     @Tag("integration-dryrun")
@@ -1837,7 +1854,7 @@ class FabricIntegrationTest extends IntegrationTestBase {
                     () -> fabric.serviceTokens()
                             .define(Side.A_Side)
                             .ofType(ServiceTokenType.VC_TOKEN)
-                            .withExpiry(30)
+                            .withExpirationDateTime(java.time.LocalDateTime.now(java.time.ZoneOffset.UTC).plusDays(30))
                             .forConnectionType(ConnectionType.EVPL_VC)
                             .allowRemoteConnection(true)
                             .allowCustomBandwidth(true)
@@ -1863,7 +1880,7 @@ class FabricIntegrationTest extends IntegrationTestBase {
                     () -> fabric.serviceTokens()
                             .define(Side.A_Side)
                             .ofType(ServiceTokenType.VC_TOKEN)
-                            .withExpiry(30)
+                            .withExpirationDateTime(java.time.LocalDateTime.now(java.time.ZoneOffset.UTC).plusDays(30))
                             .forConnectionType(ConnectionType.EVPL_VC)
                             .allowRemoteConnection(true)
                             .allowCustomBandwidth(true)
@@ -1936,7 +1953,7 @@ class FabricIntegrationTest extends IntegrationTestBase {
             assertNotNull(validation, "Validate should return a validation result");
         }
 
-        // ── Newly exposed dryRun=true surfaces ─────────────────────────────
+        // Newly exposed dryRun=true surfaces
         //
         // PARAM-DROP SAFETY DOCTRINE: every live dry-run below must be harmless even if a
         // future regression silently dropped the dryRun parameter and the call executed FOR
@@ -1944,13 +1961,13 @@ class FabricIntegrationTest extends IntegrationTestBase {
         // name of a live-discovered resource), and create dry-runs register a delete-by-uuid
         // cleanup BEFORE asserting anything. Two surfaces are deliberately NOT live-tested:
         //   - POST /fabric/v4/ports?dryRun=true (PortOperator.PortBuilder.dryRun()): an
-        //     accidental real create is a REAL port procurement order — billable and NOT
+        //     accidental real create is a REAL port procurement order - billable and NOT
         //     recoverable by an API delete. The FabricPortsWireMockTest wire-proof (asserts
         //     the dryRun=true query parameter actually goes on the wire) is the lock for
         //     this surface; no live call is ever made.
         //   - DELETE /fabric/v4/ports/{portId}?dryRun=true (Ports.delete(uuid, true)): the
         //     payload is nothing but the uuid of a live port, so a dropped parameter would
-        //     REALLY decommission that port — catastrophic and irreversible. WireMock-proofed
+        //     REALLY decommission that port - catastrophic and irreversible. WireMock-proofed
         //     only (FabricPortsWireMockTest); no live call is ever made.
 
         @Test
@@ -1980,7 +1997,7 @@ class FabricIntegrationTest extends IntegrationTestBase {
 
             // PARAM-DROP SAFETY: the dry-run echo carries no uuid (spec example
             // CloudRouterResponseExampleDryRun). A uuid in the response means the dryRun
-            // parameter was dropped and a REAL router was provisioned — register its
+            // parameter was dropped and a REAL router was provisioned - register its
             // destruction BEFORE any assertion so it is destroyed even if this test fails.
             if (dryRunResult != null && dryRunResult.getUuid() != null) {
                 registerCleanup("CloudRouter", dryRunResult.getUuid(), id -> {
@@ -1994,7 +2011,7 @@ class FabricIntegrationTest extends IntegrationTestBase {
 
             assertNotNull(dryRunResult, "Dry-run create should echo the validated cloud router payload");
             assertNull(dryRunResult.getUuid(),
-                    "Dry-run echo must carry no uuid — one means a REAL router was created (cleanup registered)");
+                    "Dry-run echo must carry no uuid - one means a REAL router was created (cleanup registered)");
         }
 
         @Test
@@ -2023,7 +2040,7 @@ class FabricIntegrationTest extends IntegrationTestBase {
                         return builder.create();
                     });
 
-            // PARAM-DROP SAFETY: same contract as the cloud router dry-run — the echo (spec
+            // PARAM-DROP SAFETY: same contract as the cloud router dry-run - the echo (spec
             // example CreateNetworkDryRunResponse) carries no uuid; if one came back a REAL
             // network was created, so register its destruction BEFORE asserting.
             if (dryRunResult != null && dryRunResult.getUuid() != null) {
@@ -2038,8 +2055,22 @@ class FabricIntegrationTest extends IntegrationTestBase {
 
             assertNotNull(dryRunResult, "Dry-run create should echo the validated network payload");
             assertNull(dryRunResult.getUuid(),
-                    "Dry-run echo must carry no uuid — one means a REAL network was created (cleanup registered)");
+                    "Dry-run echo must carry no uuid - one means a REAL network was created (cleanup registered)");
         }
+    }
+
+    //  DRYRUN-EXISTING TESTS - dry-run UPDATES against pre-existing resources
+
+    /**
+     * Dry-run updates (no-op payloads) against resources that already exist in the account.
+     * They leave nothing behind, but they touch resources this suite did not create, so they
+     * are a separate opt-in tier ({@code -Pintegration-dryrun-existing}) and never run in the
+     * default dry-run tier, which only does dry-run CREATES.
+     */
+    @Nested
+    @Tag("integration-dryrun-existing")
+    @DisplayName("Fabric Dry-Run Updates of Existing Resources")
+    class DryRunExistingTests {
 
         @Test
         @DisplayName("connections_dryRunUpdate - Dry-run a NO-OP connection rename (updateConnectionByUuid?dryRun=true)")
@@ -2090,7 +2121,7 @@ class FabricIntegrationTest extends IntegrationTestBase {
                     "No ACTIVE/INACTIVE named service token found; skipping dry-run update");
             final ServiceToken token = target;
 
-            // PARAM-DROP SAFETY: replaces /name with the token's CURRENT name — a no-op even
+            // PARAM-DROP SAFETY: replaces /name with the token's CURRENT name - a no-op even
             // if the dryRun parameter were ever dropped and the PATCH executed for real.
             ServiceToken dryRunResult = requireEntitled("Fabric", "dryRunUpdate", "ServiceToken", "PATCH",
                     () -> fabric.serviceTokens().update(token.getUuid())
@@ -2118,13 +2149,13 @@ class FabricIntegrationTest extends IntegrationTestBase {
             Assumptions.assumeTrue(target != null, "No ACTIVE named port found; skipping dry-run update");
             final Port port = target;
 
-            // PARAM-DROP SAFETY: replaces /name with the port's CURRENT name — a no-op even if
+            // PARAM-DROP SAFETY: replaces /name with the port's CURRENT name - a no-op even if
             // the dryRun parameter were ever dropped and the PATCH executed for real.
             //
             // Wire-shape caveat (javadoc'd on PortUpdater.dryRun()): unlike the real update's
             // bare Port body, the dry-run 200 responds with an AllPortsResponse paginated
             // envelope ({pagination, data:[Port]}); the SDK deserializes that envelope and
-            // unwraps data[0] into the Port returned here — this test live-proves that spec
+            // unwraps data[0] into the Port returned here - this test live-proves that spec
             // oddity holds in reality.
             Port dryRunResult = requireEntitled("Fabric", "dryRunUpdate", "Port", "PATCH",
                     () -> fabric.ports().update(port.getUuid())
@@ -2139,9 +2170,7 @@ class FabricIntegrationTest extends IntegrationTestBase {
         }
     }
 
-    // ════════════════════════════════════════════════════════════════════
     //  FULL CRUD TESTS - Create, read, delete lifecycle with cleanup
-    // ════════════════════════════════════════════════════════════════════
 
     @Nested
     @Tag("integration-full")
@@ -2156,12 +2185,12 @@ class FabricIntegrationTest extends IntegrationTestBase {
             Assumptions.assumeTrue(isFullCrudEnabled(), "Full CRUD tests disabled; requires -DtestMode=full -DconfirmDestructive=true");
             Assumptions.assumeTrue(portUuid != null, "No DOT1Q port found; skipping full CRUD test");
 
-            // ── CREATE ──────────────────────────────────────────────
+            // CREATE
             ServiceToken created = timedCall("Fabric", "create", "ServiceToken", "POST",
                     () -> fabric.serviceTokens()
                             .define(Side.A_Side)
                             .ofType(ServiceTokenType.VC_TOKEN)
-                            .withExpiry(30)
+                            .withExpirationDateTime(java.time.LocalDateTime.now(java.time.ZoneOffset.UTC).plusDays(30))
                             .forConnectionType(ConnectionType.EVPL_VC)
                             .allowRemoteConnection(true)
                             .allowCustomBandwidth(true)
@@ -2186,13 +2215,13 @@ class FabricIntegrationTest extends IntegrationTestBase {
                 }
             });
 
-            // ── GET ─────────────────────────────────────────────────
+            // GET
             ServiceToken fetched = timedCall("Fabric", "getByUuid", "ServiceToken", "GET", createdServiceTokenUuid,
                     () -> fabric.serviceTokens().getByUuid(createdServiceTokenUuid));
             assertNotNull(fetched);
             assertEquals(createdServiceTokenUuid, fetched.getUuid());
 
-            // ── LIST (verify it appears) ────────────────────────────
+            // LIST (verify it appears)
             PaginatedList<ServiceToken> tokens = timedCall("Fabric", "list", "ServiceToken", "GET",
                     () -> fabric.serviceTokens().list());
             assertNotNull(tokens);
@@ -2205,12 +2234,12 @@ class FabricIntegrationTest extends IntegrationTestBase {
             }
             assertTrue(found, "Newly created service token should appear in the list");
 
-            // ── DELETE ──────────────────────────────────────────────
+            // DELETE
             boolean deleted = timedCall("Fabric", "delete", "ServiceToken", "DELETE", createdServiceTokenUuid,
                     () -> fetched.delete());
             assertTrue(deleted, "Delete should return true");
 
-            // ── VERIFY 404 ──────────────────────────────────────────
+            // VERIFY 404
             timedExpectedFailure("Fabric", "getByUuid_afterDelete", "ServiceToken", "GET", createdServiceTokenUuid,
                     () -> fabric.serviceTokens().getByUuid(createdServiceTokenUuid));
         }

@@ -1,479 +1,557 @@
+/*
+ * Copyright 2021 Ian Jones. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this
+ * file except in compliance with the License.
+ *
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS
+ * OF ANY KIND, either express or implied. See the License for the specific language
+ * governing permissions and limitations under the License.
+ */
+
 package com.eqixiac.equinix.design.optimizer;
 
 import com.eqixiac.equinix.FabricGateway;
 import com.eqixiac.equinix.core.enums.MetroCode;
-import com.eqixiac.equinix.core.model.MetroId;
 import com.eqixiac.equinix.core.enums.Region;
-import com.eqixiac.equinix.fabric.model.implementation.cloud.CloudProviderType;
-import com.eqixiac.equinix.design.optimizer.enums.*;
-import com.eqixiac.equinix.design.optimizer.model.*;
+import com.eqixiac.equinix.core.model.MetroId;
+import com.eqixiac.equinix.design.constraint.Constraints;
+import com.eqixiac.equinix.design.cost.CostComparability;
+import com.eqixiac.equinix.design.cost.RateCardCostModel;
+import com.eqixiac.equinix.design.objective.BuiltInObjectives;
+import com.eqixiac.equinix.design.optimizer.context.CatalogDesignContext;
+import com.eqixiac.equinix.design.optimizer.context.FabricCatalogLoader;
+import com.eqixiac.equinix.design.optimizer.enums.ComplianceZone;
+import com.eqixiac.equinix.design.optimizer.enums.LatencySensitivity;
+import com.eqixiac.equinix.design.optimizer.enums.OptimizationStrategy;
+import com.eqixiac.equinix.design.optimizer.enums.RedundancyTier;
+import com.eqixiac.equinix.design.optimizer.enums.SiteRole;
+import com.eqixiac.equinix.design.optimizer.enums.WorkloadType;
+import com.eqixiac.equinix.design.optimizer.model.MulticloudEnvironmentCatalog;
+import com.eqixiac.equinix.design.optimizer.model.OptimizationResult;
+import com.eqixiac.equinix.design.solve.ExhaustiveSolver;
+import com.eqixiac.equinix.design.solve.SensitivityAnalysis;
+import com.eqixiac.equinix.design.solve.SensitivityReport;
+import com.eqixiac.equinix.design.solve.SolveRun;
+import com.eqixiac.equinix.design.solve.WeightProfiles;
+import com.eqixiac.equinix.design.spec.CloudIntent;
+import com.eqixiac.equinix.design.spec.CommercialTerms;
+import com.eqixiac.equinix.design.spec.DesignConstraints;
+import com.eqixiac.equinix.design.spec.DesignObjectives;
+import com.eqixiac.equinix.design.spec.DesignSpec;
+import com.eqixiac.equinix.design.spec.SiteIntent;
+import com.eqixiac.equinix.design.spec.WorkloadIntent;
+import com.eqixiac.equinix.design.spi.Constraint;
+import com.eqixiac.equinix.design.spi.CostModel;
+import com.eqixiac.equinix.design.spi.DesignPlugin;
+import com.eqixiac.equinix.design.spi.Objective;
+import com.eqixiac.equinix.design.spi.SolveProblem;
 import com.eqixiac.equinix.design.value.ratecard.RateCard;
 import com.eqixiac.equinix.design.value.ratecard.Term;
+import com.eqixiac.equinix.fabric.model.implementation.cloud.CloudProviderType;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
- * Entry point for the Metro Optimization Engine. Provides a fluent builder API
- * for defining workforce locations, provider requirements, workloads, and constraints,
- * then computes optimal Equinix metro placements.
+ * The Metro Optimizer: which set of Equinix metros best serves a {@link DesignSpec}.
  *
- * <h3>Example Usage</h3>
  * <pre>{@code
- * OptimizationResult result = fabric.optimizeMetros()
- *     .addSite("NYC HQ").nearestMetro(MetroCode.NY).role(SiteRole.HEADQUARTERS).headcount(500).done()
- *     .requireProvider(CloudProviderType.AWS).sellerRegions("us-east-1").done()
- *     .addWorkload("ML Training").type(WorkloadType.AI_ML_TRAINING).bandwidthMbps(10_000).done()
- *     .constraints().monthlyBudget(50_000, 100_000).redundancy(RedundancyTier.MULTI_METRO).done()
- *     .strategy(OptimizationStrategy.BALANCED)
- *     .optimize();
- *
- * System.out.println(result.toMarkdown());
+ * OptimizationResult result = MetroOptimizer.forSpec(fabric, spec).run();
+ * result.getRecommended();   // the chosen metros, every objective, priced cost lines, constraint verdicts
+ * result.getFrontier();      // every Pareto-optimal trade-off
+ * result.getSensitivity();   // weight ranges, nearest alternative, binding constraints
+ * result.toMarkdown();
  * }</pre>
+ *
+ * <p>The optimizer is an orchestrator. It gathers the facts once ({@link FabricCatalogLoader}: metros,
+ * measured latencies, cloud reachability), prices with a {@link RateCardCostModel}, measures the
+ * built-in objectives ({@link BuiltInObjectives}) plus any {@link DesignPlugin} objectives, applies the
+ * built-in constraints ({@link Constraints#forSpec}) plus plug-in constraints, searches every admissible
+ * set of metros with {@link ExhaustiveSolver}, analyses the answer's sensitivity, and places the
+ * workloads on the chosen set. Every decision lives in those plug-ins.</p>
+ *
+ * <p>Design size: {@code constraints.minMetros} (or the redundancy tier's minimum, or 1) to
+ * {@code constraints.maxMetros} (default {@value #DEFAULT_MAX_METROS}).</p>
  */
 public final class MetroOptimizer {
 
-    private MetroOptimizer() {}
+    /** Most metros a design may use when the spec sets no {@code maxMetros}. */
+    public static final int DEFAULT_MAX_METROS = 3;
+
+    private final FabricGateway fabric;
+    private final CatalogDesignContext offlineContext;
+    private final DesignSpec spec;
+    private RateCard rateCard;
+    private CostModel costModel;
+    private ExhaustiveSolver solver = new ExhaustiveSolver();
+    private final List<DesignPlugin> plugins = new ArrayList<>();
+    private MulticloudEnvironmentCatalog environments;
+    private com.eqixiac.equinix.design.spi.CurrencyConverter currencyConverter;
+    private com.eqixiac.equinix.design.spi.CurrencyConverter defaultRates;
+
+    private MetroOptimizer(FabricGateway fabric, CatalogDesignContext context, DesignSpec spec) {
+        this.fabric = fabric;
+        this.offlineContext = context;
+        this.spec = spec;
+    }
 
     /**
-     * Creates a new optimization builder using the given {@link FabricGateway} for API access.
+     * Optimises a spec against live Fabric data (read-only).
      *
-     * @param fabric the authenticated Fabric client used to retrieve metro and service profile data
-     * @return a new {@link Builder} instance
+     * @param fabric the Fabric API
+     * @param spec   the design
+     * @return a run to configure and {@link #run()}
+     */
+    public static MetroOptimizer forSpec(FabricGateway fabric, DesignSpec spec) {
+        if (fabric == null || spec == null) {
+            throw new IllegalArgumentException("forSpec needs a Fabric gateway and a spec");
+        }
+        return new MetroOptimizer(fabric, null, spec);
+    }
+
+    /**
+     * Optimises against prepared facts instead of live Fabric (offline what-ifs, tests, a cached catalogue).
+     *
+     * @param context the facts; its spec is the design
+     * @return a run to configure and {@link #run()}
+     */
+    public static MetroOptimizer forContext(CatalogDesignContext context) {
+        return new MetroOptimizer(null, context, context.spec());
+    }
+
+    /**
+     * A fluent convenience that assembles a {@link DesignSpec} and runs {@link #forSpec}.
+     *
+     * @param fabric the Fabric API
+     * @return the builder
      */
     public static Builder builder(FabricGateway fabric) {
         return new Builder(fabric);
     }
 
     /**
-     * The primary builder for assembling an optimization request. Provides fluent methods
-     * to define sites, provider requirements, workloads, constraints, and scoring strategy
-     * before executing the optimization via {@link #optimize()}.
+     * @param card the rate card to price with; default {@code RateCard.standardChain(fabric)} (live Equinix,
+     *             then reference figures)
+     * @return this run
+     */
+    public MetroOptimizer rateCard(RateCard card) {
+        this.rateCard = card;
+        return this;
+    }
+
+    /**
+     * @param model a cost model replacing the default {@link RateCardCostModel}
+     * @return this run
+     */
+    public MetroOptimizer costModel(CostModel model) {
+        this.costModel = model;
+        return this;
+    }
+
+    /**
+     * @param converter a currency converter (for example a live FX feed) ranked below rates pinned in the spec and
+     *                  above the default sources; a {@link DesignPlugin#currencyConverter()} is used when this is unset
+     * @return this run
+     */
+    public MetroOptimizer currencyConverter(com.eqixiac.equinix.design.spi.CurrencyConverter converter) {
+        this.currencyConverter = converter;
+        return this;
+    }
+
+    /**
+     * @param defaults replaces the default rate sources (live ECB rates via Frankfurter, then the bundled table),
+     *                 for example {@code CurrencyConverters.bundledOnly()} for an offline run
+     * @return this run
+     */
+    public MetroOptimizer defaultRates(com.eqixiac.equinix.design.spi.CurrencyConverter defaults) {
+        this.defaultRates = defaults;
+        return this;
+    }
+
+    /**
+     * @param exhaustiveSolver the solver (for example with another portfolio ceiling)
+     * @return this run
+     */
+    public MetroOptimizer solver(ExhaustiveSolver exhaustiveSolver) {
+        this.solver = exhaustiveSolver;
+        return this;
+    }
+
+    /**
+     * @param plugin extra objectives and constraints; {@link DesignPlugin#discover()} finds classpath ones
+     * @return this run
+     */
+    public MetroOptimizer plugin(DesignPlugin plugin) {
+        plugins.add(plugin);
+        return this;
+    }
+
+    /**
+     * @param catalog the native multicloud environment catalogue (Beta) for the informational finding
+     * @return this run
+     */
+    public MetroOptimizer multicloudEnvironments(MulticloudEnvironmentCatalog catalog) {
+        this.environments = catalog;
+        return this;
+    }
+
+    /**
+     * Runs the optimisation.
      *
-     * @see SiteBuilder
-     * @see ProviderBuilder
-     * @see WorkloadBuilder
-     * @see ConstraintsBuilder
+     * @return the result; never {@code null}: when nothing is feasible the result says why
+     * @throws IllegalArgumentException when the spec has errors ({@link DesignSpec#validate()})
+     */
+    public OptimizationResult run() {
+        long started = System.currentTimeMillis();
+        spec.requireValid();
+        Term term = spec.commercial().term() == null ? Term.MONTH_1 : spec.commercial().term();
+        CostModel model = costModel;
+        if (model == null && (rateCard != null || fabric != null)) {
+            com.eqixiac.equinix.design.spi.CurrencyConverter supplied = currencyConverter;
+            for (DesignPlugin plugin : plugins) {
+                if (supplied == null) {
+                    supplied = plugin.currencyConverter();
+                }
+            }
+            model = RateCardCostModel.forSpec(spec, rateCard != null ? rateCard : RateCard.standardChain(fabric))
+                    .term(term).currencyConverter(supplied).defaultRates(defaultRates).build();
+        }
+        CatalogDesignContext context;
+        if (offlineContext != null) {
+            context = model != null ? offlineContext.withCostModel(model) : offlineContext;
+        } else {
+            context = FabricCatalogLoader.load(fabric, spec, model);
+        }
+
+        List<Objective> objectives = new ArrayList<>(BuiltInObjectives.all());
+        List<Constraint> constraints = new ArrayList<>(Constraints.forSpec(spec));
+        for (DesignPlugin plugin : plugins) {
+            objectives.addAll(plugin.objectives());
+            constraints.addAll(plugin.constraints());
+        }
+        // A spec that weights a plug-in objective (for example carbon or simulated_resilience) gets it from the
+        // plug-ins on the classpath without the caller passing one; constraints stay opt-in.
+        Map<String, Double> weighted = com.eqixiac.equinix.design.solve.WeightProfiles.resolve(spec.objectives());
+        for (DesignPlugin discovered : DesignPlugin.discover()) {
+            for (Objective objective : discovered.objectives()) {
+                Double weight = weighted.get(objective.id());
+                if (weight != null && weight > 0
+                        && objectives.stream().noneMatch(o -> o.id().equals(objective.id()))) {
+                    objectives.add(objective);
+                }
+            }
+        }
+        // constraints.minSurvivalPct is a first-class spec limit: honour it even when no resilience plug-in is passed.
+        if (spec.constraints().minSurvivalPct() != null && constraints.stream()
+                .noneMatch(k -> com.eqixiac.equinix.design.resilience.MinSurvivalConstraint.ID.equals(k.id()))) {
+            constraints.add(new com.eqixiac.equinix.design.resilience.MinSurvivalConstraint());
+        }
+        DesignConstraints c = spec.constraints();
+        int min = 1;
+        if (c.minMetros() != null) {
+            min = Math.max(min, c.minMetros());
+        }
+        if (c.minimumRedundancy() != null) {
+            min = Math.max(min, c.minimumRedundancy().getMinimumMetros());
+        }
+        int max = c.maxMetros() != null ? c.maxMetros()
+                : Math.max(min, Math.max(DEFAULT_MAX_METROS, c.requiredMetros().size()));
+        Map<String, Double> weights = WeightProfiles.resolve(spec.objectives());
+
+        SolveProblem problem = new SolveProblem(context, context.metros(), objectives, constraints, weights, min, max);
+        SolveRun run = solver.solveDetailed(problem);
+        // Safeguard for plug-in cost models that leave lines unconverted (the built-in model converts every line):
+        // a design must not lose the cost weight only for want of an exchange rate (CostComparability.RULE).
+        List<com.eqixiac.equinix.design.spi.MetroPortfolio> feasible = new ArrayList<>();
+        for (SolveRun.Evaluated e : run.feasible()) {
+            feasible.add(e.portfolio());
+        }
+        CostComparability comparability = CostComparability.assess(feasible, context,
+                weights.getOrDefault(Objective.COST, 0.0));
+        List<Objective> ranked = objectives;
+        if (comparability.costWithdrawn()) {
+            ranked = CostComparability.withdrawCost(objectives);
+            run = solver.solveDetailed(new SolveProblem(context, context.metros(), ranked, constraints, weights, min,
+                    max));
+        }
+        SensitivityReport sensitivity = SensitivityAnalysis.analyse(run);
+        return ResultAssembler.assemble(context, run, sensitivity, min, max, rateCard, term, environments, started,
+                comparability, ranked);
+    }
+
+    /**
+     * Fluent convenience over {@link DesignSpec}: each call adds to the spec, {@link #toSpec()} returns it
+     * and {@link #optimize()} runs {@link MetroOptimizer#forSpec}. Clouds are identified by their label
+     * (default: the provider's name, or the profile name); a workload's {@code dependsOn} refers to the
+     * same cloud, adding it as required when it was not declared.
      */
     public static final class Builder {
-
         private final FabricGateway fabric;
-        private final List<UserSite> sites = new ArrayList<>();
-        private final List<ProviderRequirement> providers = new ArrayList<>();
-        private final List<WorkloadSpec> workloads = new ArrayList<>();
-        private OptimizationConstraints constraints;
-        private OptimizationStrategy strategy = OptimizationStrategy.BALANCED;
-        private ScoringWeights scoringWeights;
+        private String name = "metro-optimization";
+        private final List<SiteIntent> sites = new ArrayList<>();
+        private final Map<String, CloudIntent> clouds = new LinkedHashMap<>();
+        private final List<WorkloadIntent> workloads = new ArrayList<>();
+        private DesignConstraints constraints = DesignConstraints.none();
+        private CommercialTerms commercial = new CommercialTerms(null, null, null, null, null, null);
+        private DesignObjectives objectives = DesignObjectives.balanced();
         private RateCard rateCard;
-        private MulticloudEnvironmentCatalog multicloudEnvironments;
-        private Term term = Term.MONTH_12;
+        private MulticloudEnvironmentCatalog environments;
 
         Builder(FabricGateway fabric) {
             this.fabric = fabric;
         }
 
-        // ── Sites ──
+        /**
+         * @param name the spec name
+         * @return this builder
+         */
+        public Builder name(String name) {
+            this.name = name;
+            return this;
+        }
 
         /**
-         * Begins defining a user site (workforce location, customer market, or operational facility).
-         * The returned {@link SiteBuilder} provides methods to specify the site's metro proximity,
-         * geographic coordinates, role, and headcount.
-         *
-         * @param label a descriptive name for this site (e.g., "NYC Headquarters")
-         * @return a new {@link SiteBuilder} for configuring the site
+         * @param label the site label
+         * @return a site builder; {@link SiteBuilder#done()} returns here
          */
         public SiteBuilder addSite(String label) {
             return new SiteBuilder(this, label);
         }
 
-        Builder addSiteInternal(UserSite site) {
-            sites.add(site);
-            return this;
-        }
-
-        // ── Providers ──
-
         /**
-         * Begins defining a required cloud provider. The optimizer will penalize or exclude
-         * metros where this provider is not available.
-         *
-         * @param cloudProvider the well-known cloud provider type (e.g., {@code CloudProviderType.AWS})
-         * @return a new {@link ProviderBuilder} for configuring additional provider details
+         * @param provider a cloud every design must reach
+         * @return a cloud builder
          */
-        public ProviderBuilder requireProvider(CloudProviderType cloudProvider) {
-            return new ProviderBuilder(this, cloudProvider, true);
+        public ProviderBuilder requireProvider(CloudProviderType provider) {
+            return new ProviderBuilder(this, CloudIntent.builder().provider(provider).required(true).build(), provider.getProviderName());
         }
 
         /**
-         * Begins defining a required service profile provider by name. The optimizer will
-         * penalize or exclude metros where this service profile is not available.
-         *
-         * @param serviceProfileName the Fabric service profile name to require
-         * @return a new {@link ProviderBuilder} for configuring additional provider details
+         * @param serviceProfileName a service provider (profile name substring) every design must reach
+         * @return a cloud builder
          */
         public ProviderBuilder requireProvider(String serviceProfileName) {
-            return new ProviderBuilder(this, serviceProfileName, true);
+            return new ProviderBuilder(this, CloudIntent.builder().serviceProfileName(serviceProfileName).required(true).build(),
+                    serviceProfileName);
         }
 
         /**
-         * Begins defining a preferred (but not required) cloud provider. Metros with this
-         * provider available will receive a scoring bonus, but metros without it are not excluded.
-         *
-         * @param cloudProvider the preferred cloud provider type
-         * @return a new {@link ProviderBuilder} for configuring additional provider details
+         * @param provider a cloud that counts towards coverage but is not required
+         * @return a cloud builder
          */
-        public ProviderBuilder preferProvider(CloudProviderType cloudProvider) {
-            return new ProviderBuilder(this, cloudProvider, false);
+        public ProviderBuilder preferProvider(CloudProviderType provider) {
+            return new ProviderBuilder(this, CloudIntent.builder().provider(provider).required(false).build(),
+                    provider.getProviderName());
         }
 
         /**
-         * Begins defining a preferred (but not required) service profile provider by name.
-         * Metros with this provider available will receive a scoring bonus.
-         *
-         * @param serviceProfileName the preferred Fabric service profile name
-         * @return a new {@link ProviderBuilder} for configuring additional provider details
+         * @param serviceProfileName a service provider that counts towards coverage but is not required
+         * @return a cloud builder
          */
         public ProviderBuilder preferProvider(String serviceProfileName) {
-            return new ProviderBuilder(this, serviceProfileName, false);
+            return new ProviderBuilder(this, CloudIntent.builder().serviceProfileName(serviceProfileName).required(false).build(),
+                    serviceProfileName);
         }
-
-        Builder addProviderInternal(ProviderRequirement provider) {
-            providers.add(provider);
-            return this;
-        }
-
-        // ── Workloads ──
 
         /**
-         * Begins defining a workload to be placed by the optimizer. The returned
-         * {@link WorkloadBuilder} provides methods to specify the workload type,
-         * bandwidth, latency requirements, and provider dependencies.
-         *
-         * @param label a descriptive name for this workload (e.g., "ML Training Pipeline")
-         * @return a new {@link WorkloadBuilder} for configuring the workload
+         * @param label the workload label
+         * @return a workload builder
          */
         public WorkloadBuilder addWorkload(String label) {
             return new WorkloadBuilder(this, label);
         }
 
-        Builder addWorkloadInternal(WorkloadSpec workload) {
-            workloads.add(workload);
-            return this;
-        }
-
-        // ── Constraints ──
-
-        /**
-         * Opens the constraints builder for defining hard and soft limits on the optimization
-         * search space, including budget, region/metro restrictions, compliance zones,
-         * redundancy requirements, and latency bounds.
-         *
-         * @return a new {@link ConstraintsBuilder} for configuring optimization constraints
-         */
+        /** @return a constraints builder */
         public ConstraintsBuilder constraints() {
             return new ConstraintsBuilder(this);
         }
 
-        Builder setConstraintsInternal(OptimizationConstraints constraints) {
-            this.constraints = constraints;
-            return this;
-        }
-
-        // ── Strategy & Weights ──
-
         /**
-         * Sets the optimization strategy, which determines the default scoring weight
-         * distribution across latency, provider coverage, cost, redundancy, and compliance.
-         * Defaults to {@link OptimizationStrategy#BALANCED} if not set.
-         *
-         * @param strategy the optimization strategy to use
-         * @return this builder for method chaining
-         * @see OptimizationStrategy
+         * @param strategy a named weight profile
+         * @return this builder
          */
         public Builder strategy(OptimizationStrategy strategy) {
-            this.strategy = strategy;
+            objectives = new DesignObjectives(strategy.profile(), objectives.weights());
             return this;
         }
 
         /**
-         * Sets custom scoring weights and latency thresholds that override the strategy defaults.
-         * Only non-null fields in the provided {@link ScoringWeights} take precedence; null fields
-         * fall back to the selected strategy's defaults.
-         *
-         * @param weights the custom scoring weights and thresholds
-         * @return this builder for method chaining
-         * @see ScoringWeights
+         * @param weights explicit objective weights by id, applied on top of the profile
+         * @return this builder
          */
-        public Builder scoringWeights(ScoringWeights weights) {
-            this.scoringWeights = weights;
+        public Builder weights(Map<String, Double> weights) {
+            objectives = new DesignObjectives(objectives.profile(), weights);
             return this;
         }
 
-        // ── Pricing ──
-
         /**
-         * Sets the rate card used for cost estimation. When omitted, the optimizer
-         * defaults to live Equinix pricing ({@code EquinixRateCard.of(fabric)}),
-         * falling back to a built-in regional heuristic for any metro the live
-         * catalogue cannot price. Supply a
-         * {@link com.eqixiac.equinix.design.value.ratecard.CustomRateCard} to cost
-         * against your own negotiated rates.
-         *
-         * @param rateCard the rate card to estimate costs with
-         * @return this builder for method chaining
+         * @param card the rate card to price with
+         * @return this builder
          */
-        public Builder rateCard(RateCard rateCard) {
-            this.rateCard = rateCard;
+        public Builder rateCard(RateCard card) {
+            this.rateCard = card;
             return this;
         }
 
         /**
-         * Sets the commitment term used when resolving rates. Defaults to
-         * {@link Term#MONTH_12}.
-         *
-         * @param term the commitment term
-         * @return this builder for method chaining
+         * @param term the commitment term to price at
+         * @return this builder
          */
         public Builder term(Term term) {
-            this.term = term;
+            commercial = commercial.toBuilder().term(term).build();
             return this;
         }
 
-        // ── Native multicloud environments (Beta) ──
-
         /**
-         * Sets the catalog of native provider-to-provider multicloud environments the engine
-         * consults when it raises the informational {@code NATIVE_MULTICLOUD_ALTERNATIVE} finding,
-         * and that the Deployment Wizard inherits as its default. <b>Beta.</b> When omitted, the
-         * bundled {@link MulticloudEnvironmentCatalog#standard()} is used. That catalog is a dated
-         * copy of provider documentation and goes stale; pass
-         * {@code MulticloudEnvironmentCatalog.standard().with(...)} to add newer region pairs, or
-         * {@link MulticloudEnvironmentCatalog#empty()} to suppress the finding.
-         *
-         * @param catalog the catalog; {@code null} restores the bundled default
-         * @return this builder for method chaining
+         * @param catalog the native multicloud environment catalogue (Beta)
+         * @return this builder
          */
         public Builder multicloudEnvironments(MulticloudEnvironmentCatalog catalog) {
-            this.multicloudEnvironments = catalog;
+            this.environments = catalog;
             return this;
         }
 
-        // ── Execute ──
+        /** @return the spec assembled so far */
+        public DesignSpec toSpec() {
+            return DesignSpec.builder().name(name).sites(new ArrayList<>(sites))
+                    .clouds(new ArrayList<>(clouds.values())).workloads(new ArrayList<>(workloads))
+                    .constraints(constraints).commercial(commercial).objectives(objectives).build();
+        }
 
-        /**
-         * Executes the optimization pipeline. Assembles an {@link OptimizationRequest} from
-         * the configured sites, providers, workloads, constraints, strategy, and scoring weights,
-         * then delegates to the internal {@code MetroOptimizerEngine} for scoring and ranking.
-         *
-         * <p>This method makes live API calls to retrieve metro and service profile data from
-         * Equinix Fabric. The {@link com.eqixiac.equinix.Fabric Fabric} client must be authenticated before calling this method.</p>
-         *
-         * @return the complete optimization result with ranked recommendations, topology, and reports
-         * @see OptimizationResult
-         */
+        /** @return the result of {@code MetroOptimizer.forSpec(fabric, toSpec())} */
         public OptimizationResult optimize() {
-            OptimizationRequest request = OptimizationRequest.builder()
-                    .sites(new ArrayList<>(sites))
-                    .providers(new ArrayList<>(providers))
-                    .workloads(new ArrayList<>(workloads))
-                    .constraints(constraints != null ? constraints : OptimizationConstraints.builder().build())
-                    .strategy(strategy)
-                    .scoringWeights(scoringWeights != null ? scoringWeights : ScoringWeights.defaults())
-                    .rateCard(rateCard)
-                    .term(term)
-                    .multicloudEnvironments(multicloudEnvironments)
-                    .build();
+            return MetroOptimizer.forSpec(fabric, toSpec()).rateCard(rateCard).multicloudEnvironments(environments).run();
+        }
 
-            return MetroOptimizerEngine.execute(request, fabric);
+        private String cloudFor(CloudProviderType provider) {
+            for (CloudIntent cloud : clouds.values()) {
+                if (cloud.provider() == provider && cloud.serviceProfileName() == null) {
+                    return cloud.id();
+                }
+            }
+            String id = provider.getProviderName();
+            clouds.put(id, CloudIntent.builder().id(id).provider(provider).required(true).build());
+            return id;
+        }
+
+        private String cloudFor(String serviceProfileName) {
+            for (CloudIntent cloud : clouds.values()) {
+                if (serviceProfileName.equals(cloud.serviceProfileName())) {
+                    return cloud.id();
+                }
+            }
+            clouds.put(serviceProfileName, CloudIntent.builder().id(serviceProfileName)
+                    .serviceProfileName(serviceProfileName).required(true).build());
+            return serviceProfileName;
         }
     }
 
-    // ══════════════════════════════════════════════
-    //  Sub-Builders
-    // ══════════════════════════════════════════════
-
-    /**
-     * Fluent builder for defining a user site. A site represents a workforce location,
-     * customer market, or operational facility whose proximity to candidate metros is
-     * factored into the optimization scoring.
-     *
-     * <p>Location can be specified either by {@link #nearestMetro(MetroCode)} or by
-     * {@link #coordinates(double, double)}. If both are provided, the nearest metro
-     * takes precedence for latency lookups while coordinates are used as a fallback
-     * for distance-based estimates.</p>
-     *
-     * @see UserSite
-     * @see SiteRole
-     */
+    /** Adds one {@link SiteIntent}. */
     public static final class SiteBuilder {
-
         private final Builder parent;
-        private final String label;
-        private MetroId nearestMetro;
-        private Double latitude;
-        private Double longitude;
-        private SiteRole role = SiteRole.BRANCH_OFFICE;
-        private int headcount;
-        private double weight;
+        private SiteIntent site;
 
         SiteBuilder(Builder parent, String label) {
             this.parent = parent;
-            this.label = label;
+            this.site = SiteIntent.builder().label(label).build();
         }
 
         /**
-         * Sets the nearest Equinix metro to this site. Used for direct latency lookups
-         * in the Fabric metro interconnection data. This is the preferred way to specify
-         * site location when the nearest metro is known.
-         *
-         * @param metro the Equinix metro code nearest to this site
-         * @return this builder for method chaining
-         * @see #coordinates(double, double)
+         * @param metro the site's metro
+         * @return this builder
          */
         public SiteBuilder nearestMetro(MetroCode metro) {
-            this.nearestMetro = metro == null ? null : MetroId.of(metro);
+            site = site.toBuilder().metro(metro.name()).build();
             return this;
         }
 
         /**
-         * Sets the nearest metro by its raw code string — use this for a metro not listed by the
-         * {@link MetroCode} enum.
-         *
-         * @param metroCode the metro code nearest to this site (e.g. {@code "NY"})
-         * @return this builder for method chaining
+         * @param metroCode the site's metro code
+         * @return this builder
          */
         public SiteBuilder nearestMetro(String metroCode) {
-            this.nearestMetro = metroCode == null ? null : MetroId.of(metroCode);
+            site = site.toBuilder().metro(MetroId.of(metroCode).code()).build();
             return this;
         }
 
         /**
-         * Sets the nearest metro by its {@link MetroId}.
-         *
-         * @param metroId the id of the metro nearest to this site
-         * @return this builder for method chaining
+         * @param metro the site's metro
+         * @return this builder
          */
-        public SiteBuilder nearestMetro(MetroId metroId) {
-            this.nearestMetro = metroId;
+        public SiteBuilder nearestMetro(MetroId metro) {
+            site = site.toBuilder().metro(metro.code()).build();
             return this;
         }
 
         /**
-         * Sets the geographic coordinates of this site. Used for great-circle distance
-         * calculations when no direct metro latency data is available, or when
-         * {@link #nearestMetro(MetroCode)} is not set.
-         *
-         * @param latitude  the latitude in decimal degrees (e.g., 40.7128 for New York)
-         * @param longitude the longitude in decimal degrees (e.g., -74.0060 for New York)
-         * @return this builder for method chaining
-         * @see #nearestMetro(MetroCode)
+         * @param latitude  decimal degrees
+         * @param longitude decimal degrees
+         * @return this builder
          */
         public SiteBuilder coordinates(double latitude, double longitude) {
-            this.latitude = latitude;
-            this.longitude = longitude;
+            site = site.toBuilder().latitude(latitude).longitude(longitude).build();
             return this;
         }
 
         /**
-         * Sets the business role of this site. The role determines an importance multiplier
-         * that influences how heavily the optimizer weighs proximity to this site.
-         * Defaults to {@link SiteRole#BRANCH_OFFICE}.
-         *
-         * @param role the business role of this site
-         * @return this builder for method chaining
-         * @see SiteRole
+         * @param role what the site is
+         * @return this builder
          */
         public SiteBuilder role(SiteRole role) {
-            this.role = role;
+            site = site.toBuilder().role(role).build();
             return this;
         }
 
         /**
-         * Sets the number of employees or users at this site. When no explicit
-         * {@link #weight(double)} is set, headcount is normalized across all sites
-         * to derive relative importance in scoring.
-         *
-         * @param headcount the number of employees or users at this site
-         * @return this builder for method chaining
-         * @see #weight(double)
+         * @param headcount people at the site
+         * @return this builder
          */
         public SiteBuilder headcount(int headcount) {
-            this.headcount = headcount;
+            site = site.toBuilder().headcount(headcount).build();
             return this;
         }
 
         /**
-         * Sets an explicit importance weight for this site, overriding the headcount-based
-         * normalization. Values are relative to other sites; for example, a weight of 2.0
-         * makes this site twice as important as a site with weight 1.0.
-         *
-         * @param weight the explicit importance weight (must be positive to take effect)
-         * @return this builder for method chaining
-         * @see #headcount(int)
+         * @param weight explicit relative importance
+         * @return this builder
          */
         public SiteBuilder weight(double weight) {
-            this.weight = weight;
+            site = site.toBuilder().weight(weight).build();
             return this;
         }
 
-        /**
-         * Finalizes this site definition and returns to the parent {@link Builder}.
-         *
-         * @return the parent builder for continued configuration
-         */
+        /** @return the parent builder */
         public Builder done() {
-            return parent.addSiteInternal(UserSite.builder()
-                    .label(label)
-                    .nearestMetro(nearestMetro)
-                    .latitude(latitude)
-                    .longitude(longitude)
-                    .role(role)
-                    .headcount(headcount)
-                    .weight(weight)
-                    .build());
+            parent.sites.add(site);
+            return parent;
         }
     }
 
-    /**
-     * Fluent builder for defining a provider requirement. A provider can be identified
-     * by a well-known {@link CloudProviderType}, a Fabric service profile name, or a
-     * direct service profile UUID. Providers can be marked as required (hard constraint)
-     * or preferred (soft scoring bonus).
-     *
-     * @see ProviderRequirement
-     * @see CloudProviderType
-     */
+    /** Adds one {@link CloudIntent}. */
     public static final class ProviderBuilder {
-
         private final Builder parent;
-        private final CloudProviderType cloudProvider;
-        private final String serviceProfileName;
-        private final boolean required;
+        private CloudIntent cloud;
         private String label;
-        private String serviceProfileUuid;
-        private List<String> preferredSellerRegions;
 
-        ProviderBuilder(Builder parent, CloudProviderType cloudProvider, boolean required) {
+        ProviderBuilder(Builder parent, CloudIntent cloud, String defaultLabel) {
             this.parent = parent;
-            this.cloudProvider = cloudProvider;
-            this.serviceProfileName = null;
-            this.required = required;
-        }
-
-        ProviderBuilder(Builder parent, String serviceProfileName, boolean required) {
-            this.parent = parent;
-            this.cloudProvider = null;
-            this.serviceProfileName = serviceProfileName;
-            this.required = required;
+            this.cloud = cloud;
+            this.label = defaultLabel;
         }
 
         /**
-         * Sets a custom display label for this provider requirement. If not set, the
-         * label is derived from the cloud provider name or service profile name.
-         *
-         * @param label the display label for this provider
-         * @return this builder for method chaining
+         * @param label the cloud id
+         * @return this builder
          */
         public ProviderBuilder label(String label) {
             this.label = label;
@@ -481,467 +559,283 @@ public final class MetroOptimizer {
         }
 
         /**
-         * Sets a specific Fabric service profile UUID to look up for metro availability.
-         * Use this when you have the exact profile UUID rather than relying on name-based matching.
-         *
-         * @param uuid the Fabric service profile UUID
-         * @return this builder for method chaining
+         * @param uuid a specific service profile
+         * @return this builder
          */
         public ProviderBuilder serviceProfileUuid(String uuid) {
-            this.serviceProfileUuid = uuid;
+            cloud = cloud.toBuilder().serviceProfileUuid(uuid).build();
             return this;
         }
 
         /**
-         * Sets the preferred seller regions for this provider. Metros that support these
-         * specific seller regions receive a higher provider coverage score.
-         *
-         * @param regions the preferred seller region identifiers (e.g., "us-east-1", "eu-west-1")
-         * @return this builder for method chaining
+         * @param region the provider region (the preferred seller region)
+         * @return this builder
+         */
+        public ProviderBuilder region(String region) {
+            cloud = cloud.toBuilder().region(region).build();
+            return this;
+        }
+
+        /**
+         * @param regions provider regions; the first becomes the cloud's {@code region} (preferred seller region)
+         * @return this builder
          */
         public ProviderBuilder sellerRegions(String... regions) {
-            this.preferredSellerRegions = Arrays.asList(regions);
+            if (regions.length > 0) {
+                cloud = cloud.toBuilder().region(regions[0]).build();
+            }
             return this;
         }
 
         /**
-         * Finalizes this provider requirement and returns to the parent {@link Builder}.
-         *
-         * @return the parent builder for continued configuration
+         * @param gb data leaving the cloud per month
+         * @return this builder
          */
+        public ProviderBuilder monthlyEgressGb(double gb) {
+            cloud = cloud.toBuilder().monthlyEgressGb(gb).build();
+            return this;
+        }
+
+        /** @return the parent builder */
         public Builder done() {
-            return parent.addProviderInternal(ProviderRequirement.builder()
-                    .cloudProvider(cloudProvider)
-                    .serviceProfileName(serviceProfileName)
-                    .serviceProfileUuid(serviceProfileUuid)
-                    .label(label)
-                    .preferredSellerRegions(preferredSellerRegions)
-                    .required(required)
-                    .build());
+            parent.clouds.put(label, cloud.toBuilder().id(label).build());
+            return parent;
         }
     }
 
-    /**
-     * Fluent builder for defining a workload specification. Each workload carries a
-     * {@link WorkloadType} with built-in infrastructure defaults that can be individually
-     * overridden. Workloads can also declare provider dependencies to ensure they are
-     * placed in metros where those providers are available.
-     *
-     * <p>Profile resolution order: explicit {@link #profile(WorkloadProfile)} overrides take
-     * precedence, then individual method overrides (e.g., {@link #maxLatencyToleranceMs(double)}),
-     * then the {@link WorkloadType}'s built-in defaults.</p>
-     *
-     * @see WorkloadSpec
-     * @see WorkloadType
-     * @see WorkloadProfile
-     */
+    /** Adds one {@link WorkloadIntent}. */
     public static final class WorkloadBuilder {
-
         private final Builder parent;
+        private WorkloadIntent workload;
+        private final List<String> clouds = new ArrayList<>();
         private final String label;
-        private WorkloadType type = WorkloadType.GENERAL_COMPUTE;
-        private WorkloadProfile profileOverride;
-        private LatencySensitivity latencySensitivity;
-        private int bandwidthMbps;
-        private final List<ProviderRequirement> dependsOnProviders = new ArrayList<>();
 
         WorkloadBuilder(Builder parent, String label) {
             this.parent = parent;
             this.label = label;
+            this.workload = WorkloadIntent.builder().label(label).build();
         }
 
         /**
-         * Sets the workload type, which determines default infrastructure requirements
-         * (latency sensitivity, power density, cooling, proximity weighting). Defaults
-         * to {@link WorkloadType#GENERAL_COMPUTE}.
-         *
          * @param type the workload archetype
-         * @return this builder for method chaining
-         * @see WorkloadType
+         * @return this builder
          */
         public WorkloadBuilder type(WorkloadType type) {
-            this.type = type;
+            workload = workload.toBuilder().type(type).build();
             return this;
         }
 
         /**
-         * Sets a complete custom workload profile, overriding all defaults from the
-         * {@link WorkloadType}. Use this for full control over infrastructure requirements,
-         * or when using {@link WorkloadType#CUSTOM}.
-         *
-         * @param profile the custom workload profile
-         * @return this builder for method chaining
-         * @see WorkloadProfile
-         */
-        public WorkloadBuilder profile(WorkloadProfile profile) {
-            this.profileOverride = profile;
-            return this;
-        }
-
-        /**
-         * Overrides the latency sensitivity tier for this workload, independent of the
-         * {@link WorkloadType}'s default. The tier's {@code thresholdMs} acts as the workload's
-         * default latency ceiling during placement whenever no explicit
-         * {@link #maxLatencyToleranceMs(double)} is set — so {@code CRITICAL}/{@code HIGH}
-         * workloads are placed under a tighter default ceiling than {@code LOW} ones — and
-         * {@code CRITICAL} additionally routes the workload through lowest-latency placement.
-         *
-         * @param sensitivity the latency sensitivity tier
-         * @return this builder for method chaining
-         * @see LatencySensitivity
+         * @param sensitivity the latency sensitivity
+         * @return this builder
          */
         public WorkloadBuilder latencySensitivity(LatencySensitivity sensitivity) {
-            this.latencySensitivity = sensitivity;
+            workload = workload.toBuilder().latencySensitivity(sensitivity).build();
             return this;
         }
 
         /**
-         * Sets the required network bandwidth for this workload in megabits per second.
-         * Used in cost estimation and capacity validation.
-         *
-         * @param bandwidth the required bandwidth in Mbps
-         * @return this builder for method chaining
+         * @param mbps sustained bandwidth
+         * @return this builder
          */
-        public WorkloadBuilder bandwidthMbps(int bandwidth) {
-            this.bandwidthMbps = bandwidth;
+        public WorkloadBuilder bandwidthMbps(int mbps) {
+            workload = workload.toBuilder().bandwidthMbps(mbps).build();
             return this;
         }
 
         /**
-         * Sets an explicit maximum latency tolerance in milliseconds for this workload,
-         * overriding the default ceiling derived from the latency sensitivity tier's
-         * {@code thresholdMs}. The ceiling narrows which recommended metros this workload may be
-         * placed in (worst-case estimated latency to any user site); a ceiling no recommended
-         * metro can honour is stated on the placement and raised as a risk finding.
-         *
-         * @param maxMs the maximum acceptable latency in milliseconds
-         * @return this builder for method chaining
+         * @param maxMs hard round-trip ceiling from every site to this workload
+         * @return this builder
          */
         public WorkloadBuilder maxLatencyToleranceMs(double maxMs) {
-            if (profileOverride == null) {
-                profileOverride = WorkloadProfile.builder().maxLatencyToleranceMs(maxMs).build();
-            } else {
-                profileOverride = profileOverride.toBuilder().maxLatencyToleranceMs(maxMs).build();
+            if (!(maxMs > 0) || !Double.isFinite(maxMs)) {
+                throw new IllegalArgumentException("Workload '" + label + "': maxLatencyMs must be a positive, finite "
+                        + "number of milliseconds, got " + maxMs);
             }
+            workload = workload.toBuilder().maxLatencyMs(maxMs).build();
             return this;
         }
 
         /**
-         * Records that this workload requires high power density infrastructure (e.g., for
-         * GPU-intensive AI/ML training). This is captured on the workload profile and carried
-         * through to the result for downstream facility selection; it is <em>not</em> currently
-         * a metro-scoring input, because the Fabric API does not expose per-metro power-density
-         * capability. Use it to document the requirement and to drive cabinet/cage sizing once a
-         * metro is chosen.
-         *
-         * @return this builder for method chaining
+         * @param metro the metro the workload must run in
+         * @return this builder
          */
-        public WorkloadBuilder requiresHighPowerDensity() {
-            if (profileOverride == null) {
-                profileOverride = WorkloadProfile.builder().requiresHighPowerDensity(true).build();
-            } else {
-                profileOverride = profileOverride.toBuilder().requiresHighPowerDensity(true).build();
-            }
+        public WorkloadBuilder pinnedMetro(String metro) {
+            workload = workload.toBuilder().pinnedMetro(MetroId.of(metro).code()).build();
             return this;
         }
 
         /**
-         * Records that this workload requires liquid cooling infrastructure. This is captured on
-         * the workload profile and carried through to the result for downstream facility selection;
-         * it is <em>not</em> currently a metro-scoring input, because the Fabric API does not expose
-         * per-metro cooling capability. Use it to document the requirement and to drive
-         * cabinet/cage selection once a metro is chosen.
-         *
-         * @return this builder for method chaining
-         */
-        public WorkloadBuilder requiresLiquidCooling() {
-            if (profileOverride == null) {
-                profileOverride = WorkloadProfile.builder().requiresLiquidCooling(true).build();
-            } else {
-                profileOverride = profileOverride.toBuilder().requiresLiquidCooling(true).build();
-            }
-            return this;
-        }
-
-        /**
-         * Declares that this workload depends on a specific cloud provider being available
-         * at the assigned metro. The optimizer will ensure this workload is only placed in
-         * metros where the specified provider has connectivity.
-         *
-         * @param provider the required cloud provider for this workload
-         * @return this builder for method chaining
+         * @param provider a cloud the workload must reach
+         * @return this builder
          */
         public WorkloadBuilder dependsOn(CloudProviderType provider) {
-            dependsOnProviders.add(ProviderRequirement.builder()
-                    .cloudProvider(provider)
-                    .required(true)
-                    .build());
+            clouds.add(parent.cloudFor(provider));
             return this;
         }
 
         /**
-         * Declares that this workload depends on a specific service profile being available
-         * at the assigned metro. The optimizer will ensure this workload is only placed in
-         * metros where the specified service profile is present.
-         *
-         * @param serviceProfileName the required Fabric service profile name for this workload
-         * @return this builder for method chaining
+         * @param serviceProfileName a service provider the workload must reach
+         * @return this builder
          */
         public WorkloadBuilder dependsOn(String serviceProfileName) {
-            dependsOnProviders.add(ProviderRequirement.builder()
-                    .serviceProfileName(serviceProfileName)
-                    .required(true)
-                    .build());
+            clouds.add(parent.cloudFor(serviceProfileName));
             return this;
         }
 
-        /**
-         * Finalizes this workload definition and returns to the parent {@link Builder}.
-         *
-         * @return the parent builder for continued configuration
-         */
+        /** @return the parent builder */
         public Builder done() {
-            return parent.addWorkloadInternal(WorkloadSpec.builder()
-                    .label(label)
-                    .type(type)
-                    .profileOverride(profileOverride)
-                    .latencySensitivity(latencySensitivity)
-                    .bandwidthMbps(bandwidthMbps)
-                    .dependsOnProviders(new ArrayList<>(dependsOnProviders))
-                    .build());
+            parent.workloads.add(workload.toBuilder().clouds(clouds).build());
+            return parent;
         }
     }
 
-    /**
-     * Fluent builder for defining optimization constraints. Constraints define hard and soft
-     * limits on the search space including budget, geographic restrictions, compliance
-     * requirements, redundancy tiers, and latency bounds.
-     *
-     * <p>All constraints are optional. When omitted, the optimizer uses unconstrained defaults.</p>
-     *
-     * @see OptimizationConstraints
-     */
+    /** Sets {@link DesignConstraints} and the budget. */
     public static final class ConstraintsBuilder {
-
         private final Builder parent;
-        private BudgetRange budget;
-        private List<Region> requiredRegions;
-        private List<Region> excludedRegions;
-        private List<MetroId> requiredMetros;
-        private List<MetroId> excludedMetros;
-        private List<ComplianceZone> complianceZones;
-        private RedundancyTier minimumRedundancy;
-        private Double maxLatencyMs;
-        private Integer maxMetroCount;
+        private DesignConstraints c;
 
         ConstraintsBuilder(Builder parent) {
             this.parent = parent;
+            this.c = parent.constraints;
         }
 
         /**
-         * Sets a monthly budget range in USD used purely as a reporting ceiling. The budget is
-         * <em>reported against, never enforced</em>: no metro is excluded for falling outside the
-         * range, and the range does <em>not</em> feed the cost scoring dimension. After
-         * optimization the estimated monthly total is compared against {@code max}; if it exceeds
-         * {@code max}, the result's {@code within_budget} flag is set to {@code false} and an
-         * over-budget {@code BUDGET_EXCEEDED} finding is surfaced — but the selected metros are
-         * unchanged. The {@code min} bound is not currently checked or reported against.
-         *
-         * @param min the minimum monthly spend in USD (currently informational only — not enforced
-         *            or reported against)
-         * @param max the maximum monthly spend in USD; the estimate is reported against this
-         *            ceiling and an over-budget result raises a finding
-         * @return this builder for method chaining
+         * @param max      most the design may cost per month
+         * @param currency ISO 4217 code the budget is stated in
+         * @return this builder
          */
-        public ConstraintsBuilder monthlyBudget(double min, double max) {
-            this.budget = new BudgetRange(min, max);
+        public ConstraintsBuilder monthlyBudget(BigDecimal max, String currency) {
+            parent.commercial = parent.commercial.toBuilder().budgetMaxMonthly(max).currency(currency).build();
             return this;
         }
 
         /**
-         * Sets the monthly budget range using a pre-built {@link BudgetRange} that supports custom
-         * currencies. The budget is reported against, not enforced — see
-         * {@link #monthlyBudget(double, double)} for exactly how the ceiling is applied.
-         *
-         * @param budget the budget range with min, max, and currency
-         * @return this builder for method chaining
-         * @see BudgetRange
+         * @param max most the design may cost per month, in USD
+         * @return this builder
          */
-        public ConstraintsBuilder monthlyBudget(BudgetRange budget) {
-            this.budget = budget;
-            return this;
+        public ConstraintsBuilder monthlyBudget(double max) {
+            return monthlyBudget(BigDecimal.valueOf(max), "USD");
         }
 
         /**
-         * Restricts the optimizer to only consider metros in the specified Equinix regions.
-         * Metros outside these regions are excluded from candidacy.
-         *
-         * @param regions the required Equinix regions (e.g., {@code Region.AMER}, {@code Region.EMEA})
-         * @return this builder for method chaining
+         * @param regions regions every design must have a metro in
+         * @return this builder
          */
         public ConstraintsBuilder requiredRegions(Region... regions) {
-            this.requiredRegions = Arrays.asList(regions);
+            c = c.toBuilder().requiredRegions(Arrays.asList(regions)).build();
             return this;
         }
 
         /**
-         * Excludes metros in the specified Equinix regions from consideration.
-         *
-         * @param regions the Equinix regions to exclude
-         * @return this builder for method chaining
+         * @param regions regions no design may use
+         * @return this builder
          */
         public ConstraintsBuilder excludedRegions(Region... regions) {
-            this.excludedRegions = Arrays.asList(regions);
+            c = c.toBuilder().excludedRegions(Arrays.asList(regions)).build();
             return this;
         }
 
         /**
-         * Requires that the specified metros appear in the final recommendation set.
-         * These metros are guaranteed to be included regardless of scoring.
-         *
-         * @param metros the metro codes that must be included
-         * @return this builder for method chaining
-         */
-        public ConstraintsBuilder requireMetro(MetroCode... metros) {
-            this.requiredMetros = toMetroIds(metros);
-            return this;
-        }
-
-        /**
-         * Requires the specified metros (by raw code) in the final recommendation set — use this
-         * overload for metros not listed by the {@link MetroCode} enum.
-         *
-         * @param metroCodes the metro codes that must be included (e.g. {@code "SV"})
-         * @return this builder for method chaining
+         * @param metroCodes metros every design must include
+         * @return this builder
          */
         public ConstraintsBuilder requireMetro(String... metroCodes) {
-            this.requiredMetros = toMetroIds(metroCodes);
+            c = c.toBuilder().requiredMetros(codes(metroCodes)).build();
             return this;
         }
 
         /**
-         * Excludes the specified metros from consideration entirely.
-         *
-         * @param metros the metro codes to exclude
-         * @return this builder for method chaining
+         * @param metros metros every design must include
+         * @return this builder
          */
-        public ConstraintsBuilder excludeMetro(MetroCode... metros) {
-            this.excludedMetros = toMetroIds(metros);
-            return this;
+        public ConstraintsBuilder requireMetro(MetroCode... metros) {
+            return requireMetro(Arrays.stream(metros).map(MetroCode::name).toArray(String[]::new));
         }
 
         /**
-         * Excludes the specified metros (by raw code) from consideration — use this overload for
-         * metros not listed by the {@link MetroCode} enum.
-         *
-         * @param metroCodes the metro codes to exclude (e.g. {@code "SV"})
-         * @return this builder for method chaining
+         * @param metroCodes metros no design may use
+         * @return this builder
          */
         public ConstraintsBuilder excludeMetro(String... metroCodes) {
-            this.excludedMetros = toMetroIds(metroCodes);
+            c = c.toBuilder().excludedMetros(codes(metroCodes)).build();
             return this;
         }
 
-        private static List<MetroId> toMetroIds(MetroCode... metros) {
-            List<MetroId> ids = new java.util.ArrayList<>(metros.length);
-            for (MetroCode metro : metros) {
-                ids.add(MetroId.of(metro));
-            }
-            return ids;
-        }
-
-        private static List<MetroId> toMetroIds(String... metroCodes) {
-            List<MetroId> ids = new java.util.ArrayList<>(metroCodes.length);
-            for (String code : metroCodes) {
-                ids.add(MetroId.of(code));
-            }
-            return ids;
+        /**
+         * @param metros metros no design may use
+         * @return this builder
+         */
+        public ConstraintsBuilder excludeMetro(MetroCode... metros) {
+            return excludeMetro(Arrays.stream(metros).map(MetroCode::name).toArray(String[]::new));
         }
 
         /**
-         * Sets compliance zone requirements for data sovereignty. A deployment satisfies the
-         * requested zones when <em>each zone is covered by at least one recommended metro</em>:
-         * candidacy keeps any metro that helps satisfy at least one zone, scoring grades each metro
-         * by the fraction of requested zones its region is allowed by, and a zone the selected set
-         * leaves uncovered raises a {@code COMPLIANCE_GAP} risk finding. A metro outside every
-         * requested zone's allowed regions is excluded from candidacy (unless force-included via
-         * {@code requireMetro(...)}, which is then flagged as a compliance gap).
-         *
-         * @param zones the compliance zones to enforce (e.g., {@code ComplianceZone.EU_GDPR})
-         * @return this builder for method chaining
-         * @see ComplianceZone
+         * @param zones compliance zones every metro must be allowed by
+         * @return this builder
          */
         public ConstraintsBuilder compliance(ComplianceZone... zones) {
-            this.complianceZones = Arrays.asList(zones);
+            c = c.toBuilder().complianceZones(Arrays.asList(zones)).build();
             return this;
         }
 
         /**
-         * Sets the minimum redundancy tier for the deployment. This influences the
-         * minimum number of metros recommended and their geographic diversity.
-         *
-         * @param tier the minimum redundancy requirement
-         * @return this builder for method chaining
-         * @see RedundancyTier
+         * @param zones Fabric geo scopes / zones every metro must belong to (data sovereignty)
+         * @return this builder
+         */
+        public ConstraintsBuilder geoZones(String... zones) {
+            c = c.toBuilder().geoZones(Arrays.asList(zones)).build();
+            return this;
+        }
+
+        /**
+         * @param tier the least redundancy acceptable
+         * @return this builder
          */
         public ConstraintsBuilder redundancy(RedundancyTier tier) {
-            this.minimumRedundancy = tier;
+            c = c.toBuilder().minimumRedundancy(tier).build();
             return this;
         }
 
         /**
-         * Sets a hard upper bound on latency from any recommended metro to any user site.
-         * During candidate filtering, any metro whose estimated latency to <em>any</em>
-         * user site exceeds this threshold is excluded from candidacy.
-         *
-         * <p>The threshold is compared against the engine's per-metro-to-site latency
-         * estimate in milliseconds — the same figures used by the latency score dimension
-         * and surfaced in {@code MetroRecommendation.getSiteLatencies()} and the
-         * {@link LatencyMatrix}: Equinix Fabric metro-to-metro {@code avgLatency} where
-         * published, otherwise a Haversine fiber-distance estimate
-         * (great-circle distance × 1.4 fiber-routing multiplier × 4.9 μs/km).</p>
-         *
-         * <p>Metros force-included via {@code requireMetro(...)} bypass this filter; a
-         * required metro that breaches the bound is surfaced as a
-         * {@code LATENCY_THRESHOLD} risk finding instead of being excluded.</p>
-         *
-         * @param maxMs the maximum acceptable latency in milliseconds (values {@code <= 0}
-         *              disable the filter)
-         * @return this builder for method chaining
+         * @param maxMs round-trip ceiling from every site to its nearest metro
+         * @return this builder
          */
         public ConstraintsBuilder maxLatencyMs(double maxMs) {
-            this.maxLatencyMs = maxMs;
+            c = c.toBuilder().maxLatencyMs(maxMs).build();
             return this;
         }
 
         /**
-         * Limits the maximum number of metros in the recommendation set.
-         *
-         * @param max the maximum number of metros to recommend
-         * @return this builder for method chaining
+         * @param min fewest metros
+         * @return this builder
+         */
+        public ConstraintsBuilder minMetros(int min) {
+            c = c.toBuilder().minMetros(min).build();
+            return this;
+        }
+
+        /**
+         * @param max most metros
+         * @return this builder
          */
         public ConstraintsBuilder maxMetros(int max) {
-            this.maxMetroCount = max;
+            c = c.toBuilder().maxMetros(max).build();
             return this;
         }
 
-        /**
-         * Finalizes the constraints definition and returns to the parent {@link Builder}.
-         *
-         * @return the parent builder for continued configuration
-         */
+        /** @return the parent builder */
         public Builder done() {
-            return parent.setConstraintsInternal(OptimizationConstraints.builder()
-                    .budget(budget)
-                    .requiredRegions(requiredRegions)
-                    .excludedRegions(excludedRegions)
-                    .requiredMetros(requiredMetros)
-                    .excludedMetros(excludedMetros)
-                    .complianceZones(complianceZones)
-                    .minimumRedundancy(minimumRedundancy)
-                    .maxLatencyMs(maxLatencyMs)
-                    .maxMetroCount(maxMetroCount)
-                    .build());
+            parent.constraints = c;
+            return parent;
+        }
+
+        private static List<String> codes(String... codes) {
+            List<String> list = new ArrayList<>();
+            for (String code : codes) {
+                list.add(MetroId.of(code).code());
+            }
+            return list;
         }
     }
 }

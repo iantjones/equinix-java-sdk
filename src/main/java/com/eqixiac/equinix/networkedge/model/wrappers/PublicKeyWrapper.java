@@ -38,4 +38,9 @@ public class PublicKeyWrapper extends ResourceImpl<PublicKey> implements PublicK
         this.jsonObject = publicKeyJson;
         this.serviceClient = serviceClient;
     }
+
+    public Boolean delete() {
+        return ((com.eqixiac.equinix.networkedge.client.internal.PublicKeyClient<?>) this.serviceClient)
+                .delete(this.getUuid());
+    }
 }

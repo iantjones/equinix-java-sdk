@@ -28,16 +28,16 @@ import java.util.Objects;
 
 /**
  * A lossless, typed wrapper for the polymorphic {@code oneOf} union members used throughout the IAM
- * access-control schemas — the {@code permissions}/{@code intersect}/{@code subtract} entries of an
+ * access-control schemas - the {@code permissions}/{@code intersect}/{@code subtract} entries of an
  * {@link AccessPolicy}, {@link PermissionSet} and {@link PrincipalPolicy}, and the
  * {@code managedPolicies}/{@code managedPermissionSets}/{@code subtract} fields of a
  * {@link PolicyMask}.
  *
  * <p>Each of these union members may be:</p>
  * <ul>
- *   <li>a bare string — a literal such as {@code "none"} / {@code "all"}, an Equinix Resource Name
+ *   <li>a bare string - a literal such as {@code "none"} / {@code "all"}, an Equinix Resource Name
  *       (ERN), a {@code permissionset:}/{@code managedset:}/{@code managedpolicy:} id, etc.; or</li>
- *   <li>a structured value — an inline-permission object, a foreign-access-policy reference, a
+ *   <li>a structured value - an inline-permission object, a foreign-access-policy reference, a
  *       general permission-set reference, an array of ids, a {@code subtract} object, and so on.</li>
  * </ul>
  *

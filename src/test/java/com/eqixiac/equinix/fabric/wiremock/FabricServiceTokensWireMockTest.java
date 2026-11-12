@@ -183,7 +183,7 @@ class FabricServiceTokensWireMockTest extends WireMockTestBase {
 
             ServiceToken created = fabric.serviceTokens().define(Side.A_Side)
                     .ofType(ServiceTokenType.VC_TOKEN)
-                    .withExpiry(30)
+                    .withExpirationDateTime(java.time.LocalDateTime.of(2027, 1, 20, 18, 50, 34))
                     .forConnectionType(ConnectionType.EVPL_VC)
                     .forAccessPointType(AccessPointType.COLO)
                     .onPortUuid("c791f8cb-5cc9-4a9f-8b8a-1f2e3d4c5b6a")
@@ -195,9 +195,10 @@ class FabricServiceTokensWireMockTest extends WireMockTestBase {
             // issuerSide A_Side routes the access point selector into connection.aSide.
             wireMock.verify(postRequestedFor(urlPathMatching("/fabric/v4/serviceTokens"))
                     .withRequestBody(matchingJsonPath("$.type", equalTo("VC_TOKEN")))
-                    .withRequestBody(matchingJsonPath("$.expiry", equalTo("30")))
+                    .withRequestBody(matchingJsonPath("$.expirationDateTime", equalTo("2027-01-20T18:50:34Z")))
+                    .withRequestBody(notContaining("expiry\""))
+                    .withRequestBody(notContaining("issuerSide"))
                     .withRequestBody(matchingJsonPath("$.connection.type", equalTo("EVPL_VC")))
-                    .withRequestBody(matchingJsonPath("$.connection.issuerSide", equalTo("A_Side")))
                     .withRequestBody(matchingJsonPath(
                             "$.connection.aSide.accessPointSelectors[0].type", equalTo("COLO")))
                     .withRequestBody(matchingJsonPath(
@@ -259,7 +260,7 @@ class FabricServiceTokensWireMockTest extends WireMockTestBase {
 
             ServiceToken created = fabric.serviceTokens().define(Side.A_Side)
                     .ofType(ServiceTokenType.VC_TOKEN)
-                    .withExpiry(30)
+                    .withExpirationDateTime(java.time.LocalDateTime.of(2027, 1, 20, 18, 50, 34))
                     .forConnectionType(ConnectionType.EVPLAN_VC)
                     .forAccessPointType(AccessPointType.NETWORK)
                     .onNetworkUuid("94a494a4-f4a4-44b4-b4b4-c4c4c4c4c4c4")
@@ -290,7 +291,7 @@ class FabricServiceTokensWireMockTest extends WireMockTestBase {
                     .update("ab7f685-41b0-1b07-6de0-3a7c54b08b8f")
                     .name("Renamed-Token")
                     .description("Updated description")
-                    .expiry(45)
+                    .expirationDateTime(java.time.LocalDateTime.of(2023, 1, 20, 18, 50, 34))
                     .save();
 
             assertNotNull(updated);
@@ -299,7 +300,8 @@ class FabricServiceTokensWireMockTest extends WireMockTestBase {
                     .withRequestBody(equalToJson(
                             "[{\"op\":\"replace\",\"path\":\"/name\",\"value\":\"Renamed-Token\"},"
                             + "{\"op\":\"replace\",\"path\":\"/description\",\"value\":\"Updated description\"},"
-                            + "{\"op\":\"replace\",\"path\":\"/expiry\",\"value\":45}]", true, true)));
+                            + "{\"op\":\"replace\",\"path\":\"/expirationDateTime\",\"value\":\"2023-01-20T18:50:34Z\"}]", true, true))
+                    .withHeader("Content-Type", containing("application/json-patch+json")));
         }
 
         @Test
@@ -331,7 +333,7 @@ class FabricServiceTokensWireMockTest extends WireMockTestBase {
             assertEquals("ab7f685-41b0-1b07-6de0-3a7c54b08b8f", simulated.getUuid());
             assertEquals("Renamed-Token", simulated.getName());
 
-            // Regression lock: the dry run MUST carry dryRun=true on the wire — if a future
+            // Regression lock: the dry run MUST carry dryRun=true on the wire - if a future
             // change drops the parameter, this "verification" becomes a REAL mutation.
             wireMock.verify(patchRequestedFor(
                     urlPathEqualTo("/fabric/v4/serviceTokens/ab7f685-41b0-1b07-6de0-3a7c54b08b8f"))

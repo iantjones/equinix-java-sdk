@@ -18,12 +18,12 @@
  * Rate cards: pluggable sources of unit prices for the design-time cost, savings, and
  * TCO models. The central abstraction is
  * {@link com.eqixiac.equinix.design.value.ratecard.RateCard}, whose lookups (connection,
- * Cloud Router, cloud egress, colocation) return {@code Optional} — an empty result
+ * Cloud Router, cloud egress, colocation) return {@code Optional} - an empty result
  * means "this card cannot price that item", which is deliberately distinct from a zero
  * price, so callers fall back to another source instead of treating unknown as free.
  *
  * <p>Cards are composed into a precedence chain with
- * {@code RateCard.layered(...)} — the first card that can price an item wins. The
+ * {@code RateCard.layered(...)} - the first card that can price an item wins. The
  * conventional ordering is most-trusted first:
  * {@link com.eqixiac.equinix.design.value.ratecard.CustomRateCard} (caller-supplied,
  * e.g. negotiated contract rates), then
@@ -63,7 +63,7 @@
  * {@code egress(provider, region, EgressPath.MULTICLOUD_INTERCONNECT, term)}.</p>
  *
  * <p>Two invariants hold across all cards: an unpriceable item yields empty, never a
- * fabricated $0; and quotes in different currencies are never combined — no FX rate is
+ * fabricated $0; and quotes in different currencies are never combined - no FX rate is
  * ever invented ({@code PriceQuote.plus} throws on a currency mismatch, and the engines
  * route cross-card sums through {@code CurrencyReconciler}).</p>
  *

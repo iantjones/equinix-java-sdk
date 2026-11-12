@@ -34,12 +34,4 @@ public class PricingWrapper extends ResourceImpl<Pricing> implements Pricing {
         this.jsonObject = pricingJson;
         this.serviceClient = serviceClient;
     }
-
-//
-//
-//    public ConnectionPricing refresh() {
-//        this.jsonObject = ((ConnectionsClientImpl)this.serviceClient).refreshStatistics(this.getUuid(),
-//                this.getStats().getStartDateTime(), this.getStats().getEndDateTime(), this.getStats().getViewPoint());
-//        return this;
-//    }
 }

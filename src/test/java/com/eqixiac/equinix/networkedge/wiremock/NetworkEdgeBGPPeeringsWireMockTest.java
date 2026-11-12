@@ -321,8 +321,8 @@ class NetworkEdgeBGPPeeringsWireMockTest extends WireMockTestBase {
         @Test
         @DisplayName("re-GETs the peering and updates the wrapper's state in place")
         void refreshesInPlace() {
-            // First GET returns the original state; the second GET — triggered by
-            // wrapper.refresh() — returns a DIFFERENT payload (remoteAsn bumped, key rotated).
+            // First GET returns the original state; the second GET - triggered by
+            // wrapper.refresh() - returns a DIFFERENT payload (remoteAsn bumped, key rotated).
             wireMock.stubFor(get(urlPathEqualTo(PATH))
                     .inScenario("bgp-refresh")
                     .whenScenarioStateIs(com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED)

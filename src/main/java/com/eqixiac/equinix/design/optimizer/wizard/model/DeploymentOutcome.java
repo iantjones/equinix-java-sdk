@@ -1,5 +1,8 @@
 package com.eqixiac.equinix.design.optimizer.wizard.model;
 
+import com.eqixiac.equinix.design.plan.OrphanedResource;
+import com.eqixiac.equinix.design.plan.RollbackReport;
+import com.eqixiac.equinix.design.plan.StepResult;
 import lombok.Builder;
 import lombok.Value;
 
@@ -11,7 +14,7 @@ import java.util.stream.Collectors;
  * any errors encountered, and execution timing.
  *
  * <p><strong>{@code resources} is an audit trail, not a live inventory.</strong> It records every
- * resource execution successfully <em>created</em> — including, after an abort-and-rollback (a
+ * resource execution successfully <em>created</em> - including, after an abort-and-rollback (a
  * pre-flight dry-run rejection or a failed create mid-run), resources that were created and then
  * deleted again by the LIFO teardown. On such a run {@code toSummary()}'s
  * "N/M resources provisioned" therefore describes what was built before the teardown, not what
@@ -29,8 +32,27 @@ public class DeploymentOutcome {
     /** The plan this outcome resulted from executing. */
     DeploymentPlan plan;
 
+    /** The id ({@code PlanJson.planId}) of the plan executed. */
+    String planId;
+
+    /** Whether this was a dry run: nothing was created, no checkpoint was written. */
+    boolean dryRun;
+
     /**
-     * Every resource execution created, in creation order — see the class note: after a
+     * One entry per plan step, in execution order: what the run did with it ({@code CREATED},
+     * {@code ADOPTED}, {@code ALREADY_DONE}, {@code SKIPPED} with the reason, {@code FAILED},
+     * {@code NOT_EXECUTABLE}, ...). A step after an abort has no entry.
+     */
+    List<StepResult> steps;
+
+    /**
+     * The rollback performed after an abort ({@code FailurePolicy.ABORT_AND_ROLLBACK}), with every
+     * removed resource and every orphan (uuid and reason); {@code null} when no rollback ran.
+     */
+    RollbackReport rollback;
+
+    /**
+     * Every resource execution created, in creation order - see the class note: after a
      * rollback these entries describe resources that have since been deleted.
      */
     List<ProvisionedResource> resources;
@@ -39,7 +61,7 @@ public class DeploymentOutcome {
     boolean fullySuccessful;
 
     /**
-     * Every error recorded during the run — creation failures, waiter observations, pre-flight
+     * Every error recorded during the run - creation failures, waiter observations, pre-flight
      * notes, and (after an abort) any rollback deletions that failed.
      */
     List<ProvisioningError> errors;
@@ -67,6 +89,17 @@ public class DeploymentOutcome {
             sb.append(", ").append(errors.size()).append(" error(s)");
         }
         sb.append(" in ").append(executionTimeMs).append("ms.");
+        if (dryRun) {
+            sb.append(" DRY RUN: nothing was created.");
+        }
+        if (rollback != null) {
+            sb.append(" Rolled back: ").append(rollback.removed().size()).append(" removed, ")
+                    .append(rollback.orphans().size()).append(" orphaned");
+            for (OrphanedResource o : rollback.orphans()) {
+                sb.append(" [").append(o.kind()).append(" ").append(o.name()).append(" ").append(o.uuid()).append("]");
+            }
+            sb.append(".");
+        }
         if (informational != null && !informational.isEmpty()) {
             sb.append(" ").append(informational.size())
                     .append(" native multicloud link(s) not provisioned: created outside Fabric by the customer.");
@@ -101,6 +134,17 @@ public class DeploymentOutcome {
             md.append("\n");
         }
 
+        // Steps
+        if (steps != null && !steps.isEmpty()) {
+            md.append("## Steps\n\n| Key | Kind | Name | Action | UUID | Detail |\n|---|---|---|---|---|---|\n");
+            for (StepResult step : steps) {
+                md.append("| ").append(step.key()).append(" | ").append(step.kind()).append(" | ").append(step.name())
+                        .append(" | ").append(step.action()).append(" | ").append(step.uuid() == null ? "-" : step.uuid())
+                        .append(" | ").append(step.detail() == null ? "-" : step.detail()).append(" |\n");
+            }
+            md.append("\n");
+        }
+
         // Errors
         if (!errors.isEmpty()) {
             md.append("## Errors\n\n");
@@ -114,6 +158,10 @@ public class DeploymentOutcome {
                         .append(" |\n");
             }
             md.append("\n");
+        }
+
+        if (rollback != null) {
+            md.append(rollback.toMarkdown());
         }
 
         // Native multicloud links: informational, never provisioned here, never an error.

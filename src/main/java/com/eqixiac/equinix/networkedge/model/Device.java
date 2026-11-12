@@ -20,6 +20,7 @@ import com.eqixiac.equinix.core.enums.BandwidthUnit;
 import com.eqixiac.equinix.core.enums.MetroCode;
 import com.eqixiac.equinix.core.enums.Region;
 import com.eqixiac.equinix.networkedge.enums.Connectivity;
+import com.eqixiac.equinix.networkedge.model.json.creators.DeviceDeleteRequest;
 import com.eqixiac.equinix.networkedge.enums.DeviceCategory;
 import com.eqixiac.equinix.networkedge.enums.DeviceManagementType;
 import com.eqixiac.equinix.networkedge.enums.DevicePlane;
@@ -48,7 +49,7 @@ import java.util.ArrayList;
  * @author ianjones
  */
 public interface Device {
-    
+
     String getUuid();
 
     String getName();
@@ -185,7 +186,22 @@ public interface Device {
 
     Boolean save(DeviceUpdaterJson updaterJson);
 
+    /**
+     * Deletes the device ({@code DELETE /ne/v1/devices/{uuid}}). The wrapper keeps its last known
+     * state, so getters still work afterwards.
+     *
+     * @return {@code true} when the deletion was accepted
+     */
     Boolean delete();
+
+    /**
+     * Deletes the device with the spec's options: {@code deleteRedundantDevice} for a redundant
+     * pair and the {@code deletionInfo} deactivation keys (Palo Alto BYOL).
+     *
+     * @param request the delete options
+     * @return {@code true} when the deletion was accepted
+     */
+    Boolean delete(DeviceDeleteRequest request);
 
     Boolean refresh();
 }

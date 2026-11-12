@@ -66,6 +66,12 @@ public class PeeringIntelligenceResult {
 
     PeeringRequest request;
 
+    /**
+     * The {@code DesignSpec.fingerprint()} of the spec the analysis was run for
+     * ({@code PeeringIntelligence.forSpec}), or {@code null} for an analysis built by hand.
+     */
+    String specFingerprint;
+
     PresenceMatrix presenceMatrix;
 
     Map<Long, NetworkPresence> networkPresences;
@@ -88,7 +94,7 @@ public class PeeringIntelligenceResult {
      * Non-fatal data-completeness notes accumulated during the analysis: a data source that could not
      * be loaded, records that could not be resolved and were excluded, or an optional phase that was
      * skipped after a recoverable failure. Empty (or {@code null}) when the analysis ran cleanly. These
-     * exist so an incomplete result is never silently presented as complete — always surface them rather
+     * exist so an incomplete result is never silently presented as complete - always surface them rather
      * than reading the figures as authoritative when this list is non-empty.
      */
     List<String> warnings;
@@ -175,10 +181,10 @@ public class PeeringIntelligenceResult {
         sb.append("**Computed:** ").append(computedAt).append(" (").append(computeTimeMs).append("ms)\n");
         sb.append("**Sources:** ").append(String.join(", ", dataSources)).append("\n\n");
 
-        // Data-completeness warnings — surfaced up front so an incomplete result is never read as
+        // Data-completeness warnings - surfaced up front so an incomplete result is never read as
         // complete. Empty when the analysis ran cleanly.
         if (!warnings().isEmpty()) {
-            sb.append("> ⚠ **Data completeness:** this analysis is partial — read the figures below with "
+            sb.append("> **Data completeness:** this analysis is partial - read the figures below with "
                     + "these caveats in mind:\n");
             for (String warning : warnings()) {
                 sb.append("> - ").append(warning).append("\n");
@@ -217,7 +223,7 @@ public class PeeringIntelligenceResult {
                 sb.append("### Correlated Failures\n\n");
                 for (CorrelatedFailure cf : resiliency.getCorrelatedFailures()) {
                     sb.append("- **").append(cf.getSeverity()).append(":** ").append(cf.getFailureDomain());
-                    sb.append(" — ").append(cf.getRecommendation()).append("\n");
+                    sb.append(" - ").append(cf.getRecommendation()).append("\n");
                 }
                 sb.append("\n");
             }

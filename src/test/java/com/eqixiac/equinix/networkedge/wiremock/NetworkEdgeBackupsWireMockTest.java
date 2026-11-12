@@ -54,7 +54,7 @@ class NetworkEdgeBackupsWireMockTest extends WireMockTestBase {
             assertEquals("bkp-1111-2222-3333-444455556666", backup.getUuid());
             assertEquals("test-backup", backup.getName());
             // Spec DeviceBackupInfoVerbose carries deviceUuid and lastUpdatedDateTime (not the
-            // shared Lifecycle lastUpdatedDate name) — both must map.
+            // shared Lifecycle lastUpdatedDate name) - both must map.
             assertEquals("dev-9999-8888-7777-666655554444", backup.getDeviceUuid());
             assertEquals(LocalDateTime.of(2018, 1, 30, 10, 30, 31), backup.getLastUpdatedDate());
         }
@@ -272,53 +272,6 @@ class NetworkEdgeBackupsWireMockTest extends WireMockTestBase {
                     "/ne/v1/devices/bkp-1111-2222-3333-444455556666/restore"))
                     .withRequestBody(equalToJson("{\"name\":\"test-backup\"}", true, true)));
         }
-
-        @Test
-        @DisplayName("restoreToDevice(deviceUuid) is a pure alias of restore(): same PATCH keyed by the backup UUID")
-        void restoreToDeviceByUuidAliasesRestore() {
-            stubSingleton(wireMock, "/ne/v1/deviceBackups/.*",
-                    "/json/networkedge/backup_response.json");
-            wireMock.stubFor(patch(urlPathEqualTo(
-                    "/ne/v1/devices/bkp-1111-2222-3333-444455556666/restore"))
-                    .willReturn(okJson("{}")));
-
-            Backup backup = networkEdge.backups().getByUuid("bkp-1111-2222-3333-444455556666");
-            // The supplied deviceUuid is documented as ignored: the endpoint is keyed by the
-            // backup uuid, so the wire request is identical to restore().
-            @SuppressWarnings("deprecation")
-            Boolean result = backup.restoreToDevice("some-other-device-uuid");
-
-            assertTrue(result);
-            wireMock.verify(patchRequestedFor(urlPathEqualTo(
-                    "/ne/v1/devices/bkp-1111-2222-3333-444455556666/restore"))
-                    .withRequestBody(equalToJson("{\"name\":\"test-backup\"}", true, true)));
-        }
-
-        @Test
-        @DisplayName("restoreToDevice(Device) is a pure alias of restore(): same PATCH keyed by the backup UUID")
-        void restoreToDeviceByObjectAliasesRestore() {
-            stubSingleton(wireMock, "/ne/v1/deviceBackups/.*",
-                    "/json/networkedge/backup_response.json");
-            // The Device argument is only used as a handle; fetch one to pass in.
-            stubSingleton(wireMock, "/ne/v1/devices/ed7891f4-7a67-11e9-9bea-1681be663d3e",
-                    "/json/networkedge/device_response.json");
-            wireMock.stubFor(patch(urlPathEqualTo(
-                    "/ne/v1/devices/bkp-1111-2222-3333-444455556666/restore"))
-                    .willReturn(okJson("{}")));
-
-            Backup backup = networkEdge.backups().getByUuid("bkp-1111-2222-3333-444455556666");
-            com.eqixiac.equinix.networkedge.model.Device device =
-                    networkEdge.devices().getByUuid("ed7891f4-7a67-11e9-9bea-1681be663d3e");
-
-            @SuppressWarnings("deprecation")
-            Boolean result = backup.restoreToDevice(device);
-
-            assertTrue(result);
-            // The restore PATCH is keyed by the BACKUP uuid — not the supplied device's uuid.
-            wireMock.verify(patchRequestedFor(urlPathEqualTo(
-                    "/ne/v1/devices/bkp-1111-2222-3333-444455556666/restore"))
-                    .withRequestBody(equalToJson("{\"name\":\"test-backup\"}", true, true)));
-        }
     }
 
     @Nested
@@ -331,8 +284,8 @@ class NetworkEdgeBackupsWireMockTest extends WireMockTestBase {
         @Test
         @DisplayName("re-GETs the backup and updates the wrapper's state in place")
         void refreshesInPlace() {
-            // First GET returns the original state; the second GET — triggered by
-            // wrapper.refresh() — returns a DIFFERENT payload (renamed, status changed).
+            // First GET returns the original state; the second GET - triggered by
+            // wrapper.refresh() - returns a DIFFERENT payload (renamed, status changed).
             wireMock.stubFor(get(urlPathEqualTo(PATH))
                     .inScenario("backup-refresh")
                     .whenScenarioStateIs(com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED)

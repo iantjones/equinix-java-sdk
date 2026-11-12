@@ -37,8 +37,8 @@ import static org.junit.jupiter.api.Assertions.*;
  * The live provider-pricing adapters do not price the native multicloud path. Each adapter chose
  * between two offers with a two-way test on {@link EgressPath} ({@code INTERNET} or "the other
  * one"), so the third path added here would have been answered with a Direct Connect,
- * ExpressRoute or internet rate. These tests stub every offer with its recorded fixture — the
- * state in which an unguarded adapter would return such a rate — and require an empty result
+ * ExpressRoute or internet rate. These tests stub every offer with its recorded fixture - the
+ * state in which an unguarded adapter would return such a rate - and require an empty result
  * with no HTTP request made.
  */
 class ProviderAdaptersMulticloudPathWireMockTest extends WireMockTestBase {

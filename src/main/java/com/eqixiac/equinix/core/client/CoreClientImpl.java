@@ -39,8 +39,13 @@ public class CoreClientImpl extends ClientBase implements CoreClient {
         EquinixRequest<OAuthToken> equinixRequest = this.buildRequest("Authenticate", RequestType.SINGLE, OAuthToken.class);
         // Serialize a dedicated wire DTO, never the EquinixCredentials instance itself, so
         // custom EquinixCredentials implementations need no Jackson annotations to authenticate.
-        SerializationHelper.serializeJson(equinixRequest, new Oauth2TokenRequest(
-                getConfigClient().getEquinixClient().getEquinixCredentialsProvider().getCredentials()));
+        com.eqixiac.equinix.core.auth.EquinixCredentialsProvider credentialsProvider =
+                getConfigClient().getEquinixClient().getEquinixCredentialsProvider();
+        if (credentialsProvider == null) {
+            throw new com.eqixiac.equinix.core.exception.EquinixClientException(
+                    "This client was built over a BearerTokenProvider and has no client credentials to mint an OAuth2 token with.");
+        }
+        SerializationHelper.serializeJson(equinixRequest, new Oauth2TokenRequest(credentialsProvider.getCredentials()));
         EquinixResponse<OAuthToken> equinixResponse = this.invoke(equinixRequest);
         return ResponseHandler.handleSingletonResponse(equinixResponse, equinixRequest);
     }

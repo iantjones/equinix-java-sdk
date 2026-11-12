@@ -1,0 +1,31 @@
+{
+  "pagination": {
+    "offset": 0,
+    "limit": 10,
+    "total": 2
+  },
+  "data": [
+    {
+      "href": "https://api.equinix.com/fabric/v4/crossConnects/46bb1a31-c28f-4197-8b10-06e0e03d0743/notes/e41f485e-3094-42de-8797-0ef19a51df79",
+      "uuid": "e41f485e-3094-42de-8797-0ef19a51df79",
+      "type": "NOTE",
+      "source": "CUSTOMER",
+      "comments": "Additional note to EQUINIX technician.",
+      "changeLog": {
+        "createdBy": "124",
+        "createdDateTime": "2026-02-28T07:21:39Z"
+      }
+    },
+    {
+      "href": "https://api.equinix.com/fabric/v4/crossConnects/46bb1a31-c28f-4197-8b10-06e0e03d0743/notes/a11f485e-3094-42de-8797-0ef19a51df79",
+      "uuid": "a11f485e-3094-42de-8797-0ef19a51df79",
+      "type": "NOTE",
+      "source": "EQUINIX",
+      "comments": "Please confirm the patch panel port before the scheduled installation.",
+      "changeLog": {
+        "createdBy": "SYSTEM",
+        "createdDateTime": "2026-02-27T07:21:39Z"
+      }
+    }
+  ]
+}

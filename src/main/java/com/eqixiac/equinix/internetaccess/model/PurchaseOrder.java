@@ -28,7 +28,7 @@ import java.util.List;
 
 /**
  * A purchase order available to a billing account, as returned by the Equinix Internet Access (EIA)
- * v1 purchase-order lookups — the list ({@code GET /internetAccess/v1/accounts/{accountNumber}/purchaseOrders})
+ * v1 purchase-order lookups - the list ({@code GET /internetAccess/v1/accounts/{accountNumber}/purchaseOrders})
  * and the single get ({@code GET /internetAccess/v1/accounts/{accountNumber}/purchaseOrders/{number}}).
  *
  * <p>This is a read-only response view.</p>

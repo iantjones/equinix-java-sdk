@@ -10,7 +10,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * {@link ResourceFileUtils} contract: a missing classpath resource fails fast with the resource
- * name in the message (it must never silently return {@code null} — that surfaced as opaque
+ * name in the message (it must never silently return {@code null} - that surfaced as opaque
  * NPEs during client bootstrap).
  */
 class ResourceFileUtilsTest {

@@ -50,24 +50,24 @@ import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 
 /**
- * Locks the {@code EQ-3142539} fix: every name the Deployment Wizard generates — Cloud Routers,
- * provider connections, backbone links, and routing protocols — must be 1..23 characters (Fabric
+ * Locks the {@code EQ-3142539} fix: every name the Deployment Wizard generates - Cloud Routers,
+ * provider connections, backbone links, and routing protocols - must be 1..23 characters (Fabric
  * rejects 0 or {@code >= 24}) and unique within a plan.
  *
  * <p>The keystone scenario mirrors the live failure: a "globalpay" prefix over four metros that each
  * carry AWS + Azure + GCP, with providers named by their <em>full display names</em>
- * ("Amazon Web Services", ...) — the exact input that produced 35-character names like
+ * ("Amazon Web Services", ...) - the exact input that produced 35-character names like
  * {@code globalpay-NY-to-amazon-web-services} and made all 12 provider connections fail the live
  * dry run. The fix substitutes a compact provider token and caps every composed name.</p>
  */
-@DisplayName("DeploymentWizard — generated names fit Fabric's < 24-character limit (EQ-3142539)")
+@DisplayName("DeploymentWizard - generated names fit Fabric's < 24-character limit (EQ-3142539)")
 class DeploymentWizardNameGenerationTest {
 
     /** Fabric's contract: connection name length must be > 0 and < 24 characters. */
     private static final int MIN_LEN = 1;
     private static final int MAX_LEN = 23;
 
-    // ── keystone: realistic 4-metro / 3-cloud plan with full display-name providers ──
+    // keystone: realistic 4-metro / 3-cloud plan with full display-name providers
 
     @Test
     @DisplayName("every name in a 4-metro / 3-cloud plan is 1..23 chars and unique (full display-name providers)")
@@ -109,7 +109,7 @@ class DeploymentWizardNameGenerationTest {
                 "product names must resolve to the same compact tokens as corporate names");
     }
 
-    // ── edge: a long, caller-supplied prefix must not push names over the limit ──
+    // edge: a long, caller-supplied prefix must not push names over the limit
 
     @Test
     @DisplayName("an over-long router_name_prefix still yields names that all fit and stay unique")
@@ -139,7 +139,7 @@ class DeploymentWizardNameGenerationTest {
                 () -> "the error must name the offending input: " + ex.getMessage());
     }
 
-    // ── provider-token pinning (per provider) ──
+    // provider-token pinning (per provider)
 
     @Test
     @DisplayName("each provider maps to its pinned compact token, via label and via CloudProviderType.shortCode()")
@@ -171,7 +171,7 @@ class DeploymentWizardNameGenerationTest {
         assertTrue(fallback.matches("[a-z0-9-]+"), fallback);
     }
 
-    // ── PlanNames unit behaviour: cap + collision disambiguation ──
+    // PlanNames unit behaviour: cap + collision disambiguation
 
     @Test
     @DisplayName("PlanNames caps to 23 and disambiguates colliding truncations deterministically")
@@ -198,7 +198,7 @@ class DeploymentWizardNameGenerationTest {
         assertFalse(direct.equals(bgp));
     }
 
-    // ── helpers ──
+    // helpers
 
     private static List<String> allGeneratedNames(DeploymentPlan plan) {
         List<String> names = new ArrayList<>();
@@ -224,7 +224,7 @@ class DeploymentWizardNameGenerationTest {
     }
 
     private static DeploymentPlan planFor(String prefix, OptimizationResult result) {
-        FabricGateway fabric = mock(FabricGateway.class); // bare stub: connections() is null → dry run skipped
+        FabricGateway fabric = mock(FabricGateway.class); // bare stub: connections() is null -> dry run skipped
         return DeploymentWizard.builder(fabric, result)
                 .routerPackage("STANDARD")
                 .routerNamePrefix(prefix)
@@ -238,7 +238,7 @@ class DeploymentWizardNameGenerationTest {
     /**
      * Four metros (NY, LD, SG, FR), each carrying the same three clouds as <em>available</em> providers
      * named by the given labels. No workloads or topology are supplied, so each provider connection
-     * takes the wizard's 1000 Mbps default — the plan's <em>names</em> are what this suite exercises,
+     * takes the wizard's 1000 Mbps default - the plan's <em>names</em> are what this suite exercises,
      * not its bandwidth sizing.
      */
     private static OptimizationResult fourMetroThreeCloudResult(String awsLabel, String azureLabel, String gcpLabel) {

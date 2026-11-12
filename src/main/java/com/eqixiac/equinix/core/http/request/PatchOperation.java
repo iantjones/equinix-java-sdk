@@ -21,13 +21,13 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * A single <a href="https://datatracker.ietf.org/doc/html/rfc6902">RFC&nbsp;6902 (JSON Patch)</a>
- * operation — {@code {"op": ..., "path": ..., "value": ...}}.
+ * operation - {@code {"op": ..., "path": ..., "value": ...}}.
  *
  * <p>Several Equinix endpoints model resource updates as a JSON Patch document: an ordered array of
  * these operations sent with content-type {@code application/json-patch+json} (for example Fabric's
  * {@code PATCH /fabric/v4/networks/{id}} and {@code PATCH /fabric/v4/routers/{id}}). SDK users do not
- * normally construct these directly — the fluent {@code resource.update().field(value).save()}
- * builders translate field changes into the appropriate operations — but the type is public so the
+ * normally construct these directly - the fluent {@code resource.update().field(value).save()}
+ * builders translate field changes into the appropriate operations - but the type is public so the
  * raw patch surface is available when needed.</p>
  *
  * @author ianjones

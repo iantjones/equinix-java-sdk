@@ -50,12 +50,12 @@ public interface IAMRoles {
     /**
      * Lists all roles, controlling pagination and optional project scoping by id or ERN.
      *
-     * <p>{@code projectId} and {@code projectErn} are mutually exclusive — supply at most one.</p>
+     * <p>{@code projectId} and {@code projectErn} are mutually exclusive - supply at most one.</p>
      *
      * @param pageToken the opaque page token from a prior response, or {@code null} for the first page
      * @param pageSize the maximum number of results per page, or {@code null} for the server default
-     * @param projectId the project id to scope the listing to (mutually exclusive with
-     *                  {@code projectErn}), or {@code null}
+     * @param projectId the IAM project id to scope the listing to, {@code project:<id>} form (see
+     *                  {@link ProjectIds}; mutually exclusive with {@code projectErn}), or {@code null}
      * @param projectErn the project ERN to scope the listing to (mutually exclusive with
      *                  {@code projectId}), or {@code null}
      * @return the requested page of roles
@@ -65,7 +65,10 @@ public interface IAMRoles {
     /**
      * Lists the roles available within a specific project (first page).
      *
-     * @param projectId the project identifier (e.g. {@code project:abc-123})
+     * @param projectId the IAM project id, {@code project:<id>} (for example {@code project:abc-123}); a bare
+     *                  Resource Manager UUID is rejected, convert it with {@link ProjectIds#of(String)}.
+     *                  Project-scoped endpoints need an STS access-policy token
+     *                  ({@code new IAM(BearerTokenProvider)})
      * @return the first page of project-scoped roles
      */
     RoleList listByProject(String projectId);
@@ -73,7 +76,10 @@ public interface IAMRoles {
     /**
      * Lists the roles available within a specific project, controlling pagination.
      *
-     * @param projectId the project identifier (e.g. {@code project:abc-123})
+     * @param projectId the IAM project id, {@code project:<id>} (for example {@code project:abc-123}); a bare
+     *                  Resource Manager UUID is rejected, convert it with {@link ProjectIds#of(String)}.
+     *                  Project-scoped endpoints need an STS access-policy token
+     *                  ({@code new IAM(BearerTokenProvider)})
      * @param pageToken the opaque page token from a prior response, or {@code null} for the first page
      * @param pageSize the maximum number of results per page, or {@code null} for the server default
      * @param projectErn the project ERN (mutually exclusive with {@code projectId}), or {@code null}

@@ -45,7 +45,7 @@ public class MessageType {
     private List<PowerMessageType> power;
 
     @JsonProperty("meteredPower")
-    private List<MeteredPower> meteredPower;
+    private List<MeteredPowerMessageType> meteredPower;
 
     @JsonProperty("systemAlert")
     private List<SystemAlertMessageType> systemAlert;
@@ -55,7 +55,7 @@ public class MessageType {
 
     @Builder
     public MessageType(List<AssetMessageType> asset, List<EnvironmentalMessageType> environmental,
-                       List<PowerMessageType> power, List<MeteredPower> meteredPower,
+                       List<PowerMessageType> power, List<MeteredPowerMessageType> meteredPower,
                        List<SystemAlertMessageType> systemAlert, List<CustomAlertMessageType> customAlert) {
         this.asset = asset;
         this.environmental = environmental;

@@ -47,7 +47,7 @@ public class VPNWrapper extends ResourceImpl<VPN> implements VPN {
     }
 
     public Boolean save(VPNUpdaterJson updaterJson) {
-        this.json = ((VPNClientImpl)this.serviceClient).update(this.getUuid(), updaterJson);
+        this.json = WrapperState.keep(this.json, ((VPNClientImpl)this.serviceClient).update(this.getUuid(), updaterJson));
         return true;
     }
 
@@ -56,7 +56,7 @@ public class VPNWrapper extends ResourceImpl<VPN> implements VPN {
     }
 
     public Boolean refresh() {
-        this.json = ((VPNClientImpl)this.serviceClient).refresh(this.getUuid());
+        this.json = WrapperState.keep(this.json, ((VPNClientImpl)this.serviceClient).refresh(this.getUuid()));
         return true;
     }
 }

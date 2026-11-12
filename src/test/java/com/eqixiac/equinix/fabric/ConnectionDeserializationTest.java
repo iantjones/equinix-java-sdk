@@ -153,8 +153,6 @@ class ConnectionDeserializationTest {
         assertEquals(ServiceTokenState.ACTIVE, token.getState());
         assertEquals("Zside-Token-01", token.getName());
         assertEquals("Z-side token this connection was redeemed from", token.getDescription());
-        assertEquals("z", token.getIssuerSide());
-        assertEquals(30, token.getExpiry());
         assertNotNull(token.getExpirationDateTime());
         assertEquals(2024, token.getExpirationDateTime().getYear());
         assertEquals(6, token.getExpirationDateTime().getMonthValue());

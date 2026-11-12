@@ -1,0 +1,14 @@
+{
+  "href": "https://api.equinix.com/fabric/v4/appLinks/23cd19ab-d3bb-478b-9f25-bd12a3af1914/appProcessors/90ee425c-9988-454c-96d9-1128bc16350f",
+  "uuid": "90ee425c-9988-454c-96d9-1128bc16350f",
+  "type": "APP_PROCESSOR",
+  "config": "bW9kZWxfbGlzdDoKICAtIG1vZGVsX25hbWU6IGdwdC00bwogICA...",
+  "endpoint": "123456.privateai.link",
+  "attachmentStatus": "ATTACHED",
+  "changeLog": {
+    "createdBy": "test",
+    "createdDateTime": "2026-06-27T04:20:55.471Z",
+    "updatedBy": "test",
+    "updatedDateTime": "2026-06-28T04:20:55.471Z"
+  }
+}

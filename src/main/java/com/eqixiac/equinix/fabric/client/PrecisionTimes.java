@@ -24,6 +24,9 @@ import com.eqixiac.equinix.fabric.model.TimeServicePackage;
 import com.eqixiac.equinix.fabric.model.json.creators.PrecisionTimeOperator;
 
 import java.util.List;
+import com.eqixiac.equinix.core.http.response.PaginatedFilteredList;
+import com.eqixiac.equinix.fabric.model.implementation.filter.FilterPropertyList;
+import com.eqixiac.equinix.fabric.model.implementation.sort.SortPropertyList;
 
 /**
  * Client interface for managing Equinix Fabric Precision Time services. Precision Time provides
@@ -32,11 +35,26 @@ import java.util.List;
 public interface PrecisionTimes {
 
     /**
-     * Lists all precision time service instances accessible to the current account.
+     * Lists precision time services through {@code POST /fabric/v4/timeServices/search} with an
+     * empty filter. The specification documents {@code /project/projectId} as a mandatory filter
+     * property, so prefer {@link #search(FilterPropertyList, SortPropertyList)} with a project
+     * filter; the service may reject an unfiltered search.
      *
      * @return a paginated list of precision time services
      */
     PaginatedList<PrecisionTime> list();
+
+    /**
+     * Searches precision time services ({@code POST /fabric/v4/timeServices/search}). Filter
+     * properties: {@code /project/projectId} (mandatory per the spec), {@code /name},
+     * {@code /uuid}, {@code /type}, {@code /state}, {@code /account/accountNumber},
+     * {@code /package/code}.
+     *
+     * @param filter the search filter
+     * @param sort the sort criteria, may be {@code null}
+     * @return the matching services, paged
+     */
+    PaginatedFilteredList<PrecisionTime> search(FilterPropertyList filter, SortPropertyList sort);
 
     /**
      * Retrieves a single precision time service by its unique identifier.

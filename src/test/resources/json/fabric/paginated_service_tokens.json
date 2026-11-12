@@ -29,7 +29,7 @@
         "accountNumber": 123456,
         "orgId": 100100
       },
-      "changeLog": {
+      "changelog": {
         "createdBy": "tokenCreator",
         "createdDateTime": "2024-02-15T10:30:00Z",
         "updatedBy": "tokenCreator",
@@ -60,7 +60,7 @@
         "accountNumber": 123456,
         "orgId": 100100
       },
-      "changeLog": {
+      "changelog": {
         "createdBy": "tokenCreator",
         "createdDateTime": "2024-03-01T09:00:00Z",
         "updatedBy": "tokenCreator",

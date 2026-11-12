@@ -103,14 +103,6 @@
           "GetVlans": {
             "httpMethod": "GET",
             "requestUri": "{$portUuid}/linkProtocols"
-          },
-          "GetStatistics": {
-            "httpMethod": "GET",
-            "requestUri": "{$uuid}/stats"
-          },
-          "GetMetrics": {
-            "httpMethod": "GET",
-            "requestUri": "{$uuid}/metrics"
           }
         }
       },
@@ -151,14 +143,6 @@
           "SearchReceivedRoutes": {
             "httpMethod": "POST",
             "requestUri": "{$uuid}/receivedRoutes/search"
-          },
-          "GetStatistics": {
-            "httpMethod": "GET",
-            "requestUri": "{$uuid}/stats"
-          },
-          "GetMetrics": {
-            "httpMethod": "GET",
-            "requestUri": "{$uuid}/metrics"
           },
           "GetConnectionRouteAggregations": {
             "httpMethod": "GET",
@@ -203,11 +187,6 @@
           },
           "GetMetricByName": {
             "httpMethod": "GET"
-          },
-          "GetMetricByAssetId": {
-            "httpMethod": "GET",
-            "requestUri": "{$asset}/{$assetId}/metrics",
-            "overrideRootUri": true
           }
         }
       },
@@ -599,6 +578,10 @@
           "DeleteStream": {
             "httpMethod": "DELETE",
             "requestUri": "{$uuid}"
+          },
+          "SearchStreams": {
+            "httpMethod": "POST",
+            "requestUri": "search"
           }
         }
       },
@@ -624,14 +607,20 @@
           "DeleteStreamSubscription": {
             "httpMethod": "DELETE",
             "requestUri": "{$streamId}/subscriptions/{$uuid}"
+          },
+          "SearchStreamSubscriptions": {
+            "httpMethod": "POST",
+            "requestUri": "streamSubscriptions/search",
+            "overrideRootUri": true
           }
         }
       },
       "PrecisionTime": {
         "rootUri": "timeServices",
         "serviceEndpoints": {
-          "GetTimeServices": {
-            "httpMethod": "GET"
+          "SearchTimeServices": {
+            "httpMethod": "POST",
+            "requestUri": "search"
           },
           "GetTimeService": {
             "httpMethod": "GET",
@@ -679,9 +668,9 @@
             "httpMethod": "GET",
             "requestUri": "{$uuid}"
           },
-          "GetCloudEventByAssetId": {
-            "httpMethod": "GET",
-            "requestUri": "{$asset}/{$assetId}/cloudevents",
+          "SearchLiveEvents": {
+            "httpMethod": "POST",
+            "requestUri": "liveEvents/search",
             "overrideRootUri": true
           }
         }
@@ -857,6 +846,23 @@
           "DeleteStreamAsset": {
             "httpMethod": "DELETE",
             "requestUri": "{$streamId}/{$asset}/{$assetId}"
+          },
+          "SearchStreamAssets": {
+            "httpMethod": "POST",
+            "requestUri": "streamAssets/search",
+            "overrideRootUri": true
+          },
+          "GetStreamDevice": {
+            "httpMethod": "GET",
+            "requestUri": "{$streamId}/devices/{$deviceId}"
+          },
+          "UpdateStreamDevice": {
+            "httpMethod": "PUT",
+            "requestUri": "{$streamId}/devices/{$deviceId}"
+          },
+          "DeleteStreamDevice": {
+            "httpMethod": "DELETE",
+            "requestUri": "{$streamId}/devices/{$deviceId}"
           }
         }
       },
@@ -876,7 +882,7 @@
             "requestUri": "{$streamId}/alertRules"
           },
           "UpdateStreamAlertRule": {
-            "httpMethod": "PATCH",
+            "httpMethod": "PUT",
             "requestUri": "{$streamId}/alertRules/{$uuid}"
           },
           "DeleteStreamAlertRule": {

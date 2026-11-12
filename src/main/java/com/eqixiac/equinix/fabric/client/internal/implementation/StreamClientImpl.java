@@ -18,6 +18,9 @@ package com.eqixiac.equinix.fabric.client.internal.implementation;
 
 import com.eqixiac.equinix.core.client.ResourceClientBase;
 import com.eqixiac.equinix.core.http.response.Page;
+import com.eqixiac.equinix.core.model.FilteredSortedPaginatedPost;
+import com.eqixiac.equinix.fabric.model.implementation.filter.FilterPropertyList;
+import com.eqixiac.equinix.fabric.model.implementation.sort.SortPropertyList;
 import com.eqixiac.equinix.fabric.client.implementation.FabricConfigImpl;
 import com.eqixiac.equinix.fabric.client.internal.StreamClient;
 import com.eqixiac.equinix.fabric.model.Stream;
@@ -58,5 +61,9 @@ public class StreamClientImpl extends ResourceClientBase<Stream, StreamJson> imp
 
     public StreamJson refresh(String uuid) {
         return getByUuid(uuid);
+    }
+
+    public Page<StreamJson> search(FilterPropertyList filter, SortPropertyList sort) {
+        return searchPage("SearchStreams", new FilteredSortedPaginatedPost<>(filter, sort));
     }
 }

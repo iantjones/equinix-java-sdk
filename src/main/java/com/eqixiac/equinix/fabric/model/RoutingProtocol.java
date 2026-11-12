@@ -21,7 +21,7 @@ import com.eqixiac.equinix.fabric.enums.RoutingProtocolType;
 import com.eqixiac.equinix.fabric.model.implementation.*;
 import com.eqixiac.equinix.fabric.model.json.creators.RoutingProtocolOperator;
 
-public interface RoutingProtocol {
+public interface RoutingProtocol extends DeletableResource {
 
     String getUuid();
 

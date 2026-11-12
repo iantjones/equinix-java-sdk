@@ -30,7 +30,7 @@ import java.util.List;
  *
  * @author ianjones
  */
-public interface ServiceToken {
+public interface ServiceToken extends DeletableResource {
 
     String getUuid();
 
@@ -45,14 +45,11 @@ public interface ServiceToken {
     String getDescription();
 
     /**
-     * Information about the side of the connection the token issuer is on. Deprecated in the spec.
+     * Expiration date and time of the token (UTC). Replaces the {@code expiry} and
+     * {@code issuerSide} properties that spec 4.34.0 deprecates and this SDK no longer models.
      *
-     * @return the issuer side
+     * @return the expiration, or {@code null}
      */
-    String getIssuerSide();
-
-    Integer getExpiry();
-
     LocalDateTime getExpirationDateTime();
 
     Connection getConnection();

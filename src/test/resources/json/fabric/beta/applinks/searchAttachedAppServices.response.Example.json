@@ -1,0 +1,19 @@
+{
+  "pagination": {
+    "offset": 0,
+    "limit": 20,
+    "total": 1,
+    "next": "/search?offset=1&limit=20",
+    "previous": "/search?offset=0&limit=20"
+  },
+  "data": [
+    {
+      "href": "https://api.equinix.com/fabric/v4/appLinks/23cd19ab-d3bb-478b-9f25-bd12a3af1914/appServices/5008a109-9d1c-485c-b0ba-de9736f283c2",
+      "uuid": "5008a109-9d1c-485c-b0ba-de9736f283c2",
+      "type": "APP_SERVICE",
+      "geoScope": "GLOBAL",
+      "destinationIp": "10.10.1.110",
+      "attachmentStatus": "ATTACHED"
+    }
+  ]
+}

@@ -1,0 +1,1731 @@
+swagger: '2.0'
+info:
+  version: 1.0.0
+  title: Reports Service API
+  description: The Reports APIs provide services to trigger and access various reports types available on Equinix Customer Portal. These report types can be triggered and accessed by a user depending on their permissions. The reports can be scheduled to be generated on a recurring basis, or they can be generated on an ad hoc basis.
+  termsOfService: https://www.equinix.com/about/legal/terms
+  contact:
+    name: Equinix API Support
+    url: https://docs.equinix.com/api-support.htm
+host: api.equinix.com
+schemes:
+- https
+paths:
+  /v1/reportCenter/reports/scheduler:
+    post:
+      operationId: scheduleReport
+      summary: Schedule New Report
+      tags:
+      - Report Center
+      description: Use this API to schedule a report to be generated on a recurring or ad hoc basis.
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+      - name: body
+        in: body
+        schema:
+          $ref: '#/definitions/reportRequest'
+          example:
+            name: et officia sed
+            parameters:
+            - name: consequat quis non consectetur eu
+              value: consequat anim ad
+              type: LONG
+            - name: consequat pariatur
+              value: volup
+              type: STRING
+            - name: irure veniam sint
+              value: exercitation
+              type: INT
+            - name: velit
+              value: in cillum
+              type: STRING
+            - name: elit occaecat mollit laboris ut
+              value: est
+              type: DOUBLE
+            scheduleType: QUARTERLY
+            period: 7_DAYS
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/scheduledReport'
+          examples:
+            application/json:
+              scheduledId: fec45434-dd6a-4fe9-8fd4-06f219e5dff6
+              reportName: eiusmod qui nisi
+              scheduleType: QUARTERLY
+              period: 14_DAYS
+              createdBy: reprehenderit
+              createdDate: '4804-01-02T06:54:41.561Z'
+              lastAttemptedDate: '4533-03-23T21:44:07.660Z'
+              customerOrganizationId: 75750444
+              forOrg: 36659
+              forUser: 59730
+              lastModifiedBy: john.doe
+              lastModifiedDate: '2017-07-02T21:59:15.045Z'
+              numberOfFailedAttempts: 1
+              status: ACTIVE
+              parameters:
+              - name: ipsum sed et dolor non
+                value: laborum reprehenderit
+                type: DOUBLE
+              - name: et sit Ut aute
+                value: eu
+                type: BOOLEAN
+              - name: cillum
+                value: Ut consequat
+                type: DOUBLE
+              reports:
+              - reportId: 95f08f5b-ee7d-473a-975f-0e9a49f03ab0
+                scheduledId: 741ebc4b-07b8-4aca-bbd1-f65c79c962da
+                createdBy: proid
+                createdDate: '3614-05-18T07:13:42.624Z'
+                startTime: '4827-05-13T00:28:17.727Z'
+                status: ERROR
+                numberOfAttempts: 2
+                parameters:
+                - name: id laborum reprehenderit cillum irur
+                  value: consequat
+                  type: LONG
+                - name: ullamco aute
+                  value: nulla aute consectetur est ea
+                  type: STRING
+                lastAccessedDate: '4302-06-01T23:03:58.540Z'
+    get:
+      operationId: getScheduledReports
+      summary: Get your Scheduled Reports
+      tags:
+      - Report Center
+      description: Use this method to get a list of reports that the authenticated user has scheduled to be generated on a recurring basis.
+      produces:
+      - application/json
+      parameters:
+      - name: offset
+        in: query
+        description: Use offset and limit to restrict the number of users in the output. Offset can be used to specify the start record
+        type: integer
+        default: 0
+        minimum: 0
+      - name: limit
+        in: query
+        description: Use offset and limit to restrict the number of users in the output. Limit can be used to restrict the number of reports in the response
+        type: integer
+        default: 10
+        minimum: 0
+        maximum: 100
+      - name: sorts
+        in: query
+        description: Use sort to get the reports in the response sorted in the particular order. for example, use '-GENERATED_DATE to sort the reports by generated date in descending order. And ‘GENERATED_DATE’ for ascending order. For descending order, the field name should be prefixed with '-'
+        type: array
+        default: -CREATED_DATE
+        uniqueItems: true
+        items:
+          type: string
+          enum:
+          - REPORT_NAME
+          - -REPORT_NAME
+          - CREATED_DATE
+          - -CREATED_DATE
+        collectionFormat: csv
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/search-scheduled-report-response'
+          examples:
+            application/json:
+              data:
+              - scheduledId: fb85e943-39da-4d62-afcf-46ed1077ce60
+                reportName: voluptate
+                scheduleType: DAILY
+                createdBy: cupidatat dolore adipisicing quis
+                createdDate: '3269-06-06T22:03:28.837Z'
+                lastAttemptedDate: '3699-07-10T06:45:56.312Z'
+                customerOrganizationId: 48422050
+                status: INACTIVE
+                parameters: [
+                  ]
+                reports: [
+                  ]
+                period: 1_DAY
+                forOrg: 43909627
+                forUser: 12354
+                lastModifiedBy: john.doe
+                lastModifiedDate: '2017-07-02T21:59:15.045Z'
+                numberOfFailedAttempts: 2
+              - scheduledId: 37f5fa8f-5fe8-40b3-91db-627bc053432c
+                reportName: eiusmod ullamco ipsum pariatur laborum
+                scheduleType: QUARTERLY
+                createdBy: occaecat dolor consectetur
+                createdDate: '3109-05-27T03:32:30.773Z'
+                lastAttemptedDate: '3115-06-07T03:13:50.038Z'
+                customerOrganizationId: 77997941
+                forOrg: 43909627
+                forUser: 12354
+                lastModifiedBy: john.doe
+                lastModifiedDate: '2017-07-02T21:59:15.045Z'
+                numberOfFailedAttempts: 3
+                status: INACTIVE
+                parameters:
+                - name: ex cu
+                  value: mollit dolor laboris sint
+                  type: ARRAY
+                - name: sed
+                  value: pariatur anim dolor cupidatat consectetur
+                  type: INT
+                - name: ipsum
+                  value: minim Excepteur tempor ulla
+                  type: INT
+                - name: Ut laborum
+                  value: esse commodo adipisicing sed
+                  type: INT
+                - name: anim Duis elit nisi irure
+                  value: cillum
+                  type: ARRAY
+                reports: [
+                  ]
+                period: 7_DAYS
+              - scheduledId: ca32d0c1-4eee-4dd6-8d29-1401d91ce2af
+                reportName: fugiat magna cupidatat
+                scheduleType: DAILY
+                createdBy: esse tempor sunt mollit aute
+                createdDate: '4740-12-25T16:47:30.142Z'
+                lastAttemptedDate: '2223-10-26T12:30:20.003Z'
+                customerOrganizationId: 25319222
+                forUser: 12354
+                lastModifiedBy: john.doe
+                lastModifiedDate: '2017-07-02T21:59:15.045Z'
+                numberOfFailedAttempts: 2
+                status: ACTIVE
+                parameters:
+                - name: eiusmod exercitation in
+                  value: fugiat e
+                  type: BOOLEAN
+                  required: true
+                - name: id irure L
+                  value: sed
+                  type: ARRAY
+                - name: eiusmod non proident
+                  value: enim
+                  type: LONG
+                - name: exercitation sint sunt
+                  value: veniam
+                  type: STRING
+                reports: [
+                  ]
+                forOrg: 37814662
+              - scheduledId: 384ebadf-6cac-4258-9432-254d97a43edc
+                reportName: culpa qui enim quis ipsum
+                scheduleType: DAILY
+                createdBy: sint
+                createdDate: '2054-06-06T17:58:19.383Z'
+                lastAttemptedDate: '2777-08-05T04:43:04.000Z'
+                customerOrganizationId: 3386629
+                forOrg: 43909627
+                forUser: 12354
+                lastModifiedBy: john.doe
+                lastModifiedDate: '2017-07-02T21:59:15.045Z'
+                numberOfFailedAttempts: 0
+                status: ACTIVE
+                parameters:
+                - name: sint
+                  value: amet
+                  type: ARRAY
+                - name: 'incididunt aute tempor '
+                  value: anim ullamco
+                  type: ARRAY
+                  required: true
+                reports: [
+                  ]
+              page:
+                total: 4
+                limit: 5
+                offset: 0
+                sorts:
+                - sint sit dolor
+                - ut est laborum
+                - magna voluptate
+                - velit nulla sed in voluptate
+              _links:
+                self:
+                  href: esse aute
+                next:
+                  href: Duis dolor
+                prev:
+                  href: labore velit
+    delete:
+      operationId: deleteScheduledReports
+      summary: Delete your scheduled reports
+      tags:
+      - Report Center
+      description: Use this API to delete specific recurring reports of an authenticated user by the recurring reports' scheduled IDs.
+      produces:
+      - application/json
+      parameters:
+      - name: scheduledIds
+        in: query
+        description: Comma separated scheduled ids to be deleted.
+        required: true
+        type: array
+        uniqueItems: true
+        minItems: 1
+        maxItems: 20
+        items:
+          type: string
+        collectionFormat: csv
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/status'
+          examples:
+            application/json:
+              status: true
+    parameters:
+    - $ref: '#/parameters/authHeader'
+  /v1/reportCenter/reports/files:
+    get:
+      operationId: downloadReports
+      summary: Download list of generated reports
+      tags:
+      - Report Center
+      description: Use this method to download a list of generated reports triggered by the authenticated user.
+      produces:
+      - application/octet-stream
+      - application/json
+      parameters:
+      - name: reportIds
+        in: query
+        description: Comma separated report ids to be deleted.
+        required: true
+        type: array
+        uniqueItems: true
+        minItems: 1
+        maxItems: 20
+        items:
+          type: string
+        collectionFormat: csv
+      responses:
+        '200':
+          description: Successful response returning files
+          schema:
+            type: file
+        '403':
+          description: Authorization Error
+          schema:
+            $ref: '#/definitions/genericError'
+        '404':
+          description: Resource not found
+          schema:
+            $ref: '#/definitions/genericError'
+        '500':
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/genericError'
+    parameters:
+    - $ref: '#/parameters/authHeader'
+  /v1/reportCenter/reports/scheduler/{scheduledId}:
+    parameters:
+    - name: scheduledId
+      in: path
+      description: Scheduled Id for the report entry
+      required: true
+      type: string
+      format: uuid
+    - $ref: '#/parameters/authHeader'
+    get:
+      operationId: getScheduledReport
+      summary: Get details of scheduled report
+      tags:
+      - Report Center
+      description: Use this API to get the report details of a specific recurring scheduled report requested by the authenticated user.
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/scheduledReport'
+          examples:
+            application/json:
+              scheduledId: 7a48fc3e-5263-4d75-a6ea-a1c576318ec5
+              reportName: nisi
+              scheduleType: MONTHLY
+              period: 7_DAYS
+              createdBy: ut ullamco in qui
+              createdDate: '3549-12-27T03:27:05.019Z'
+              lastAttemptedDate: '3732-11-15T13:24:17.660Z'
+              customerOrganizationId: 86501527
+              forOrg: 80446188
+              forUser: 12354
+              lastModifiedBy: john.doe
+              lastModifiedDate: '2017-07-02T21:59:15.045Z'
+              numberOfFailedAttempts: 3
+              status: INACTIVE
+              parameters:
+              - name: ex cillum culpa et
+                value: enim in
+                type: INT
+              - name: proident exercitation sed do Lorem
+                value: incididunt cupidatat commodo ip
+                type: LONG
+              - name: Excepteur Lorem qui esse nulla
+                value: 'ad '
+                type: STRING
+              - name: Ut dolor id in
+                value: eiusmod consequat velit
+                type: STRING
+              - name: minim ut
+                value: quis
+                type: LONG
+              reports:
+              - reportId: 53b2e8e0-6eb0-45c5-bb75-2c684ef176ca
+                scheduledId: 6a996098-29d4-462b-abb8-9fc546bdf48d
+                createdBy: Ut minim
+                createdDate: '2229-08-20T08:22:59.562Z'
+                startTime: '2047-05-28T10:40:18.068Z'
+                status: INACTIVE
+                numberOfAttempts: 0
+                parameters:
+                - name: dolor
+                  value: non aliqua tempor labore reprehenderit
+                  type: ARRAY
+                - name: sint Ut dolo
+                  value: sint laboris officia
+                  type: STRING
+                - name: magna sit proident voluptate dolore
+                  value: labore exercitation
+                  type: INT
+                - name: dolor
+                  value: nulla commodo esse ea
+                  type: STRING
+                publisherInfo: {
+                  }
+              - reportId: 54c39784-7232-47db-acd4-00da92619ee9
+                scheduledId: 1c5e15e7-1ea7-49f2-801f-27b33f3efbbf
+                createdBy: sed occaecat elit voluptate Duis
+                createdDate: '2317-01-16T05:33:22.543Z'
+                startTime: '3867-08-22T17:01:49.260Z'
+                status: INACTIVE
+                numberOfAttempts: 0
+                parameters:
+                - name: pariatur laboris dolore in
+                  value: mollit veniam ullamco aliquip i
+                  type: STRING
+                location: Excepteur do
+                endTime: '3863-01-02T05:40:11.392Z'
+                lastAccessedDate: '2312-09-12T04:10:52.600Z'
+                publisherInfo: {
+                  }
+              - reportId: e46697b7-7db5-4d7d-9a2a-f0ca371f4840
+                scheduledId: 34648279-fa1b-42dc-8edb-65678addd710
+                createdBy: commodo eu sint laborum
+                createdDate: '2549-04-09T16:14:33.705Z'
+                startTime: '4589-10-27T11:35:19.288Z'
+                status: SUCCESS
+                numberOfAttempts: 2
+                parameters:
+                - name: aute occaecat sunt
+                  value: do eu cillum reprehenderit deserunt
+                  type: STRING
+                - name: voluptate
+                  value: aliqua
+                  type: ARRAY
+                - name: q
+                  value: adipisicing nostrud u
+                  type: STRING
+                - name: elit cillum esse pariatur ut
+                  value: qui cons
+                  type: STRING
+                endTime: '3400-03-13T05:45:48.760Z'
+                lastAccessedDate: '4299-07-20T20:00:25.475Z'
+                location: commodo est qui
+                publisherInfo: {
+                  }
+    put:
+      operationId: updateScheduledReport
+      summary: Modify scheduled report parameters
+      tags:
+      - Report Center
+      description: Use this method to modify the report parameters and values of an existing scheduled report by the authenticated user.
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+      - name: body
+        in: body
+        schema:
+          $ref: '#/definitions/reportRequest'
+          example:
+            name: cupidatat elit
+            parameters:
+            - name: nisi ea aliquip
+              value: ut
+              type: DOUBLE
+              required: false
+            - name: 'aute '
+              value: in et ullamco
+              type: INT
+            - name: esse
+              value: anim ex do
+              type: ARRAY
+            scheduleType: ANNUALLY
+            period: CUSTOM
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/scheduledReport'
+          examples:
+            application/json:
+              scheduledId: 2f5d2739-6761-409c-ac9c-5093b5f130c2
+              reportName: occaecat tempor proident sint magna
+              scheduleType: QUARTERLY
+              period: 7_DAYS
+              createdBy: culpa Lorem
+              createdDate: '2388-03-14T01:42:40.633Z'
+              lastAttemptedDate: '1979-10-12T21:39:16.862Z'
+              customerOrganizationId: 42799428
+              forOrg: 55997535
+              forUser: 12354
+              lastModifiedBy: john.doe
+              lastModifiedDate: '2017-07-02T21:59:15.045Z'
+              numberOfFailedAttempts: 0
+              status: ACTIVE
+              parameters:
+              - name: qui veniam irure
+                value: et
+                type: BOOLEAN
+              reports:
+              - reportId: 3050cbb7-b49a-4396-a034-258b5cdcb308
+                scheduledId: 1a6772a5-db72-4a7b-94c6-84ea738d398b
+                createdBy: dolore
+                createdDate: '3550-09-11T03:45:02.961Z'
+                startTime: '4018-06-28T02:17:57.901Z'
+                status: INACTIVE
+                numberOfAttempts: 2
+                parameters:
+                - name: minim
+                  value: id cupidatat consectetur
+                  type: DOUBLE
+                - name: pariatur aliqua
+                  value: ut commodo
+                  type: ARRAY
+                - name: pariatur voluptate commodo
+                  value: fugiat sit
+                  type: INT
+                - name: reprehenderit
+                  value: cupidatat aliquip
+                  type: ARRAY
+                - name: eu id officia esse
+                  value: ea consequat ad
+                  type: DOUBLE
+                location: anim dolor do eu
+                lastAccessedBy: occaecat dolor officia in elit
+                lastAccessedDate: '4226-05-03T17:49:05.713Z'
+                endTime: '2408-02-04T16:24:12.594Z'
+              - reportId: f94c7d84-1072-493f-8c41-3be00a4852fd
+                scheduledId: d1b1a11b-a6ba-437d-b106-999dfcc307a8
+                createdBy: amet non
+                createdDate: '4855-08-18T01:00:39.416Z'
+                startTime: '4505-05-25T14:28:52.122Z'
+                status: INACTIVE
+                numberOfAttempts: 0
+                parameters:
+                - name: Ut
+                  value: consectetur irure exercitation
+                  type: ARRAY
+                - name: Ut laborum
+                  value: enim
+                  type: STRING
+                - name: est cillum fugiat
+                  value: occaecat nulla sit ut
+                  type: STRING
+                location: officia exercitation sed pariatur occaecat
+                numberOfDownloads: 84017338
+                lastAccessedBy: ullamco adipisicing esse est
+  /v1/reportCenter/reports/definitions:
+    get:
+      operationId: getReportDefinitions
+      summary: Get all reports definitions
+      tags:
+      - Report Center
+      description: This API returns all the parameter configurations and applicable values for all the report types supported by Equinix.
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: ''
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/reportRequest'
+          examples:
+            application/json:
+            - name: consectetur in amet ullamco occaecat
+              parameters:
+              - name: status
+                type: BOOLEAN
+                value: 'true'
+              - name: recordCount
+                type: INT
+                value: '1234'
+              - name: startDate
+                type: STRING
+                value: cillum
+              - name: userKeys
+                type: ARRAY
+                value: 312453,542784,682012
+              control: ALLOW
+              categories:
+              - SITE_AND_ENVIRONMENT
+              - ASSET
+              - FINANCE
+              - SECURITY
+            - name: ul
+              parameters: [
+                ]
+              categories:
+              - POWER
+              control: DENY
+    parameters:
+    - $ref: '#/parameters/authHeader'
+  /v1/reportCenter/reports:
+    delete:
+      operationId: deleteReports
+      summary: Delete your generated reports
+      tags:
+      - Report Center
+      description: Use this API to delete specific generated reports of an authenticated user by the generated reports' report IDs.
+      produces:
+      - application/json
+      parameters:
+      - name: reportIds
+        in: query
+        description: Comma separated report ids to be deleted.
+        required: true
+        type: array
+        uniqueItems: true
+        minItems: 1
+        maxItems: 20
+        items:
+          type: string
+        collectionFormat: csv
+      responses:
+        '200':
+          description: ''
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/downloadable-report'
+          examples:
+            application/json:
+            - reportId: e96b42b6-ef0f-458f-a3f2-a5fd188236d7
+              status: SUCCESS
+            - reportId: 75e7c1e3-8593-4afa-ab75-b80b341d5547
+              status: ERROR
+            - reportId: 737b187c-3c28-4bd2-8c4c-b46c95e69547
+              status: SUCCESS
+    get:
+      operationId: getReports
+      summary: Get your generated reports
+      tags:
+      - Report Center
+      description: Use this method to get a list of reports triggered for generation by the authenticated user.
+      produces:
+      - application/json
+      parameters:
+      - name: offset
+        in: query
+        description: The start index from which the list is created.
+        type: integer
+        default: 0
+        minimum: 0
+      - name: limit
+        in: query
+        description: Use offset and limit to restrict the number of users in the output. Limit can be used to restrict the number of reports in the response
+        type: integer
+        default: 10
+        minimum: 0
+        maximum: 100
+      - name: duration
+        in: query
+        description: Number of days since should reports be searched
+        type: integer
+        default: 7
+        minimum: 1
+        maximum: 365
+      - name: sorts
+        in: query
+        description: Use sort to get the reports in the response sorted in the particular order. for example, use '-GENERATED_DATE' to sort the reports by generated date in descending order. And ‘GENERATED_DATE’ for ascending order. For descending order, the field name should be prefixed with '-'
+        type: array
+        default: -GENERATED_DATE
+        uniqueItems: true
+        items:
+          type: string
+          enum:
+          - REPORT_NAME
+          - -REPORT_NAME
+          - GENERATED_DATE
+          - -GENERATED_DATE
+          - REQUESTED_DATE
+          - -REQUESTED_DATE
+        collectionFormat: csv
+      - name: statuses
+        in: query
+        description: List of statuses of reports to be searched.
+        type: array
+        uniqueItems: true
+        default:
+        - IN_PROGRESS
+        - SUCCESS
+        - ERROR
+        items:
+          type: string
+          enum:
+          - IN_PROGRESS
+          - SUCCESS
+          - ERROR
+        collectionFormat: csv
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/search-report-response'
+          examples:
+            application/json:
+              data:
+              - reportId: 624c4a6c-7871-41c3-ba6e-75850d29ed92
+                scheduledId: 5a7107c6-7192-45b6-bf3d-d9e941aa4348
+                reportName: dolore
+                createdBy: in ea officia Lorem
+                requestedDate: '3964-08-29T08:17:55.966Z'
+                generatedDate: '2436-06-24T06:01:42.805Z'
+                status: SUCCESS
+                fileSize: 22690250
+                numberOfDownloads: 0
+              - reportId: ab35a2cc-171f-42d4-bbb4-a0193585450d
+                scheduledId: 511c1f32-da86-42bf-9a5d-e0fbe1145070
+                reportName: in ea nostrud dolor anim
+                createdBy: ullamco sin
+                requestedDate: '3721-10-04T04:48:32.824Z'
+                generatedDate: '2778-10-01T13:16:17.591Z'
+                status: ERROR
+                numberOfDownloads: 1
+              - reportId: 2007a3a4-e9d0-49a5-bcb1-18ca689a6e50
+                scheduledId: 0d9f98ed-cc78-41ab-847a-1fbdf79ff55d
+                reportName: ullamco aliquip veniam
+                createdBy: in nostrud
+                requestedDate: '2053-11-05T10:45:49.313Z'
+                generatedDate: '4251-04-28T12:19:23.748Z'
+                status: ERROR
+                fileSize: 22695633
+                numberOfDownloads: 3
+              page:
+                total: 20393392
+                limit: 12512897
+                offset: 49505553
+                sorts:
+                - deserunt laboris
+                - cupidatat
+                - ut ex
+                - do sit
+                - ut qui
+              _links:
+                self:
+                  href: non cupidatat esse ex
+                next:
+                  href: ad nulla quis aliqua anim
+    parameters:
+    - $ref: '#/parameters/authHeader'
+  /v1/reportCenter/reports/scheduler/{scheduledId}/report:
+    parameters:
+    - name: scheduledId
+      in: path
+      description: Scheduled Id to generate a new report
+      required: true
+      type: string
+      format: uuid
+    - $ref: '#/parameters/authHeader'
+    post:
+      operationId: generateReport
+      summary: Generate new report from schedule
+      tags:
+      - Report Center
+      description: Use this API to generate a new report from an existing scheduled report of the authenticated user, as identified by its scheduled ID.
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/report'
+          examples:
+            application/json:
+              reportId: eab1d606-2315-476f-848a-a622a47f24ff
+              scheduledId: b48696e4-6fdb-49ed-868e-040df6596245
+              startTime: '4498-05-31T11:48:13.373Z'
+              endTime: '4472-01-16T11:56:02.238Z'
+              createdBy: elit consequat occaecat
+              createdDate: '2251-10-21T02:07:18.598Z'
+              lastAccessedBy: occaecat ullamco tempor c
+              lastAccessedDate: '2594-04-16T16:02:41.030Z'
+              status: IN_PROGRESS
+              location: eu labore
+              numberOfDownloads: 1
+              numberOfAttempts: 1
+              parameters:
+              - name: reprehender
+                value: quis laborum ut
+                type: LONG
+              - name: nostrud qui pariatur
+                value: eiusmod ut officia ex sint
+                type: BOOLEAN
+              - name: ullamco esse eu enim
+                value: anim qui commodo Excepteur dolor
+                type: BOOLEAN
+              - name: amet veniam
+                value: voluptate
+                type: INT
+              - name: dolor adipisicing
+                value: commodo
+                type: ARRAY
+  /v1/reportCenter/reports/definitions/{reportName}:
+    parameters:
+    - name: reportName
+      in: path
+      description: Unique report name of the definition
+      required: true
+      type: string
+      minLength: 1
+    - $ref: '#/parameters/authHeader'
+    get:
+      operationId: getReportDefinition
+      summary: Get report definition by name
+      tags:
+      - Report Center
+      description: Use this API to return the parameter configurations and applicable values for a specific report type supported by Equinix.
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/reportRequest'
+          examples:
+            application/json:
+              name: consectetur in amet ullamco occaecat
+              parameters:
+              - name: status
+                type: BOOLEAN
+                value: 'true'
+              - name: recordCount
+                type: INT
+                value: '1234'
+              - name: startDate
+                type: STRING
+                value: cillum
+              - name: userKeys
+                type: ARRAY
+                value: 312453,542784,682012
+              control: ALLOW
+              categories:
+              - SITE_AND_ENVIRONMENT
+              - ASSET
+              - FINANCE
+              - SECURITY
+        '401':
+          description: ''
+  /v1/reportCenter/reports/{reportId}/file:
+    parameters:
+    - name: reportId
+      in: path
+      description: Unique identifier of generated report
+      required: true
+      type: string
+      format: uuid
+    - $ref: '#/parameters/authHeader'
+    get:
+      operationId: downloadReport
+      summary: Download a generated report
+      tags:
+      - Report Center
+      description: This method downloads a specific generated report that was originally triggered by the authenticated user. 
+      produces:
+      - application/octet-stream
+      - application/json
+      responses:
+        '200':
+          description: Successful response returning the file
+          schema:
+            type: file
+        '403':
+          description: Authorization Error
+          schema:
+            $ref: '#/definitions/genericError'
+        '404':
+          description: Resource not found
+          schema:
+            $ref: '#/definitions/genericError'
+        '500':
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/genericError'
+  /v1/reportCenter/reports/{reportId}:
+    parameters:
+    - name: reportId
+      in: path
+      description: Unique identifier of generated report
+      required: true
+      type: string
+      format: uuid
+    - $ref: '#/parameters/authHeader'
+    get:
+      operationId: getReportById
+      summary: Get details of generated report 
+      tags:
+      - Report Center
+      description: Use this API to get the details of a report triggered for generated by the authenticated user.
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/report'
+          examples:
+            application/json:
+              reportId: 894d2b14-30b2-413b-8370-110998b9923d
+              scheduledId: 102eb0a5-0d4b-46ba-8865-773728cfffbb
+              createdBy: ad dolor
+              createdDate: '2909-07-21T00:14:20.700Z'
+              lastAccessedBy: eu reprehenderit
+              lastAccessedDate: '3111-04-13T18:17:23.826Z'
+              startTime: '3698-08-25T04:24:44.011Z'
+              endTime: '1994-03-01T04:43:58.554Z'
+              status: ERROR
+              errorMessage: cupidatat qui non
+              location: Excepteur fugiat consequat Ut eu
+              numberOfDownloads: 92915061
+              numberOfAttempts: 1
+              parameters:
+              - name: Lorem
+                value: ad nostrud sunt sit
+                type: ARRAY
+              publisherInfo: {
+                }
+        '401':
+          description: ''
+definitions:
+  reportRequest:
+    title: ReportRequest
+    type: object
+    properties:
+      name:
+        type: string
+        description: Report Name
+        minLength: 1
+      parameters:
+        type: array
+        description: List of input parameters
+        minItems: 0
+        items:
+          $ref: '#/definitions/parameter'
+      scheduleType:
+        $ref: '#/definitions/scheduleType'
+      period:
+        $ref: '#/definitions/period'
+      control:
+        type: string
+        description: Indicates whether user is entitled to use this report type.
+        enum:
+        - ALLOW
+        - DENY
+      categories:
+        type: array
+        uniqueItems: true
+        description: The list of categories this definition belongs to
+        items:
+          type: string
+          enum:
+          - SECURITY
+          - SITE_AND_ENVIRONMENT
+          - ASSET
+          - POWER
+          - FINANCE
+    required:
+    - name
+    - parameters
+    - scheduleType
+    - period
+    example:
+      name: eu exercitation
+      parameters:
+      - name: id sunt
+        value: tempor consequat minim
+        type: INT
+      - name: eu consequat minim commodo
+        value: Duis ex laboris
+        type: LONG
+      - name: nostrud nulla in minim
+        value: est laborum magna ea
+        type: STRING
+      - name: ut ullamco pariatur ex
+        value: laboris Duis commodo culpa
+        type: LONG
+      scheduleType: MONTHLY
+      period: 30_DAYS
+  parameter:
+    title: Parameter
+    type: object
+    properties:
+      name:
+        type: string
+        description: Parameter name
+      value:
+        type: string
+        description: Parameter value
+        minLength: 1
+      type:
+        type: string
+        description: Parameter type
+        enum:
+        - ARRAY
+        - STRING
+        - LONG
+        - INT
+        - BOOLEAN
+        - DOUBLE
+        - JSON
+        - JSON_ARRAY
+      required:
+        type: boolean
+        description: Flag to indicate the parameter is required or optional
+    required:
+    - name
+    - value
+    example:
+      name: user_key
+      value: 143534,908373
+      type: ARRAY
+      required: true
+  status:
+    title: Status
+    type: object
+    properties:
+      status:
+        type: boolean
+        description: staus of the operation
+        default: true
+    required:
+    - status
+  scheduleType:
+    title: ScheduleType
+    type: string
+    description: Scheduling strategy for the report to be generated.
+    enum:
+    - ONE_TIME
+    - DAILY
+    - WEEKLY
+    - MONTHLY
+    - QUARTERLY
+    - ANNUALLY
+  scheduledReport:
+    title: ScheduledReport
+    type: object
+    properties:
+      scheduledId:
+        type: string
+        description: A unique UUID string denoting the id of the scheduled entry
+        format: uuid
+      reportName:
+        type: string
+        description: Name of the report
+        minLength: 1
+      scheduleType:
+        $ref: '#/definitions/scheduleType'
+      period:
+        $ref: '#/definitions/period'
+      createdBy:
+        type: string
+        description: Person/Entity who created this entry first time
+      createdDate:
+        type: string
+        description: Time when this entry was first created
+        format: date-time
+      lastAttemptedDate:
+        type: string
+        description: Last attempted date to trigger the report generation
+        format: date-time
+      customerOrganizationId:
+        type: integer
+        description: Customer Organization Id
+        minimum: 0
+      forOrg:
+        type: integer
+        description: Customer Org Id where report is generated on behalf of
+        minimum: 1
+      forUser:
+        type: string
+        description: User key where report is generated on behalf of
+      lastModifiedBy:
+        type: string
+        description: Person/Entity who modified this entry last time
+      lastModifiedDate:
+        type: string
+        description: Last modified date of this entry
+        format: date-time
+      numberOfFailedAttempts:
+        type: integer
+        description: Number of times the generation of report were failed
+        minimum: 0
+        maximum: 3
+      status:
+        $ref: '#/definitions/scheduleStatus'
+      parameters:
+        type: array
+        description: Parameters for the reports to be generated
+        minItems: 0
+        items:
+          $ref: '#/definitions/parameter'
+      reports:
+        type: array
+        description: Array of generated reports
+        uniqueItems: false
+        items:
+          $ref: '#/definitions/report'
+    required:
+    - scheduledId
+    - reportName
+    - scheduleType
+    - createdBy
+    - createdDate
+    - lastAttemptedDate
+    - customerOrganizationId
+    - status
+    - parameters
+    - reports
+    example:
+      scheduledId: 806f281c-6295-465e-bd41-04559d4d4960
+      reportName: my_report
+      scheduleType: WEEKLY
+      period: 30_DAYS
+      createdBy: john.doe
+      createdDate: '2017-05-14T00:40:59.790Z'
+      lastAttemptedDate: '2018-07-02T21:59:15.045Z'
+      customerOrganizationId: 44010
+      forOrg: 28120
+      forUser: 12354
+      lastModifiedBy: john.doe
+      lastModifiedDate: '2017-07-02T21:59:15.045Z'
+      numberOfFailedAttempts: 0
+      status: ACTIVE
+      parameters:
+      - name: adipisicing
+        value: Duis
+        type: STRING
+      - name: esse anim dolor et
+        value: velit Excepteur voluptate
+        type: ARRAY
+      - name: exercitation pariatur cupidatat anim in
+        value: labore esse
+        type: ARRAY
+      - name: exercitation est
+        value: magna quis
+        type: DOUBLE
+      - name: dolor nulla nisi ut eu
+        value: Duis mollit Lorem
+        type: DOUBLE
+      reports:
+      - reportId: 71df1306-94f9-4cbd-b6b0-735098bf7f87
+        scheduledId: 772e5b73-3814-4604-8ae9-6f3eef114132
+        createdBy: ea sint fugi
+        createdDate: '3738-09-09T05:31:51.735Z'
+        startTime: '3990-09-01T03:46:44.797Z'
+        status: SUCCESS
+        numberOfAttempts: 3
+        parameters: [
+          ]
+        publisherInfo: {
+          }
+        lastAccessedBy: sunt eu aute
+      - reportId: cff3620a-e3d6-4206-a504-1758bd400501
+        scheduledId: 4ad6048f-3fc4-4fb9-8b66-22fba0bd62f1
+        createdBy: ullamco amet nostrud sint
+        createdDate: '2918-11-28T03:33:08.736Z'
+        startTime: '4808-02-16T12:09:15.960Z'
+        status: INACTIVE
+        numberOfAttempts: 3
+        parameters:
+        - name: cillum Duis ex cupidatat voluptate
+          value: Ut
+          type: INT
+        location: laboris nostrud
+        errorMessage: qui Excepteur
+        endTime: '4909-04-15T03:51:50.570Z'
+        numberOfDownloads: 14336105
+        publisherInfo: {
+          }
+      - reportId: 4dbd3bea-25f8-485c-b06e-e9c06883b0d7
+        scheduledId: e572e79e-0a56-4052-879f-427ecb40dc85
+        createdBy: cupidatat
+        createdDate: '4434-04-25T17:09:55.402Z'
+        startTime: '4243-01-15T02:51:52.654Z'
+        status: INACTIVE
+        numberOfAttempts: 0
+        parameters:
+        - name: pariatur aliqua ullamco dolor et
+          value: nisi deserunt dolore
+          type: STRING
+        - name: dolore amet ad
+          value: proident tempor
+          type: LONG
+        lastAccessedBy: dolore exercitat
+        errorMessage: co
+        endTime: '5058-03-30T22:21:23.213Z'
+      - reportId: bc77cee9-0142-4954-afea-002d333b6440
+        scheduledId: 98d33b3c-675e-4f1e-bfa7-ffdcd7b0aa18
+        createdBy: tempor
+        createdDate: '2280-02-21T19:11:10.988Z'
+        startTime: '3750-11-06T20:13:33.607Z'
+        status: ERROR
+        numberOfAttempts: 1
+        parameters:
+        - name: qui non minim ut
+          value: ullamco Ut pariatur ipsum
+          type: INT
+        - name: nulla laborum deserunt
+          value: in dolore culpa consequat
+          type: ARRAY
+        location: dolor
+        lastAccessedDate: '4752-10-18T16:02:21.842Z'
+        publisherInfo: {
+          }
+        lastAccessedBy: sunt ipsu
+        numberOfDownloads: 51428315
+  report:
+    title: Report
+    type: object
+    properties:
+      reportId:
+        type: string
+        description: A unique UUID string denoting the id of the report entry
+        format: uuid
+      scheduledId:
+        type: string
+        description: Scheduled Id for the report entry
+        format: uuid
+      createdBy:
+        type: string
+        description: Person/Entity who created this entry first time
+      createdDate:
+        type: string
+        description: Time when this entry was first created
+        format: date-time
+      lastAccessedBy:
+        type: string
+        description: Person/Entity who accessed this entry last time
+      lastAccessedDate:
+        type: string
+        description: Time when this entry was last accessed
+        format: date-time
+      startTime:
+        type: string
+        description: Processing start time of the report
+        format: date-time
+      endTime:
+        type: string
+        description: Processing end time of the report
+        format: date-time
+      status:
+        $ref: '#/definitions/reportStatus'
+      errorMessage:
+        type: string
+        description: Contains an error message if something is failed.
+      location:
+        type: string
+        description: Location of the report once it is generated
+      numberOfDownloads:
+        type: integer
+        default: 0
+        description: Number of times this report is downloaded by the customer
+        minimum: 0
+      numberOfAttempts:
+        type: integer
+        description: Number of times attempted to generate the report
+        minimum: 0
+        maximum: 3
+      parameters:
+        type: array
+        description: Parameters for the reports to be generated
+        minItems: 0
+        items:
+          $ref: '#/definitions/parameter'
+      publisherInfo:
+        type: object
+        description: Contains report publish data as a json
+    required:
+    - reportId
+    - scheduledId
+    - createdBy
+    - createdDate
+    - startTime
+    - status
+    - numberOfAttempts
+    - parameters
+    example:
+      reportId: 91b68c7a-e3d4-40ed-a048-e6ecb7c0a6af
+      scheduledId: 5c66965a-f79b-46c5-a723-e13dae91e622
+      createdBy: minim aliquip sit
+      createdDate: '3232-10-13T19:06:19.045Z'
+      lastAccessedBy: mollit irure aliquip
+      lastAccessedDate: '3454-08-17T05:56:04.691Z'
+      startTime: '3841-08-04T05:51:18.262Z'
+      endTime: '3907-11-27T08:16:24.458Z'
+      status: ERROR
+      errorMessage: do Ex
+      location: dolore et fugiat
+      numberOfDownloads: 18013697
+      numberOfAttempts: 0
+      parameters:
+      - name: ex laborum
+        value: irure ex Lor
+        type: ARRAY
+      - name: magna Excepteur
+        value: sit
+        type: INT
+      - name: veniam mollit ea esse
+        value: non esse
+        type: BOOLEAN
+      - name: in elit veniam do
+        value: ipsum dolor
+        type: ARRAY
+      publisherInfo: {
+        }
+  reportStatus:
+    title: ReportStatus
+    type: string
+    description: Status of the report
+    enum:
+    - IN_PROGRESS
+    - DELAYED
+    - SUCCESS
+    - ERROR
+    - INACTIVE
+  period:
+    title: Period
+    type: string
+    description: Date range which the report should be generated
+    enum:
+    - 1_DAY
+    - 7_DAYS
+    - 14_DAYS
+    - 30_DAYS
+    - 90_DAYS
+    - 180_DAYS
+    - 1_YEAR
+    - CUSTOM
+    - NONE
+  scheduleStatus:
+    title: ScheduleStatus
+    type: string
+    enum:
+    - ACTIVE
+    - INACTIVE
+    - SUSPENDED
+    description: Scheduling Status
+  page:
+    title: Page
+    type: object
+    properties:
+      total:
+        type: integer
+        minimum: 0
+        description: Total number of records
+        default: 0
+      limit:
+        type: integer
+        minimum: 0
+        default: 0
+        description: Number of records per page
+      offset:
+        type: integer
+        minimum: 0
+        default: 0
+        description: The page number
+      sorts:
+        type: array
+        description: Sort fields based on polarity
+        items:
+          type: string
+    required:
+    - total
+    - limit
+    - offset
+    example:
+      total: 54690858
+      limit: 21446016
+      offset: 60463582
+      sorts:
+      - cupidatat
+      - dolor occaecat
+  reference-link:
+    title: ReferenceLink
+    type: object
+    properties:
+      href:
+        type: string
+        description: href of the link
+        minLength: 1
+    required:
+    - href
+    example:
+      href: /reports?limit=10
+  links:
+    title: Links
+    type: object
+    properties:
+      prev:
+        $ref: '#/definitions/reference-link'
+      self:
+        $ref: '#/definitions/reference-link'
+      next:
+        $ref: '#/definitions/reference-link'
+    required:
+    - self
+    example:
+      prev:
+        href: /reports?limit=10&offset=50
+      self:
+        href: /reports?limit=10&offset=40
+      next:
+        href: /reports?limit=10&offset=30
+  search-report-response:
+    title: SearchReportResponse
+    type: object
+    properties:
+      data:
+        type: array
+        description: List of records
+        minItems: 0
+        items:
+          $ref: '#/definitions/downloadable-report'
+      page:
+        $ref: '#/definitions/page'
+      _links:
+        $ref: '#/definitions/links'
+    required:
+    - data
+    - _links
+    example:
+      data:
+      - reportId: 0c1ba2a7-053c-4974-b4c1-ad22f5765f03
+        status: ERROR
+      - reportId: c9f8029d-62b0-4a42-b1c9-cb924515f80e
+        status: IN_PROGRESS
+        scheduledId: 69db9183-e9cc-4cd8-aaf8-d0aec8e64d07
+        createdBy: in est officia
+        fileSize: 5997663
+        requestedDate: '2389-02-21T23:38:54.744Z'
+      - reportId: 0d63a95b-3649-49f3-9658-0cf637bf2e54
+        status: IN_PROGRESS
+        requestedDate: '2386-09-09T17:54:06.104Z'
+        fileType: XLS
+        createdBy: ullamco labor
+        scheduledId: b84a6bae-3b39-4aef-b6ea-dd3d30b78ef6
+      - reportId: 3190b044-8215-4fc7-a2cf-720bf7df7642
+        status: INACTIVE
+        fileSize: 40635347
+        createdBy: eu minim
+        reportName: laborum sint aliqua occ
+        fileType: CSV
+      page:
+        total: 57630205
+        limit: 82388200
+        offset: 86416613
+        sorts:
+        - esse
+        - cupidatat Ut fugiat ut ad
+      _links:
+        self:
+          href: esse in Excepteur do
+        next:
+          href: sunt sit
+  downloadable-report:
+    title: DownloadableReport
+    type: object
+    properties:
+      reportId:
+        type: string
+        description: A unique UUID string denoting the id of the report entry
+        format: uuid
+      scheduledId:
+        type: string
+        description: Scheduled Id for the report entry
+        format: uuid
+      reportName:
+        type: string
+        description: Name of the report
+        minLength: 1
+      fileName:
+        type: string
+        description: File name of the report
+        minLength: 1
+      fileType:
+        type: string
+        description: File type of the report
+        enum:
+        - XLS
+        - CSV
+        - PDF
+        minLength: 1
+      fileSize:
+        type: number
+        description: Size of the report in bytes
+        minimum: 0
+      createdFor:
+        type: string
+        description: Person/Entity whom this entry belongs to
+      requestedDate:
+        type: string
+        description: Time when this entry was first requested
+        format: date-time
+      generatedDate:
+        type: string
+        description: Time when this entry was generated
+        format: date-time
+      status:
+        $ref: '#/definitions/reportStatus'
+      numberOfDownloads:
+        type: integer
+        default: 0
+        description: Number of times this report is downloaded by the customer
+        minimum: 0
+    required:
+    - reportId
+    - status
+    example:
+      reportId: 8f204c59-f70f-437b-92d5-dbbde2932de5
+      scheduledId: 886fc5de-6304-46c7-902c-d946c656c169
+      reportName: Duis
+      fileName: velit Duis sit
+      fileType: XLS
+      fileSize: 95806395
+      createdBy: sint
+      requestedDate: '2807-08-28T13:34:33.735Z'
+      generatedDate: '2847-09-19T23:25:35.305Z'
+      status: SUCCESS
+      numberOfDownloads: 1
+  genericErrorType:
+    title: GenericErrorType
+    type: object
+    properties:
+      code:
+        type: string
+        description: Error code
+      fields:
+        type: array
+        items:
+          type: string
+          description: Name of the field which cause the error
+        description: List of fields having error
+      message:
+        type: string
+        description: Error Message
+      messageParams:
+        type: array
+        items:
+          type: object
+          description: 'Message parameter '
+        description: List of Parameters used in the message to support i18N messages
+    required:
+    - code
+    - message
+    example:
+      code: ipsum dolore dolor qui eiusmod
+      fields:
+      - proident ipsum pariatur aute
+      - laborum pariatur
+      - elit
+      - culpa est tempor
+      - quis velit proident do
+      message: amet id veniam mag
+      messageParams:
+      - {
+        }
+  genericError:
+    title: GenericError
+    type: object
+    properties:
+      errors:
+        type: array
+        items:
+          $ref: '#/definitions/genericErrorType'
+        description: List of errors
+      ticketId:
+        type: string
+        description: Internal ticket Id generated to track the issue in case of any 5xx error from the response
+    example:
+      errors:
+      - code: magna et ut
+        message: laborum culpa id do
+        messageParams:
+        - {
+          }
+      - code: ipsum aliquip cupidatat ad
+        message: et
+      - code: ea nulla in irure sed
+        message: est qui eu labore
+      - code: amet al
+        message: sed ut magna occaecat id
+        fields:
+        - con
+      - code: qui exercitation dolore minim
+        message: eu aliquip
+        fields:
+        - voluptate Ut
+        - minim est in dolore enim
+        - Lorem
+        - fugiat dolor velit
+      ticketId: laboris
+  search-scheduled-report-response:
+    title: SearchScheduledReportResponse
+    type: object
+    properties:
+      data:
+        type: array
+        description: List of records
+        minItems: 0
+        items:
+          $ref: '#/definitions/scheduledReport'
+      page:
+        $ref: '#/definitions/page'
+      _links:
+        $ref: '#/definitions/links'
+    required:
+    - data
+    - _links
+    example:
+      data:
+      - scheduledId: fb85e943-39da-4d62-afcf-46ed1077ce60
+        reportName: voluptate
+        scheduleType: DAILY
+        createdBy: cupidatat dolore adipisicing quis
+        createdDate: '3269-06-06T22:03:28.837Z'
+        lastAttemptedDate: '3699-07-10T06:45:56.312Z'
+        customerOrganizationId: 48422050
+        status: INACTIVE
+        parameters: [
+          ]
+        reports: [
+          ]
+        period: 1_DAY
+        forOrg: 43909627
+        forUser: 12354
+        lastModifiedBy: john.doe
+        lastModifiedDate: '2017-07-02T21:59:15.045Z'
+        numberOfFailedAttempts: 1
+      - scheduledId: 37f5fa8f-5fe8-40b3-91db-627bc053432c
+        reportName: eiusmod ullamco ipsum pariatur laborum
+        scheduleType: QUARTERLY
+        createdBy: occaecat dolor consectetur
+        createdDate: '3109-05-27T03:32:30.773Z'
+        lastAttemptedDate: '3115-06-07T03:13:50.038Z'
+        customerOrganizationId: 77997941
+        status: INACTIVE
+        parameters:
+        - name: ex cu
+          value: mollit dolor laboris sint
+          type: ARRAY
+        - name: sed
+          value: pariatur anim dolor cupidatat consectetur
+          type: INT
+        - name: ipsum
+          value: minim Excepteur tempor ulla
+          type: INT
+        - name: Ut laborum
+          value: esse commodo adipisicing sed
+          type: INT
+        - name: anim Duis elit nisi irure
+          value: cillum
+          type: ARRAY
+        reports: [
+          ]
+        period: 7_DAYS
+      - scheduledId: ca32d0c1-4eee-4dd6-8d29-1401d91ce2af
+        reportName: fugiat magna cupidatat
+        scheduleType: DAILY
+        createdBy: esse tempor sunt mollit aute
+        createdDate: '4740-12-25T16:47:30.142Z'
+        lastAttemptedDate: '2223-10-26T12:30:20.003Z'
+        customerOrganizationId: 25319222
+        status: ACTIVE
+        parameters:
+        - name: eiusmod exercitation in
+          value: fugiat e
+          type: BOOLEAN
+          required: true
+        - name: id irure L
+          value: sed
+          type: ARRAY
+        - name: eiusmod non proident
+          value: enim
+          type: LONG
+        - name: exercitation sint sunt
+          value: veniam
+          type: STRING
+        reports: [
+          ]
+        forOrg: 37814662
+        forUser: 12354
+        lastModifiedBy: john.doe
+        lastModifiedDate: '2017-07-02T21:59:15.045Z'
+        numberOfFailedAttempts: 0
+      - scheduledId: 384ebadf-6cac-4258-9432-254d97a43edc
+        reportName: culpa qui enim quis ipsum
+        scheduleType: DAILY
+        createdBy: sint
+        createdDate: '2054-06-06T17:58:19.383Z'
+        lastAttemptedDate: '2777-08-05T04:43:04.000Z'
+        customerOrganizationId: 3386629
+        status: ACTIVE
+        parameters:
+        - name: sint
+          value: amet
+          type: ARRAY
+        - name: incididunt aute tempor
+          value: anim ullamco
+          type: ARRAY
+          required: true
+        reports: [
+          ]
+      page:
+        total: 4
+        limit: 5
+        offset: 0
+        sorts:
+        - sint sit dolor
+        - ut est laborum
+        - magna voluptate
+        - velit nulla sed in voluptate
+      _links:
+        self:
+          href: esse aute
+        next:
+          href: Duis dolor
+        prev:
+          href: labore velit
+parameters:
+  authHeader:
+    name: Authorization
+    in: header
+    description: Specify the Access token with prefix 'Bearer '.
+    type: string
+    minimum: 1
+    required: true

@@ -72,8 +72,8 @@ class PaginationTest {
     @Test
     void unknownPaginationFieldsAreIgnoredForwardCompatibly() throws Exception {
         // The API adding a new pagination metadata key (e.g. totalPages) must not fail every
-        // list call — Pagination is @JsonIgnoreProperties(ignoreUnknown = true) because the
-        // shared wire mapper keeps FAIL_ON_UNKNOWN_PROPERTIES enabled.
+        // list call. Pagination is @JsonIgnoreProperties(ignoreUnknown = true), and the shared wire
+        // mapper also disables FAIL_ON_UNKNOWN_PROPERTIES.
         Pagination p = parse("{\"offset\":0,\"limit\":20,\"total\":100,\"totalPages\":5,\"nextCursor\":\"abc\"}");
         assertEquals(0, p.getPageNumber());
         assertFalse(p.isLastPage());

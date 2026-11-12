@@ -52,4 +52,7 @@ public class PeeringRequest {
     boolean includePolicies;
 
     boolean includeResiliency;
+
+    /** The fingerprint of the {@code DesignSpec} the request was built from, or {@code null}. */
+    String specFingerprint;
 }

@@ -1,11 +1,16 @@
 package com.eqixiac.equinix.design.value.tco;
 
+import com.eqixiac.equinix.design.cost.ConvertingRateCard;
+import com.eqixiac.equinix.design.cost.CurrencyConverters;
+import com.eqixiac.equinix.design.spec.CommercialTerms;
 import com.eqixiac.equinix.design.value.CurrencyReconciler;
 import com.eqixiac.equinix.design.value.ratecard.ColocationItem;
 import com.eqixiac.equinix.design.value.ratecard.EgressPath;
 import com.eqixiac.equinix.design.value.ratecard.EgressRate;
 import com.eqixiac.equinix.design.value.ratecard.MulticloudLinkQuote;
 import com.eqixiac.equinix.design.value.ratecard.MulticloudLinkRequest;
+import com.eqixiac.equinix.design.value.ratecard.ConnectionModel;
+import com.eqixiac.equinix.design.value.ratecard.PriceLookup;
 import com.eqixiac.equinix.design.value.ratecard.PriceQuote;
 import com.eqixiac.equinix.design.value.ratecard.RateCard;
 import com.eqixiac.equinix.design.value.ratecard.ReferenceRateCard;
@@ -42,7 +47,12 @@ final class TcoEngine {
     private TcoEngine() {}
 
     static TcoComparison compute(TcoCalculator.Builder b) {
-        RateCard rateCard = b.getRateCard() != null ? b.getRateCard() : RateCard.standardChain(b.getFabric());
+        RateCard base = b.getRateCard() != null ? b.getRateCard() : RateCard.standardChain(b.getFabric());
+        // One comparison currency for every figure: anything quoted in another currency is converted (pinned
+        // rates, a supplied converter, live ECB rates, the bundled table), exactly as RateCardCostModel does.
+        ConvertingRateCard rateCard = ConvertingRateCard.of(base, b.getCurrency(), CurrencyConverters.forTerms(
+                CommercialTerms.builder().currency(b.getCurrency()).exchangeRates(b.getExchangeRates()).build(),
+                b.getCurrencyConverter(), b.getDefaultRates()));
         ReferenceRateCard reference = ReferenceRateCard.standard();
         Term term = b.getTerm();
 
@@ -55,30 +65,34 @@ final class TcoEngine {
                     ? b.getReverseEgressUnit().toGigabytes(BigDecimal.valueOf(b.getReverseEgressAmount()))
                     : gb;
 
-        Optional<EgressRate> internet = rateCard.egress(b.getProvider(), b.getRegion(), EgressPath.INTERNET, term);
-        Optional<EgressRate> privateEgress = rateCard.egress(b.getProvider(), b.getRegion(), EgressPath.PRIVATE, term);
-        String currency = resolveCurrency(internet, privateEgress);
+        PriceLookup<EgressRate> internetLookup = rateCard.egressLookup(b.getProvider(), b.getRegion(), EgressPath.INTERNET,
+                term);
+        PriceLookup<EgressRate> privateLookup = rateCard.egressLookup(b.getProvider(), b.getRegion(), EgressPath.PRIVATE,
+                term);
+        Optional<EgressRate> internet = internetLookup.toOptional();
+        Optional<EgressRate> privateEgress = privateLookup.toOptional();
+        String currency = b.getCurrency();
 
         List<CostBreakdown> breakdowns = new ArrayList<>();
         if (b.getArchetypes().contains(DeploymentArchetype.PUBLIC_CLOUD_INTERNET)) {
             breakdowns.add(twoSided
                     ? publicCloudInternetTwoSided(b, rateCard, internet, gb, reverseGb, term, currency)
-                    : publicCloudInternet(internet, gb, currency));
+                    : publicCloudInternet(internetLookup, gb, currency));
         }
         if (b.getArchetypes().contains(DeploymentArchetype.ON_PREM)) {
-            breakdowns.add(twoSided ? onPremNotApplicable(b, currency) : onPrem(b, reference, currency));
+            breakdowns.add(twoSided ? onPremNotApplicable(b, currency) : onPrem(b, reference, rateCard, currency));
         }
         if (b.getArchetypes().contains(DeploymentArchetype.EQUINIX_INTERCONNECT)) {
             breakdowns.add(twoSided
                     ? equinixInterconnectTwoSided(b, rateCard, reference, privateEgress, gb, reverseGb, term, currency)
-                    : equinixInterconnect(b, rateCard, reference, privateEgress, gb, term, currency));
+                    : equinixInterconnect(b, rateCard, reference, privateLookup, gb, term, currency));
         }
         if (twoSided && b.getArchetypes().contains(DeploymentArchetype.NATIVE_MULTICLOUD_INTERCONNECT)) {
             breakdowns.add(nativeMulticloudInterconnect(b, rateCard, gb, reverseGb, term, currency));
         }
 
         // Fold any caller-supplied line items (e.g. compute/storage) into every priced archetype,
-        // so absolute totals reflect the full deployment (applied uniformly — the comparison is
+        // so absolute totals reflect the full deployment (applied uniformly - the comparison is
         // unchanged).
         Map<String, BigDecimal> additional = b.getAdditionalLineItems();
         if (additional != null && !additional.isEmpty()) {
@@ -98,13 +112,15 @@ final class TcoEngine {
         }
         breakdowns = withTermTotals;
 
-        // Recommend the priced archetype that is cheapest over the term, not by MRC alone —
+        // Recommend the priced archetype that is cheapest over the term, not by MRC alone - 
         // a low monthly rate with a heavy setup charge must not beat a slightly higher
         // monthly rate with none.
         CostBreakdown recommended = breakdowns.stream()
                 .filter(CostBreakdown::isPriced)
                 .min((x, y) -> x.getTotalOverTerm().compareTo(y.getTotalOverTerm()))
                 .orElse(null);
+
+        String recommendationNote = recommendationNote(breakdowns, recommended);
 
         Optional<CostBreakdown> baseline = breakdowns.stream()
                 .filter(c -> c.getArchetype() == DeploymentArchetype.PUBLIC_CLOUD_INTERNET && c.isPriced())
@@ -149,6 +165,9 @@ final class TcoEngine {
         if (currencyNote != null) {
             disclaimer = disclaimer + currencyNote;
         }
+        for (String fxNote : rateCard.converter().notes()) {
+            disclaimer = disclaimer + " " + fxNote + ".";
+        }
 
         return TcoComparison.builder()
                 .breakdowns(breakdowns)
@@ -162,7 +181,47 @@ final class TcoEngine {
                 .disclaimer(disclaimer)
                 .asOf(reference.asOf())
                 .trafficNote(twoSided ? trafficNote(b, gb, reverseGb) : null)
+                .recommendationNote(recommendationNote)
+                .specFingerprint(b.getSpecFingerprint())
+                .assumptions(b.getSpecAssumptions())
                 .build();
+    }
+
+    /**
+     * States how the recommendation relates to the incomplete archetypes. "Priced" means complete, so the
+     * recommendation is always among complete archetypes; an incomplete archetype whose priced part over the
+     * term is already at or above the recommendation's total cannot win once its missing lines are added,
+     * otherwise the recommendation is provisional and the note says so.
+     */
+    static String recommendationNote(List<CostBreakdown> breakdowns, CostBreakdown recommended) {
+        List<String> parts = new ArrayList<>();
+        for (CostBreakdown cb : breakdowns) {
+            if (cb.isPriced()) {
+                continue;
+            }
+            String name = cb.getArchetype().getDisplayName();
+            boolean sameCurrency = recommended != null && recommended.getCurrency() != null
+                    && recommended.getCurrency().equals(cb.getCurrency());
+            boolean hasPartial = cb.getLineItems() != null && !cb.getLineItems().isEmpty()
+                    && cb.getMonthlyTotal() != null && cb.getMonthlyTotal().signum() > 0;
+            if (recommended == null) {
+                parts.add(name + " is incomplete (" + cb.getUnpriced().size() + " unpriced component(s))");
+            } else if (hasPartial && sameCurrency
+                    && cb.getTotalOverTerm().compareTo(recommended.getTotalOverTerm()) >= 0) {
+                parts.add(name + " is incomplete, but its priced part alone (" + cb.getCurrency() + " "
+                        + cb.getTotalOverTerm().setScale(2, RoundingMode.HALF_UP).toPlainString()
+                        + " over the term) already exceeds the recommendation, so it cannot be cheaper");
+            } else {
+                parts.add(name + " is incomplete and could not be compared (" + cb.getUnpriced().size()
+                        + " unpriced component(s)); it might be cheaper once priced, so the recommendation is "
+                        + "provisional");
+            }
+        }
+        if (parts.isEmpty()) {
+            return null;
+        }
+        return (recommended == null ? "No archetype is complete, so none is recommended. "
+                : "The recommendation is chosen among complete archetypes only. ") + String.join("; ", parts) + ".";
     }
 
     private static String trafficNote(TcoCalculator.Builder b, BigDecimal gb, BigDecimal reverseGb) {
@@ -191,14 +250,18 @@ final class TcoEngine {
         return cb.toBuilder().totalOverTerm(total).build();
     }
 
-    private static CostBreakdown publicCloudInternet(Optional<EgressRate> internet, BigDecimal gb, String currency) {
+    private static CostBreakdown publicCloudInternet(PriceLookup<EgressRate> internetLookup, BigDecimal gb,
+                                                     String currency) {
         Map<String, BigDecimal> items = new LinkedHashMap<>();
+        Optional<EgressRate> internet = internetLookup.toOptional();
         if (internet.isEmpty()) {
+            String reason = "Cloud egress (public internet): " + internetLookup.unpricedReason();
             return CostBreakdown.builder()
                     .archetype(DeploymentArchetype.PUBLIC_CLOUD_INTERNET)
                     .monthlyTotal(BigDecimal.ZERO).setupTotal(BigDecimal.ZERO)
                     .currency(currency).lineItems(items).priced(false)
                     .note("Public-internet egress rate unavailable for this provider/region.")
+                    .unpriced(List.of(reason))
                     .build();
         }
         BigDecimal egressCost = internet.get().costFor(gb);
@@ -210,11 +273,12 @@ final class TcoEngine {
                 .build();
     }
 
-    private static CostBreakdown onPrem(TcoCalculator.Builder b, ReferenceRateCard reference, String currency) {
-        BigDecimal transitPerMbps = orReference(b.getOnPremTransitPerMbpsMonth(), reference, "transitPerMbpsMonth");
-        BigDecimal hardware = orReference(b.getOnPremHardwareMonthly(), reference, "hardwareMonthly");
-        BigDecimal crossConnect = orReference(b.getOnPremCrossConnectMonthly(), reference, "crossConnectMonthly");
-        BigDecimal powerPerKw = orReference(b.getOnPremPowerPerKwMonth(), reference, "powerPerKwMonth");
+    private static CostBreakdown onPrem(TcoCalculator.Builder b, ReferenceRateCard reference,
+                                        ConvertingRateCard rateCard, String currency) {
+        BigDecimal transitPerMbps = orReference(b.getOnPremTransitPerMbpsMonth(), reference, "transitPerMbpsMonth", rateCard);
+        BigDecimal hardware = orReference(b.getOnPremHardwareMonthly(), reference, "hardwareMonthly", rateCard);
+        BigDecimal crossConnect = orReference(b.getOnPremCrossConnectMonthly(), reference, "crossConnectMonthly", rateCard);
+        BigDecimal powerPerKw = orReference(b.getOnPremPowerPerKwMonth(), reference, "powerPerKwMonth", rateCard);
 
         Map<String, BigDecimal> items = new LinkedHashMap<>();
         if (transitPerMbps == null || hardware == null || crossConnect == null || powerPerKw == null) {
@@ -223,12 +287,15 @@ final class TcoEngine {
                     .monthlyTotal(BigDecimal.ZERO).setupTotal(BigDecimal.ZERO)
                     .currency(currency).lineItems(items).priced(false)
                     .note("On-prem reference figures unavailable.")
+                    .unpriced(List.of("On-prem inputs: a reference midpoint is missing from the bundle, or has no "
+                            + "exchange rate from " + reference.currencyCode() + " to " + currency + ", and no override "
+                            + "was supplied"))
                     .build();
         }
 
         // The bundled midpoints are published in the reference card's own currency (USD). When the
         // comparison currency (resolved from egress) is known to differ, stamping those figures with
-        // it would mislabel them — the same guard the reference fold-ins in equinixInterconnect(...)
+        // it would mislabel them - the same guard the reference fold-ins in equinixInterconnect(...)
         // apply. Per the CurrencyReconciler policy the archetype is reported unpriced with the
         // reason, never as a relabelled cross-currency number. Caller-supplied overrides are taken
         // to be in the comparison currency, so a fully overridden archetype still prices.
@@ -236,7 +303,9 @@ final class TcoEngine {
                 || b.getOnPremHardwareMonthly() == null
                 || b.getOnPremCrossConnectMonthly() == null
                 || b.getOnPremPowerPerKwMonth() == null;
-        if (usesReferenceMidpoints && CurrencyReconciler.knownDifferent(reference.currencyCode(), currency)) {
+        // The midpoints were converted to the comparison currency above (orReference); this guard only fires for a
+        // caller-built comparison whose currency the reference figures could not reach.
+        if (usesReferenceMidpoints && transitPerMbps == null) {
             return CostBreakdown.builder()
                     .archetype(DeploymentArchetype.ON_PREM)
                     .monthlyTotal(BigDecimal.ZERO).setupTotal(BigDecimal.ZERO)
@@ -246,6 +315,8 @@ final class TcoEngine {
                             + "; they cannot be relabelled without an FX rate, so this archetype is reported "
                             + "as unpriced. Supply all four on-prem overrides in " + currency
                             + " to price it.")
+                    .unpriced(List.of("On-prem midpoints: " + reference.currencyCode() + " reference figures cannot be "
+                            + "combined with " + currency + " without an exchange rate"))
                     .build();
         }
         BigDecimal transit = transitPerMbps.multiply(BigDecimal.valueOf(b.getBandwidthMbps()));
@@ -279,69 +350,64 @@ final class TcoEngine {
                         + "and contain no egress from " + b.getProvider() + " or " + b.getPeerProvider()
                         + ", while the other archetypes are priced on the traffic in both directions. "
                         + "Remove toCloud(...) for the single-cloud comparison that prices it.")
+                .unpriced(List.of("On-prem: not applicable to a cloud-to-cloud comparison"))
                 .build();
     }
 
-    private static CostBreakdown equinixInterconnect(TcoCalculator.Builder b, RateCard rateCard,
-                                                     ReferenceRateCard reference, Optional<EgressRate> privateEgress,
+    private static CostBreakdown equinixInterconnect(TcoCalculator.Builder b, ConvertingRateCard rateCard,
+                                                     ReferenceRateCard reference, PriceLookup<EgressRate> privateLookup,
                                                      BigDecimal gb, Term term, String currency) {
         Map<String, BigDecimal> items = new LinkedHashMap<>();
+        // Every component this archetype should contain is either a line item or an entry here: nothing is
+        // silently dropped, and the archetype is "priced" only when this list is empty.
+        List<String> unpriced = new ArrayList<>();
 
-        Optional<PriceQuote> connection = rateCard.connection(
-                b.getConnectionType(), b.getBandwidthMbps(), b.getMetro(), term);
-        boolean priced = privateEgress.isPresent() && connection.isPresent();
-        String note = priced ? null : "Private egress rate or Equinix connection price unavailable.";
-
-        // Every priced component of this archetype flows through one reconciler. A cross-currency
-        // sum (e.g. USD private egress + a EUR live Fabric connection, which the default chain
-        // genuinely produces for an EMEA metro) would be a fabricated figure, so when the components
-        // disagree the archetype is reported as unpriced/mixed rather than totalled.
+        // Every priced component flows through one reconciler. A cross-currency sum (e.g. USD private egress
+        // + a GBP live Fabric connection, which the default chain produces for London) would be a fabricated
+        // figure, so when the components disagree the archetype is reported as incomplete rather than totalled.
         CurrencyReconciler recon = CurrencyReconciler.create();
 
-        BigDecimal egressCost = privateEgress.map(r -> r.costFor(gb)).orElse(BigDecimal.ZERO);
-        if (privateEgress.isPresent()) {
+        if (privateLookup.isPriced()) {
+            BigDecimal egressCost = privateLookup.value().costFor(gb);
             items.put("Cloud egress (private interconnect)", egressCost);
-            recon.add(privateEgress.get().getCurrency(), egressCost, BigDecimal.ZERO);
+            recon.add(privateLookup.value().getCurrency(), egressCost, BigDecimal.ZERO);
+        } else {
+            unpriced.add("Cloud egress (private interconnect): " + privateLookup.unpricedReason());
         }
-        if (connection.isPresent()) {
-            items.put("Equinix Fabric connection", connection.get().getMonthlyRecurring());
-            recon.add(connection.get().getCurrency(),
-                    connection.get().getMonthlyRecurring(), connection.get().getNonRecurring());
+        PriceLookup<PriceQuote> connection = rateCard.connectionLookup(
+                b.getConnectionType(), b.getBandwidthMbps(), b.getMetro(), term);
+        if (connection.isPriced()) {
+            items.put("Equinix Fabric connection", connection.value().getMonthlyRecurring());
+            recon.add(connection.value().getCurrency(),
+                    connection.value().getMonthlyRecurring(), connection.value().getNonRecurring());
+        } else {
+            unpriced.add("Equinix Fabric connection: " + connection.unpricedReason());
         }
         if (b.isIncludeRouter()) {
-            Optional<PriceQuote> router = rateCard.cloudRouter(b.getRouterPackage(), b.getMetro(), term);
-            if (router.isPresent()) {
-                items.put("Fabric Cloud Router", router.get().getMonthlyRecurring());
-                recon.add(router.get().getCurrency(),
-                        router.get().getMonthlyRecurring(), router.get().getNonRecurring());
+            PriceLookup<PriceQuote> router = rateCard.cloudRouterLookup(b.getRouterPackage(), b.getMetro(), term);
+            if (router.isPriced()) {
+                items.put("Fabric Cloud Router", router.value().getMonthlyRecurring());
+                recon.add(router.value().getCurrency(),
+                        router.value().getMonthlyRecurring(), router.value().getNonRecurring());
             } else {
-                // A requested component that cannot be priced must not silently vanish from the
-                // total. Follow the unpriced-component convention: flag the archetype as not fully
-                // priced and name the missing component, leaving the partial figures visible.
-                priced = false;
-                String routerNote = "Fabric Cloud Router (" + b.getRouterPackage() + ") was requested but "
-                        + "could not be priced by the rate card; this archetype's totals are partial and "
-                        + "exclude the Cloud Router.";
-                note = note == null ? routerNote : note + " " + routerNote;
+                unpriced.add("Fabric Cloud Router (" + b.getRouterPackage() + "): " + router.unpricedReason());
             }
         }
 
         int crossConnectCount = b.getCrossConnects();
         boolean coloCrossConnectPriced = foldColocationPrimitives(b, rateCard, term, items, recon);
 
-        // Mixed currencies among the components above: do not fabricate a combined total. Surface the
-        // per-currency subtotals and mark the archetype unpriced, so it is treated as unavailable
-        // rather than presented as a single (wrong) number.
         if (recon.isMixed()) {
             String mixNote = "Equinix interconnect components are priced in multiple currencies ("
                     + recon.describeCurrencies() + "): " + recon.describeMonthlySubtotals() + " per month. A "
                     + "single-currency total cannot be formed without an FX rate, so this archetype is reported "
-                    + "as unpriced rather than as a fabricated cross-currency sum.";
+                    + "as incomplete rather than as a fabricated cross-currency sum.";
+            unpriced.add("Total: " + mixNote);
             return CostBreakdown.builder()
                     .archetype(DeploymentArchetype.EQUINIX_INTERCONNECT)
                     .monthlyTotal(BigDecimal.ZERO).setupTotal(BigDecimal.ZERO)
                     .currency(currency).lineItems(items).priced(false)
-                    .note(note == null ? mixNote : note + " " + mixNote)
+                    .note(String.join(" ", unpriced)).unpriced(unpriced)
                     .build();
         }
 
@@ -349,39 +415,43 @@ final class TcoEngine {
         BigDecimal setup = recon.setupTotal().orElse(BigDecimal.ZERO);
         String coreCurrency = recon.soleCurrencyOr(currency);
 
-        // The CSP interconnect port and (unless a colocation cross-connect was supplied above, or the
-        // caller set crossConnects(0)) the Equinix cross-connect come from the bundled reference card
-        // (USD). Only fold them in when the reconciled currency of the components above matches, so
-        // reference figures never silently mix currencies into the total. The reference cross-connect
-        // is per unit, so it scales by the configured count too.
-        Optional<BigDecimal> cspPort = reference.cspInterconnectPortMonthly(b.getProvider(), b.getBandwidthMbps());
-        Optional<BigDecimal> crossConnect = (coloCrossConnectPriced || crossConnectCount == 0)
-                ? Optional.empty() : reference.equinixCrossConnectMonthly();
-        if (coreCurrency.equals(reference.currencyCode())) {
-            if (cspPort.isPresent()) {
-                items.put("Cloud provider interconnect port", cspPort.get());
-                monthly = monthly.add(cspPort.get());
-            }
-            if (crossConnect.isPresent()) {
+        // The provider's fee for the connection a Fabric cloud connection is (a hosted/partner connection),
+        // priced exactly as the optimiser's RateCardCostModel prices it.
+        PriceLookup<PriceQuote> cspPort = rateCard.toTarget(reference.providerConnection(b.getProvider(),
+                ConnectionModel.HOSTED, b.getBandwidthMbps()));
+        if (!cspPort.isPriced()) {
+            unpriced.add("Cloud provider hosted-connection fee: " + cspPort.unpricedReason());
+        } else if (!coreCurrency.equals(cspPort.value().getCurrency().getCurrencyCode())) {
+            unpriced.add("Cloud provider hosted-connection fee: " + cspPort.value().getCurrency() + " "
+                    + cspPort.value().getMonthlyRecurring().toPlainString() + "/month cannot be combined with "
+                    + coreCurrency + " components without an exchange rate");
+        } else {
+            items.put("Cloud provider interconnect port", cspPort.value().getMonthlyRecurring());
+            monthly = monthly.add(cspPort.value().getMonthlyRecurring());
+        }
+        if (!coloCrossConnectPriced && crossConnectCount > 0) {
+            Optional<BigDecimal> referenceCrossConnect = reference.equinixCrossConnectMonthly();
+            Optional<BigDecimal> crossConnect = referenceCrossConnect.flatMap(v -> rateCard.amount(v,
+                    reference.currencyCode()));
+            if (referenceCrossConnect.isEmpty()) {
+                unpriced.add("Equinix cross-connect: no rate supplied and no reference figure");
+            } else if (crossConnect.isEmpty() || !coreCurrency.equals(rateCard.target())) {
+                unpriced.add("Equinix cross-connect: the reference figure is " + reference.currencyCode()
+                        + " and no exchange rate to " + coreCurrency + " is available");
+            } else {
                 BigDecimal crossConnectMonthly = crossConnect.get().multiply(BigDecimal.valueOf(crossConnectCount));
                 items.put(countedLabel("Equinix cross-connect", crossConnectCount, crossConnect.get()),
                         crossConnectMonthly);
                 monthly = monthly.add(crossConnectMonthly);
             }
-        } else if (cspPort.isPresent() || crossConnect.isPresent()) {
-            String skip = "CSP interconnect port and Equinix cross-connect omitted: reference figures are "
-                    + reference.currencyCode() + " and cannot be mixed with " + coreCurrency + ".";
-            note = note == null ? skip : note + " " + skip;
         }
 
-        // Stamp the breakdown with the currency its own components reconciled to — not the
-        // comparison-wide egress currency — so the baseline-vs-recommended currency guard in
-        // compute() compares labels that actually describe these figures.
         return CostBreakdown.builder()
                 .archetype(DeploymentArchetype.EQUINIX_INTERCONNECT)
                 .monthlyTotal(monthly).setupTotal(setup)
-                .currency(coreCurrency).lineItems(items).priced(priced)
-                .note(note)
+                .currency(coreCurrency).lineItems(items).priced(unpriced.isEmpty())
+                .note(unpriced.isEmpty() ? null : String.join(" ", unpriced))
+                .unpriced(unpriced)
                 .build();
     }
 
@@ -422,7 +492,7 @@ final class TcoEngine {
             recon.add(coloCabinet.get().getCurrency(), cabinetMonthly, cabinetSetup);
         }
         // POWER_PER_KW is priced per kW per month (see ColocationItem), so it is multiplied by the
-        // configured power draw before being folded in — previously it was never consumed at all.
+        // configured power draw before being folded in - previously it was never consumed at all.
         Optional<PriceQuote> coloPower = rateCard.colocation(ColocationItem.POWER_PER_KW, b.getMetro(), term);
         if (coloPower.isPresent() && b.getPowerKw() > 0) {
             BigDecimal kw = BigDecimal.valueOf(b.getPowerKw());
@@ -434,7 +504,7 @@ final class TcoEngine {
         return coloCrossConnect.isPresent();
     }
 
-    // ── Cloud-to-cloud (two-sided) forms ──
+    // Cloud-to-cloud (two-sided) forms
 
     /**
      * Public internet, both directions: {@code fromCloud}'s internet egress on the forward volume
@@ -465,7 +535,7 @@ final class TcoEngine {
                 .archetype(DeploymentArchetype.PUBLIC_CLOUD_INTERNET)
                 .monthlyTotal(recon.monthlyTotal().orElse(BigDecimal.ZERO)).setupTotal(BigDecimal.ZERO)
                 .currency(recon.soleCurrencyOr(currency)).lineItems(items).priced(missing.isEmpty())
-                .note(note).provenance(provenance)
+                .note(note).provenance(provenance).unpriced(note == null ? List.of() : List.of(note))
                 .build();
     }
 
@@ -476,7 +546,7 @@ final class TcoEngine {
      * missing component on either side leaves the archetype partially priced, so it is never
      * ranked on an incomplete total against the native path.
      */
-    private static CostBreakdown equinixInterconnectTwoSided(TcoCalculator.Builder b, RateCard rateCard,
+    private static CostBreakdown equinixInterconnectTwoSided(TcoCalculator.Builder b, ConvertingRateCard rateCard,
                                                              ReferenceRateCard reference,
                                                              Optional<EgressRate> privateEgress, BigDecimal gb,
                                                              BigDecimal reverseGb, Term term, String currency) {
@@ -548,18 +618,20 @@ final class TcoEngine {
         String coreCurrency = recon.soleCurrencyOr(currency);
 
         Optional<BigDecimal> crossConnect = (coloCrossConnectPriced || crossConnectCount == 0)
-                ? Optional.empty() : reference.equinixCrossConnectMonthly();
-        if (coreCurrency.equals(reference.currencyCode())) {
+                ? Optional.empty() : reference.equinixCrossConnectMonthly()
+                        .flatMap(v -> rateCard.amount(v, reference.currencyCode()));
+        if (coreCurrency.equals(rateCard.target())) {
             for (CloudProviderType cloud : List.of(b.getProvider(), b.getPeerProvider())) {
-                Optional<PriceQuote> cspPort = reference.cspInterconnectPortMonthlyQuote(cloud, b.getBandwidthMbps());
-                if (cspPort.isPresent()) {
-                    items.put("Cloud provider interconnect port (" + cloud + ")", cspPort.get().getMonthlyRecurring());
-                    monthly = monthly.add(cspPort.get().getMonthlyRecurring());
-                    provenance.add("Cloud provider interconnect port (" + cloud + "): " + cspPort.get().getNote()
+                PriceLookup<PriceQuote> cspPort = rateCard.toTarget(reference.providerConnection(cloud,
+                        ConnectionModel.HOSTED, b.getBandwidthMbps()));
+                if (cspPort.isPriced()) {
+                    items.put("Cloud provider interconnect port (" + cloud + ")", cspPort.value().getMonthlyRecurring());
+                    monthly = monthly.add(cspPort.value().getMonthlyRecurring());
+                    provenance.add("Cloud provider interconnect port (" + cloud + "): " + cspPort.value().getNote()
                             + ", reference data as of " + reference.asOf() + ".");
                 } else {
-                    partial.add("No reference CSP interconnect-port figure for " + cloud
-                            + "; this archetype's totals are partial and exclude that port.");
+                    partial.add("Cloud provider hosted-connection fee (" + cloud + "): " + cspPort.unpricedReason()
+                            + "; this archetype's totals are partial and exclude it.");
                 }
             }
             if (crossConnect.isPresent()) {
@@ -579,7 +651,7 @@ final class TcoEngine {
                 .monthlyTotal(monthly).setupTotal(setup)
                 .currency(coreCurrency).lineItems(items).priced(partial.isEmpty())
                 .note(partial.isEmpty() ? null : String.join(" ", partial))
-                .provenance(provenance)
+                .provenance(provenance).unpriced(partial)
                 .build();
     }
 
@@ -612,7 +684,7 @@ final class TcoEngine {
                     .archetype(archetype)
                     .monthlyTotal(BigDecimal.ZERO).setupTotal(BigDecimal.ZERO)
                     .currency(currency).lineItems(items).priced(false)
-                    .note(none).provenance(provenance)
+                    .note(none).provenance(provenance).unpriced(List.of(none))
                     .build();
         }
         MulticloudLinkQuote quote = resolved.get();
@@ -672,7 +744,7 @@ final class TcoEngine {
                 .monthlyTotal(recon.monthlyTotal().orElse(BigDecimal.ZERO))
                 .setupTotal(recon.setupTotal().orElse(BigDecimal.ZERO))
                 .currency(recon.soleCurrencyOr(currency)).lineItems(items).priced(partial.isEmpty())
-                .note(note).provenance(provenance)
+                .note(note).provenance(provenance).unpriced(partial)
                 .build();
     }
 
@@ -714,7 +786,7 @@ final class TcoEngine {
 
     /**
      * The mixed-currency form of a two-sided breakdown: zero totals, unpriced, and a note giving
-     * the per-currency subtotals — the same convention the single-cloud Equinix archetype uses.
+     * the per-currency subtotals - the same convention the single-cloud Equinix archetype uses.
      */
     private static CostBreakdown mixedCurrencyBreakdown(DeploymentArchetype archetype, String what,
                                                         CurrencyReconciler recon, Map<String, BigDecimal> items,
@@ -730,6 +802,7 @@ final class TcoEngine {
                 .currency(currency).lineItems(items).priced(false)
                 .note(priorNote == null ? mixNote : priorNote + " " + mixNote)
                 .provenance(provenance)
+                .unpriced(priorNote == null ? List.of(mixNote) : List.of(priorNote, mixNote))
                 .build();
     }
 
@@ -761,8 +834,12 @@ final class TcoEngine {
                 .build();
     }
 
-    private static BigDecimal orReference(BigDecimal override, ReferenceRateCard reference, String key) {
-        return override != null ? override : reference.onPrem(key).orElse(null);
+    private static BigDecimal orReference(BigDecimal override, ReferenceRateCard reference, String key,
+                                          ConvertingRateCard rateCard) {
+        if (override != null) {
+            return override;
+        }
+        return reference.onPrem(key).flatMap(v -> rateCard.amount(v, reference.currencyCode())).orElse(null);
     }
 
     private static String resolveCurrency(Optional<EgressRate> internet, Optional<EgressRate> privateEgress) {

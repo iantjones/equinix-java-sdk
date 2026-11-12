@@ -1,0 +1,354 @@
+{
+  "asOf": "2026-11",
+  "retrieved": "2026-11-12",
+  "currency": "USD",
+  "hoursPerMonth": 730,
+  "disclaimer": "Indicative reference figures compiled for the SDK's value-realization models as of 2026-11, NOT quotes. Provider interconnect fees are public list prices copied from the providers' pricing pages and price-list APIs on the retrieval date recorded on each row (US / Zone 1 / North America where the provider varies by location); hourly rates are converted to monthly at 730 hours per month. Cloud egress rates are headline standard-tier US/North-America list prices (tiered by volume, region- and destination-dependent, excluding free-tier allowances and negotiated discounts). Equinix and on-prem figures are indicative fallbacks and market-range midpoints; real Equinix-side costs must be sourced from the live Fabric Pricing API. Use for comparative estimates only; actual costs will differ.",
+  "egress": [
+    {
+      "provider": "AWS",
+      "path": "INTERNET",
+      "perGb": 0.09,
+      "note": "us-east-1, first 10 TB/mo tier (carried from the 2026-06 bundle; not re-verified)",
+      "source": "https://aws.amazon.com/ec2/pricing/on-demand/",
+      "retrieved": "2026-06"
+    },
+    {
+      "provider": "AWS",
+      "path": "PRIVATE",
+      "perGb": 0.02,
+      "note": "Direct Connect data transfer out, contiguous US to US locations",
+      "source": "https://aws.amazon.com/directconnect/pricing/",
+      "retrieved": "2026-11-12"
+    },
+    {
+      "provider": "AZURE",
+      "path": "INTERNET",
+      "perGb": 0.087,
+      "note": "Zone 1, first 10 TB/mo tier (carried from the 2026-06 bundle; not re-verified)",
+      "source": "https://azure.microsoft.com/en-us/pricing/details/bandwidth/",
+      "retrieved": "2026-06"
+    },
+    {
+      "provider": "AZURE",
+      "path": "PRIVATE",
+      "perGb": 0.025,
+      "note": "ExpressRoute Metered Data - Data Transfer Out, Zone 1",
+      "source": "https://prices.azure.com/api/retail/prices?$filter=serviceName eq 'ExpressRoute' and productName eq 'ExpressRoute' and armRegionName eq 'Zone 1' (Standard Metered Data circuits; pricing page https://azure.microsoft.com/en-us/pricing/details/expressroute/)",
+      "retrieved": "2026-11-12"
+    },
+    {
+      "provider": "GOOGLE_CLOUD",
+      "path": "INTERNET",
+      "perGb": 0.1118,
+      "note": "Premium Tier, North America, 0-1 TiB tier; converted from per-GiB list price (0.12/GiB) (carried from the 2026-06 bundle; not re-verified)",
+      "source": "https://cloud.google.com/network-tiers/pricing",
+      "retrieved": "2026-06"
+    },
+    {
+      "provider": "GOOGLE_CLOUD",
+      "path": "PRIVATE",
+      "perGb": 0.0186,
+      "note": "Cloud Interconnect data transfer, United States/Canada connection location; converted from per-GiB list price (0.02 USD/GiB = 0.0186 per decimal GB)",
+      "source": "https://cloud.google.com/network-connectivity/docs/interconnect/pricing",
+      "retrieved": "2026-11-12"
+    }
+  ],
+  "equinixConnection": [
+    {
+      "bandwidthMbps": 100,
+      "monthly": 75,
+      "note": "intra-metro VC, indicative"
+    },
+    {
+      "bandwidthMbps": 1000,
+      "monthly": 150,
+      "note": "intra-metro VC, indicative"
+    },
+    {
+      "bandwidthMbps": 10000,
+      "monthly": 350,
+      "note": "intra-metro VC, indicative"
+    }
+  ],
+  "equinixCloudRouter": [
+    {
+      "packageCode": "STANDARD",
+      "monthly": 1200,
+      "note": "Fabric Cloud Router STANDARD package, indicative"
+    }
+  ],
+  "equinixCrossConnectMonthly": 300,
+  "providerInterconnect": [
+    {
+      "provider": "AWS",
+      "model": "DEDICATED_PORT",
+      "product": "AWS Direct Connect dedicated connection, port-hour (all locations except Japan)",
+      "source": "https://aws.amazon.com/directconnect/pricing/",
+      "retrieved": "2026-11-12",
+      "tiers": [
+        {
+          "bandwidthMbps": 1000,
+          "hourly": 0.3
+        },
+        {
+          "bandwidthMbps": 10000,
+          "hourly": 2.25
+        },
+        {
+          "bandwidthMbps": 100000,
+          "hourly": 22.5
+        },
+        {
+          "bandwidthMbps": 400000,
+          "hourly": 85.0
+        }
+      ]
+    },
+    {
+      "provider": "AWS",
+      "model": "HOSTED",
+      "product": "AWS Direct Connect hosted connection, port-hour by capacity (all locations except Japan; 1 Gbps and above from select partners only)",
+      "source": "https://aws.amazon.com/directconnect/pricing/",
+      "retrieved": "2026-11-12",
+      "tiers": [
+        {
+          "bandwidthMbps": 50,
+          "hourly": 0.03
+        },
+        {
+          "bandwidthMbps": 100,
+          "hourly": 0.06
+        },
+        {
+          "bandwidthMbps": 200,
+          "hourly": 0.08
+        },
+        {
+          "bandwidthMbps": 300,
+          "hourly": 0.12
+        },
+        {
+          "bandwidthMbps": 400,
+          "hourly": 0.16
+        },
+        {
+          "bandwidthMbps": 500,
+          "hourly": 0.2
+        },
+        {
+          "bandwidthMbps": 1000,
+          "hourly": 0.33
+        },
+        {
+          "bandwidthMbps": 2000,
+          "hourly": 0.66
+        },
+        {
+          "bandwidthMbps": 5000,
+          "hourly": 1.65
+        },
+        {
+          "bandwidthMbps": 10000,
+          "hourly": 2.48
+        },
+        {
+          "bandwidthMbps": 25000,
+          "hourly": 6.2
+        }
+      ]
+    },
+    {
+      "provider": "AZURE",
+      "model": "DEDICATED_PORT",
+      "product": "Azure ExpressRoute Direct port, Metered, Zone 1 (monthly)",
+      "source": "https://prices.azure.com/api/retail/prices?$filter=serviceName eq 'ExpressRoute' and productName eq 'ExpressRoute Direct' and armRegionName eq 'Zone 1' (Port meters)",
+      "retrieved": "2026-11-12",
+      "tiers": [
+        {
+          "bandwidthMbps": 10000,
+          "monthly": 6000
+        },
+        {
+          "bandwidthMbps": 100000,
+          "monthly": 50000
+        },
+        {
+          "bandwidthMbps": 400000,
+          "monthly": 150000
+        }
+      ]
+    },
+    {
+      "provider": "AZURE",
+      "model": "HOSTED",
+      "product": "Azure ExpressRoute circuit, Standard Metered Data, Zone 1 (monthly); over Equinix Fabric the circuit is ordered through the service-provider (partner) model",
+      "source": "https://prices.azure.com/api/retail/prices?$filter=serviceName eq 'ExpressRoute' and productName eq 'ExpressRoute' and armRegionName eq 'Zone 1' (Standard Metered Data circuits; pricing page https://azure.microsoft.com/en-us/pricing/details/expressroute/)",
+      "retrieved": "2026-11-12",
+      "tiers": [
+        {
+          "bandwidthMbps": 50,
+          "monthly": 55
+        },
+        {
+          "bandwidthMbps": 100,
+          "monthly": 110
+        },
+        {
+          "bandwidthMbps": 200,
+          "monthly": 145
+        },
+        {
+          "bandwidthMbps": 500,
+          "monthly": 290
+        },
+        {
+          "bandwidthMbps": 1000,
+          "monthly": 436
+        },
+        {
+          "bandwidthMbps": 2000,
+          "monthly": 872
+        },
+        {
+          "bandwidthMbps": 5000,
+          "monthly": 2180
+        },
+        {
+          "bandwidthMbps": 10000,
+          "monthly": 3400
+        }
+      ]
+    },
+    {
+      "provider": "GOOGLE_CLOUD",
+      "model": "DEDICATED_PORT",
+      "product": "Google Cloud Dedicated Interconnect circuit plus one VLAN attachment of the same capacity (10G: 2.328 + 0.10; 100G: 23.28 + 1.00; 400G: 85.00 + 4.00 USD/h)",
+      "source": "https://cloud.google.com/network-connectivity/docs/interconnect/pricing",
+      "retrieved": "2026-11-12",
+      "tiers": [
+        {
+          "bandwidthMbps": 10000,
+          "hourly": 2.428
+        },
+        {
+          "bandwidthMbps": 100000,
+          "hourly": 24.28
+        },
+        {
+          "bandwidthMbps": 400000,
+          "hourly": 89.0
+        }
+      ]
+    },
+    {
+      "provider": "GOOGLE_CLOUD",
+      "model": "HOSTED",
+      "product": "Google Cloud Partner Interconnect VLAN attachment by capacity (hourly)",
+      "source": "https://cloud.google.com/network-connectivity/docs/interconnect/pricing",
+      "retrieved": "2026-11-12",
+      "tiers": [
+        {
+          "bandwidthMbps": 50,
+          "hourly": 0.05417
+        },
+        {
+          "bandwidthMbps": 100,
+          "hourly": 0.0625
+        },
+        {
+          "bandwidthMbps": 200,
+          "hourly": 0.08333
+        },
+        {
+          "bandwidthMbps": 300,
+          "hourly": 0.1111
+        },
+        {
+          "bandwidthMbps": 400,
+          "hourly": 0.1389
+        },
+        {
+          "bandwidthMbps": 500,
+          "hourly": 0.1736
+        },
+        {
+          "bandwidthMbps": 1000,
+          "hourly": 0.2778
+        },
+        {
+          "bandwidthMbps": 2000,
+          "hourly": 0.5694
+        },
+        {
+          "bandwidthMbps": 5000,
+          "hourly": 1.25
+        },
+        {
+          "bandwidthMbps": 10000,
+          "hourly": 2.36
+        },
+        {
+          "bandwidthMbps": 20000,
+          "hourly": 3.61
+        },
+        {
+          "bandwidthMbps": 50000,
+          "hourly": 9.02
+        }
+      ]
+    },
+    {
+      "provider": "ORACLE_CLOUD",
+      "model": "DEDICATED_PORT",
+      "product": "Oracle Cloud FastConnect port-hour (colocation or third-party provider)",
+      "source": "https://apexapps.oracle.com/pls/apex/cetools/api/v1/products/?currencyCode=USD (parts B88325, B88326, B93126, B107975, metric Port Hour); port speeds per model: https://docs.oracle.com/en-us/iaas/Content/Network/Concepts/fastconnectoverview.htm",
+      "retrieved": "2026-11-12",
+      "tiers": [
+        {
+          "bandwidthMbps": 1000,
+          "hourly": 0.2125
+        },
+        {
+          "bandwidthMbps": 10000,
+          "hourly": 1.275
+        },
+        {
+          "bandwidthMbps": 100000,
+          "hourly": 10.75
+        },
+        {
+          "bandwidthMbps": 400000,
+          "hourly": 20.0
+        }
+      ]
+    },
+    {
+      "provider": "ORACLE_CLOUD",
+      "model": "HOSTED",
+      "product": "Oracle Cloud FastConnect through an Oracle partner: the same port-hour by port speed (partner port speeds 1, 10 and 100 Gbps)",
+      "source": "https://apexapps.oracle.com/pls/apex/cetools/api/v1/products/?currencyCode=USD (parts B88325, B88326, B93126, B107975, metric Port Hour); port speeds per model: https://docs.oracle.com/en-us/iaas/Content/Network/Concepts/fastconnectoverview.htm",
+      "retrieved": "2026-11-12",
+      "tiers": [
+        {
+          "bandwidthMbps": 1000,
+          "hourly": 0.2125
+        },
+        {
+          "bandwidthMbps": 10000,
+          "hourly": 1.275
+        },
+        {
+          "bandwidthMbps": 100000,
+          "hourly": 10.75
+        }
+      ]
+    }
+  ],
+  "onPrem": {
+    "transitPerMbpsMonth": 0.75,
+    "crossConnectMonthly": 250,
+    "hardwareMonthly": 300,
+    "powerPerKwMonth": 195
+  }
+}

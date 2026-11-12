@@ -17,9 +17,6 @@
 package com.eqixiac.equinix.fabric.client.internal.implementation;
 
 import com.eqixiac.equinix.core.client.ResourceClientBase;
-import com.eqixiac.equinix.core.enums.RequestType;
-import com.eqixiac.equinix.core.http.ResponseHandler;
-import com.eqixiac.equinix.core.http.request.EquinixRequest;
 import com.eqixiac.equinix.core.http.response.Page;
 import com.eqixiac.equinix.core.model.FilteredSortedPaginatedPost;
 import com.eqixiac.equinix.fabric.client.implementation.FabricConfigImpl;
@@ -29,9 +26,6 @@ import com.eqixiac.equinix.fabric.model.implementation.filter.FilterPropertyList
 import com.eqixiac.equinix.fabric.model.implementation.sort.SortPropertyList;
 import com.eqixiac.equinix.fabric.model.json.CloudEventJson;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Internal client for Fabric Cloud Events (read-only). The JSON model implements the public
@@ -58,10 +52,7 @@ public class CloudEventClientImpl extends ResourceClientBase<CloudEvent, CloudEv
         return getOne("GetCloudEvent", uuid);
     }
 
-    public List<CloudEvent> getByAssetId(String asset, String assetId) {
-        EquinixRequest<CloudEvent> request = buildRequestWithPathParams("GetCloudEventByAssetId", RequestType.PAGINATED,
-                Map.of("asset", asset, "assetId", assetId), CloudEventJson.class);
-        Page<CloudEventJson> page = ResponseHandler.handlePaginatedListResponse(invoke(request), request);
-        return (page != null && page.getItems() != null) ? List.copyOf(page.getItems()) : Collections.emptyList();
+    public Page<CloudEventJson> searchLiveEvents(FilterPropertyList filter) {
+        return searchPage("SearchLiveEvents", new FilteredSortedPaginatedPost<>(filter, null));
     }
 }

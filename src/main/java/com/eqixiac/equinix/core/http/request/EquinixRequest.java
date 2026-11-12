@@ -16,7 +16,6 @@
 
 package com.eqixiac.equinix.core.http.request;
 
-import com.eqixiac.equinix.core.auth.EquinixCredentialsProvider;
 import com.eqixiac.equinix.core.enums.HttpMethod;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JavaType;
@@ -37,7 +36,7 @@ import java.util.Map;
  * GET/single/list cases; {@link PaginatedRequest} and {@link PaginatedPostRequest} extend it to add
  * offset/limit paging and POST-search paging respectively.
  *
- * <p>The request body — when the operation has one — is carried as a single {@link RequestBody}
+ * <p>The request body - when the operation has one - is carried as a single {@link RequestBody}
  * (JSON payload, form fields, or raw bytes); the wire entity is built from it by
  * {@link RequestFactory} at dispatch time. No transport (Apache HttpClient) type appears in this
  * class's API.</p>
@@ -52,7 +51,6 @@ import java.util.Map;
 @Setter
 public class EquinixRequest<T> {
 
-    private EquinixCredentialsProvider equinixCredentialsProvider;
     private URI endPoint;
     private String resourcePath;
     private HttpMethod httpMethod;
@@ -91,14 +89,14 @@ public class EquinixRequest<T> {
      * operations whose element type differs from the owning client's own JSON model (e.g. the
      * accounts client paging account <em>agreements</em>). The producer maps page 1 itself, but
      * pages 2+ are fetched through the owning client's shared {@code nextPage(...)}, which by
-     * default re-maps every item with the client's class-level {@code wrap()} — typed for the
+     * default re-maps every item with the client's class-level {@code wrap()} - typed for the
      * client's own JSON model, so a differently-typed element would throw
      * {@link ClassCastException}. Producers of such requests set this mapper (mirroring their
-     * page-1 mapping — often the identity, when the JSON model implements the public interface
+     * page-1 mapping - often the identity, when the JSON model implements the public interface
      * directly) and the shared paging pipeline applies it instead of {@code wrap()}.
      *
      * <p>Client-side carrier only: declared {@code transient} to make explicit that it plays no
-     * part in any serialized form of the request — it never travels on the wire.</p>
+     * part in any serialized form of the request - it never travels on the wire.</p>
      */
     private transient java.util.function.UnaryOperator<Object> pageItemMapper;
 
@@ -140,7 +138,7 @@ public class EquinixRequest<T> {
     /**
      * Sets the path parameters, defensively copying into a mutable map (mirrors
      * {@link #setQueryParameters}: {@code addPathParameter} mutates the stored map, so an
-     * immutable caller-supplied map — e.g. {@code Map.of("uuid", uuid)} — must not be stored by
+     * immutable caller-supplied map - e.g. {@code Map.of("uuid", uuid)} - must not be stored by
      * reference).
      *
      * @param pathParameters the path parameters (may be {@code null} or immutable)

@@ -38,7 +38,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * when disabled (the default) no EIA call is made; when EIA fails the registry still loads from
  * Fabric alone (best-effort).
  */
-@DisplayName("EquinixConfig.enrichMetroRegistry — cross-source metro/IBX enrichment")
+@DisplayName("EquinixConfig.enrichMetroRegistry - cross-source metro/IBX enrichment")
 class MetroRegistryEnrichmentWireMockTest extends WireMockTestBase {
 
     static final String METROS_PATH = "/fabric/v4/metros";
@@ -130,7 +130,7 @@ class MetroRegistryEnrichmentWireMockTest extends WireMockTestBase {
     }
 
     @Test
-    @DisplayName("refresh() re-reads both sources in place — new IBXes appear on existing references")
+    @DisplayName("refresh() re-reads both sources in place - new IBXes appear on existing references")
     void refreshReloadsInPlace() throws Exception {
         try (Fabric fabric = new Fabric(testCredentials(), enrichedConfig())) {
             redirectToWireMock(fabric);

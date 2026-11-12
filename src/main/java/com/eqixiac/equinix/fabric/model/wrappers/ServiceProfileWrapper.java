@@ -33,6 +33,8 @@ public class ServiceProfileWrapper extends ResourceImpl<ServiceProfile> implemen
 
     @Delegate(excludes = ServiceProfileMutability.class)
     private ServiceProfileJson jsonObject;
+
+    private boolean deleted;
     @Getter
     private final Pageable<ServiceProfile> serviceClient;
 
@@ -47,8 +49,17 @@ public class ServiceProfileWrapper extends ResourceImpl<ServiceProfile> implemen
     }
 
     public Boolean delete() {
-        this.jsonObject = ((ServiceProfileClientImpl)this.serviceClient).delete(this.getUuid());
+        ServiceProfileJson response = ((ServiceProfileClientImpl)this.serviceClient).delete(this.getUuid());
+        if (response != null) {
+            this.jsonObject = response;
+        }
+        this.deleted = true;
         return true;
+    }
+
+    @Override
+    public boolean isDeleted() {
+        return this.deleted;
     }
 
     public void refresh() {

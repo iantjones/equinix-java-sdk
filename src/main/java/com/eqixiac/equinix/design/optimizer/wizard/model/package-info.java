@@ -15,22 +15,22 @@
  */
 
 /**
- * Value types for the Deployment Wizard — the plan itself and everything it is made of, plus the
+ * Value types for the Deployment Wizard - the plan itself and everything it is made of, plus the
  * execution-side inputs and outcomes.
  *
  * <p>The centrepiece is {@link com.eqixiac.equinix.design.optimizer.wizard.model.DeploymentPlan}
  * (immutable; {@code dryRun()} returns a refreshed copy, {@code execute(ExecutionInputs)} does the
- * provisioning). Its parts are the planned resources —
+ * provisioning). Its parts are the planned resources - 
  * {@link com.eqixiac.equinix.design.optimizer.wizard.model.PlannedCloudRouter},
  * {@link com.eqixiac.equinix.design.optimizer.wizard.model.PlannedConnection},
  * {@link com.eqixiac.equinix.design.optimizer.wizard.model.PlannedBackboneLink},
- * {@link com.eqixiac.equinix.design.optimizer.wizard.model.PlannedRoutingProtocol} — with the
+ * {@link com.eqixiac.equinix.design.optimizer.wizard.model.PlannedRoutingProtocol} - with the
  * sizing/selection evidence
  * ({@link com.eqixiac.equinix.design.optimizer.wizard.model.BandwidthAllocation},
  * {@link com.eqixiac.equinix.design.optimizer.wizard.model.ProfileSelection},
  * {@link com.eqixiac.equinix.design.optimizer.wizard.model.ProfileCandidate}) and
  * currency-honest pricing
- * ({@link com.eqixiac.equinix.design.optimizer.wizard.model.PlanPricing} — cross-currency totals
+ * ({@link com.eqixiac.equinix.design.optimizer.wizard.model.PlanPricing} - cross-currency totals
  * are withheld, never fabricated).</p>
  *
  * <p><b>Beta.</b> A fifth kind of planned entry,

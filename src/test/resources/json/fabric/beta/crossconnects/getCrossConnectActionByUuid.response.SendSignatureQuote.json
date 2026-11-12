@@ -1,0 +1,10 @@
+{
+  "href": "https://api.equinix.com/fabric/v4/crossConnects/46bb1a31-c28f-4197-8b10-06e0e03d0743/actions/30cc7878-54e3-4e1a-8651-87a61354bad4",
+  "uuid": "30cc7878-54e3-4e1a-8651-87a61354bad4",
+  "type": "XC_SIGNATURE_SUBMISSION",
+  "state": "COMPLETED",
+  "changeLog": {
+    "createdDateTime": "2026-07-24T06:50:46Z",
+    "createdBy": "testuser"
+  }
+}

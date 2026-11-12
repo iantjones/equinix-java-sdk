@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * {@code subtract} fields of policy masks).
  *
  * <p>The tests prove that <em>both</em> the bare-string form and the structured (object/array)
- * form survive a deserialize-then-serialize round-trip unchanged — on read (response models) and
+ * form survive a deserialize-then-serialize round-trip unchanged - on read (response models) and
  * on write (request creators).</p>
  */
 class PolicyExpressionDeserializationTest {

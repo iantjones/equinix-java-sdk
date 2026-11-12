@@ -24,7 +24,7 @@ import java.util.List;
 
 /**
  * Operational data for a routing protocol (the Fabric v4 {@code RoutingProtocolOperation}
- * schema) — carries the provisioning errors reported when a routing protocol FAILED.
+ * schema) - carries the provisioning errors reported when a routing protocol FAILED.
  */
 @Getter
 @JsonIgnoreProperties(ignoreUnknown = true)

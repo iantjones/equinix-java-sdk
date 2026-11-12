@@ -43,7 +43,6 @@ import com.eqixiac.equinix.fabric.model.implementation.filter.FilterPropertyList
 import com.eqixiac.equinix.fabric.model.implementation.sort.SortPropertyList;
 import com.eqixiac.equinix.fabric.model.json.ConnectionActionJson;
 import com.eqixiac.equinix.fabric.model.json.ConnectionJson;
-import com.eqixiac.equinix.fabric.model.json.ConnectionStatisticJson;
 import com.eqixiac.equinix.fabric.model.json.ConnectionValidationResponseJson;
 import com.eqixiac.equinix.fabric.model.json.MetricJson;
 import com.eqixiac.equinix.fabric.model.json.creators.ConnectionCreatorJson;
@@ -91,6 +90,7 @@ public class ConnectionClientImpl extends ResourceClientBase<Connection, Connect
     }
 
     public ConnectionJson getByUuid(String uuid) {
+        requireId(uuid, "uuid");
         return getOne("GetConnection", uuid);
     }
 
@@ -99,10 +99,12 @@ public class ConnectionClientImpl extends ResourceClientBase<Connection, Connect
     }
 
     public ConnectionJson delete(String uuid) {
+        requireId(uuid, "uuid");
         return deleteOne("DeleteConnection", uuid);
     }
 
     public ConnectionJson refresh(String uuid) {
+        requireId(uuid, "uuid");
         return getByUuid(uuid);
     }
 
@@ -111,81 +113,72 @@ public class ConnectionClientImpl extends ResourceClientBase<Connection, Connect
     }
 
     public ConnectionActionJson performOperation(String uuid, ConnectionOperationType connectionOperationType, String description, Object bodyObject) {
+        requireId(uuid, "uuid");
         return postForType("ManageConnection", Map.of("uuid", uuid),
                 new ManageConnection(connectionOperationType, description, bodyObject),
                 ConnectionActionJson.getSingleTypeRef());
     }
 
     public ConnectionJson update(String uuid, List<PatchOperation> operations) {
+        requireId(uuid, "uuid");
         return patchOne("UpdateConnection", uuid, operations);
     }
 
     public ConnectionJson dryRunUpdate(String uuid, List<PatchOperation> operations) {
+        requireId(uuid, "uuid");
         // Same wire shape as update() (json-patch+json PATCH) plus dryRun=true; nothing persists.
         return dryRunPatch("UpdateConnection", uuid, operations);
     }
 
-    public ConnectionStatisticJson getStatistics(String uuid, LocalDateTime startDateTime, LocalDateTime endDateTime, Side viewPoint) {
-        Map<String, List<String>> qParams = Map.of(
-                "startDateTime", ParameterMapper.singleParamList(ParameterMapper.dateTimeForQuery(startDateTime)),
-                "endDateTime", ParameterMapper.singleParamList(ParameterMapper.dateTimeForQuery(endDateTime)),
-                "viewPoint", ParameterMapper.singleParamList(viewPoint.toViewPoint())
-        );
-        return getAs("GetStatistics", Map.of("uuid", uuid), qParams, ConnectionStatisticJson.class);
-    }
-
-    public ConnectionStatisticJson refreshStatistics(String uuid, LocalDateTime startDateTime, LocalDateTime endDateTime, Side viewPoint) {
-        return this.getStatistics(uuid, startDateTime, endDateTime, viewPoint);
-    }
-
-    public List<Metric> getMetrics(String uuid, String name, LocalDateTime fromDateTime, LocalDateTime toDateTime) {
-        Map<String, List<String>> qParams = new HashMap<>();
-        if (name != null) {
-            ParameterMapper.addAdditionalValue(qParams, "name", name);
-        }
-        if (fromDateTime != null) {
-            ParameterMapper.addAdditionalValue(qParams, "fromDateTime", ParameterMapper.dateTimeForQuery(fromDateTime));
-        }
-        if (toDateTime != null) {
-            ParameterMapper.addAdditionalValue(qParams, "toDateTime", ParameterMapper.dateTimeForQuery(toDateTime));
-        }
-
-        EquinixRequest<Metric> equinixRequest = buildRequest("GetMetrics", RequestType.PAGINATED,
-                Map.of("uuid", uuid), qParams, MetricJson.class);
-        EquinixResponse<Metric> equinixResponse = invoke(equinixRequest);
-        Page<MetricJson> page = ResponseHandler.handlePaginatedListResponse(equinixResponse, equinixRequest);
-        return (page != null && page.getItems() != null) ? List.copyOf(page.getItems()) : Collections.emptyList();
-    }
-
     public List<RouteAggregationAttachment> getRouteAggregations(String connectionId) {
+        requireId(connectionId, "connectionId");
         return this.routeAggregationAttachmentsClient.getConnectionRouteAggregations(connectionId);
     }
 
     public RouteAggregationAttachment getRouteAggregation(String connectionId, String routeAggregationId) {
+        requireId(connectionId, "connectionId");
+        requireId(routeAggregationId, "routeAggregationId");
         return this.routeAggregationAttachmentsClient.getConnectionRouteAggregation(connectionId, routeAggregationId);
     }
 
     public RouteAggregationAttachment attachRouteAggregation(String connectionId, String routeAggregationId) {
+        requireId(connectionId, "connectionId");
+        requireId(routeAggregationId, "routeAggregationId");
         return this.routeAggregationAttachmentsClient.attachConnectionRouteAggregation(connectionId, routeAggregationId);
     }
 
     public Boolean detachRouteAggregation(String connectionId, String routeAggregationId) {
+        requireId(connectionId, "connectionId");
+        requireId(routeAggregationId, "routeAggregationId");
         return this.routeAggregationAttachmentsClient.detachConnectionRouteAggregation(connectionId, routeAggregationId);
     }
 
     public List<RouteFilterAttachment> getRouteFilters(String connectionId) {
+        requireId(connectionId, "connectionId");
         return this.routeFilterAttachmentsClient.getConnectionRouteFilters(connectionId);
     }
 
     public RouteFilterAttachment getRouteFilter(String connectionId, String routeFilterId) {
+        requireId(connectionId, "connectionId");
+        requireId(routeFilterId, "routeFilterId");
         return this.routeFilterAttachmentsClient.getConnectionRouteFilter(connectionId, routeFilterId);
     }
 
     public RouteFilterAttachment attachRouteFilter(String connectionId, String routeFilterId, Direction direction) {
+        requireId(connectionId, "connectionId");
+        requireId(routeFilterId, "routeFilterId");
         return this.routeFilterAttachmentsClient.attachConnectionRouteFilter(connectionId, routeFilterId, direction);
     }
 
     public Boolean detachRouteFilter(String connectionId, String routeFilterId) {
+        requireId(connectionId, "connectionId");
+        requireId(routeFilterId, "routeFilterId");
         return this.routeFilterAttachmentsClient.detachConnectionRouteFilter(connectionId, routeFilterId);
+    }
+
+    private static void requireId(String value, String name) {
+        if (value == null || value.isBlank()) {
+            throw new IllegalArgumentException(name + " is required");
+        }
     }
 }

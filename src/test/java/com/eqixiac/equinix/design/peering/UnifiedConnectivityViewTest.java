@@ -29,7 +29,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Tests for {@link UnifiedConnectivityView} — the per-ASN combined IX + Fabric view.
+ * Tests for {@link UnifiedConnectivityView} - the per-ASN combined IX + Fabric view.
  */
 @DisplayName("UnifiedConnectivityView")
 class UnifiedConnectivityViewTest {

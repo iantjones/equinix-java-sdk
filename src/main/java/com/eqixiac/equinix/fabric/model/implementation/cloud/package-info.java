@@ -39,11 +39,11 @@
  * <pre>{@code
  * // Option 1: Wrap a cloud provider SDK object
  * AwsDirectConnectAdapter<Connection> adapter = new AwsDirectConnectAdapter<>(
- *     awsConnection, awsAccountId, "us-east-1", equinixProfileUuid);
+ *     awsConnection, awsAccountId, "us-east-1", equinixProfileUuid, "DC");
  *
  * // Option 2: Manual construction without a provider SDK
  * AwsDirectConnectAdapter<?> adapter = AwsDirectConnectAdapter.of(
- *     "123456789012", "us-east-1", equinixProfileUuid);
+ *     "123456789012", "us-east-1", equinixProfileUuid, "DC");
  *
  * // Use the adapter with the Fabric ConnectionBuilder
  * Connection conn = fabric.connections()

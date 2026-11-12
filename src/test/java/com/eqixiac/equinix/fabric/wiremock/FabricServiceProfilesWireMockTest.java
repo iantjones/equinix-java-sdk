@@ -631,6 +631,35 @@ class FabricServiceProfilesWireMockTest extends WireMockTestBase {
     }
 
     @Nested
+    @DisplayName("replace() - PUT with If-Match")
+    class Replace {
+
+        private static final String SP_ID = "f6a7b8c9-d0e1-2345-fabc-567890123def";
+        private static final String URL = "/fabric/v4/serviceProfiles/" + SP_ID;
+
+        @Test
+        @DisplayName("reads the ETag from GET and sends it as the required If-Match header")
+        void replaceSendsIfMatchFromETag() {
+            wireMock.stubFor(get(urlPathEqualTo(URL))
+                    .willReturn(okJson(loadFixture("/json/fabric/service_profile_response.json"))
+                            .withHeader("ETag", "\"v7\"")));
+            wireMock.stubFor(put(urlPathEqualTo(URL))
+                    .willReturn(okJson(loadFixture("/json/fabric/service_profile_response.json"))));
+
+            ServiceProfile replaced = fabric.serviceProfiles()
+                    .define(ServiceProfileType.L2_PROFILE)
+                    .name("AWS Direct Connect - Production")
+                    .visibility(ServiceProfileVisibility.PUBLIC)
+                    .replace(SP_ID);
+
+            assertNotNull(replaced);
+            wireMock.verify(putRequestedFor(urlPathEqualTo(URL))
+                    .withHeader("If-Match", equalTo("\"v7\""))
+                    .withRequestBody(matchingJsonPath("$.name", equalTo("AWS Direct Connect - Production"))));
+        }
+    }
+
+    @Nested
     @DisplayName("Wrapper refresh()")
     class WrapperRefresh {
 

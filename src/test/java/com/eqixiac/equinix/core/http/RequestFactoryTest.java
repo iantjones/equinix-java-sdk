@@ -41,7 +41,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Wire behavior of the unified {@link RequestBody} abstraction: {@link RequestFactory} is the
- * single place a body becomes a transport entity, built at dispatch time — so JSON payloads
+ * single place a body becomes a transport entity, built at dispatch time - so JSON payloads
  * mutated between dispatches (POST-search paging) are re-serialized, form fields are URL-encoded,
  * raw bytes pass through verbatim, and a DELETE grows a body only when one is attached.
  */

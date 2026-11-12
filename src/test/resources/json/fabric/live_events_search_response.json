@@ -1,0 +1,35 @@
+{
+  "pagination": {
+    "offset": 0,
+    "limit": 2,
+    "total": 1
+  },
+  "data": [
+    {
+      "specversion": "1.0",
+      "source": "https://api.equinix.com/fabric/v4/cloudevents",
+      "id": "6c573287-9914-4202-8b6d-2d15e7da04b8",
+      "type": "equinix.fabric.port.status.down",
+      "subject": "/fabric/v4/ports/8ac8ecfe-c7cb-4def-9f77-5ce93c19d83d",
+      "time": "2018-04-05T17:31:00.000Z",
+      "dataschema": "https://equinix.github.io/equinix-cloudevents/jsonschema/equinix/fabric/v1/ChangeEvent.json",
+      "datacontenttype": "application/json",
+      "severitynumber": "21",
+      "severitytext": "FATAL",
+      "equinixalert": "raise/AABBcCCDDeEfFf123,",
+      "equinixproject": "project-123",
+      "data": {
+        "message": "Virtual port 'port-name' status changed to DOWN",
+        "resource": {
+          "href": "https://api.equinix.com//fabric/v4/ports/8ac8ecfe-c7cb-4def-9f77-5ce93c19d83d",
+          "uuid": "8ac8ecfe-c7cb-4def-9f77-5ce93c19d83d",
+          "type": "XF_PORT",
+          "state": "PROVISIONED",
+          "operation": {
+            "operationalStatus": "DOWN"
+          }
+        }
+      }
+    }
+  ]
+}

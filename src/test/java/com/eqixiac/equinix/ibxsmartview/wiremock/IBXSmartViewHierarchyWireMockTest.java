@@ -98,7 +98,7 @@ class IBXSmartViewHierarchyWireMockTest extends WireMockTestBase {
             wireMock.stubFor(get(urlPathEqualTo(LOCATION_PATH))
                     .willReturn(aResponse().withStatus(404)
                             .withHeader("Content-Type", "application/json")
-                            .withBody("[{\"errorCode\":\"ERR-404\",\"errorMessage\":\"Account not found\"}]")));
+                            .withBody("[{\"errorCode\":\"DCIM-ASSET-404\",\"title\":\"Request Validation Error\",\"message\":\"DCIM-ASSET-404\",\"developerMessage\":\"Account not found\",\"fieldName\":null}]")));
 
             assertThrows(EquinixNotFoundException.class,
                     () -> smartView.hierarchy().getLocationHierarchy(ACCOUNT_NO, IBX));
@@ -138,7 +138,7 @@ class IBXSmartViewHierarchyWireMockTest extends WireMockTestBase {
             wireMock.stubFor(get(urlPathEqualTo(POWER_PATH))
                     .willReturn(aResponse().withStatus(500)
                             .withHeader("Content-Type", "application/json")
-                            .withBody("[{\"errorCode\":\"ERR-500\",\"errorMessage\":\"Internal server error\"}]")));
+                            .withBody("[{\"errorCode\":\"DCIM-ASSET-500\",\"title\":\"Request Validation Error\",\"message\":\"DCIM-ASSET-500\",\"developerMessage\":\"Internal server error\",\"fieldName\":null}]")));
 
             assertThrows(EquinixServerException.class,
                     () -> smartView.hierarchy().getPowerHierarchy(ACCOUNT_NO, IBX));

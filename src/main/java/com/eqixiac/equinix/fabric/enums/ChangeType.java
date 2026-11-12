@@ -25,7 +25,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
  * <p>Fabric reports change types across many resource families (connections, networks, ports,
  * routers, route filters/aggregations and their rules, routing protocols, etc.). The full set is
  * enumerated here, and unknown/newly-introduced values deserialize to {@link #UNKNOWN} rather than
- * failing the whole response — the API can add change types without breaking existing SDK clients.</p>
+ * failing the whole response - the API can add change types without breaking existing SDK clients.</p>
  *
  * @author ianjones
  */

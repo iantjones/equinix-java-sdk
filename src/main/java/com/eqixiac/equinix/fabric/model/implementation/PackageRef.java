@@ -24,7 +24,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 /**
- * Package settings for a port (the Fabric v4 {@code Package} schema — the
+ * Package settings for a port (the Fabric v4 {@code Package} schema - the
  * {@code Port.package} response attribute). Named {@code PackageRef} to avoid
  * clashing with the {@code PortPackage} catalog resource.
  *

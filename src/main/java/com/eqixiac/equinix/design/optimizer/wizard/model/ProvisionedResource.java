@@ -2,15 +2,17 @@ package com.eqixiac.equinix.design.optimizer.wizard.model;
 
 import com.eqixiac.equinix.core.model.MetroId;
 import lombok.Builder;
+import lombok.extern.jackson.Jacksonized;
 import lombok.Value;
 
 /**
- * A single resource that was created during deployment execution — the audit-trail entry a
+ * A single resource that was created during deployment execution - the audit-trail entry a
  * {@link DeploymentOutcome} carries for every create that succeeded, including resources that
  * were subsequently torn down by an abort-and-rollback.
  */
 @Value
-@Builder
+@Builder(toBuilder = true)
+@Jacksonized
 public class ProvisionedResource {
 
     /**
@@ -19,10 +21,16 @@ public class ProvisionedResource {
      */
     String resourceType;
 
+    /** The plan's logical key for the resource; {@code null} on outcomes of hand-built plans without keys. */
+    String key;
+
+    /** For a routing protocol, the uuid of the connection it was created on; otherwise {@code null}. */
+    String parentUuid;
+
     /** The planned resource's name (the same name that appears on the plan). */
     String name;
 
-    /** The real uuid Fabric assigned at creation — the handle rollback deletes by. */
+    /** The real uuid Fabric assigned at creation - the handle rollback deletes by. */
     String uuid;
 
     /** The metro the resource lives in, or {@code null} where not applicable (routing protocols). */
@@ -32,7 +40,7 @@ public class ProvisionedResource {
      * The last state execution observed for this resource. One of: the ready state (normally
      * {@code "PROVISIONED"}); a real terminal-failure state the waiter caught ({@code "FAILED"},
      * {@code "CANCELLED"}, {@code "DEPROVISIONED"}, {@code "DEPROVISIONING"}); or the fallback
-     * {@code "PROVISIONING"} when no state could be observed at all — the wait timed out or the
+     * {@code "PROVISIONING"} when no state could be observed at all - the wait timed out or the
      * status fetch itself failed, so the resource may or may not have progressed since.
      */
     String status;

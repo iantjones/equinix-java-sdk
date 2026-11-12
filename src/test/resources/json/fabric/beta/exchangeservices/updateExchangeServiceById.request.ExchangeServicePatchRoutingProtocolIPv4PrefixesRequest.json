@@ -1,0 +1,10 @@
+[
+  {
+    "op": "replace",
+    "path": "/routingProtocol/bgpIpv4/prefixes",
+    "value": [
+      "10.10.10.0/24",
+      "10.10.20.0/24"
+    ]
+  }
+]

@@ -72,7 +72,7 @@ public class EquinixConfig {
      * An opt-in circuit breaker enforced on every request attempt, alongside the retry policy.
      * After the configured number of <em>consecutive</em> service failures (5xx responses or
      * transport {@code IOException}s) the breaker opens and requests fail fast with a
-     * {@link com.eqixiac.equinix.core.exception.CircuitOpenException} — no HTTP call is made —
+     * {@link com.eqixiac.equinix.core.exception.CircuitOpenException} - no HTTP call is made - 
      * until the cooldown elapses and a half-open probe succeeds. Example:
      * {@code .circuitBreaker(new CircuitBreaker(5, 30_000))} (open after 5 consecutive failures,
      * probe after 30s). {@code null} (the default) disables circuit breaking entirely.
@@ -80,11 +80,11 @@ public class EquinixConfig {
     private final CircuitBreaker circuitBreaker;
 
     /**
-     * Whether to enrich the metro registry with per-IBX detail from Equinix Internet Access (EIA) —
+     * Whether to enrich the metro registry with per-IBX detail from Equinix Internet Access (EIA) - 
      * today the only Equinix API that returns per-data-center geo coordinates. When enabled,
      * {@code fabric.metroRegistry()} / {@code Equinix.metroRegistry()} also queries
      * {@code GET /internetAccess/v2/ibxs} (both EIA connection types, unioned) and exposes the
-     * result through {@code MetroRegistry.ibx(String)} / {@code ibxDetails(String)} — giving
+     * result through {@code MetroRegistry.ibx(String)} / {@code ibxDetails(String)} - giving
      * IBX-to-IBX latency math ({@code design.geo.SpeedOfLightLatency}) live coordinates without
      * wiring up the InternetAccess domain yourself.
      *
@@ -98,8 +98,8 @@ public class EquinixConfig {
     /**
      * A PeeringDB API key used by the Peering Intelligence entry points
      * ({@code fabric.peeringIntelligence()} / {@code design.peeringIntelligence()}) when no key is
-     * passed explicitly. This is a separate credential from the Equinix OAuth client — it is created
-     * on <a href="https://docs.peeringdb.com/howto/api_keys/">peeringdb.com</a> — and unlocks higher
+     * passed explicitly. This is a separate credential from the Equinix OAuth client - it is created
+     * on <a href="https://docs.peeringdb.com/howto/api_keys/">peeringdb.com</a> - and unlocks higher
      * rate limits than anonymous PeeringDB access (~20 requests/minute) plus auth-gated fields.
      *
      * <p>Resolution order at analysis time: an explicit {@code peeringIntelligence(key)} argument,

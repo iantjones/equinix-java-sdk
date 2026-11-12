@@ -33,11 +33,12 @@ public interface LegacyPower {
     /**
      * Retrieves the current power data for a specific hierarchy level and value.
      *
-     * @param accountNo the Equinix account number
+     * @param accountNo the Equinix account number (required; the service answers HTTP 400 without it)
      * @param ibx the IBX code identifying the data center
      * @param levelType the hierarchy level type (e.g., cage, cabinet)
      * @param levelValue the specific value for the hierarchy level
      * @return the current power data
+     * @throws IllegalArgumentException if a parameter the spec marks required is null or blank
      */
     PowerData getCurrent(String accountNo, String ibx, String levelType, String levelValue);
 
@@ -53,7 +54,7 @@ public interface LegacyPower {
     /**
      * Retrieves trending power data over a specified time range and interval.
      *
-     * @param accountNo the Equinix account number
+     * @param accountNo the Equinix account number (required; the service answers HTTP 400 without it)
      * @param ibx the IBX code identifying the data center
      * @param levelType the hierarchy level type (e.g., cage, cabinet)
      * @param levelValue the specific value for the hierarchy level
@@ -61,6 +62,7 @@ public interface LegacyPower {
      * @param fromDate the start date of the trend range
      * @param toDate the end date of the trend range
      * @return the trending power data
+     * @throws IllegalArgumentException if a parameter the spec marks required is null or blank
      */
     TrendingPowerData getTrending(String accountNo, String ibx, String levelType,
                                   String levelValue, String interval,

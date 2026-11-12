@@ -17,6 +17,9 @@
 package com.eqixiac.equinix.fabric.client;
 
 import com.eqixiac.equinix.core.http.response.PaginatedList;
+import com.eqixiac.equinix.core.http.response.PaginatedFilteredList;
+import com.eqixiac.equinix.fabric.model.implementation.filter.FilterPropertyList;
+import com.eqixiac.equinix.fabric.model.implementation.sort.SortPropertyList;
 import com.eqixiac.equinix.fabric.model.Stream;
 import com.eqixiac.equinix.fabric.model.json.creators.StreamOperator;
 
@@ -48,4 +51,14 @@ public interface Streams {
      * @return a builder for configuring the new stream
      */
     StreamOperator.StreamBuilder define();
+
+    /**
+     * Searches streams ({@code POST /fabric/v4/streams/search}), for example by
+     * {@code /project/projectId}, {@code /uuid} or {@code /state}.
+     *
+     * @param filter the filter, or {@code null}
+     * @param sort the sort, or {@code null}
+     * @return a paginated, filtered list of streams
+     */
+    PaginatedFilteredList<Stream> search(FilterPropertyList filter, SortPropertyList sort);
 }

@@ -1,0 +1,91 @@
+{
+  "href": "https://api.equinix.com/fabric/v4/crossConnects/46bb1a31-c28f-4197-8b10-06e0e03d0743/actions/74ffa1a1-87b6-4b4d-b984-bad94687edf8",
+  "uuid": "74ffa1a1-87b6-4b4d-b984-bad94687edf8",
+  "type": "XC_DEINSTALL",
+  "state": "PENDING",
+  "data": {
+    "attachments": [
+      {
+        "href": "https://api.equinix.com/fabric/v4/crossConnects/46bb1a31-c28f-4197-8b10-06e0e03d0743/attachments/b41f485e-3094-42de-8797-0ef19a51df82",
+        "uuid": "b41f485e-3094-42de-8797-0ef19a51df82",
+        "attachmentId": "e41f485e-3094-42de-8797-0ef19a51df79"
+      }
+    ],
+    "schedule": {
+      "href": "https://api.equinix.com/fabric/v4/crossConnects/46bb1a31-c28f-4197-8b10-06e0e03d0743/schedules/c51f485e-3094-42de-8797-0ef19a51df83",
+      "uuid": "c51f485e-3094-42de-8797-0ef19a51df83",
+      "type": "XC_DEINSTALL_SCHEDULE",
+      "code": "STANDARD",
+      "state": "PENDING",
+      "requestedDateTime": "2026-06-14T17:21:25.586Z",
+      "deinstallationDateTime": "2026-06-16T17:21:25.586Z",
+      "changeLog": {
+        "createdDateTime": "2026-07-24T06:50:46Z",
+        "createdBy": "testuser"
+      }
+    },
+    "liveTrafficConsentProvided": true,
+    "services": [
+      {
+        "href": "https://api.equinix.com/fabric/v4/crossConnects/46bb1a31-c28f-4197-8b10-06e0e03d0743/services/d61f485e-3094-42de-8797-0ef19a51df84",
+        "uuid": "d61f485e-3094-42de-8797-0ef19a51df84",
+        "type": "XC_PATCH_EQUIPMENT",
+        "state": "PENDING",
+        "device": {
+          "cabinetUniqueSpaceId": "SV2:00:000000:0100",
+          "port": 32,
+          "connectorType": "SC"
+        },
+        "description": "device description",
+        "changeLog": {
+          "createdDateTime": "2026-07-24T06:50:46Z",
+          "createdBy": "testuser"
+        }
+      }
+    ],
+    "notifications": [
+      {
+        "type": "ORDERING",
+        "emails": [
+          "abc@test.com"
+        ],
+        "phone": [
+          {
+            "type": "MOBILE",
+            "number": "+14085551234",
+            "contactPreference": {
+              "timezone": "PST",
+              "availability": "ANYTIME"
+            }
+          }
+        ]
+      },
+      {
+        "type": "TECHNICAL",
+        "emails": [
+          "abc@test.com"
+        ],
+        "phone": [
+          {
+            "type": "MOBILE",
+            "number": "+14085551234",
+            "contactPreference": {
+              "timezone": "PST",
+              "availability": "ANYTIME"
+            }
+          }
+        ]
+      },
+      {
+        "type": "NOTIFICATION",
+        "emails": [
+          "abc@test.com"
+        ]
+      }
+    ]
+  },
+  "changeLog": {
+    "createdDateTime": "2026-07-24T06:50:46Z",
+    "createdBy": "testuser"
+  }
+}

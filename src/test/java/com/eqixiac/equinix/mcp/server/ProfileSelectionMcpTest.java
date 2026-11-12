@@ -45,7 +45,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@DisplayName("ProfileSelection in the MCP plan output — serialization + profile-choice elicitation")
+@DisplayName("ProfileSelection in the MCP plan output - serialization + profile-choice elicitation")
 class ProfileSelectionMcpTest {
 
     private final ServerContext ctx = ServerContext.builder().environment(Map.of()).build();
@@ -105,7 +105,7 @@ class ProfileSelectionMcpTest {
     @Test
     @DisplayName("the profile_selection block surfaces the round-up and every covering alternative")
     void serializesRoundUpAndAlternatives() {
-        ObjectNode payload = DesignToolFactory.planPayload(roundedUpChoicePlan(), "plan-x", ctx, null);
+        ObjectNode payload = PlanTools.planPayload(roundedUpChoicePlan(), ctx, null, DesignPayloads.Detail.STANDARD);
         JsonNode ps = profileSelection(payload);
 
         assertEquals(3000, ps.get("requested_mbps").asInt());
@@ -134,14 +134,14 @@ class ProfileSelectionMcpTest {
     @DisplayName("with no elicitation, a hasChoice() connection keeps the already-valid default profile")
     void keepsDefaultWhenUnsupported() {
         DeploymentPlan plan = roundedUpChoicePlan();
-        DesignToolFactory.ProfileChoices choices =
-                DesignToolFactory.applyProfileChoices(plan, ctx, StubExchanges.unsupported());
+        PlanTools.ProfileChoices choices =
+                PlanTools.applyProfileChoices(plan, ctx, StubExchanges.unsupported());
 
         PlannedConnection connection = choices.plan().getProviderConnections().get(0);
         assertEquals("sp-default", connection.getZSideServiceProfileUuid(), "the default profile is kept");
         assertEquals("kept_default", choices.records().get("aws-conn").status());
 
-        ObjectNode payload = DesignToolFactory.planPayload(choices.plan(), "plan-x", ctx, choices);
+        ObjectNode payload = PlanTools.planPayload(choices.plan(), ctx, choices, DesignPayloads.Detail.STANDARD);
         JsonNode choice = profileSelection(payload).get("choice");
         assertEquals("kept_default", choice.get("status").asText());
         assertEquals("sp-default", choice.get("selected_profile_uuid").asText());
@@ -151,8 +151,8 @@ class ProfileSelectionMcpTest {
     @DisplayName("with elicitation, a hasChoice() connection is prompted and the user's pick is applied")
     void appliesElicitedPick() {
         DeploymentPlan plan = roundedUpChoicePlan();
-        DesignToolFactory.ProfileChoices choices =
-                DesignToolFactory.applyProfileChoices(plan, ctx, StubExchanges.accepts("sp-alt"));
+        PlanTools.ProfileChoices choices =
+                PlanTools.applyProfileChoices(plan, ctx, StubExchanges.accepts("sp-alt"));
 
         PlannedConnection connection = choices.plan().getProviderConnections().get(0);
         assertEquals("sp-alt", connection.getZSideServiceProfileUuid(),
@@ -162,11 +162,11 @@ class ProfileSelectionMcpTest {
         assertEquals("sp-alt", connection.getProfileSelection().getAlternatives().get(0).getServiceProfileUuid(),
                 "the pick is reordered to the front of the alternatives");
 
-        DesignToolFactory.ProfileChoiceRecord record = choices.records().get("aws-conn");
+        PlanTools.ProfileChoiceRecord record = choices.records().get("aws-conn");
         assertEquals("picked", record.status());
         assertEquals("sp-alt", record.selectedProfileUuid());
 
-        ObjectNode payload = DesignToolFactory.planPayload(choices.plan(), "plan-x", ctx, choices);
+        ObjectNode payload = PlanTools.planPayload(choices.plan(), ctx, choices, DesignPayloads.Detail.STANDARD);
         JsonNode ps = profileSelection(payload);
         assertEquals("sp-alt", ps.get("selected_profile_uuid").asText());
         assertEquals("picked", ps.get("choice").get("status").asText());
@@ -188,17 +188,17 @@ class ProfileSelectionMcpTest {
                 .valid(true)
                 .build();
 
-        ObjectNode payload = DesignToolFactory.planPayload(plan, "plan-x", ctx, null);
+        ObjectNode payload = PlanTools.planPayload(plan, ctx, null, DesignPayloads.Detail.STANDARD);
         assertFalse(payload.get("provider_connections").get(0).has("profile_selection"),
                 "a null selection produces no block");
     }
 
-    // ── reprice after an elicited tier change ───────────────────────────────
+    // reprice after an elicited tier change
 
     /**
      * A connection with a genuine profile choice whose two covering profiles bill at DIFFERENT tiers:
      * the default (tightest fit) at 5000 Mbps, the alternative at 10000 Mbps. Picking the alternative
-     * raises the connection's billable tier — the case whose pricing must be recomputed. The Cloud
+     * raises the connection's billable tier - the case whose pricing must be recomputed. The Cloud
      * Router and backbone lists are empty (never null), exactly as an engine-built plan carries them.
      */
     private static DeploymentPlan tierChoicePlan() {
@@ -270,7 +270,7 @@ class ProfileSelectionMcpTest {
 
     /**
      * A wizard builder configured with the bandwidth-priced rate card. The card is set, so repricing
-     * never touches the (null) Fabric gateway or optimization result — it just prices the plan's current
+     * never touches the (null) Fabric gateway or optimization result - it just prices the plan's current
      * connections against this card, the same way the MCP's wizard prices the plan it built.
      */
     private static DeploymentWizard.Builder repricingWizard() {
@@ -289,13 +289,13 @@ class ProfileSelectionMcpTest {
         assertEquals(0, BigDecimal.valueOf(5000).compareTo(priced.getPricing().getMonthlyTotal()));
 
         // The user elicits a pick that moves the connection onto the higher (10000 Mbps) tier.
-        DesignToolFactory.ProfileChoices choices =
-                DesignToolFactory.applyProfileChoices(priced, ctx, StubExchanges.accepts("sp-big"));
+        PlanTools.ProfileChoices choices =
+                PlanTools.applyProfileChoices(priced, ctx, StubExchanges.accepts("sp-big"));
         assertTrue(choices.changed(), "a pick onto a different profile is a change");
         assertEquals(10000, choices.plan().getProviderConnections().get(0).getBandwidthMbps(),
                 "the connection is rebuilt at the chosen profile's tier");
 
-        // The rebuilt plan still carries the pricing computed from the pre-swap tier — this is the defect
+        // The rebuilt plan still carries the pricing computed from the pre-swap tier - this is the defect
         // reprice() exists to correct: pricing is stale until it is recomputed.
         assertEquals(0, BigDecimal.valueOf(5000).compareTo(
                         choices.plan().getPricing().getProviderConnectionMonthlyCost()),
@@ -310,7 +310,7 @@ class ProfileSelectionMcpTest {
         assertEquals(0, BigDecimal.valueOf(10000).compareTo(repriced.getPricing().getPerConnectionCost().get("aws-conn")),
                 "the per-connection figure tracks the new tier");
 
-        // Only pricing is replaced — the connections (and validity) are carried through untouched.
+        // Only pricing is replaced - the connections (and validity) are carried through untouched.
         assertEquals(choices.plan().getProviderConnections(), repriced.getProviderConnections());
         assertTrue(repriced.isValid());
     }
@@ -321,9 +321,9 @@ class ProfileSelectionMcpTest {
         DeploymentWizard.Builder wizard = repricingWizard();
         DeploymentPlan priced = wizard.reprice(tierChoicePlan());
 
-        // No elicitation support → the default is kept, nothing changes.
-        DesignToolFactory.ProfileChoices choices =
-                DesignToolFactory.applyProfileChoices(priced, ctx, StubExchanges.unsupported());
+        // No elicitation support -> the default is kept, nothing changes.
+        PlanTools.ProfileChoices choices =
+                PlanTools.applyProfileChoices(priced, ctx, StubExchanges.unsupported());
         assertFalse(choices.changed(), "keeping the default is not a change");
 
         // Repricing the unchanged plan produces the same figures it already had.

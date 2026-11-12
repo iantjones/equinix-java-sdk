@@ -47,7 +47,7 @@ public class ACLTemplateWrapper extends ResourceImpl<ACLTemplate> implements ACL
     }
 
     public Boolean save(ACLTemplateUpdaterJson updaterJson) {
-        this.json = ((ACLTemplateClientImpl)this.serviceClient).update(this.getUuid(), updaterJson);
+        this.json = WrapperState.keep(this.json, ((ACLTemplateClientImpl)this.serviceClient).update(this.getUuid(), updaterJson));
         return true;
     }
 
@@ -64,7 +64,7 @@ public class ACLTemplateWrapper extends ResourceImpl<ACLTemplate> implements ACL
     }
 
     public Boolean refresh(String accountUcmId) {
-        this.json = ((ACLTemplateClientImpl)this.serviceClient).refresh(this.getUuid(), accountUcmId);
+        this.json = WrapperState.keep(this.json, ((ACLTemplateClientImpl)this.serviceClient).refresh(this.getUuid(), accountUcmId));
         return true;
     }
 }

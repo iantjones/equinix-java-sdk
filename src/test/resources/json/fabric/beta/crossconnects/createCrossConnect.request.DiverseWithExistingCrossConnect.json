@@ -1,0 +1,49 @@
+{
+  "type": "XC",
+  "name": "My-CC-service-SEC",
+  "redundancy": {
+    "priority": "SECONDARY",
+    "group": "7cf39156-9dec-40f7-a254-9bb401342e83"
+  },
+  "aSide": {
+    "demarcationPoint": {
+      "patchPanelId": "PP:Demarc:1260379",
+      "patchPanelPortA": 14,
+      "patchPanelPortB": 15,
+      "connectorType": "SC"
+    }
+  },
+  "zSide": {
+    "demarcationPoint": {
+      "patchPanelId": "PP:Demarc:1260379",
+      "patchPanelPortA": 22,
+      "patchPanelPortB": 23,
+      "connectorType": "SC"
+    }
+  },
+  "schedule": {
+    "code": "STANDARD",
+    "requestedDateTime": "2026-02-27T07:21:39Z"
+  },
+  "notifications": [
+    {
+      "type": "TECHNICAL",
+      "emails": [
+        "abc@test.com"
+      ],
+      "phone": [
+        {
+          "type": "MOBILE",
+          "number": "+14085551234",
+          "contactPreference": {
+            "timezone": "PST",
+            "availability": "ANYTIME"
+          }
+        }
+      ]
+    }
+  ],
+  "order": {
+    "customerReferenceId": "12345"
+  }
+}

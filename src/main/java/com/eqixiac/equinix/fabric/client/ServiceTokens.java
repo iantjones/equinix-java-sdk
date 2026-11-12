@@ -52,7 +52,7 @@ public interface ServiceTokens {
      * Begins the fluent builder for creating a new service token.
      * Call methods on the returned builder to configure the token, then call {@code create()}.
      *
-     * @param issuerSide the side (A-side or Z-side) issuing the service token
+     * @param issuerSide the side (A-side or Z-side) the token's access point is placed on
      * @return a builder for configuring the new service token
      */
     ServiceTokenOperator.ServiceTokenBuilder define(Side issuerSide);

@@ -16,6 +16,7 @@
 
 package com.eqixiac.equinix;
 
+import com.eqixiac.equinix.core.auth.BearerTokenProvider;
 import com.eqixiac.equinix.core.auth.EquinixCredentials;
 import com.eqixiac.equinix.core.auth.EquinixCredentialsProvider;
 import com.eqixiac.equinix.core.auth.EquinixStaticCredentialsProvider;
@@ -26,8 +27,8 @@ import java.io.Closeable;
 import java.io.IOException;
 
 /**
- * A single Equinix session that owns <strong>one</strong> authenticated core client — a single
- * OAuth token and a single HTTP connection pool — and vends every domain client over it. Use this
+ * A single Equinix session that owns <strong>one</strong> authenticated core client - a single
+ * OAuth token and a single HTTP connection pool - and vends every domain client over it. Use this
  * when an application talks to more than one domain so they share the token and pool instead of
  * each {@code new Fabric(creds)} / {@code new NetworkEdge(creds)} standing up its own (which would
  * authenticate and pool independently).
@@ -56,7 +57,7 @@ public final class Equinix implements Closeable {
 
     private Fabric fabric;
     private NetworkEdge networkEdge;
-    private CustomerPortal customerPortal;
+    private Operations operations;
     private IBXSmartView ibxSmartView;
     private InternetAccess internetAccess;
     private Projects projects;
@@ -93,7 +94,7 @@ public final class Equinix implements Closeable {
     }
 
     /**
-     * Opens a session whose credentials are resolved through the given provider — consulted on each
+     * Opens a session whose credentials are resolved through the given provider - consulted on each
      * authentication, so the whole session (every domain client over the shared core) can rotate
      * credentials at runtime.
      *
@@ -122,8 +123,33 @@ public final class Equinix implements Closeable {
      * @param config the construction-time options
      */
     public Equinix(EquinixCredentialsProvider credentialsProvider, EquinixConfig config) {
+        this(new com.eqixiac.equinix.core.client.EquinixClient(credentialsProvider, config.isSandbox()), config);
+    }
+
+    /**
+     * Opens a session whose every domain client signs requests with tokens from the given provider
+     * instead of OAuth2 client credentials, for example an STS-issued access-policy token (which
+     * IAM project-scoped endpoints require).
+     *
+     * @param bearerTokenProvider supplies the bearer tokens shared by every client in this session
+     */
+    public Equinix(BearerTokenProvider bearerTokenProvider) {
+        this(bearerTokenProvider, EquinixConfig.defaults());
+    }
+
+    /**
+     * Opens a bearer-token session with explicit {@link EquinixConfig} options.
+     *
+     * @param bearerTokenProvider supplies the bearer tokens shared by every client in this session
+     * @param config the construction-time options
+     */
+    public Equinix(BearerTokenProvider bearerTokenProvider, EquinixConfig config) {
+        this(new com.eqixiac.equinix.core.client.EquinixClient(bearerTokenProvider, config.isSandbox()), config);
+    }
+
+    private Equinix(com.eqixiac.equinix.core.client.EquinixClient core, EquinixConfig config) {
         this.config = config;
-        this.core = new com.eqixiac.equinix.core.client.EquinixClient(credentialsProvider, config.isSandbox());
+        this.core = core;
         if (config.getRetryPolicy() != null) {
             this.core.setRetryPolicy(config.getRetryPolicy());
         }
@@ -146,11 +172,31 @@ public final class Equinix implements Closeable {
         return networkEdge;
     }
 
-    public CustomerPortal customerPortal() {
-        if (customerPortal == null) {
-            customerPortal = new CustomerPortal(core);
+    public Operations operations() {
+        if (operations == null) {
+            operations = new Operations(core);
         }
-        return customerPortal;
+        return operations;
+    }
+
+    /**
+     * The Cross Connect product's two API families: the order API under {@link #operations()} and the
+     * Fabric v4 Beta API under {@code fabric().beta()}.
+     *
+     * @return both cross connect clients
+     */
+    public CrossConnectApis crossConnects() {
+        return new CrossConnectApis(operations().crossConnects(), fabric().beta().crossConnects());
+    }
+
+    /**
+     * The Digital LOA product's two API families: the Digital LOA v1 API under {@link #operations()} and
+     * the Fabric v4 Beta API under {@code fabric().beta()}.
+     *
+     * @return both Digital LOA clients
+     */
+    public DigitalLoaApis digitalLoas() {
+        return new DigitalLoaApis(operations().digitalLoas(), fabric().beta().loas());
     }
 
     public IBXSmartView ibxSmartView() {
@@ -197,8 +243,8 @@ public final class Equinix implements Closeable {
     }
 
     /**
-     * The live metro catalogue — every metro with its IBXs, coordinates, region, and inter-metro
-     * latencies — keyed by {@link com.eqixiac.equinix.core.model.MetroId}. Sourced from the Fabric
+     * The live metro catalogue - every metro with its IBXs, coordinates, region, and inter-metro
+     * latencies - keyed by {@link com.eqixiac.equinix.core.model.MetroId}. Sourced from the Fabric
      * Metros API (the only catalogue with that depth) but surfaced here as a session-level,
      * cross-domain concern; it shares this session's single Fabric cache. Loaded eagerly on
      * {@link #authenticate()} when {@code EquinixConfig.isAutoLoadMetros()} is set (the default),
@@ -221,7 +267,7 @@ public final class Equinix implements Closeable {
     }
 
     /**
-     * Explicitly performs OAuth2 authentication, warming the session's shared token. Optional —
+     * Explicitly performs OAuth2 authentication, warming the session's shared token. Optional - 
      * authentication otherwise happens automatically on the first API call. When
      * {@code EquinixConfig.isAutoLoadMetros()} is enabled (the default), this also eagerly loads the
      * shared metro catalogue ({@code fabric().metroRegistry()}); the load is best-effort and does

@@ -31,7 +31,7 @@ import com.eqixiac.equinix.fabric.model.json.creators.PrecisionTimeOperator;
 
 import java.util.List;
 
-public interface PrecisionTime {
+public interface PrecisionTime extends DeletableResource {
 
     String getUuid();
 

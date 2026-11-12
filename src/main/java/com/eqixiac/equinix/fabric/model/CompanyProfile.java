@@ -29,7 +29,7 @@ import java.util.List;
 /**
  * A Fabric company profile (the public, marketplace-facing profile for an organization).
  */
-public interface CompanyProfile {
+public interface CompanyProfile extends DeletableResource {
 
     String getHref();
 

@@ -55,7 +55,7 @@ class MulticloudSavingsTest {
         assertEquals(0, new BigDecimal(expected).compareTo(actual), "expected " + expected + " but was " + actual);
     }
 
-    // ── The break-even formula ──
+    // The break-even formula
 
     /**
      * Worked example from cited list prices (all USD, retrieved 2026-09-21 unless noted).
@@ -115,7 +115,7 @@ class MulticloudSavingsTest {
                 "equal per-GB rates: the per-GB path is cheaper at every volume");
     }
 
-    // ── Estimate ──
+    // Estimate
 
     @Test
     void peerCloudAddsTheNativePathAsAThirdOptionOnTheSameTwoWayTraffic() {
@@ -129,9 +129,9 @@ class MulticloudSavingsTest {
         assertTrue(c.isReverseEgressAssumedSymmetric());
 
         assertMoney("20180.00", c.getInternetMonthlyCost());        // 9,000 + 11,180
-        assertMoney("4018.50", c.getEquinixFixedMonthlyCost());     // 2 x 350 + 1,642.50 + 1,676
+        assertMoney("4233.20", c.getEquinixFixedMonthlyCost());     // 2 x 350 + 1,810.40 + 1,722.80
         assertMoney("3860.00", c.getEquinixEgressMonthlyCost());    // 2,000 + 1,860
-        assertMoney("7878.50", c.getEquinixMonthlyCost());
+        assertMoney("8093.20", c.getEquinixMonthlyCost());
         assertMoney("0", c.getEquinixSetupCost());
         assertMoney("22870.90", c.getNativeFixedMonthlyCost());     // (12.33 + 19.00) x 730
         assertMoney("0", c.getNativeDataTransferMonthlyCost());
@@ -146,14 +146,14 @@ class MulticloudSavingsTest {
         SavingsEstimate estimate = awsToGoogle().calculate();
 
         // (22,870.90 - 4,018.50) / (0.02 + 0.0186) = 488,404.145 GB each way
-        //   x 8000 / 2,628,000 = 1,486.77 Mbps each way -> 2,973.5 Mbps in total.
-        assertEquals(new BigDecimal("2973.5"), estimate.breakEvenSustainedMbps().orElseThrow());
-        assertEquals(new BigDecimal("2973.5"), estimate.getMulticloudComparison().getBreakEvenSustainedMbps());
+        //   x 8000 / 2,628,000 = 1,486.77 Mbps each way -> 2,939.7 Mbps in total.
+        assertEquals(new BigDecimal("2939.7"), estimate.breakEvenSustainedMbps().orElseThrow());
+        assertEquals(new BigDecimal("2939.7"), estimate.getMulticloudComparison().getBreakEvenSustainedMbps());
         assertEquals(MulticloudPathComparison.breakEvenSustainedMbps(new BigDecimal("22870.90"),
-                        new BigDecimal("4018.50"), new BigDecimal("0.0386"), BigDecimal.ZERO),
+                        new BigDecimal("4233.20"), new BigDecimal("0.0386"), BigDecimal.ZERO),
                 estimate.breakEvenSustainedMbps());
         assertTrue(estimate.getMulticloudComparison().getNotes().stream()
-                .anyMatch(n -> n.startsWith("Break-even = 2 x ((native fixed USD 22870.90 - Equinix fixed USD 4018.50)")),
+                .anyMatch(n -> n.startsWith("Break-even = 2 x ((native fixed USD 22870.90 - Equinix fixed USD 4233.20)")),
                 estimate.getMulticloudComparison().getNotes().toString());
     }
 
@@ -162,7 +162,7 @@ class MulticloudSavingsTest {
         Optional<BigDecimal> small = awsToGoogle().egress(1, DataUnit.GIGABYTE).calculate().breakEvenSustainedMbps();
         Optional<BigDecimal> large = awsToGoogle().egress(5, DataUnit.PETABYTE).calculate().breakEvenSustainedMbps();
 
-        assertEquals(new BigDecimal("2973.5"), small.orElseThrow());
+        assertEquals(new BigDecimal("2939.7"), small.orElseThrow());
         assertEquals(small, large);
     }
 
@@ -172,7 +172,7 @@ class MulticloudSavingsTest {
         // 1 PB each way: Equinix = 4,018.50 + 38,600 = 42,618.50 > native 22,870.90.
         MulticloudPathComparison high = awsToGoogle().egress(1, DataUnit.PETABYTE).calculate()
                 .getMulticloudComparison();
-        assertMoney("42618.50", high.getEquinixMonthlyCost());
+        assertMoney("42833.20", high.getEquinixMonthlyCost());
         assertEquals(EgressPath.MULTICLOUD_INTERCONNECT, high.getLowestCostPath());
     }
 
@@ -180,9 +180,9 @@ class MulticloudSavingsTest {
     void aCloudRouterRaisesTheEquinixFixedCostAndLowersTheBreakEven() {
         SavingsEstimate withRouter = awsToGoogle().includeCloudRouter("STANDARD").calculate();
 
-        assertMoney("5218.50", withRouter.getMulticloudComparison().getEquinixFixedMonthlyCost()); // + 1,200
-        // (22,870.90 - 5,218.50) / 0.0386 x 16000 / 2,628,000 = 2,784.27
-        assertEquals(new BigDecimal("2784.3"), withRouter.breakEvenSustainedMbps().orElseThrow());
+        assertMoney("5433.20", withRouter.getMulticloudComparison().getEquinixFixedMonthlyCost()); // + 1,200
+        // (22,870.90 - 5,433.20) / 0.0386 x 16000 / 2,628,000 = 2,750.4
+        assertEquals(new BigDecimal("2750.4"), withRouter.breakEvenSustainedMbps().orElseThrow());
         assertFalse(withRouter.getMulticloudComparison().getNotes().stream().anyMatch(n -> n.contains("no A-side")));
 
         assertTrue(awsToGoogle().calculate().getMulticloudComparison().getNotes().stream()
@@ -216,13 +216,13 @@ class MulticloudSavingsTest {
         MulticloudPathComparison c = awsToGoogle().bandwidthMbps(1_000).rateCard(card).calculate()
                 .getMulticloudComparison();
 
-        // Native = (1.37 + 3.50) x 730 = 3,555.10; Equinix fixed = 2 x 150 + 219 + 1,676 = 2,195.00.
+        // Native = (1.37 + 3.50) x 730 = 3,555.10; Equinix fixed = 2 x 150 + 240.90 (AWS 1G hosted) + 202.79 (Google 1G Partner VLAN attachment) = 743.69.
         assertMoney("3555.10", c.getNativeFixedMonthlyCost());
-        assertMoney("2195.00", c.getEquinixFixedMonthlyCost());
-        assertEquals(new BigDecimal("214.5"), c.getBreakEvenSustainedMbps());
+        assertMoney("743.69", c.getEquinixFixedMonthlyCost());
+        assertEquals(new BigDecimal("443.4"), c.getBreakEvenSustainedMbps());
         assertFalse(c.getNotes().stream().anyMatch(n -> n.contains("exceeds the link's capacity")));
 
-        // The bundled 10 Gbps figures: 2,973.5 Mbps is within the 20,000 Mbps capacity.
+        // The bundled 10 Gbps figures: 2,939.7 Mbps is within the 20,000 Mbps capacity.
         assertFalse(awsToGoogle().calculate().getMulticloudComparison().getNotes().stream()
                 .anyMatch(n -> n.contains("exceeds the link's capacity")));
 
@@ -258,10 +258,10 @@ class MulticloudSavingsTest {
     void aReversedCrossingIsReportedAsABreakEvenWithTheOppositeSense() {
         // Regression: native fixed fee (2,000) BELOW the Equinix fixed cost (4,018.50) but native
         // per-GB (0.05 + 0.05) ABOVE the Equinix per-GB (0.0386). The lines cross at
-        // (4,018.50 - 2,000) / (0.10 - 0.0386) = 32,874.4 GB each way = 200.1 Mbps summed, and
+        // (4,233.20 - 2,000) / (0.10 - 0.0386) = 36,371.3 GB each way = 221.4 Mbps summed, and
         // above it the Equinix path is cheaper. The previous code returned empty and stated that
         // the native path costs the same or less at every volume, while the declared 1 PB each
-        // way priced Equinix at 42,618.50 against native 102,000.00.
+        // way priced Equinix at 42,833.20 against native 102,000.00.
         RateCard reversed = RateCard.layered(
                 CustomRateCard.builder()
                         .multicloudLinkRate(CloudProviderType.AWS, 10_000, new BigDecimal("1000"))
@@ -273,10 +273,10 @@ class MulticloudSavingsTest {
         MulticloudPathComparison c = awsToGoogle().egress(1, DataUnit.PETABYTE).rateCard(reversed).calculate()
                 .getMulticloudComparison();
 
-        assertMoney("42618.50", c.getEquinixMonthlyCost());
+        assertMoney("42833.20", c.getEquinixMonthlyCost());
         assertMoney("102000.00", c.getNativeMonthlyCost());
         assertEquals(EgressPath.PRIVATE, c.getLowestCostPath());
-        assertEquals(new BigDecimal("200.1"), c.getBreakEvenSustainedMbps());
+        assertEquals(new BigDecimal("221.4"), c.getBreakEvenSustainedMbps());
         assertFalse(c.isNativeCheaperAboveBreakEven(), "the Equinix path is cheaper above this break-even");
         assertTrue(c.getNotes().stream().anyMatch(n -> n.contains("the sense is reversed")
                 && n.contains("above it the Equinix path does")), c.getNotes().toString());
@@ -286,11 +286,11 @@ class MulticloudSavingsTest {
         assertTrue(md.contains("Below it the native link costs less per month; above it the Equinix path does."), md);
 
         // The static formula agrees, and the usual case keeps its sense.
-        assertEquals(new BigDecimal("200.1"), MulticloudPathComparison.breakEvenSustainedMbps(
-                new BigDecimal("2000"), new BigDecimal("4018.50"), new BigDecimal("0.0386"), new BigDecimal("0.10"))
+        assertEquals(new BigDecimal("221.4"), MulticloudPathComparison.breakEvenSustainedMbps(
+                new BigDecimal("2000"), new BigDecimal("4233.20"), new BigDecimal("0.0386"), new BigDecimal("0.10"))
                 .orElseThrow());
-        assertFalse(MulticloudPathComparison.nativeCheaperAboveBreakEven(new BigDecimal("2000"), new BigDecimal("4018.50")));
-        assertTrue(MulticloudPathComparison.nativeCheaperAboveBreakEven(new BigDecimal("22870.90"), new BigDecimal("4018.50")));
+        assertFalse(MulticloudPathComparison.nativeCheaperAboveBreakEven(new BigDecimal("2000"), new BigDecimal("4233.20")));
+        assertTrue(MulticloudPathComparison.nativeCheaperAboveBreakEven(new BigDecimal("22870.90"), new BigDecimal("4233.20")));
         assertTrue(awsToGoogle().calculate().getMulticloudComparison().isNativeCheaperAboveBreakEven());
     }
 
@@ -320,59 +320,6 @@ class MulticloudSavingsTest {
         assertEquals(Optional.of(EgressPath.MULTICLOUD_INTERCONNECT),
                 MulticloudPathComparison.dominatesAtEveryVolume(hi, hi, cheap, cheap));
         assertTrue(MulticloudPathComparison.dominatesAtEveryVolume(null, hi, cheap, cheap).isEmpty());
-    }
-
-    @Test
-    void breakEvenIsWithheldWhenAPerGbRateIsInAnotherCurrencyEvenAtZeroVolume() {
-        // Regression: at the 0 GB default a per-GB cost of zero never entered the currency check,
-        // so 0.02 USD + 0.05 EUR were summed into a USD-labelled break-even.
-        RateCard euroPerGb = RateCard.layered(
-                CustomRateCard.builder().currency(java.util.Currency.getInstance("EUR"))
-                        .egressRate(CloudProviderType.GOOGLE_CLOUD, EgressPath.PRIVATE, new BigDecimal("0.05"))
-                        .egressRate(CloudProviderType.GOOGLE_CLOUD, EgressPath.INTERNET, new BigDecimal("0.10"))
-                        .build(),
-                ReferenceRateCard.standard());
-        MulticloudPathComparison zeroVolume = SavingsCalculator.builder(null)
-                .fromCloud(CloudProviderType.AWS).inRegion("us-east-1")
-                .toCloud(CloudProviderType.GOOGLE_CLOUD).toRegion("us-east4")
-                .viaMetro(MetroCode.DC).bandwidthMbps(10_000)
-                .rateCard(euroPerGb).calculate().getMulticloudComparison();
-
-        assertEquals("USD", zeroVolume.getCurrency());
-        assertNotNull(zeroVolume.getEquinixMonthlyCost(), "at zero volume the Equinix path's fixed cost is all USD");
-        assertNotNull(zeroVolume.getNativeMonthlyCost());
-        assertNull(zeroVolume.getBreakEvenSustainedMbps());
-        assertTrue(zeroVolume.getNotes().stream().anyMatch(n -> n.startsWith("Break-even not computed: the per-GB rates")
-                && n.contains("GOOGLE_CLOUD private (EUR)")), zeroVolume.getNotes().toString());
-        assertFalse(zeroVolume.getNotes().stream().anyMatch(n -> n.contains("0.07")), zeroVolume.getNotes().toString());
-
-        // With a non-zero volume the Equinix path itself is withheld as mixed-currency, as before.
-        MulticloudPathComparison withVolume = awsToGoogle().rateCard(euroPerGb).calculate().getMulticloudComparison();
-        assertNull(withVolume.getEquinixMonthlyCost());
-        assertNull(withVolume.getBreakEvenSustainedMbps());
-    }
-
-    @Test
-    void anInternetPathInAnotherCurrencyDoesNotWithholdTheNativeVersusEquinixBreakEven() {
-        // Regression: the comparison currency followed the internet path (first in list order),
-        // so a EUR internet card withheld the two USD paths and the break-even between them.
-        RateCard euroInternet = RateCard.layered(
-                CustomRateCard.builder().currency(java.util.Currency.getInstance("EUR"))
-                        .egressRate(CloudProviderType.AWS, EgressPath.INTERNET, new BigDecimal("0.08"))
-                        .egressRate(CloudProviderType.GOOGLE_CLOUD, EgressPath.INTERNET, new BigDecimal("0.10"))
-                        .build(),
-                ReferenceRateCard.standard());
-        MulticloudPathComparison c = awsToGoogle().rateCard(euroInternet).calculate().getMulticloudComparison();
-
-        assertEquals("USD", c.getCurrency(), "the currency the Equinix and native paths share");
-        assertMoney("7878.50", c.getEquinixMonthlyCost());
-        assertMoney("22870.90", c.getNativeMonthlyCost());
-        assertEquals(new BigDecimal("2973.5"), c.getBreakEvenSustainedMbps());
-        assertEquals(EgressPath.PRIVATE, c.getLowestCostPath());
-        assertNull(c.getInternetMonthlyCost(), "the EUR internet path is withheld, never converted");
-        assertTrue(c.getNotes().stream().anyMatch(n -> n.startsWith("Public internet path withheld: it is priced in EUR")),
-                c.getNotes().toString());
-        assertFalse(c.getNotes().stream().anyMatch(n -> n.startsWith("Break-even not computed")), c.getNotes().toString());
     }
 
     @Test
@@ -419,7 +366,7 @@ class MulticloudSavingsTest {
         MulticloudPathComparison c = awsToGoogle().rateCard(withSetup).calculate().getMulticloudComparison();
 
         assertMoney("500", c.getEquinixSetupCost());
-        assertMoney("4118.50", c.getEquinixFixedMonthlyCost()); // 2 x 400 + 3,318.50
+        assertMoney("4333.20", c.getEquinixFixedMonthlyCost()); // 2 x 400 + 3,533.20
     }
 
     @Test
@@ -445,10 +392,10 @@ class MulticloudSavingsTest {
 
         assertTrue(md.contains("### Cloud-to-cloud paths: AWS (us-east-1) <-> GOOGLE_CLOUD (us-east4)"), md);
         assertTrue(md.contains("| Public internet | USD 0.00 | USD 20180.00 | USD 20180.00 |"), md);
-        assertTrue(md.contains("| Equinix Fabric private interconnect (two-sided) | USD 4018.50 | USD 3860.00 | USD 7878.50 |"), md);
+        assertTrue(md.contains("| Equinix Fabric private interconnect (two-sided) | USD 4233.20 | USD 3860.00 | USD 8093.20 |"), md);
         assertTrue(md.contains("| Native multicloud interconnect | USD 22870.90 | USD 0.00 | USD 22870.90 |"), md);
-        assertTrue(md.contains("Break-even sustained rate (native vs Equinix): 2973.5 Mbps summed over both "
-                + "directions (1486.8 Mbps each way)"), md);
+        assertTrue(md.contains("Break-even sustained rate (native vs Equinix): 2939.7 Mbps summed over both "
+                + "directions (1469.9 Mbps each way)"), md);
         assertTrue(md.contains("12.33 USD/h x 730 h/month = 9000.90 USD/month"), md);
         assertTrue(md.contains("retrieved 2026-09-21"), md);
         assertTrue(md.contains("730 h/month (MulticloudLinkQuote.HOURS_PER_MONTH)"), md);

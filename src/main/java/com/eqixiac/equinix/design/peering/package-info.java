@@ -18,7 +18,7 @@
  * Peering Intelligence: interconnection analysis combining PeeringDB IX/facility data with the
  * live Equinix Fabric catalog.
  *
- * <p>{@link com.eqixiac.equinix.design.peering.PeeringIntelligence} is the entry point — a
+ * <p>{@link com.eqixiac.equinix.design.peering.PeeringIntelligence} is the entry point - a
  * fluent builder reached via {@code fabric.peeringIntelligence()} or
  * {@code Design.over(fabric).peeringIntelligence()}. An analysis produces a
  * {@link com.eqixiac.equinix.design.peering.model.PeeringIntelligenceResult} containing an

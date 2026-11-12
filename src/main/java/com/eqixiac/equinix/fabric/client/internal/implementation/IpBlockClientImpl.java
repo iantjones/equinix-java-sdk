@@ -55,7 +55,8 @@ public class IpBlockClientImpl extends ResourceClientBase<IpBlock, IpBlockJson> 
     }
 
     public IpBlockJson update(String uuid, List<PatchOperation> operations) {
-        return patchOne("PatchIpBlock", uuid, operations);
+        // PATCH /ipBlocks/{uuid}: spec 4.34.0 declares only application/json for this op/path/value array.
+        return updateOne("PatchIpBlock", uuid, operations);
     }
 
     public IpBlockJson delete(String uuid) {

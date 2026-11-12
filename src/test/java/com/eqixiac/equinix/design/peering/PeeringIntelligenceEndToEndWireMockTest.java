@@ -45,18 +45,18 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
- * Drives the public entry point — {@code PeeringIntelligence.builder(fabric, key).addAsn(...).analyze()}
- * — end-to-end against a WireMock-stubbed PeeringDB plus a Mockito {@link FabricGateway}. Unlike
+ * Drives the public entry point - {@code PeeringIntelligence.builder(fabric, key).addAsn(...).analyze()}
+ * - end-to-end against a WireMock-stubbed PeeringDB plus a Mockito {@link FabricGateway}. Unlike
  * {@link PeeringDiversityEngineTest} (which constructs the engine directly with a hand-stubbed
- * {@code PeeringDbClient}), this test runs the whole {@code Builder.analyze()} → {@code new
- * PeeringDbClient(...)} → {@code engine.execute()} chain so the builder wiring and the real PeeringDB
+ * {@code PeeringDbClient}), this test runs the whole {@code Builder.analyze()} -> {@code new
+ * PeeringDbClient(...)} -> {@code engine.execute()} chain so the builder wiring and the real PeeringDB
  * HTTP/parse path are both exercised in one pass.
  *
  * <p>The builder is pointed at WireMock through the package-private {@code peeringDbBaseUrl} seam
  * (see {@code sdkChangeNeeded}); Fabric is a plain Mockito stub whose {@code metros().list()} returns
  * a real {@link PaginatedList}, matching the pattern the engine's {@code loadMetroGeo()} expects.</p>
  */
-@DisplayName("PeeringIntelligence.analyze() — end-to-end via the public builder")
+@DisplayName("PeeringIntelligence.analyze() - end-to-end via the public builder")
 class PeeringIntelligenceEndToEndWireMockTest extends WireMockTestBase {
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
@@ -86,7 +86,7 @@ class PeeringIntelligenceEndToEndWireMockTest extends WireMockTestBase {
                 .willReturn(okJson(loadFixture("/json/peering/peeringdb_net_16509_response.json"))));
         wireMock.stubFor(get(urlPathEqualTo("/api/netixlan")).withQueryParam("asn", equalTo("16509"))
                 .willReturn(okJson(loadFixture("/json/peering/peeringdb_netixlan_16509_response.json"))));
-        wireMock.stubFor(get(urlPathEqualTo("/api/netfac")).withQueryParam("asn", equalTo("16509"))
+        wireMock.stubFor(get(urlPathEqualTo("/api/netfac")).withQueryParam("net_id", equalTo("1234"))
                 .willReturn(okJson(loadFixture("/json/peering/peeringdb_netfac_16509_response.json"))));
         wireMock.stubFor(get(urlPathEqualTo("/api/netixlan")).withQueryParam("asn", equalTo("65100"))
                 .willReturn(okJson(loadFixture("/json/peering/peeringdb_netixlan_65100_response.json"))));
@@ -145,7 +145,7 @@ class PeeringIntelligenceEndToEndWireMockTest extends WireMockTestBase {
         ResiliencyAssessment resiliency = result.getResiliency();
         assertNotNull(resiliency, "resiliency requested with customer metros");
         assertNotNull(resiliency.getOverallRating());
-        // Three customer metros → three metro-pair diversity scores.
+        // Three customer metros -> three metro-pair diversity scores.
         assertEquals(3, resiliency.getDiversityScores().size());
         // Blast-radius report exists per customer metro.
         assertEquals(3, resiliency.getBlastRadiusReports().size());
@@ -162,7 +162,7 @@ class PeeringIntelligenceEndToEndWireMockTest extends WireMockTestBase {
 
         List<PeeringOpportunity> opportunities = result.getPeeringOpportunities();
         assertNotNull(opportunities);
-        // Customer (65100) shares the Ashburn IX (100) with AWS → exactly one opportunity there.
+        // Customer (65100) shares the Ashburn IX (100) with AWS -> exactly one opportunity there.
         assertEquals(1, opportunities.size());
         PeeringOpportunity opp = opportunities.get(0);
         assertEquals(CUSTOMER, opp.getCustomerAsn());
@@ -215,14 +215,14 @@ class PeeringIntelligenceEndToEndWireMockTest extends WireMockTestBase {
     void multiAsnAnalyzeBatchesRequests() {
         long google = 15169L;
         // The engine must collapse the per-ASN loop into one asn__in request per endpoint
-        // (net, netixlan, netfac) — deliberately NO per-ASN asn= stubs here, so a regression
+        // (net, netixlan, netfac) - deliberately NO per-ASN asn= stubs here, so a regression
         // back to per-ASN requests fails loudly.
         wireMock.stubFor(get(urlPathEqualTo("/api/net"))
                 .withQueryParam("asn__in", equalTo("16509,15169"))
                 .willReturn(okJson("{\"data\":["
-                        + "{\"asn\":16509,\"name\":\"Amazon.com, Inc.\",\"info_type\":\"Content\","
+                        + "{\"id\":1234,\"asn\":16509,\"name\":\"Amazon.com, Inc.\",\"info_type\":\"Content\","
                         + "\"policy_general\":\"Selective\",\"info_ipv6\":true},"
-                        + "{\"asn\":15169,\"name\":\"Google LLC\",\"info_type\":\"Content\","
+                        + "{\"id\":433,\"asn\":15169,\"name\":\"Google LLC\",\"info_type\":\"Content\","
                         + "\"policy_general\":\"Open\",\"info_ipv6\":true}]}")));
         wireMock.stubFor(get(urlPathEqualTo("/api/netixlan"))
                 .withQueryParam("asn__in", equalTo("16509,15169"))
@@ -231,7 +231,7 @@ class PeeringIntelligenceEndToEndWireMockTest extends WireMockTestBase {
                         + "{\"ix_id\":100,\"asn\":15169,\"speed\":40000,\"is_rs_peer\":true,\"operational\":true},"
                         + "{\"ix_id\":999,\"asn\":15169,\"speed\":10000,\"is_rs_peer\":false,\"operational\":true}]}")));
         wireMock.stubFor(get(urlPathEqualTo("/api/netfac"))
-                .withQueryParam("asn__in", equalTo("16509,15169"))
+                .withQueryParam("net_id__in", equalTo("1234,433"))
                 .willReturn(okJson("{\"data\":[]}")));
 
         PeeringIntelligenceResult result = PeeringIntelligence.builder(stubFabric(), null)

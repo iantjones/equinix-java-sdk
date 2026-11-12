@@ -33,7 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * URI-template resolution in {@link RequestAssembler#addRequestParams}: every {@code {$token}}
  * placeholder must resolve, and an unresolved token must fail fast naming the token and endpoint
  * (previously it was silently substituted with an empty string, producing a structurally
- * different URI that failed server-side far from the cause — the {$bgpPeeringUuid} lesson).
+ * different URI that failed server-side far from the cause - the {$bgpPeeringUuid} lesson).
  */
 class RequestAssemblerTest {
 
@@ -48,16 +48,26 @@ class RequestAssemblerTest {
                   "GetWidgetPart": { "httpMethod": "GET", "requestUri": "{$uuid}/parts/{$partId}" },
                   "ListWidgets": { "httpMethod": "GET" }
                 }
+              },
+              "Rootless": {
+                "rootUri": "",
+                "serviceEndpoints": {
+                  "GetProjectRoles": { "httpMethod": "GET", "requestUri": "projects/{$projectId}/roles" }
+                }
               }
             }
             """;
 
     private static EquinixRequest<Object> request(String serviceEndpoint, Map<String, String> pathParams) throws Exception {
+        return request("Widgets", serviceEndpoint, pathParams);
+    }
+
+    private static EquinixRequest<Object> request(String parent, String serviceEndpoint, Map<String, String> pathParams) throws Exception {
         JsonNode functionalArea = Constants.mapper().readTree(FUNCTIONAL_AREA_JSON);
         EquinixRequest<Object> request = new EquinixRequest<>();
         request.setFunctionalAreaJson(functionalArea);
         request.setFunctionalArea("Widgets");
-        request.setRequestParent("Widgets");
+        request.setRequestParent(parent);
         request.setServiceEndpoint(serviceEndpoint);
         if (pathParams != null) {
             request.setPathParameters(pathParams);
@@ -86,7 +96,7 @@ class RequestAssemblerTest {
 
     @Test
     void unresolvedTokenFailsFastNamingTokenAndEndpoint() throws Exception {
-        // "uuid" supplied, "partId" not — previously this dispatched .../abc-123/parts/ silently.
+        // "uuid" supplied, "partId" not - previously this dispatched .../abc-123/parts/ silently.
         EquinixRequest<Object> request = request("GetWidgetPart", Map.of("uuid", "abc-123"));
 
         EquinixClientException e = assertThrows(EquinixClientException.class,
@@ -104,5 +114,61 @@ class RequestAssemblerTest {
                 () -> RequestAssembler.addRequestParams(request));
 
         assertTrue(e.getMessage().contains("NoSuchEndpoint"));
+    }
+
+    @Test
+    void emptyPathParameterIsRejectedInsteadOfCollapsingToTheCollectionUrl() throws Exception {
+        // Previously "" yielded widgets/v4/widgets/ -> "widgets/v4/widgets", the LIST url.
+        EquinixRequest<Object> request = request("GetWidget", Map.of("uuid", ""));
+
+        EquinixClientException e = assertThrows(EquinixClientException.class,
+                () -> RequestAssembler.addRequestParams(request));
+        assertTrue(e.getMessage().contains("'uuid' is blank"), e.getMessage());
+    }
+
+    @Test
+    void blankPathParameterIsRejected() throws Exception {
+        EquinixRequest<Object> request = request("GetWidgetPart", Map.of("uuid", "abc", "partId", "  "));
+
+        EquinixClientException e = assertThrows(EquinixClientException.class,
+                () -> RequestAssembler.addRequestParams(request));
+        assertTrue(e.getMessage().contains("partId"), e.getMessage());
+    }
+
+    @Test
+    void pathParameterValuesArePercentEncodedAsOneSegment() throws Exception {
+        EquinixRequest<Object> request = request("GetWidgetPart",
+                Map.of("uuid", "a/b c#d?e%f", "partId", "x&y+z"));
+
+        RequestAssembler.addRequestParams(request);
+
+        assertEquals("widgets/v4/widgets/a%2Fb%20c%23d%3Fe%25f/parts/x%26y%2Bz", request.getResourcePath());
+    }
+
+    @Test
+    void colonAndAtAreKeptSoIamProjectIdsAndErnsStillWork() throws Exception {
+        EquinixRequest<Object> request = request("Rootless", "GetProjectRoles",
+                Map.of("projectId", "project:2f6c6a6e-0d3c-4f7f-9c1a-1b2c3d4e5f60"));
+
+        RequestAssembler.addRequestParams(request);
+
+        // An empty rootUri still collapses structurally; the value's ':' is kept.
+        assertEquals("widgets/v4/projects/project:2f6c6a6e-0d3c-4f7f-9c1a-1b2c3d4e5f60/roles", request.getResourcePath());
+        assertEquals("ern:equinix:user@example.com", RequestAssembler.encodePathSegment("ern:equinix:user@example.com"));
+    }
+
+    @Test
+    void encodesNonAsciiAsUtf8() {
+        assertEquals("caf%C3%A9", RequestAssembler.encodePathSegment("caf\u00e9"));
+        assertEquals("a-b.c_d~e", RequestAssembler.encodePathSegment("a-b.c_d~e"));
+    }
+
+    @Test
+    void encodedValueCannotIntroduceADoubleSlash() throws Exception {
+        EquinixRequest<Object> request = request("GetWidgetPart", Map.of("uuid", "/", "partId", "p"));
+
+        RequestAssembler.addRequestParams(request);
+
+        assertEquals("widgets/v4/widgets/%2F/parts/p", request.getResourcePath());
     }
 }

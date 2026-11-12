@@ -90,6 +90,7 @@ public class StreamSubscriptionOperator extends ResourceImpl<StreamSubscription>
                 builder.apiKey = credential.getApiKey();
                 builder.username = credential.getUsername();
                 builder.password = credential.getPassword();
+                builder.apiToken = credential.getApiToken();
             }
         }
         return builder;
@@ -117,6 +118,7 @@ public class StreamSubscriptionOperator extends ResourceImpl<StreamSubscription>
         private String apiKey;
         private String username;
         private String password;
+        private String apiToken;
         private StreamSubscriptionSelector metricSelector;
         private StreamSubscriptionSelector eventSelector;
         private StreamSubscriptionFilter filters;
@@ -189,6 +191,19 @@ public class StreamSubscriptionOperator extends ResourceImpl<StreamSubscription>
 
         public StreamSubscriptionOperator.StreamSubscriptionBuilder withPassword(String password) {
             this.password = password;
+            return this;
+        }
+
+        /**
+         * Sets the sink API token ({@code credential.apiToken}) and the credential type
+         * {@code API_TOKEN}, as the Dynatrace sink expects.
+         *
+         * @param apiToken the API token
+         * @return this builder
+         */
+        public StreamSubscriptionOperator.StreamSubscriptionBuilder withApiToken(String apiToken) {
+            this.apiToken = apiToken;
+            this.credentialType = StreamSubscriptionSinkCredentialType.API_TOKEN;
             return this;
         }
 

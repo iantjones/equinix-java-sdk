@@ -44,7 +44,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.time.Instant;
+import java.time.Clock;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
@@ -63,7 +63,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>Every logical request is tagged with a generated correlation id (a UUID), sent to the API as an
  * {@code X-Correlation-Id} header (shared by all retry attempts of that request), included in the
  * request/retry log lines, and carried on any resulting
- * {@link com.eqixiac.equinix.core.exception.EquinixServiceException} — so a failure in application
+ * {@link com.eqixiac.equinix.core.exception.EquinixServiceException} - so a failure in application
  * logs, the SDK's logs, and Equinix's server-side logs can be tied together by one id.</p>
  *
  * <p>An opt-in {@link CircuitBreaker} (see {@link #setCircuitBreaker(CircuitBreaker)}) is consulted
@@ -95,6 +95,26 @@ public class EquinixHttpClient implements Closeable {
      * The opt-in circuit breaker; {@code null} (the default) disables breaking entirely.
      */
     private volatile CircuitBreaker circuitBreaker;
+
+    /** Clock for {@code Retry-After} HTTP-dates; replaceable for deterministic tests. */
+    private volatile Clock clock = Clock.systemUTC();
+
+    /** Performs the backoff wait; replaceable (package-private) so tests do not sleep. */
+    private volatile java.util.function.LongConsumer sleeper = EquinixHttpClient::sleep;
+
+    /**
+     * Replaces the clock used to resolve a {@code Retry-After} HTTP-date into a delay.
+     *
+     * @param clock the clock; must not be {@code null}
+     */
+    public void setClock(Clock clock) {
+        this.clock = java.util.Objects.requireNonNull(clock, "clock");
+    }
+
+    /** Test hook: replaces the backoff sleep. */
+    void setSleeper(java.util.function.LongConsumer sleeper) {
+        this.sleeper = java.util.Objects.requireNonNull(sleeper, "sleeper");
+    }
 
     /**
      * Overrides the retry policy for transient failures.
@@ -138,7 +158,7 @@ public class EquinixHttpClient implements Closeable {
                 .build();
 
         // Connection manager is owned by this client (not shared), so httpClient.close()
-        // also shuts the pool down — see close().
+        // also shuts the pool down - see close().
         httpClient = HttpClients.custom()
                 .setConnectionManager(connectionManager)
                 .setDefaultRequestConfig(requestConfig)
@@ -157,7 +177,7 @@ public class EquinixHttpClient implements Closeable {
     /**
      * Executes one HTTP attempt. On an error status the response is fully drained (for the error
      * body) and then <em>closed</em> before the typed exception is thrown, so the pooled connection
-     * is always released — even when reading the error body fails mid-stream. On the success path
+     * is always released - even when reading the error body fails mid-stream. On the success path
      * the open response is returned for the caller's handler to consume.
      *
      * @throws com.eqixiac.equinix.core.exception.EquinixClientException if any.
@@ -250,6 +270,27 @@ public class EquinixHttpClient implements Closeable {
      * entity (not a one-shot stream), so it is correct on every retry attempt and never consumes
      * the bytes that are actually sent. A logging failure is swallowed.
      */
+    // JSON members and form fields whose values must never reach a log: the OAuth client secret
+    // (sent in the token-mint body), passwords, and the tokens the STS exchange carries.
+    private static final java.util.regex.Pattern SECRET_JSON = java.util.regex.Pattern.compile(
+            "(\"(?:client_secret|clientSecret|password|user_password|subject_token|subjectToken"
+                    + "|access_token|accessToken|refresh_token|refreshToken)\"\\s*:\\s*)\"(?:[^\"\\\\]|\\\\.)*\"");
+    private static final java.util.regex.Pattern SECRET_FORM = java.util.regex.Pattern.compile(
+            "((?:^|&)(?:client_secret|password|user_password|subject_token|access_token|refresh_token)=)[^&]*");
+
+    /**
+     * Masks credential values in a request body before it is logged. Hosts such as Claude Desktop
+     * persist an MCP server's stderr, so {@code EQUINIX_MCP_LOG_LEVEL=debug} must not write the
+     * client secret there.
+     */
+    static String redactSecrets(String body) {
+        if (body == null || body.isEmpty()) {
+            return body;
+        }
+        String masked = SECRET_JSON.matcher(body).replaceAll("$1\"***\"");
+        return SECRET_FORM.matcher(masked).replaceAll("$1***");
+    }
+
     private void logRequestBody(HttpRequestBase apacheRequest) {
         if (!this.outputRequestJson || !log.isDebugEnabled()
                 || !(apacheRequest instanceof HttpEntityEnclosingRequestBase enclosingRequest)
@@ -258,7 +299,7 @@ public class EquinixHttpClient implements Closeable {
             return;
         }
         try {
-            log.debug("Request body: {}", EntityUtils.toString(enclosingRequest.getEntity()));
+            log.debug("Request body: {}", redactSecrets(EntityUtils.toString(enclosingRequest.getEntity())));
         }
         catch (IOException bodyLogEx) {
             log.debug("Could not read request body for logging: {}", bodyLogEx.getMessage());
@@ -296,7 +337,7 @@ public class EquinixHttpClient implements Closeable {
     /**
      * Executes a request with automatic retry of transient failures per the configured
      * {@link RetryPolicy}. Retries are bounded by the policy's max attempts, gated on retryable status
-     * codes / {@code IOException}s <em>and</em> — for 5xx/IO failures — on HTTP-method idempotency
+     * codes / {@code IOException}s <em>and</em> - for 5xx/IO failures - on HTTP-method idempotency
      * (POST and PATCH are not retried by default, to avoid duplicate side effects; a 429 is exempt
      * from that gate because the server explicitly did not process the request), and spaced by
      * exponential backoff with full jitter (honoring {@code Retry-After}). Each retry is logged at
@@ -359,7 +400,7 @@ public class EquinixHttpClient implements Closeable {
                     // Request-body serialization failed. JsonProcessingException extends
                     // IOException, but this is a deterministic client-side bug, not a transport
                     // failure: the service was never contacted and a re-attempt can never succeed.
-                    // Throw immediately — no retry, and nothing recorded on the breaker.
+                    // Throw immediately - no retry, and nothing recorded on the breaker.
                     throw ece;
                 }
                 boolean transportFailure = ece.getCause() instanceof IOException;
@@ -381,24 +422,36 @@ public class EquinixHttpClient implements Closeable {
 
     /**
      * Parses a {@code Retry-After} value from the exception into millis, or {@code null} if absent /
-     * unparseable. Both RFC&nbsp;7231 forms are honored: delta-seconds (e.g. {@code "30"}) and an
-     * HTTP-date (e.g. {@code "Wed, 21 Oct 2026 07:28:00 GMT"}), the latter computed relative to now.
+     * unparseable; see {@link #parseRetryAfterMillis(String, java.time.Instant)}.
      */
     private Long retryAfterMillis(EquinixServiceException ese) {
         if (ese.getHttpHeaders() == null) {
             return null;
         }
-        String value = ese.getHttpHeaders().get(RETRY_AFTER_HEADER);
+        return parseRetryAfterMillis(ese.getHttpHeaders().get(RETRY_AFTER_HEADER), clock.instant());
+    }
+
+    /**
+     * Converts a {@code Retry-After} header value into a delay in milliseconds. Both RFC&nbsp;9110
+     * forms are honoured: delta-seconds (e.g. {@code "30"}) and an HTTP-date (e.g.
+     * {@code "Wed, 21 Oct 2026 07:28:00 GMT"}), the latter relative to {@code now} and floored at 0
+     * for a date in the past.
+     *
+     * @param value the header value; may be {@code null}
+     * @param now the current instant
+     * @return the delay in millis, or {@code null} when absent or unparseable
+     */
+    static Long parseRetryAfterMillis(String value, java.time.Instant now) {
         if (value == null) {
             return null;
         }
         String trimmed = value.trim();
         try {
-            return Long.parseLong(trimmed) * 1000L;
+            return Math.max(0L, Long.parseLong(trimmed)) * 1000L;
         } catch (NumberFormatException notDeltaSeconds) {
             try {
                 ZonedDateTime retryAt = ZonedDateTime.parse(trimmed, DateTimeFormatter.RFC_1123_DATE_TIME);
-                return Math.max(0L, retryAt.toInstant().toEpochMilli() - Instant.now().toEpochMilli());
+                return Math.max(0L, retryAt.toInstant().toEpochMilli() - now.toEpochMilli());
             } catch (Exception notHttpDate) {
                 // Neither form parsed; fall back to computed backoff.
                 return null;
@@ -410,6 +463,10 @@ public class EquinixHttpClient implements Closeable {
         if (millis <= 0) {
             return;
         }
+        sleeper.accept(millis);
+    }
+
+    private static void sleep(long millis) {
         try {
             Thread.sleep(millis);
         } catch (InterruptedException ie) {
@@ -424,6 +481,11 @@ public class EquinixHttpClient implements Closeable {
         return (status / 100 == HttpStatus.SC_OK / 100);
     }
 
+    /**
+     * The protocol endpoints default to when none is given.
+     *
+     * @return {@link Protocol#HTTPS}
+     */
     public Protocol getProtocol() {
         return protocol;
     }

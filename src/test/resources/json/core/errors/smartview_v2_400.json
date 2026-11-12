@@ -1,0 +1,9 @@
+[
+  {
+    "errorCode": "DCIM-ASSET-52724",
+    "title": "Bad Request",
+    "message": "Invalid request",
+    "developerMessage": "accountNo is a mandatory parameter/header",
+    "fieldName": null
+  }
+]

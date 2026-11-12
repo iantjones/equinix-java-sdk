@@ -36,7 +36,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
  * <p>{@code generateStsToken} is unusual in that it consumes
  * {@code application/x-www-form-urlencoded} rather than JSON; the form fields are attached as a
  * {@link RequestBody#form(java.util.Map)} body (encoded by the core request factory at dispatch),
- * leaving the rest of the dispatch — auth headers, retries, response handling — to the shared
+ * leaving the rest of the dispatch - auth headers, retries, response handling - to the shared
  * infrastructure. The {@code TokenResponse} and {@code ListAccessPoliciesGrantedOutput} responses
  * are read-only, so the deserialized JSON models are returned directly.</p>
  */

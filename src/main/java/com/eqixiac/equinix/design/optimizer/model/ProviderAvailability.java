@@ -10,12 +10,12 @@ import java.util.List;
  * and if so, which seller regions are supported.
  *
  * <p>{@link #serviceProfileUuid} and {@link #sellerRegions} carry the single <em>outranks</em>
- * winner — the profile chosen for scoring and seller-region preference, and the default the wizard
+ * winner - the profile chosen for scoring and seller-region preference, and the default the wizard
  * pins when it has no bandwidth to reconcile. {@link #profileOptions} carries EVERY matching profile
  * for the metro (each with its bandwidth capability) so the wizard can instead pick a profile whose
  * allowed tiers cover the connection's speed once that speed is known. It is {@code null} on
  * hand-built availability entries that predate bandwidth-aware selection, which the wizard reads as
- * "no capability data — fall back to the default uuid".</p>
+ * "no capability data - fall back to the default uuid".</p>
  */
 @Value
 @Builder(toBuilder = true)

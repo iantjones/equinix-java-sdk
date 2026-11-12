@@ -29,6 +29,8 @@ public class IpBlockWrapper extends ResourceImpl<IpBlock> implements IpBlock {
 
     @Delegate(excludes = IpBlockMutability.class)
     private IpBlockJson jsonObject;
+
+    private boolean deleted;
     @Getter
     private final Pageable<IpBlock> serviceClient;
 
@@ -42,8 +44,17 @@ public class IpBlockWrapper extends ResourceImpl<IpBlock> implements IpBlock {
     }
 
     public Boolean delete() {
-        this.jsonObject = ((IpBlockClientImpl) this.serviceClient).delete(this.getUuid());
+        IpBlockJson response = ((IpBlockClientImpl) this.serviceClient).delete(this.getUuid());
+        if (response != null) {
+            this.jsonObject = response;
+        }
+        this.deleted = true;
         return true;
+    }
+
+    @Override
+    public boolean isDeleted() {
+        return this.deleted;
     }
 
     public void refresh() {

@@ -41,12 +41,19 @@ import com.eqixiac.equinix.networkedge.model.json.DeviceJson;
 import com.eqixiac.equinix.networkedge.model.json.Pricing;
 import com.eqixiac.equinix.networkedge.model.json.creators.DeviceACLRequest;
 import com.eqixiac.equinix.networkedge.model.json.creators.DeviceCreatorJson;
+import com.eqixiac.equinix.networkedge.model.json.creators.DeviceDeleteRequest;
 import com.eqixiac.equinix.networkedge.model.json.creators.DeviceRMARequest;
 import com.eqixiac.equinix.networkedge.model.json.creators.DeviceUpdaterJson;
 import com.eqixiac.equinix.networkedge.model.wrappers.DeviceWrapper;
 
 import java.util.List;
 import java.util.Map;
+import com.eqixiac.equinix.core.http.ResponseHandler;
+import com.eqixiac.equinix.core.http.request.RequestBody;
+import com.eqixiac.equinix.core.http.request.EquinixRequest;
+import java.nio.charset.StandardCharsets;
+import java.util.UUID;
+import java.util.Objects;
 
 /**
  *
@@ -94,16 +101,24 @@ public class DeviceClientImpl extends ResourceClientBase<Device, DeviceJson> imp
         return history != null ? history.getData() : null;
     }
 
-    public InterfaceStats getInterfaceStatistics(String uuid, String interfaceId, String startDateTime, String endDateTime) {
+    /** {@code YYYY-MM-DDThh:mm:ssZ}: the only form the live service accepts (2026-11-11). */
+    private static final java.time.format.DateTimeFormatter STATS_FORMAT =
+            java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'").withZone(java.time.ZoneOffset.UTC);
+
+    public InterfaceStats getInterfaceStatistics(String uuid, String interfaceId,
+                                                 java.time.Instant startDateTime, java.time.Instant endDateTime) {
+        if (startDateTime == null || endDateTime == null) {
+            throw new IllegalArgumentException("startDateTime and endDateTime are required by the live"
+                    + " Network Edge interface stats API (HTTP 400 without them)");
+        }
+        if (endDateTime.isBefore(startDateTime)) {
+            throw new IllegalArgumentException("endDateTime must not be before startDateTime");
+        }
         Map<String, List<String>> qParams = new java.util.HashMap<>();
-        if (startDateTime != null) {
-            qParams.put("startDateTime", ParameterMapper.singleParamList(startDateTime));
-        }
-        if (endDateTime != null) {
-            qParams.put("endDateTime", ParameterMapper.singleParamList(endDateTime));
-        }
+        qParams.put("startDateTime", ParameterMapper.singleParamList(STATS_FORMAT.format(startDateTime)));
+        qParams.put("endDateTime", ParameterMapper.singleParamList(STATS_FORMAT.format(endDateTime)));
         return getAs("GetInterfaceStatistics", Map.of("uuid", uuid, "interfaceId", interfaceId),
-                qParams.isEmpty() ? null : qParams, InterfaceStats.class);
+                qParams, InterfaceStats.class);
     }
 
     public List<DownloadableImage> listDownloadableImages(String deviceType) {
@@ -156,18 +171,51 @@ public class DeviceClientImpl extends ResourceClientBase<Device, DeviceJson> imp
         return booleanOp("PingDevice", RequestType.SINGLE, Map.of("uuid", uuid), null, null);
     }
 
+    /**
+     * {@code POST /ne/v1/devices/licenseFiles}. The spec accepts only {@code multipart/form-data}
+     * with a binary {@code file} part ({@code LicenseUploadRequest}); {@code metroCode},
+     * {@code deviceTypeCode} and {@code licenseType} are required query parameters.
+     */
     public String postLicenseFile(MetroCode metroCode, String deviceTypeCode, LicenseType licenseType, String fileContents) {
+        Objects.requireNonNull(metroCode, "metroCode");
+        Objects.requireNonNull(deviceTypeCode, "deviceTypeCode");
+        Objects.requireNonNull(licenseType, "licenseType");
         Map<String, List<String>> qParams = Map.of("metroCode", ParameterMapper.singleParamList(metroCode),
                 "deviceTypeCode", ParameterMapper.singleParamList(deviceTypeCode),
                 "licenseType", ParameterMapper.singleParamList(licenseType));
-        return mapOp("PostLicense", RequestType.SINGLE, null, qParams, Map.of("file", fileContents)).get("fileId");
+        return uploadLicense("PostLicense", null, qParams, fileContents);
     }
 
+    /** {@code POST /ne/v1/devices/licenseFiles/{uuid}}, {@code multipart/form-data} as above. */
     public String postLicenseFile(String deviceUuid, String fileContents) {
-        return mapOp("PostLicenseToDevice", RequestType.SINGLE, Map.of("uuid", deviceUuid), null,
-                Map.of("file", fileContents)).get("fileId");
+        return uploadLicense("PostLicenseToDevice", Map.of("uuid", deviceUuid), null, fileContents);
     }
 
+    private String uploadLicense(String serviceEndpoint, Map<String, String> pathParams,
+                                 Map<String, List<String>> queryParams, String fileContents) {
+        EquinixRequest<Object> request = buildRequest(serviceEndpoint, RequestType.SINGLE, pathParams, queryParams, Object.class);
+        String boundary = "----EquinixSdkBoundary" + UUID.randomUUID().toString().replace("-", "");
+        String head = "--" + boundary + "\r\n"
+                + "Content-Disposition: form-data; name=\"file\"; filename=\"license\"\r\n"
+                + "Content-Type: application/octet-stream\r\n\r\n";
+        String tail = "\r\n--" + boundary + "--\r\n";
+        byte[] file = fileContents != null ? fileContents.getBytes(StandardCharsets.UTF_8) : new byte[0];
+        byte[] headBytes = head.getBytes(StandardCharsets.UTF_8);
+        byte[] tailBytes = tail.getBytes(StandardCharsets.UTF_8);
+        byte[] body = new byte[headBytes.length + file.length + tailBytes.length];
+        System.arraycopy(headBytes, 0, body, 0, headBytes.length);
+        System.arraycopy(file, 0, body, headBytes.length, file.length);
+        System.arraycopy(tailBytes, 0, body, headBytes.length + file.length, tailBytes.length);
+        request.setContentType("multipart/form-data; boundary=" + boundary);
+        request.setBody(RequestBody.bytes(body, "multipart/form-data"));
+        return ResponseHandler.handleMapResponse(request, invoke(request)).get("fileId");
+    }
+
+    /**
+     * {@code PUT /ne/v1/devices/{uuid}/licenseTokens}, answered with {@code 202 Accepted}. Returns
+     * the {@code fileId} when the service includes one, or {@code null} for an empty 202 body; the
+     * update has been accepted either way.
+     */
     public String updateLicenseToken(String deviceUuid, String licenseToken) {
         return mapOp("UpdateLicenseToken", RequestType.SINGLE, Map.of("uuid", deviceUuid), null,
                 Map.of("token", licenseToken)).get("fileId");
@@ -190,6 +238,16 @@ public class DeviceClientImpl extends ResourceClientBase<Device, DeviceJson> imp
 
     public Boolean delete(String uuid) {
         return booleanOp("DeleteDevice", RequestType.SINGLE, Map.of("uuid", uuid), null, null);
+    }
+
+    public Boolean delete(String uuid, DeviceDeleteRequest request) {
+        if (request == null) {
+            return delete(uuid);
+        }
+        Map<String, List<String>> query = request.getDeleteRedundantDevice() == null ? null
+                : Map.of("deleteRedundantDevice", List.of(String.valueOf(request.getDeleteRedundantDevice())));
+        return booleanOp("DeleteDevice", RequestType.SINGLE, Map.of("uuid", uuid), query,
+                request.hasBody() ? request : null);
     }
 
     public DeviceJson refresh(String uuid) {

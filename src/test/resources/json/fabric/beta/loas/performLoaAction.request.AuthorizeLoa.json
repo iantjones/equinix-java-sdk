@@ -1,0 +1,12 @@
+{
+  "type": "LOA_ISSUER_AUTHORIZATION",
+  "data": {
+    "demarcationPoint": {
+      "patchPanelId": "CP:Demarc:1259684",
+      "patchPanelPortA": 23,
+      "patchPanelPortB": 23,
+      "connectorType": "SC"
+    },
+    "expirationDateTime": "2026-08-07T07:00:00Z"
+  }
+}

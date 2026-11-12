@@ -29,6 +29,8 @@ public class RouteFilterRuleWrapper extends ResourceImpl<RouteFilterRule> implem
 
     @Delegate(excludes = RouteFilterRuleMutability.class)
     private RouteFilterRuleJson jsonObject;
+
+    private boolean deleted;
     @Getter
     private final Pageable<RouteFilterRule> serviceClient;
 
@@ -42,8 +44,17 @@ public class RouteFilterRuleWrapper extends ResourceImpl<RouteFilterRule> implem
     }
 
     public Boolean delete(String routeFilterId) {
-        this.jsonObject = ((RouteFilterRuleClientImpl)this.serviceClient).delete(routeFilterId, this.getUuid());
+        RouteFilterRuleJson response = ((RouteFilterRuleClientImpl)this.serviceClient).delete(routeFilterId, this.getUuid());
+        if (response != null) {
+            this.jsonObject = response;
+        }
+        this.deleted = true;
         return true;
+    }
+
+    @Override
+    public boolean isDeleted() {
+        return this.deleted;
     }
 
     public void refresh(String routeFilterId) {

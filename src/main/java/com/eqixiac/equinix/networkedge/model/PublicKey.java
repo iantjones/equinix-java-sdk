@@ -35,4 +35,12 @@ public interface PublicKey {
      * Key type, whether RSA or DSA ({@code PublicKeyResponse.keyType}).
      */
     KeyType getKeyType();
+
+    /**
+     * Deletes this key ({@code DELETE /ne/v1/publicKeys/{uuid}}, live endpoint not in the published
+     * spec). The wrapper keeps its last known state afterwards.
+     *
+     * @return {@code true} when the deletion was accepted
+     */
+    Boolean delete();
 }

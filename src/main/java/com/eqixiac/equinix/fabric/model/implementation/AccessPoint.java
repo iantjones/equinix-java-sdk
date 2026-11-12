@@ -95,4 +95,24 @@ public class AccessPoint {
 
     @JsonProperty("role")
     private AccessPointRole role;
+
+    /** {@code providerIdentifier}: the provider's identifier for this access point (spec 4.34.0). */
+    @JsonProperty("providerIdentifier")
+    private String providerIdentifier;
+
+    /** {@code productOffering} (z-side only, spec 4.34.0). */
+    @JsonProperty("productOffering")
+    private ProductOffering productOffering;
+
+    /** {@code bandwidthCommit} in Mbps (0-100000, spec 4.34.0). */
+    @JsonProperty("bandwidthCommit")
+    private Integer bandwidthCommit;
+
+    /** {@code address} (spec 4.34.0). */
+    @JsonProperty("address")
+    private AccessPointAddress address;
+
+    /** {@code interconnect} of an {@code IC} access point (live shape, 2026-11-11). */
+    @JsonProperty("interconnect")
+    private InterconnectRef interconnect;
 }

@@ -3,34 +3,15 @@ package com.eqixiac.equinix.design.optimizer.enums;
 import lombok.Getter;
 
 /**
- * Defines latency sensitivity tiers for workload placement decisions.
+ * Latency sensitivity tiers for workloads, each with a typical round-trip ceiling
+ * ({@code thresholdMs}).
  *
- * <p>Each tier carries {@code thresholdMs}, the <strong>default per-workload latency
- * ceiling</strong> the optimizer engine ({@code MetroOptimizerEngine})
- * applies during workload placement. A workload's effective ceiling is its explicit
- * {@code WorkloadProfile.maxLatencyToleranceMs} when set; otherwise it is this tier's
- * {@code thresholdMs} &mdash; so a {@code CRITICAL} or {@code HIGH} workload is placed under a
- * tighter default ceiling than a {@code LOW} one, measured as the worst-case estimated latency
- * from the metro to any user site.</p>
+ * <p>The tier is descriptive: the Metro Optimizer does not turn it into a limit. Only an explicit
+ * {@code WorkloadIntent.maxLatencyMs} constrains where a workload may run (the
+ * {@code workload_max_latency} constraint), so a design is never rejected for a ceiling the caller
+ * did not state. Use {@code thresholdMs} as a starting point when choosing that explicit value.</p>
  *
- * <p>Exactly what the ceiling does, per kind:</p>
- * <ul>
- *   <li>An <em>explicit</em> ceiling always narrows which recommended metros the workload may be
- *       placed in, is stated on the placement rationale, and raises risk findings when it cannot be
- *       evaluated or honoured.</li>
- *   <li>The tier's <em>implied</em> ceiling narrows placement the same way, and the placement
- *       rationale names the tier whenever the ceiling actually ruled metros out or could not be
- *       honoured; when it binds nothing (or there are no sites to measure from) it is silent and
- *       raises no findings, because the caller never stated it.</li>
- * </ul>
- *
- * <p>Separately, {@code CRITICAL} (and any profile flagged proximity-weighted) routes the workload
- * through the lowest-weighted-latency placement rule rather than the highest-scored-metro rule.
- * The tiers do not scale the latency <em>scoring</em> curve &mdash; that is driven by the
- * thresholds on {@link com.eqixiac.equinix.design.optimizer.model.ScoringWeights}.</p>
- *
- * @see com.eqixiac.equinix.design.optimizer.model.WorkloadProfile
- * @see com.eqixiac.equinix.design.optimizer.model.ScoringWeights
+ * @see com.eqixiac.equinix.design.spec.WorkloadIntent
  */
 @Getter
 public enum LatencySensitivity {
@@ -47,7 +28,7 @@ public enum LatencySensitivity {
     /** Sub-50&nbsp;ms default placement ceiling; the fallback tier when a workload states none. */
     MEDIUM(50.0, "Sub-50ms latency acceptable"),
 
-    /** 200&nbsp;ms default placement ceiling — effectively unconstrained for most topologies. */
+    /** 200&nbsp;ms default placement ceiling - effectively unconstrained for most topologies. */
     LOW(200.0, "Latency tolerant up to 200ms");
 
     private final double thresholdMs;

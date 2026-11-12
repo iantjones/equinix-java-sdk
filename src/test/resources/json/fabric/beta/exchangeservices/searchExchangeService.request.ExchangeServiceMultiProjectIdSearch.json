@@ -1,0 +1,25 @@
+{
+  "filter": {
+    "and": [
+      {
+        "property": "/project/projectId",
+        "operator": "IN",
+        "values": [
+          "30ad25e2-53dc-11ed-bdc3-0242ac120002",
+          "30ad25e2-53dc-11ed-bdc3-0242ac120003",
+          "30ad25e2-53dc-11ed-bdc3-0242ac120004"
+        ]
+      }
+    ]
+  },
+  "pagination": {
+    "limit": 25,
+    "offset": 0
+  },
+  "sort": [
+    {
+      "property": "/changeLog/updatedDateTime",
+      "direction": "DESC"
+    }
+  ]
+}

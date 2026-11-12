@@ -24,7 +24,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
  * OAuth 2.0 token type of an issued STS token (STS v1 spec schema {@code TokenResponse}, property
  * {@code tokenType}). Wire values are mixed-case ({@code Bearer}, {@code DPoP}), so constants map
  * to the spec spelling via {@code getValue()}. {@link #UNKNOWN} is a read-side fallback for values
- * added after this SDK release — never send it.
+ * added after this SDK release - never send it.
  */
 public enum TokenType implements APIParam {
     BEARER("Bearer"),

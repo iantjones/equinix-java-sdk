@@ -40,7 +40,8 @@ import lombok.Getter;
  *     awsConnection,
  *     awsConnection.getOwnerAccount(),   // 12-digit AWS Account ID
  *     awsConnection.getRegion(),          // e.g., "us-east-1"
- *     "equinix-aws-profile-uuid"          // Equinix service profile for AWS
+ *     "equinix-aws-profile-uuid",          // Equinix service profile for AWS
+ *     "SV"                                   // Equinix metro of the provider port
  * );
  *
  * Connection conn = fabric.connections()
@@ -58,7 +59,8 @@ import lombok.Getter;
  * AwsDirectConnectAdapter<?> adapter = AwsDirectConnectAdapter.of(
  *     "123456789012",                      // AWS Account ID
  *     "us-east-1",                          // Region
- *     "equinix-aws-profile-uuid"            // Equinix service profile
+ *     "equinix-aws-profile-uuid",            // Equinix service profile
+ *     "SV"                                   // Equinix metro of the provider port
  * );
  * }</pre>
  *
@@ -73,6 +75,7 @@ public class AwsDirectConnectAdapter<T> implements CloudProviderConnectionAdapte
     private final String authenticationKey;
     private final String sellerRegion;
     private final String serviceProfileUuid;
+    private final String metroCode;
 
     /**
      * Creates an adapter wrapping an AWS Direct Connect SDK object.
@@ -81,12 +84,15 @@ public class AwsDirectConnectAdapter<T> implements CloudProviderConnectionAdapte
      * @param awsAccountId       the 12-digit AWS Account ID used as the authentication key
      * @param awsRegion          the AWS region (e.g., {@code "us-east-1"})
      * @param serviceProfileUuid the Equinix Fabric service profile UUID for AWS Direct Connect
+     * @param metroCode          the Equinix metro the provider is reached in, e.g. {@code "SV"}; required,
+     *                           sent as {@code zSide.accessPoint.location.metroCode}
      */
-    public AwsDirectConnectAdapter(T source, String awsAccountId, String awsRegion, String serviceProfileUuid) {
+    public AwsDirectConnectAdapter(T source, String awsAccountId, String awsRegion, String serviceProfileUuid, String metroCode) {
         this.source = source;
         this.authenticationKey = awsAccountId;
         this.sellerRegion = awsRegion;
         this.serviceProfileUuid = serviceProfileUuid;
+        this.metroCode = AdapterArguments.requireMetro(metroCode);
     }
 
     /**
@@ -95,10 +101,12 @@ public class AwsDirectConnectAdapter<T> implements CloudProviderConnectionAdapte
      * @param awsAccountId       the 12-digit AWS Account ID
      * @param awsRegion          the AWS region (e.g., {@code "us-east-1"})
      * @param serviceProfileUuid the Equinix Fabric service profile UUID for AWS Direct Connect
+     * @param metroCode          the Equinix metro the provider is reached in, e.g. {@code "SV"}; required,
+     *                           sent as {@code zSide.accessPoint.location.metroCode}
      * @return a new adapter configured for AWS Direct Connect
      */
-    public static AwsDirectConnectAdapter<Void> of(String awsAccountId, String awsRegion, String serviceProfileUuid) {
-        return new AwsDirectConnectAdapter<>(null, awsAccountId, awsRegion, serviceProfileUuid);
+    public static AwsDirectConnectAdapter<Void> of(String awsAccountId, String awsRegion, String serviceProfileUuid, String metroCode) {
+        return new AwsDirectConnectAdapter<>(null, awsAccountId, awsRegion, serviceProfileUuid, metroCode);
     }
 
     @Override

@@ -23,6 +23,10 @@ import com.fasterxml.jackson.databind.JsonDeserializer;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.temporal.TemporalAccessor;
+import java.time.temporal.TemporalQueries;
 
 /**
  *
@@ -36,6 +40,14 @@ public class LocalDateTimeDeserializer extends JsonDeserializer<LocalDateTime> {
         if(string.length() == 0)
             return null;
 
-        return LocalDateTime.parse(string, Constants.ALL_DATE_FORMATS);
+        TemporalAccessor parsed = Constants.ALL_DATE_FORMATS.parse(string);
+        LocalDateTime local = LocalDateTime.from(parsed);
+        // A value that carries an offset or zone is normalised to UTC, so two instants written
+        // with different offsets compare correctly; a value without one is taken as written.
+        ZoneId zone = parsed.query(TemporalQueries.zone());
+        if (zone == null) {
+            return local;
+        }
+        return local.atZone(zone).withZoneSameInstant(ZoneOffset.UTC).toLocalDateTime();
     }
 }

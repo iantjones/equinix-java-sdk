@@ -18,6 +18,7 @@ package com.eqixiac.equinix.sts.model.json;
 
 import com.eqixiac.equinix.sts.enums.TokenType;
 import com.eqixiac.equinix.sts.model.StsToken;
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
@@ -31,14 +32,18 @@ import lombok.Getter;
 public class StsTokenJson implements StsToken {
 
     @JsonProperty("accessToken")
+    @JsonAlias("access_token")
     private String accessToken;
 
     @JsonProperty("issuedTokenType")
+    @JsonAlias("issued_token_type")
     private String issuedTokenType;
 
     @JsonProperty("tokenType")
+    @JsonAlias("token_type")
     private TokenType tokenType;
 
     @JsonProperty("expiresIn")
+    @JsonAlias("expires_in")
     private Integer expiresIn;
 }

@@ -244,7 +244,7 @@ final class MulticloudReferenceRates {
         return Side.priced(PriceQuote.monthly(monthly, currency, PriceSource.REFERENCE).withNote(note.toString()));
     }
 
-    // ── Parsed rows ──
+    // Parsed rows
 
     private static final class Side {
         final PriceQuote quote;

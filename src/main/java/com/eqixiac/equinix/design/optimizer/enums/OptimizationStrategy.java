@@ -1,49 +1,36 @@
 package com.eqixiac.equinix.design.optimizer.enums;
 
-import lombok.Getter;
-
 /**
- * Pre-defined optimization strategies that set default scoring weights.
- * Users can further customize weights via
- * {@link com.eqixiac.equinix.design.optimizer.model.ScoringWeights}.
- *
- * <p>Each constant carries a weight per scoring dimension, in the order latency,
- * provider coverage, cost, redundancy, compliance. The engine sums the effective
- * weights (after any {@code ScoringWeights} overrides) and renormalizes them to 1,
- * so the values below are relative shares, not absolute multipliers.</p>
- *
- * @see com.eqixiac.equinix.design.optimizer.model.ScoringWeights
+ * Named weightings of the optimizer's objectives, each one of the
+ * {@link com.eqixiac.equinix.design.solve.WeightProfiles} profiles. A convenience for callers that
+ * prefer an enum to a profile name: {@link #profile()} is what goes into
+ * {@code DesignObjectives.profile}.
  */
-@Getter
 public enum OptimizationStrategy {
 
-    /** Even-handed default: latency 0.30, provider coverage 0.25, cost 0.20, redundancy 0.15, compliance 0.10. */
-    BALANCED(0.30, 0.25, 0.20, 0.15, 0.10),
+    /** The {@code balanced} profile. */
+    BALANCED("balanced"),
 
-    /** Prioritizes proximity to user sites: latency 0.50, provider coverage 0.20, cost 0.10, redundancy 0.10, compliance 0.10. */
-    LATENCY_FIRST(0.50, 0.20, 0.10, 0.10, 0.10),
+    /** The {@code latency_first} profile. */
+    LATENCY_FIRST("latency_first"),
 
-    /** Prioritizes estimated monthly cost: latency 0.15, provider coverage 0.15, cost 0.45, redundancy 0.15, compliance 0.10. */
-    COST_FIRST(0.15, 0.15, 0.45, 0.15, 0.10),
+    /** The {@code cost_first} profile. */
+    COST_FIRST("cost_first"),
 
-    /** Prioritizes geographic diversity: latency 0.20, provider coverage 0.15, cost 0.15, redundancy 0.40, compliance 0.10. */
-    REDUNDANCY_FIRST(0.20, 0.15, 0.15, 0.40, 0.10),
+    /** The {@code redundancy_first} profile. */
+    REDUNDANCY_FIRST("redundancy_first"),
 
-    /** Prioritizes cloud/service-profile reach: latency 0.20, provider coverage 0.45, cost 0.15, redundancy 0.10, compliance 0.10. */
-    PROVIDER_COVERAGE_FIRST(0.20, 0.45, 0.15, 0.10, 0.10);
+    /** The {@code provider_coverage_first} profile. */
+    PROVIDER_COVERAGE_FIRST("provider_coverage_first");
 
-    private final double latencyWeight;
-    private final double providerCoverageWeight;
-    private final double costWeight;
-    private final double redundancyWeight;
-    private final double complianceWeight;
+    private final String profile;
 
-    OptimizationStrategy(double latencyWeight, double providerCoverageWeight,
-                         double costWeight, double redundancyWeight, double complianceWeight) {
-        this.latencyWeight = latencyWeight;
-        this.providerCoverageWeight = providerCoverageWeight;
-        this.costWeight = costWeight;
-        this.redundancyWeight = redundancyWeight;
-        this.complianceWeight = complianceWeight;
+    OptimizationStrategy(String profile) {
+        this.profile = profile;
+    }
+
+    /** @return the {@code WeightProfiles} name */
+    public String profile() {
+        return profile;
     }
 }

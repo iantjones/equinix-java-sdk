@@ -16,7 +16,7 @@
 
 /**
  * Exporters that render design-engine output into portable, version-controllable text formats.
- * Both exporters are stateless, thread-safe, and side-effect free — they read a plan or result
+ * Both exporters are stateless, thread-safe, and side-effect free - they read a plan or result
  * and return a string, provisioning nothing.
  *
  * <p>{@link com.eqixiac.equinix.design.export.TerraformExporter} renders a
@@ -28,7 +28,7 @@
  * for the customer-supplied cloud authorization keys and VLAN tags. Its honest limits: the
  * caller still supplies provider credentials and the variable values before
  * {@code terraform apply}, and physical colocation (cabinets, cross-connects) cannot be
- * expressed at all — the Equinix Terraform provider has no resources for it.</p>
+ * expressed at all - the Equinix Terraform provider has no resources for it.</p>
  *
  * <p>{@link com.eqixiac.equinix.design.export.TopologyDiagram} renders a {@code DeploymentPlan}
  * (metro subgraphs, provider edges, backbone edges; {@code graph LR}) or an

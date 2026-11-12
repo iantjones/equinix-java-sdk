@@ -26,7 +26,7 @@ import com.eqixiac.equinix.iam.model.json.creators.UpdatePolicyMaskRequest;
  * ({@code /v1/projects/{projectId}/policyMasks}).
  *
  * <p>A policy mask constrains the permissions an underlying policy would otherwise grant. This
- * interface provides the policy mask lifecycle — list / create / get / update / delete plus the
+ * interface provides the policy mask lifecycle - list / create / get / update / delete plus the
  * enable/disable lifecycle toggles. All operations are scoped to a {@code projectId}.</p>
  */
 public interface IAMPolicyMasks {
@@ -34,7 +34,10 @@ public interface IAMPolicyMasks {
     /**
      * Lists the policy masks of a project (first page).
      *
-     * @param projectId the project identifier
+     * @param projectId the IAM project id, {@code project:<id>} (for example {@code project:abc-123}); a bare
+     *                  Resource Manager UUID is rejected, convert it with {@link ProjectIds#of(String)}.
+     *                  Project-scoped endpoints need an STS access-policy token
+     *                  ({@code new IAM(BearerTokenProvider)})
      * @return the first page of policy masks
      */
     PolicyMaskList list(String projectId);
@@ -42,7 +45,10 @@ public interface IAMPolicyMasks {
     /**
      * Lists the policy masks of a project, controlling pagination.
      *
-     * @param projectId the project identifier
+     * @param projectId the IAM project id, {@code project:<id>} (for example {@code project:abc-123}); a bare
+     *                  Resource Manager UUID is rejected, convert it with {@link ProjectIds#of(String)}.
+     *                  Project-scoped endpoints need an STS access-policy token
+     *                  ({@code new IAM(BearerTokenProvider)})
      * @param pageToken the opaque page token from a prior response, or {@code null} for the first page
      * @param pageSize the maximum number of results per page, or {@code null} for the server default
      * @return the requested page of policy masks
@@ -52,7 +58,10 @@ public interface IAMPolicyMasks {
     /**
      * Creates a new policy mask in a project.
      *
-     * @param projectId the project identifier
+     * @param projectId the IAM project id, {@code project:<id>} (for example {@code project:abc-123}); a bare
+     *                  Resource Manager UUID is rejected, convert it with {@link ProjectIds#of(String)}.
+     *                  Project-scoped endpoints need an STS access-policy token
+     *                  ({@code new IAM(BearerTokenProvider)})
      * @param request the policy mask to create
      * @return the created policy mask
      */
@@ -61,7 +70,10 @@ public interface IAMPolicyMasks {
     /**
      * Retrieves a single policy mask by id.
      *
-     * @param projectId the project identifier
+     * @param projectId the IAM project id, {@code project:<id>} (for example {@code project:abc-123}); a bare
+     *                  Resource Manager UUID is rejected, convert it with {@link ProjectIds#of(String)}.
+     *                  Project-scoped endpoints need an STS access-policy token
+     *                  ({@code new IAM(BearerTokenProvider)})
      * @param policyMaskId the policy mask identifier
      * @return the matching policy mask
      */
@@ -70,7 +82,10 @@ public interface IAMPolicyMasks {
     /**
      * Updates a policy mask.
      *
-     * @param projectId the project identifier
+     * @param projectId the IAM project id, {@code project:<id>} (for example {@code project:abc-123}); a bare
+     *                  Resource Manager UUID is rejected, convert it with {@link ProjectIds#of(String)}.
+     *                  Project-scoped endpoints need an STS access-policy token
+     *                  ({@code new IAM(BearerTokenProvider)})
      * @param policyMaskId the policy mask identifier
      * @param request the update (the request's {@code lastRev} guards against concurrent updates)
      * @return the updated policy mask
@@ -83,7 +98,10 @@ public interface IAMPolicyMasks {
      * <p>The spec requires the policy mask's last-known revision in the request body for
      * optimistic-concurrency-controlled deletion.</p>
      *
-     * @param projectId the project identifier
+     * @param projectId the IAM project id, {@code project:<id>} (for example {@code project:abc-123}); a bare
+     *                  Resource Manager UUID is rejected, convert it with {@link ProjectIds#of(String)}.
+     *                  Project-scoped endpoints need an STS access-policy token
+     *                  ({@code new IAM(BearerTokenProvider)})
      * @param policyMaskId the policy mask identifier
      * @param lastRev the last-known revision of the mask (required; from {@link PolicyMask#getRev()})
      * @return {@code true} if the deletion request was accepted
@@ -93,7 +111,10 @@ public interface IAMPolicyMasks {
     /**
      * Enables a previously disabled policy mask.
      *
-     * @param projectId the project identifier
+     * @param projectId the IAM project id, {@code project:<id>} (for example {@code project:abc-123}); a bare
+     *                  Resource Manager UUID is rejected, convert it with {@link ProjectIds#of(String)}.
+     *                  Project-scoped endpoints need an STS access-policy token
+     *                  ({@code new IAM(BearerTokenProvider)})
      * @param policyMaskId the policy mask identifier
      * @param lastRev the last-known revision of the mask (for concurrency control), or {@code null}
      * @return the updated policy mask
@@ -103,7 +124,10 @@ public interface IAMPolicyMasks {
     /**
      * Disables a policy mask.
      *
-     * @param projectId the project identifier
+     * @param projectId the IAM project id, {@code project:<id>} (for example {@code project:abc-123}); a bare
+     *                  Resource Manager UUID is rejected, convert it with {@link ProjectIds#of(String)}.
+     *                  Project-scoped endpoints need an STS access-policy token
+     *                  ({@code new IAM(BearerTokenProvider)})
      * @param policyMaskId the policy mask identifier
      * @param lastRev the last-known revision of the mask (for concurrency control), or {@code null}
      * @return the updated policy mask

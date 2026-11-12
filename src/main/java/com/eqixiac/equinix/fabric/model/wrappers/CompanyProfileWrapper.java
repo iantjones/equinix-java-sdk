@@ -28,6 +28,8 @@ public class CompanyProfileWrapper extends ResourceImpl<CompanyProfile> implemen
 
     @Delegate(excludes = CompanyProfileMutability.class)
     private CompanyProfileJson jsonObject;
+
+    private boolean deleted;
     @Getter
     private final Pageable<CompanyProfile> serviceClient;
 
@@ -37,8 +39,17 @@ public class CompanyProfileWrapper extends ResourceImpl<CompanyProfile> implemen
     }
 
     public Boolean delete() {
-        ((CompanyProfileClientImpl) this.serviceClient).delete(this.getUuid());
+        CompanyProfileJson response = ((CompanyProfileClientImpl) this.serviceClient).delete(this.getUuid());
+        if (response != null) {
+            this.jsonObject = response;
+        }
+        this.deleted = true;
         return true;
+    }
+
+    @Override
+    public boolean isDeleted() {
+        return this.deleted;
     }
 
     public void refresh() {

@@ -26,12 +26,12 @@ import lombok.Getter;
  * policy requiring traffic minimums or geographic coverage.</p>
  *
  * <ul>
- *   <li>{@link #OPEN} — Will peer with anyone who requests it. Easiest to establish.</li>
- *   <li>{@link #SELECTIVE} — Evaluates peering requests on a case-by-case basis. May require
+ *   <li>{@link #OPEN} - Will peer with anyone who requests it. Easiest to establish.</li>
+ *   <li>{@link #SELECTIVE} - Evaluates peering requests on a case-by-case basis. May require
  *       minimum traffic or presence in multiple locations.</li>
- *   <li>{@link #RESTRICTIVE} — Has strict requirements for peering (traffic ratios, contracts,
+ *   <li>{@link #RESTRICTIVE} - Has strict requirements for peering (traffic ratios, contracts,
  *       geographic presence). Most difficult to establish.</li>
- *   <li>{@link #NO} — Does not peer. Only reachable via transit or private connectivity (e.g., Fabric).</li>
+ *   <li>{@link #NO} - Does not peer. Only reachable via transit or private connectivity (e.g., Fabric).</li>
  * </ul>
  *
  * @author ianjones
@@ -53,12 +53,12 @@ public enum PeeringPolicy {
     private final String description;
 
     /**
-     * Constructs a peering policy. Argument order is pinned here — the two
+     * Constructs a peering policy. Argument order is pinned here - the two
      * {@code String} parameters straddle the score, so never regenerate this
      * constructor from field order.
      *
      * @param displayName      the PeeringDB-facing display name
-     * @param feasibilityScore how likely peering can be established (0.0–1.0)
+     * @param feasibilityScore how likely peering can be established (0.0-1.0)
      * @param description      the human-readable explanation
      */
     PeeringPolicy(String displayName, double feasibilityScore, String description) {

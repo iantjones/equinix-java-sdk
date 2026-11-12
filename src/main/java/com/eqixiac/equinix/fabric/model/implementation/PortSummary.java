@@ -106,8 +106,6 @@ public class PortSummary extends PortRef {
     @JsonProperty("package")
     private PackageRef portPackage;
 
-    @JsonProperty("settings")
-    private PortSettings settings;
 
     @JsonProperty("physicalPortQuantity")
     private Integer physicalPortQuantity;

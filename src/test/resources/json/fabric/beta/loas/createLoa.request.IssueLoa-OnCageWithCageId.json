@@ -1,0 +1,15 @@
+{
+  "type": "CAGE_LOA",
+  "name": "LOA-Equinix-SV1-2026",
+  "description": "Authorization for cage access to Equinix at SV1",
+  "authorizedProductType": "XC",
+  "expirationDateTime": "2026-12-31T23:59:59Z",
+  "requestor": {
+    "email": "user@org1.com",
+    "orgId": 95900,
+    "orgName": "organizationName1"
+  },
+  "demarcationPoint": {
+    "cageUniqueSpaceId": "AM7:0G:0202"
+  }
+}

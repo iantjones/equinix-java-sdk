@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@DisplayName("SpecHash — canonical form and the SHA-256 binding")
+@DisplayName("SpecHash - canonical form and the SHA-256 binding")
 class SpecHashTest {
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
@@ -43,7 +43,7 @@ class SpecHashTest {
     }
 
     @Test
-    @DisplayName("any value change changes the hash — the token binding is exact")
+    @DisplayName("any value change changes the hash - the token binding is exact")
     void valueChangesChangeHash() throws Exception {
         String base = canonical("{\"name\":\"X\",\"bandwidth_mbps\":1000}");
         String bumped = canonical("{\"name\":\"X\",\"bandwidth_mbps\":2000}");

@@ -11,9 +11,9 @@ import java.util.Optional;
 
 /**
  * The result of a {@link TcoCalculator} run: a side-by-side cost comparison of the
- * requested {@link DeploymentArchetype}s, the recommended approach — the lowest
+ * requested {@link DeploymentArchetype}s, the recommended approach - the lowest
  * <em>total cost over the commitment term</em> ({@code MRC × months + NRC}), so
- * one-time setup charges count — and the saving of the recommended approach versus
+ * one-time setup charges count - and the saving of the recommended approach versus
  * the public-cloud-over-internet baseline, both per month and over the term.
  *
  * <p>A cloud-to-cloud comparison ({@code TcoCalculator.Builder.toCloud(...)}) is two-sided:
@@ -37,7 +37,7 @@ public class TcoComparison {
     List<CostBreakdown> breakdowns;
 
     /**
-     * The archetype with the lowest total cost over the term among those that priced —
+     * The archetype with the lowest total cost over the term among those that priced - 
      * {@code null} when no archetype could be priced at all.
      */
     DeploymentArchetype recommended;
@@ -48,7 +48,7 @@ public class TcoComparison {
     /**
      * Monthly saving of the recommended archetype versus the baseline. {@code null} when
      * either side is unpriced or the two are priced in different currencies (no FX rate
-     * is ever fabricated) — guard before dereferencing.
+     * is ever fabricated) - guard before dereferencing.
      */
     BigDecimal monthlySavingsVsBaseline;
 
@@ -59,7 +59,7 @@ public class TcoComparison {
 
     /**
      * Saving of the recommended archetype versus the baseline over the full commitment
-     * term ({@code baseline totalOverTerm − recommended totalOverTerm}), which accounts
+     * term ({@code baseline totalOverTerm - recommended totalOverTerm}), which accounts
      * for one-time setup charges. Null when either side is unpriced or the currencies differ.
      */
     BigDecimal savingsOverTermVsBaseline;
@@ -80,6 +80,20 @@ public class TcoComparison {
      * single-cloud comparison.
      */
     String trafficNote;
+
+    /**
+     * How the recommendation relates to incomplete archetypes: {@code null} when every requested archetype
+     * priced; otherwise names each incomplete one and whether its priced part already exceeds the
+     * recommendation (so it cannot win) or not (so the recommendation is provisional).
+     */
+    String recommendationNote;
+
+    /** The fingerprint of the spec this comparison was derived from ({@code forSpec}), else {@code null}. */
+    String specFingerprint;
+
+    /** What {@code forSpec} assumed where the spec was silent; empty otherwise. */
+    @lombok.Builder.Default
+    List<String> assumptions = List.of();
 
     /**
      * The breakdown for a specific archetype.
@@ -142,7 +156,7 @@ public class TcoComparison {
      */
     public String toMarkdown() {
         StringBuilder sb = new StringBuilder();
-        sb.append("## Total Cost of Ownership — Deployment Comparison\n\n");
+        sb.append("## Total Cost of Ownership: Deployment Comparison\n\n");
         if (term != null) {
             sb.append("**Term:** ").append(term.months())
                     .append(term.months() == 1 ? " month" : " months")
@@ -163,11 +177,35 @@ public class TcoComparison {
                         .append(money(b.getSetupTotal(), rowCurrency)).append(" | ")
                         .append(money(b.getTotalOverTerm(), rowCurrency)).append(" | ");
             } else {
-                sb.append("_unavailable_ | — | — | ");
+                sb.append("_incomplete_ | n/a | n/a | ");
             }
-            sb.append(b.getArchetype() == recommended ? "✅ recommended" : "").append(" |\n");
+            sb.append(b.getArchetype() == recommended ? "recommended" : "").append(" |\n");
         }
         sb.append("\n");
+        if (recommendationNote != null) {
+            sb.append("**Completeness:** ").append(recommendationNote).append("\n\n");
+        }
+        boolean wrote = false;
+        for (CostBreakdown b : breakdowns) {
+            if (b.getUnpriced() != null && !b.getUnpriced().isEmpty()) {
+                sb.append("- ").append(b.getArchetype().getDisplayName()).append(" is incomplete:\n");
+                for (String u : b.getUnpriced()) {
+                    sb.append("  - unpriced: ").append(u).append("\n");
+                }
+                wrote = true;
+            }
+        }
+        if (specFingerprint != null) {
+            sb.append("\n_Derived from spec fingerprint `").append(specFingerprint, 0, Math.min(12, specFingerprint.length()))
+                    .append("`_\n");
+            for (String a : assumptions) {
+                sb.append("- Assumed: ").append(a).append("\n");
+            }
+            wrote = true;
+        }
+        if (wrote) {
+            sb.append("\n");
+        }
         if (recommended != null && monthlySavingsVsBaseline != null) {
             sb.append("**Recommended:** ").append(recommended.getDisplayName()).append("\n\n");
             sb.append("- Monthly saving vs. ").append(baseline.getDisplayName()).append(": ")

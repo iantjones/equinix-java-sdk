@@ -1,0 +1,81 @@
+{
+  "data": [
+    {
+      "type": "OC",
+      "bandwidth": 100000,
+      "connectionDestinationType": "BMMR",
+      "pathType": "DUAL_DIVERSE",
+      "bmmrType": "EQUINIX",
+      "redundancy": {
+        "priority": "PRIMARY"
+      },
+      "aSide": {
+        "demarcationPoint": {
+          "patchPanelId": "CP:Demarc:1259684",
+          "patchPanelPortA": "10",
+          "patchPanelPortB": "11",
+          "connectorType": "SC"
+        }
+      },
+      "zSide": {
+        "location": {
+          "ibxCode": "SV2"
+        },
+        "loa": {
+          "uuid": "64de7e5-7fe7-41e6-b984-80d5aa159a0e"
+        }
+      },
+      "account": {
+        "accountNumber": 270848
+      },
+      "notifications": [
+        {
+          "type": "NOTIFICATION",
+          "emails": [
+            "test@test.com"
+          ],
+          "registeredUsers": [
+            "test@test.com"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "OC",
+      "bandwidth": 100000,
+      "connectionDestinationType": "BMMR",
+      "pathType": "DUAL_DIVERSE",
+      "bmmrType": "EQUINIX",
+      "redundancy": {
+        "priority": "SECONDARY"
+      },
+      "aSide": {
+        "demarcationPoint": {
+          "patchPanelId": "PP:Demarc:1260379",
+          "patchPanelPortA": "14",
+          "patchPanelPortB": "15",
+          "connectorType": "SC"
+        }
+      },
+      "zSide": {
+        "location": {
+          "ibxCode": "SV2"
+        },
+        "loa": {
+          "uuid": "e9e2a1b6-8d4f-4c3e-8b2a-5f1d6e7a9c59"
+        }
+      },
+      "account": {
+        "accountNumber": 270848
+      },
+      "notifications": [
+        {
+          "type": "NOTIFICATION",
+          "emails": [
+            "test@test.com"
+          ]
+        }
+      ]
+    }
+  ]
+}

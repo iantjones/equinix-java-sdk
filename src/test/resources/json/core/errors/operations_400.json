@@ -1,0 +1,10 @@
+{
+  "errors": [
+    {
+      "code": "EQX-171-1212",
+      "fields": ["/filters/productTypes/0"],
+      "message": "Invalid value for productTypes",
+      "messageParams": ["TROUBLE_TICKET"]
+    }
+  ]
+}

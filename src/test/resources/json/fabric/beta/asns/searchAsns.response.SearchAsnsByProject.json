@@ -1,0 +1,55 @@
+{
+  "pagination": {
+    "total": 1
+  },
+  "sort": [
+    {
+      "direction": "DESC",
+      "property": "/changeLog/createdDateTime"
+    }
+  ],
+  "data": [
+    {
+      "href": "fabric/v4/asns/6db706f8-2a37-4546-a3ed-1df113a84d43",
+      "uuid": "6db706f8-2a37-4546-a3ed-1df113a84d43",
+      "type": "PUBLIC_ASN",
+      "project": {
+        "projectId": "03ed2230-604a-494c-bca2-c042d38d80bc"
+      },
+      "state": "PROVISIONING",
+      "number": 64497,
+      "rirRegion": "RIPE_NCC",
+      "ownershipChallengeDetails": {
+        "type": "RPKI",
+        "message": "eqx-rpki-challenge-2026-04-21T11:20:00Z-64497",
+        "signature": "MEUCIQCrExampleBase64SignatureValue7h4Yg=="
+      },
+      "assets": [
+        {
+          "service": {
+            "href": "https://api.equinix.com/fabric/v4/internetAccessService/52fbdb3f-8def-410d-868b-ef920878bff8",
+            "type": "IA",
+            "uuid": "52fbdb3f-8def-410d-868b-ef920878bff8"
+          },
+          "announcingMetro": "LD",
+          "ipBlocks": [
+            {
+              "href": "https://api.equinix.com/fabric/v4/ipBlocks/129afa61-f706-41cb-a03a-69a276bdb0b4",
+              "type": "IPV4_IP_BLOCK",
+              "uuid": "129afa61-f706-41cb-a03a-69a276bdb0b4"
+            },
+            {
+              "href": "https://api.equinix.com/fabric/v4/ipBlocks/72fc7c32-67c8-4ae4-b43f-d4d656961f04",
+              "type": "IPV6_IP_BLOCK",
+              "uuid": "72fc7c32-67c8-4ae4-b43f-d4d656961f04"
+            }
+          ]
+        }
+      ],
+      "changeLog": {
+        "createdDateTime": "2025-12-01T12:11:22.222Z",
+        "updatedDateTime": "2025-12-01T13:11:22.222Z"
+      }
+    }
+  ]
+}

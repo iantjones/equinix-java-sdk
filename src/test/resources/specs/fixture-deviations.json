@@ -1,0 +1,717 @@
+{
+ "_comment": "Documented live-vs-spec deviations: the fixture follows the LIVE service where the spec is wrong. Each entry needs a reason and a date.",
+ "deviations": [
+  {
+   "fixture": "operations/order_history_search_response_live.json",
+   "pointer": "/content/*",
+   "kind": "required",
+   "detail": "missing required property \"submittedDate\"",
+   "date": "2026-11-12",
+   "reason": "fixture is a live capture; the live service differs from the spec here (CHANGELOG \"Fixes from live validation\", 2026-11-11)"
+  },
+  {
+   "fixture": "operations/order_history_search_response_live.json",
+   "pointer": "/content/*/orderSource",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "reason": "fixture is a live capture; the live service differs from the spec here (CHANGELOG \"Fixes from live validation\", 2026-11-11)"
+  },
+  {
+   "fixture": "operations/order_history_search_response_live.json",
+   "pointer": "/content/*/account",
+   "kind": "required",
+   "detail": "missing required property \"number\"",
+   "date": "2026-11-12",
+   "reason": "fixture is a live capture; the live service differs from the spec here (CHANGELOG \"Fixes from live validation\", 2026-11-11)"
+  },
+  {
+   "fixture": "operations/order_history_search_response_live.json",
+   "pointer": "/content/*/account/accountName",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "reason": "fixture is a live capture; the live service differs from the spec here (CHANGELOG \"Fixes from live validation\", 2026-11-11)"
+  },
+  {
+   "fixture": "operations/order_history_search_response_live.json",
+   "pointer": "/content/*/account/accountNumber",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "reason": "fixture is a live capture; the live service differs from the spec here (CHANGELOG \"Fixes from live validation\", 2026-11-11)"
+  },
+  {
+   "fixture": "operations/order_history_search_response_live.json",
+   "pointer": "/content/*/uiMetaData",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "reason": "fixture is a live capture; the live service differs from the spec here (CHANGELOG \"Fixes from live validation\", 2026-11-11)"
+  },
+  {
+   "fixture": "operations/order_history_search_response_live.json",
+   "pointer": "/content/*/orderingContacts",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "reason": "fixture is a live capture; the live service differs from the spec here (CHANGELOG \"Fixes from live validation\", 2026-11-11)"
+  },
+  {
+   "fixture": "operations/order_history_search_response_live.json",
+   "pointer": "/content/*/notificationContacts",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "reason": "fixture is a live capture; the live service differs from the spec here (CHANGELOG \"Fixes from live validation\", 2026-11-11)"
+  },
+  {
+   "fixture": "operations/order_history_search_response_live.json",
+   "pointer": "/content/*/technicalContacts",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "reason": "fixture is a live capture; the live service differs from the spec here (CHANGELOG \"Fixes from live validation\", 2026-11-11)"
+  },
+  {
+   "fixture": "operations/order_history_search_response_live.json",
+   "pointer": "/content/*/piiHoldFlag",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "reason": "fixture is a live capture; the live service differs from the spec here (CHANGELOG \"Fixes from live validation\", 2026-11-11)"
+  },
+  {
+   "fixture": "operations/order_history_search_response_live.json",
+   "pointer": "/content/*/pendingCustomerInputFlag",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "reason": "fixture is a live capture; the live service differs from the spec here (CHANGELOG \"Fixes from live validation\", 2026-11-11)"
+  },
+  {
+   "fixture": "operations/order_history_search_response_live.json",
+   "pointer": "/content/*/awaitingCustomerResponse",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "reason": "fixture is a live capture; the live service differs from the spec here (CHANGELOG \"Fixes from live validation\", 2026-11-11)"
+  },
+  {
+   "fixture": "operations/order_history_search_response_live.json",
+   "pointer": "/content/*/modifiable",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "reason": "fixture is a live capture; the live service differs from the spec here (CHANGELOG \"Fixes from live validation\", 2026-11-11)"
+  },
+  {
+   "fixture": "operations/order_history_search_response_live.json",
+   "pointer": "/content/*/cancellable",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "reason": "fixture is a live capture; the live service differs from the spec here (CHANGELOG \"Fixes from live validation\", 2026-11-11)"
+  },
+  {
+   "fixture": "fabric/beta-live/asns_search_live_shape.json",
+   "pointer": "/data/*/type",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "reason": "fixture is a live capture; the live service differs from the spec here (CHANGELOG \"Fixes from live validation\", 2026-11-11)"
+  },
+  {
+   "fixture": "fabric/beta-live/asns_search_live_shape.json",
+   "pointer": "/data/*/assets/*/state",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "reason": "fixture is a live capture; the live service differs from the spec here (CHANGELOG \"Fixes from live validation\", 2026-11-11)"
+  },
+  {
+   "fixture": "fabric/beta/applinks/getAttachedAppDomainsByAppLinkId.response.Example.json",
+   "pointer": "/data/*/changeLog",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "reason": "fixture is the verbatim spec example getAttachedAppDomainsByAppLinkId/response \"Example\" (Fabric 4.34.0); the spec contradicts its own schema here"
+  },
+  {
+   "fixture": "fabric/beta/applinks/getAttachedAppServicesByAppLinkId.response.Example.json",
+   "pointer": "/data/*/changeLog",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "reason": "fixture is the verbatim spec example getAttachedAppServicesByAppLinkId/response \"Example\" (Fabric 4.34.0); the spec contradicts its own schema here"
+  },
+  {
+   "fixture": "fabric/beta/applinks/updateAppServiceAttachmentToAppLink.response.AppLinkResponse.json",
+   "pointer": "/change/data/*/path",
+   "kind": "enum",
+   "detail": "value not in spec enum",
+   "date": "2026-11-12",
+   "reason": "fixture is the verbatim spec example updateAppServiceAttachmentToAppLink/response \"AppLinkResponse\" (Fabric 4.34.0); the spec contradicts its own schema here"
+  },
+  {
+   "fixture": "fabric/beta/asns/createAsn.request.CreatePrivateAsn.json",
+   "pointer": "/type",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "reason": "fixture is the verbatim spec example createAsn/request \"CreatePrivateAsn\" (Fabric 4.34.0); the spec contradicts its own schema here"
+  },
+  {
+   "fixture": "fabric/beta/asns/createAsn.request.CreatePublicAsn.json",
+   "pointer": "/type",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "reason": "fixture is the verbatim spec example createAsn/request \"CreatePublicAsn\" (Fabric 4.34.0); the spec contradicts its own schema here"
+  },
+  {
+   "fixture": "fabric/beta/asns/createAsn.response.PrivateAsnCreated.json",
+   "pointer": "/type",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "reason": "fixture is the verbatim spec example createAsn/response \"PrivateAsnCreated\" (Fabric 4.34.0); the spec contradicts its own schema here"
+  },
+  {
+   "fixture": "fabric/beta/asns/createAsn.response.PublicAsnCreated.json",
+   "pointer": "/type",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "reason": "fixture is the verbatim spec example createAsn/response \"PublicAsnCreated\" (Fabric 4.34.0); the spec contradicts its own schema here"
+  },
+  {
+   "fixture": "fabric/beta/asns/createAsn.response.PublicAsnCreated.json",
+   "pointer": "/ownershipChallengeDetails/message",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "reason": "fixture is the verbatim spec example createAsn/response \"PublicAsnCreated\" (Fabric 4.34.0); the spec contradicts its own schema here"
+  },
+  {
+   "fixture": "fabric/beta/asns/createAsn.response.PublicAsnCreated.json",
+   "pointer": "/ownershipChallengeDetails/signature",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "reason": "fixture is the verbatim spec example createAsn/response \"PublicAsnCreated\" (Fabric 4.34.0); the spec contradicts its own schema here"
+  },
+  {
+   "fixture": "fabric/beta/asns/deleteAsnById.response.PrivateAsnCreated.json",
+   "pointer": "/type",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "reason": "fixture is the verbatim spec example deleteAsnById/response \"PrivateAsnCreated\" (Fabric 4.34.0); the spec contradicts its own schema here"
+  },
+  {
+   "fixture": "fabric/beta/asns/deleteAsnById.response.PublicAsnCreated.json",
+   "pointer": "/type",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "reason": "fixture is the verbatim spec example deleteAsnById/response \"PublicAsnCreated\" (Fabric 4.34.0); the spec contradicts its own schema here"
+  },
+  {
+   "fixture": "fabric/beta/asns/deleteAsnById.response.PublicAsnCreated.json",
+   "pointer": "/ownershipChallengeDetails/message",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "reason": "fixture is the verbatim spec example deleteAsnById/response \"PublicAsnCreated\" (Fabric 4.34.0); the spec contradicts its own schema here"
+  },
+  {
+   "fixture": "fabric/beta/asns/deleteAsnById.response.PublicAsnCreated.json",
+   "pointer": "/ownershipChallengeDetails/signature",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "reason": "fixture is the verbatim spec example deleteAsnById/response \"PublicAsnCreated\" (Fabric 4.34.0); the spec contradicts its own schema here"
+  },
+  {
+   "fixture": "fabric/beta/asns/getAsnById.response.PublicAsnRetrieved.json",
+   "pointer": "/type",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "reason": "fixture is the verbatim spec example getAsnById/response \"PublicAsnRetrieved\" (Fabric 4.34.0); the spec contradicts its own schema here"
+  },
+  {
+   "fixture": "fabric/beta/asns/getAsnById.response.PublicAsnRetrieved.json",
+   "pointer": "/ownershipChallengeDetails/message",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "reason": "fixture is the verbatim spec example getAsnById/response \"PublicAsnRetrieved\" (Fabric 4.34.0); the spec contradicts its own schema here"
+  },
+  {
+   "fixture": "fabric/beta/asns/getAsnById.response.PublicAsnRetrieved.json",
+   "pointer": "/ownershipChallengeDetails/signature",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "reason": "fixture is the verbatim spec example getAsnById/response \"PublicAsnRetrieved\" (Fabric 4.34.0); the spec contradicts its own schema here"
+  },
+  {
+   "fixture": "fabric/beta/asns/patchAsnById.response.PrivateAsnCreated.json",
+   "pointer": "/type",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "reason": "fixture is the verbatim spec example patchAsnById/response \"PrivateAsnCreated\" (Fabric 4.34.0); the spec contradicts its own schema here"
+  },
+  {
+   "fixture": "fabric/beta/asns/patchAsnById.response.PublicAsnCreated.json",
+   "pointer": "/type",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "reason": "fixture is the verbatim spec example patchAsnById/response \"PublicAsnCreated\" (Fabric 4.34.0); the spec contradicts its own schema here"
+  },
+  {
+   "fixture": "fabric/beta/asns/patchAsnById.response.PublicAsnCreated.json",
+   "pointer": "/ownershipChallengeDetails/message",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "reason": "fixture is the verbatim spec example patchAsnById/response \"PublicAsnCreated\" (Fabric 4.34.0); the spec contradicts its own schema here"
+  },
+  {
+   "fixture": "fabric/beta/asns/patchAsnById.response.PublicAsnCreated.json",
+   "pointer": "/ownershipChallengeDetails/signature",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "reason": "fixture is the verbatim spec example patchAsnById/response \"PublicAsnCreated\" (Fabric 4.34.0); the spec contradicts its own schema here"
+  },
+  {
+   "fixture": "fabric/beta/asns/searchAsns.response.SearchAsnsByProject.json",
+   "pointer": "/pagination",
+   "kind": "required",
+   "detail": "missing required property \"limit\"",
+   "date": "2026-11-12",
+   "reason": "fixture is the verbatim spec example searchAsns/response \"SearchAsnsByProject\" (Fabric 4.34.0); the spec contradicts its own schema here"
+  },
+  {
+   "fixture": "fabric/beta/asns/searchAsns.response.SearchAsnsByProject.json",
+   "pointer": "/data/*/type",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "reason": "fixture is the verbatim spec example searchAsns/response \"SearchAsnsByProject\" (Fabric 4.34.0); the spec contradicts its own schema here"
+  },
+  {
+   "fixture": "fabric/beta/asns/searchAsns.response.SearchAsnsByProject.json",
+   "pointer": "/data/*/ownershipChallengeDetails/message",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "reason": "fixture is the verbatim spec example searchAsns/response \"SearchAsnsByProject\" (Fabric 4.34.0); the spec contradicts its own schema here"
+  },
+  {
+   "fixture": "fabric/beta/asns/searchAsns.response.SearchAsnsByProject.json",
+   "pointer": "/data/*/ownershipChallengeDetails/signature",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "reason": "fixture is the verbatim spec example searchAsns/response \"SearchAsnsByProject\" (Fabric 4.34.0); the spec contradicts its own schema here"
+  },
+  {
+   "fixture": "fabric/beta/crossconnects/createCrossConnect.request.ExtendedCrossConnectEquinixManaged.json",
+   "pointer": "/bmmrType",
+   "kind": "type",
+   "detail": "expected object, got str",
+   "date": "2026-11-12",
+   "reason": "fixture is the verbatim spec example createCrossConnect/request \"ExtendedCrossConnectEquinixManaged\" (Fabric 4.34.0); the spec contradicts its own schema here"
+  },
+  {
+   "fixture": "fabric/beta/crossconnects/createCrossConnect.request.ExtendedCrossConnectSelfManaged.json",
+   "pointer": "/bmmrType",
+   "kind": "type",
+   "detail": "expected object, got str",
+   "date": "2026-11-12",
+   "reason": "fixture is the verbatim spec example createCrossConnect/request \"ExtendedCrossConnectSelfManaged\" (Fabric 4.34.0); the spec contradicts its own schema here"
+  },
+  {
+   "fixture": "fabric/beta/crossconnects/getCrossConnectActionByUuid.response.AcceptProposedDateTime.json",
+   "pointer": "/type",
+   "kind": "type",
+   "detail": "expected object, got str",
+   "date": "2026-11-12",
+   "reason": "fixture is the verbatim spec example getCrossConnectActionByUuid/response \"AcceptProposedDateTime\" (Fabric 4.34.0); the spec contradicts its own schema here"
+  },
+  {
+   "fixture": "fabric/beta/crossconnects/getCrossConnectActionByUuid.response.AcceptProposedDateTime.json",
+   "pointer": "/state",
+   "kind": "type",
+   "detail": "expected object, got str",
+   "date": "2026-11-12",
+   "reason": "fixture is the verbatim spec example getCrossConnectActionByUuid/response \"AcceptProposedDateTime\" (Fabric 4.34.0); the spec contradicts its own schema here"
+  },
+  {
+   "fixture": "fabric/beta/crossconnects/getCrossConnectActionByUuid.response.CancelCrossConnect.json",
+   "pointer": "/type",
+   "kind": "type",
+   "detail": "expected object, got str",
+   "date": "2026-11-12",
+   "reason": "fixture is the verbatim spec example getCrossConnectActionByUuid/response \"CancelCrossConnect\" (Fabric 4.34.0); the spec contradicts its own schema here"
+  },
+  {
+   "fixture": "fabric/beta/crossconnects/getCrossConnectActionByUuid.response.CancelCrossConnect.json",
+   "pointer": "/state",
+   "kind": "type",
+   "detail": "expected object, got str",
+   "date": "2026-11-12",
+   "reason": "fixture is the verbatim spec example getCrossConnectActionByUuid/response \"CancelCrossConnect\" (Fabric 4.34.0); the spec contradicts its own schema here"
+  },
+  {
+   "fixture": "fabric/beta/crossconnects/getCrossConnectActionByUuid.response.DeinstallCrossConnect.json",
+   "pointer": "/type",
+   "kind": "type",
+   "detail": "expected object, got str",
+   "date": "2026-11-12",
+   "reason": "fixture is the verbatim spec example getCrossConnectActionByUuid/response \"DeinstallCrossConnect\" (Fabric 4.34.0); the spec contradicts its own schema here"
+  },
+  {
+   "fixture": "fabric/beta/crossconnects/getCrossConnectActionByUuid.response.DeinstallCrossConnect.json",
+   "pointer": "/state",
+   "kind": "type",
+   "detail": "expected object, got str",
+   "date": "2026-11-12",
+   "reason": "fixture is the verbatim spec example getCrossConnectActionByUuid/response \"DeinstallCrossConnect\" (Fabric 4.34.0); the spec contradicts its own schema here"
+  },
+  {
+   "fixture": "fabric/beta/crossconnects/getCrossConnectActionByUuid.response.DeinstallCrossConnect.json",
+   "pointer": "/data/schedule/code",
+   "kind": "type",
+   "detail": "expected object, got str",
+   "date": "2026-11-12",
+   "reason": "fixture is the verbatim spec example getCrossConnectActionByUuid/response \"DeinstallCrossConnect\" (Fabric 4.34.0); the spec contradicts its own schema here"
+  },
+  {
+   "fixture": "fabric/beta/crossconnects/getCrossConnectActionByUuid.response.DeinstallCrossConnect.json",
+   "pointer": "/data/schedule/state",
+   "kind": "type",
+   "detail": "expected object, got str",
+   "date": "2026-11-12",
+   "reason": "fixture is the verbatim spec example getCrossConnectActionByUuid/response \"DeinstallCrossConnect\" (Fabric 4.34.0); the spec contradicts its own schema here"
+  },
+  {
+   "fixture": "fabric/beta/crossconnects/getCrossConnectActionByUuid.response.DeinstallCrossConnect.json",
+   "pointer": "/data/services/*/type",
+   "kind": "type",
+   "detail": "expected object, got str",
+   "date": "2026-11-12",
+   "reason": "fixture is the verbatim spec example getCrossConnectActionByUuid/response \"DeinstallCrossConnect\" (Fabric 4.34.0); the spec contradicts its own schema here"
+  },
+  {
+   "fixture": "fabric/beta/crossconnects/getCrossConnectActionByUuid.response.DeinstallCrossConnect.json",
+   "pointer": "/data/services/*/state",
+   "kind": "type",
+   "detail": "expected object, got str",
+   "date": "2026-11-12",
+   "reason": "fixture is the verbatim spec example getCrossConnectActionByUuid/response \"DeinstallCrossConnect\" (Fabric 4.34.0); the spec contradicts its own schema here"
+  },
+  {
+   "fixture": "fabric/beta/crossconnects/getCrossConnectActionByUuid.response.RejectProposedDateTime.json",
+   "pointer": "/type",
+   "kind": "type",
+   "detail": "expected object, got str",
+   "date": "2026-11-12",
+   "reason": "fixture is the verbatim spec example getCrossConnectActionByUuid/response \"RejectProposedDateTime\" (Fabric 4.34.0); the spec contradicts its own schema here"
+  },
+  {
+   "fixture": "fabric/beta/crossconnects/getCrossConnectActionByUuid.response.RejectProposedDateTime.json",
+   "pointer": "/state",
+   "kind": "type",
+   "detail": "expected object, got str",
+   "date": "2026-11-12",
+   "reason": "fixture is the verbatim spec example getCrossConnectActionByUuid/response \"RejectProposedDateTime\" (Fabric 4.34.0); the spec contradicts its own schema here"
+  },
+  {
+   "fixture": "fabric/beta/crossconnects/getCrossConnectActionByUuid.response.SendSignatureQuote.json",
+   "pointer": "/type",
+   "kind": "type",
+   "detail": "expected object, got str",
+   "date": "2026-11-12",
+   "reason": "fixture is the verbatim spec example getCrossConnectActionByUuid/response \"SendSignatureQuote\" (Fabric 4.34.0); the spec contradicts its own schema here"
+  },
+  {
+   "fixture": "fabric/beta/crossconnects/getCrossConnectActionByUuid.response.SendSignatureQuote.json",
+   "pointer": "/state",
+   "kind": "type",
+   "detail": "expected object, got str",
+   "date": "2026-11-12",
+   "reason": "fixture is the verbatim spec example getCrossConnectActionByUuid/response \"SendSignatureQuote\" (Fabric 4.34.0); the spec contradicts its own schema here"
+  },
+  {
+   "fixture": "fabric/beta/crossconnects/getCrossConnectActionByUuid.response.UpdateInformation.json",
+   "pointer": "/type",
+   "kind": "type",
+   "detail": "expected object, got str",
+   "date": "2026-11-12",
+   "reason": "fixture is the verbatim spec example getCrossConnectActionByUuid/response \"UpdateInformation\" (Fabric 4.34.0); the spec contradicts its own schema here"
+  },
+  {
+   "fixture": "fabric/beta/crossconnects/getCrossConnectActionByUuid.response.UpdateInformation.json",
+   "pointer": "/state",
+   "kind": "type",
+   "detail": "expected object, got str",
+   "date": "2026-11-12",
+   "reason": "fixture is the verbatim spec example getCrossConnectActionByUuid/response \"UpdateInformation\" (Fabric 4.34.0); the spec contradicts its own schema here"
+  },
+  {
+   "fixture": "fabric/beta/crossconnects/getCrossConnectSchedulesByUuid.response.SchedulesExample.json",
+   "pointer": "/data/*/code",
+   "kind": "type",
+   "detail": "expected object, got str",
+   "date": "2026-11-12",
+   "reason": "fixture is the verbatim spec example getCrossConnectSchedulesByUuid/response \"SchedulesExample\" (Fabric 4.34.0); the spec contradicts its own schema here"
+  },
+  {
+   "fixture": "fabric/beta/crossconnects/getCrossConnectSchedulesByUuid.response.SchedulesExample.json",
+   "pointer": "/data/*/state",
+   "kind": "type",
+   "detail": "expected object, got str",
+   "date": "2026-11-12",
+   "reason": "fixture is the verbatim spec example getCrossConnectSchedulesByUuid/response \"SchedulesExample\" (Fabric 4.34.0); the spec contradicts its own schema here"
+  },
+  {
+   "fixture": "fabric/beta/crossconnects/getCrossConnectServicesByUuid.response.GetCrossConnectServices.json",
+   "pointer": "/data/*/type",
+   "kind": "type",
+   "detail": "expected object, got str",
+   "date": "2026-11-12",
+   "reason": "fixture is the verbatim spec example getCrossConnectServicesByUuid/response \"GetCrossConnectServices\" (Fabric 4.34.0); the spec contradicts its own schema here"
+  },
+  {
+   "fixture": "fabric/beta/crossconnects/getCrossConnectServicesByUuid.response.GetCrossConnectServices.json",
+   "pointer": "/data/*/state",
+   "kind": "type",
+   "detail": "expected object, got str",
+   "date": "2026-11-12",
+   "reason": "fixture is the verbatim spec example getCrossConnectServicesByUuid/response \"GetCrossConnectServices\" (Fabric 4.34.0); the spec contradicts its own schema here"
+  },
+  {
+   "fixture": "fabric/beta/crossconnects/performCrossConnectAction.response.AcceptProposedDateTime.json",
+   "pointer": "/type",
+   "kind": "type",
+   "detail": "expected object, got str",
+   "date": "2026-11-12",
+   "reason": "fixture is the verbatim spec example performCrossConnectAction/response \"AcceptProposedDateTime\" (Fabric 4.34.0); the spec contradicts its own schema here"
+  },
+  {
+   "fixture": "fabric/beta/crossconnects/performCrossConnectAction.response.AcceptProposedDateTime.json",
+   "pointer": "/state",
+   "kind": "type",
+   "detail": "expected object, got str",
+   "date": "2026-11-12",
+   "reason": "fixture is the verbatim spec example performCrossConnectAction/response \"AcceptProposedDateTime\" (Fabric 4.34.0); the spec contradicts its own schema here"
+  },
+  {
+   "fixture": "fabric/beta/crossconnects/performCrossConnectAction.response.CancelCrossConnect.json",
+   "pointer": "/type",
+   "kind": "type",
+   "detail": "expected object, got str",
+   "date": "2026-11-12",
+   "reason": "fixture is the verbatim spec example performCrossConnectAction/response \"CancelCrossConnect\" (Fabric 4.34.0); the spec contradicts its own schema here"
+  },
+  {
+   "fixture": "fabric/beta/crossconnects/performCrossConnectAction.response.CancelCrossConnect.json",
+   "pointer": "/state",
+   "kind": "type",
+   "detail": "expected object, got str",
+   "date": "2026-11-12",
+   "reason": "fixture is the verbatim spec example performCrossConnectAction/response \"CancelCrossConnect\" (Fabric 4.34.0); the spec contradicts its own schema here"
+  },
+  {
+   "fixture": "fabric/beta/crossconnects/performCrossConnectAction.response.DeinstallCrossConnect.json",
+   "pointer": "/type",
+   "kind": "type",
+   "detail": "expected object, got str",
+   "date": "2026-11-12",
+   "reason": "fixture is the verbatim spec example performCrossConnectAction/response \"DeinstallCrossConnect\" (Fabric 4.34.0); the spec contradicts its own schema here"
+  },
+  {
+   "fixture": "fabric/beta/crossconnects/performCrossConnectAction.response.DeinstallCrossConnect.json",
+   "pointer": "/state",
+   "kind": "type",
+   "detail": "expected object, got str",
+   "date": "2026-11-12",
+   "reason": "fixture is the verbatim spec example performCrossConnectAction/response \"DeinstallCrossConnect\" (Fabric 4.34.0); the spec contradicts its own schema here"
+  },
+  {
+   "fixture": "fabric/beta/crossconnects/performCrossConnectAction.response.DeinstallCrossConnect.json",
+   "pointer": "/data/schedule/code",
+   "kind": "type",
+   "detail": "expected object, got str",
+   "date": "2026-11-12",
+   "reason": "fixture is the verbatim spec example performCrossConnectAction/response \"DeinstallCrossConnect\" (Fabric 4.34.0); the spec contradicts its own schema here"
+  },
+  {
+   "fixture": "fabric/beta/crossconnects/performCrossConnectAction.response.DeinstallCrossConnect.json",
+   "pointer": "/data/schedule/state",
+   "kind": "type",
+   "detail": "expected object, got str",
+   "date": "2026-11-12",
+   "reason": "fixture is the verbatim spec example performCrossConnectAction/response \"DeinstallCrossConnect\" (Fabric 4.34.0); the spec contradicts its own schema here"
+  },
+  {
+   "fixture": "fabric/beta/crossconnects/performCrossConnectAction.response.DeinstallCrossConnect.json",
+   "pointer": "/data/services/*/type",
+   "kind": "type",
+   "detail": "expected object, got str",
+   "date": "2026-11-12",
+   "reason": "fixture is the verbatim spec example performCrossConnectAction/response \"DeinstallCrossConnect\" (Fabric 4.34.0); the spec contradicts its own schema here"
+  },
+  {
+   "fixture": "fabric/beta/crossconnects/performCrossConnectAction.response.DeinstallCrossConnect.json",
+   "pointer": "/data/services/*/state",
+   "kind": "type",
+   "detail": "expected object, got str",
+   "date": "2026-11-12",
+   "reason": "fixture is the verbatim spec example performCrossConnectAction/response \"DeinstallCrossConnect\" (Fabric 4.34.0); the spec contradicts its own schema here"
+  },
+  {
+   "fixture": "fabric/beta/crossconnects/performCrossConnectAction.response.RejectProposedDateTime.json",
+   "pointer": "/type",
+   "kind": "type",
+   "detail": "expected object, got str",
+   "date": "2026-11-12",
+   "reason": "fixture is the verbatim spec example performCrossConnectAction/response \"RejectProposedDateTime\" (Fabric 4.34.0); the spec contradicts its own schema here"
+  },
+  {
+   "fixture": "fabric/beta/crossconnects/performCrossConnectAction.response.RejectProposedDateTime.json",
+   "pointer": "/state",
+   "kind": "type",
+   "detail": "expected object, got str",
+   "date": "2026-11-12",
+   "reason": "fixture is the verbatim spec example performCrossConnectAction/response \"RejectProposedDateTime\" (Fabric 4.34.0); the spec contradicts its own schema here"
+  },
+  {
+   "fixture": "fabric/beta/crossconnects/performCrossConnectAction.response.SendSignatureQuote.json",
+   "pointer": "/type",
+   "kind": "type",
+   "detail": "expected object, got str",
+   "date": "2026-11-12",
+   "reason": "fixture is the verbatim spec example performCrossConnectAction/response \"SendSignatureQuote\" (Fabric 4.34.0); the spec contradicts its own schema here"
+  },
+  {
+   "fixture": "fabric/beta/crossconnects/performCrossConnectAction.response.SendSignatureQuote.json",
+   "pointer": "/state",
+   "kind": "type",
+   "detail": "expected object, got str",
+   "date": "2026-11-12",
+   "reason": "fixture is the verbatim spec example performCrossConnectAction/response \"SendSignatureQuote\" (Fabric 4.34.0); the spec contradicts its own schema here"
+  },
+  {
+   "fixture": "fabric/beta/crossconnects/performCrossConnectAction.response.UpdateInformation.json",
+   "pointer": "/type",
+   "kind": "type",
+   "detail": "expected object, got str",
+   "date": "2026-11-12",
+   "reason": "fixture is the verbatim spec example performCrossConnectAction/response \"UpdateInformation\" (Fabric 4.34.0); the spec contradicts its own schema here"
+  },
+  {
+   "fixture": "fabric/beta/crossconnects/performCrossConnectAction.response.UpdateInformation.json",
+   "pointer": "/state",
+   "kind": "type",
+   "detail": "expected object, got str",
+   "date": "2026-11-12",
+   "reason": "fixture is the verbatim spec example performCrossConnectAction/response \"UpdateInformation\" (Fabric 4.34.0); the spec contradicts its own schema here"
+  },
+  {
+   "fixture": "fabric/beta/crossconnects/searchCrossConnectAction.response.CrossConnectActionSearchExample.json",
+   "pointer": "/data/*/type",
+   "kind": "type",
+   "detail": "expected object, got str",
+   "date": "2026-11-12",
+   "reason": "fixture is the verbatim spec example searchCrossConnectAction/response \"CrossConnectActionSearchExample\" (Fabric 4.34.0); the spec contradicts its own schema here"
+  },
+  {
+   "fixture": "fabric/beta/crossconnects/searchCrossConnectAction.response.CrossConnectActionSearchExample.json",
+   "pointer": "/data/*/state",
+   "kind": "type",
+   "detail": "expected object, got str",
+   "date": "2026-11-12",
+   "reason": "fixture is the verbatim spec example searchCrossConnectAction/response \"CrossConnectActionSearchExample\" (Fabric 4.34.0); the spec contradicts its own schema here"
+  },
+  {
+   "fixture": "fabric/beta/crossconnects/searchCrossConnectSchedules.response.SearchInstallSchedules.json",
+   "pointer": "/data/*/code",
+   "kind": "type",
+   "detail": "expected object, got str",
+   "date": "2026-11-12",
+   "reason": "fixture is the verbatim spec example searchCrossConnectSchedules/response \"SearchInstallSchedules\" (Fabric 4.34.0); the spec contradicts its own schema here"
+  },
+  {
+   "fixture": "fabric/metrics_search_response.json",
+   "pointer": "/data/*/summary",
+   "kind": "type",
+   "detail": "expected string, got dict",
+   "date": "2026-11-12",
+   "reason": "live port metrics return summary as an object; the spec types it as a string (CHANGELOG, live 2026-11-11)"
+  },
+  {
+   "fixture": "sts/openid_configuration_live.json",
+   "pointer": "/",
+   "kind": "required",
+   "detail": "missing required property \"jwksUri\"",
+   "date": "2026-11-12",
+   "reason": "fixture is a live capture; the live service differs from the spec here (CHANGELOG \"Fixes from live validation\", 2026-11-11)"
+  },
+  {
+   "fixture": "sts/openid_configuration_live.json",
+   "pointer": "/jwks_uri",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "reason": "fixture is a live capture; the live service differs from the spec here (CHANGELOG \"Fixes from live validation\", 2026-11-11)"
+  },
+  {
+   "fixture": "sts/openid_configuration_live.json",
+   "pointer": "/token_endpoint",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "reason": "fixture is a live capture; the live service differs from the spec here (CHANGELOG \"Fixes from live validation\", 2026-11-11)"
+  },
+  {
+   "fixture": "sts/openid_configuration_live.json",
+   "pointer": "/claims_supported",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "reason": "fixture is a live capture; the live service differs from the spec here (CHANGELOG \"Fixes from live validation\", 2026-11-11)"
+  },
+  {
+   "fixture": "sts/openid_configuration_live.json",
+   "pointer": "/response_types_supported",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "reason": "fixture is a live capture; the live service differs from the spec here (CHANGELOG \"Fixes from live validation\", 2026-11-11)"
+  },
+  {
+   "fixture": "sts/openid_configuration_live.json",
+   "pointer": "/subject_types_supported",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "reason": "fixture is a live capture; the live service differs from the spec here (CHANGELOG \"Fixes from live validation\", 2026-11-11)"
+  },
+  {
+   "fixture": "sts/openid_configuration_live.json",
+   "pointer": "/id_token_signing_alg_values_supported",
+   "kind": "undocumented",
+   "detail": "property not in the spec schema",
+   "date": "2026-11-12",
+   "reason": "fixture is a live capture; the live service differs from the spec here (CHANGELOG \"Fixes from live validation\", 2026-11-11)"
+  }
+ ]
+}

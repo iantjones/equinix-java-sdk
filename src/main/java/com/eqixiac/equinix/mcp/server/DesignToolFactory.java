@@ -16,1099 +16,782 @@
 
 package com.eqixiac.equinix.mcp.server;
 
+import com.eqixiac.equinix.FabricGateway;
 import com.eqixiac.equinix.core.enums.MetroCode;
-import com.eqixiac.equinix.design.export.TerraformExporter;
+import com.eqixiac.equinix.core.enums.Region;
+import com.eqixiac.equinix.design.geo.RouteFactorCalibration;
 import com.eqixiac.equinix.design.geo.SpeedOfLightLatency;
 import com.eqixiac.equinix.design.optimizer.MetroOptimizer;
-import com.eqixiac.equinix.design.optimizer.enums.LatencySensitivity;
-import com.eqixiac.equinix.design.optimizer.enums.OptimizationStrategy;
-import com.eqixiac.equinix.design.optimizer.enums.RedundancyTier;
-import com.eqixiac.equinix.design.optimizer.enums.WorkloadType;
-import com.eqixiac.equinix.design.optimizer.model.CostEstimate;
 import com.eqixiac.equinix.design.optimizer.model.MetroRecommendation;
 import com.eqixiac.equinix.design.optimizer.model.OptimizationResult;
-import com.eqixiac.equinix.design.optimizer.wizard.DeploymentWizard;
-import com.eqixiac.equinix.design.optimizer.wizard.enums.BackboneTopology;
-import com.eqixiac.equinix.design.optimizer.wizard.enums.CloudToCloudStrategy;
-import com.eqixiac.equinix.design.optimizer.wizard.model.DeploymentPlan;
-import com.eqixiac.equinix.design.optimizer.wizard.model.PlanPricing;
-import com.eqixiac.equinix.design.optimizer.wizard.model.PlannedConnection;
-import com.eqixiac.equinix.design.optimizer.wizard.model.ProfileCandidate;
-import com.eqixiac.equinix.design.optimizer.wizard.model.ProfileSelection;
+import com.eqixiac.equinix.design.optimizer.model.RiskFinding;
 import com.eqixiac.equinix.design.peering.PeeringIntelligence;
 import com.eqixiac.equinix.design.peering.model.PeeringIntelligenceResult;
-import com.eqixiac.equinix.design.value.ratecard.RateCard;
-import com.eqixiac.equinix.design.value.savings.SavingsCalculator;
-import com.eqixiac.equinix.design.value.savings.SavingsEstimate;
-import com.eqixiac.equinix.design.value.tco.DeploymentArchetype;
-import com.eqixiac.equinix.design.value.tco.TcoCalculator;
-import com.eqixiac.equinix.design.value.tco.TcoComparison;
+import com.eqixiac.equinix.design.placement.PlacementPlan;
+import com.eqixiac.equinix.design.resilience.ResilienceAnalyzer;
+import com.eqixiac.equinix.design.resilience.ResilienceFindings;
+import com.eqixiac.equinix.design.resilience.ResilienceOptions;
+import com.eqixiac.equinix.design.resilience.ResilienceReport;
+import com.eqixiac.equinix.design.resilience.ScenarioOutcome;
+import com.eqixiac.equinix.design.resilience.WorkloadAvailability;
+import com.eqixiac.equinix.design.solve.SensitivityReport;
+import com.eqixiac.equinix.design.spec.DesignSpec;
+import com.eqixiac.equinix.design.spi.ConstraintVerdict;
+import com.eqixiac.equinix.design.spi.DesignOption;
+import com.eqixiac.equinix.design.spi.MetroPortfolio;
+import com.eqixiac.equinix.design.spi.ObjectiveValue;
+import com.eqixiac.equinix.design.spi.PortfolioCost;
+import com.eqixiac.equinix.design.value.ratecard.PriceSource;
 import com.eqixiac.equinix.fabric.model.Metro;
 import com.eqixiac.equinix.fabric.model.MetroRegistry;
+import com.eqixiac.equinix.fabric.model.implementation.ConnectedMetro;
 import com.eqixiac.equinix.fabric.model.implementation.cloud.CloudProviderType;
 import com.eqixiac.equinix.internetaccess.model.Ibx;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import io.modelcontextprotocol.server.McpSyncServerExchange;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.regex.Pattern;
 
 import static com.eqixiac.equinix.mcp.server.Args.enumValue;
-import static com.eqixiac.equinix.mcp.server.Args.optEnum;
 import static com.eqixiac.equinix.mcp.server.Args.optInt;
 import static com.eqixiac.equinix.mcp.server.Args.optLong;
-import static com.eqixiac.equinix.mcp.server.Args.optNumber;
-import static com.eqixiac.equinix.mcp.server.Args.optString;
-import static com.eqixiac.equinix.mcp.server.Args.requireNumber;
 import static com.eqixiac.equinix.mcp.server.Args.requireString;
+import static com.eqixiac.equinix.mcp.server.DesignPayloads.Detail;
+import static com.eqixiac.equinix.mcp.server.DesignPayloads.capped;
+import static com.eqixiac.equinix.mcp.server.DesignPayloads.round1;
+import static com.eqixiac.equinix.mcp.server.DesignPayloads.round4;
 import static com.eqixiac.equinix.mcp.server.Schemas.array;
+import static com.eqixiac.equinix.mcp.server.Schemas.detail;
 import static com.eqixiac.equinix.mcp.server.Schemas.integer;
-import static com.eqixiac.equinix.mcp.server.Schemas.looseObject;
-import static com.eqixiac.equinix.mcp.server.Schemas.lowerNames;
-import static com.eqixiac.equinix.mcp.server.Schemas.number;
 import static com.eqixiac.equinix.mcp.server.Schemas.object;
+import static com.eqixiac.equinix.mcp.server.Schemas.objectOrString;
 import static com.eqixiac.equinix.mcp.server.Schemas.props;
 import static com.eqixiac.equinix.mcp.server.Schemas.string;
-import static com.eqixiac.equinix.mcp.server.Schemas.stringEnum;
+import static com.eqixiac.equinix.mcp.server.Schemas.with;
 
 /**
- * The nine {@code design_*} tools — every one runs a design <em>engine</em> (optimizer,
- * wizard, speed-of-light geometry, TCO, savings, cloud-to-cloud path comparison, the native
- * multicloud environment catalog, peering intelligence, Terraform export) rather than mirroring a
- * REST endpoint. The two cloud-to-cloud tools are built in {@link MulticloudDesignTools}.
+ * The design toolset's catalog and its engine tools. Every engine tool takes the same input, a
+ * {@code DesignSpec} ({@link SpecInput}), and every result carries the spec fingerprint and a
+ * {@code provenance} block, so an agent can run the whole loop with the spec as the shared currency:
+ * {@code design_spec_template} -> {@code design_validate_spec} -> {@code design_optimize} ->
+ * {@code design_analyze_resilience} / {@code design_growth_and_terms} / {@code design_estimate_tco} ->
+ * {@code design_plan_deployment} -> {@code design_get_plan} / {@code design_plan_drift} /
+ * {@code design_export_terraform}.
+ *
+ * <p>Built here: optimization, resilience, latency and peering. The spec tools are in
+ * {@link SpecTools}, the value tools in {@link ValueTools}, the plan lifecycle in {@link PlanTools},
+ * the cloud-to-cloud tools (Beta) in {@link MulticloudDesignTools} and the estate analysis (its own
+ * toolset) in {@link EstateTools}. Every tool here is read-only.</p>
  */
 final class DesignToolFactory {
-
-    private static final int MAX_RECOMMENDATIONS = 8;
-    private static final int MAX_OPPORTUNITIES = 20;
-    private static final int MAX_FINDINGS = 10;
 
     static final String[] CLOUD_VALUES = {
             "aws", "azure", "gcp", "google_cloud", "oci", "oracle_cloud", "ibm_cloud", "alibaba_cloud"};
 
+    private static final Pattern METRO = Pattern.compile("[A-Z]{2}");
+
     private DesignToolFactory() {
     }
 
-    static List<ToolRegistration> tools() {
-        return List.of(optimizePlacement(), planDeployment(), estimateLatency(), estimateTco(),
-                compareCloudEgress(), MulticloudDesignTools.compareCloudToCloud(),
-                MulticloudDesignTools.listMulticloudEnvironments(), analyzePeering(), exportTerraform());
-    }
-
-    // ── design_optimize_placement ───────────────────────────────────────────
-
     /**
-     * The optimizer's input schema, shared by {@code design_optimize_placement} and the
-     * {@code optimization} block of {@code design_plan_deployment}.
+     * The {@code design} toolset, in the order an agent typically uses it.
      *
-     * <p>Every description here is a prompt the calling model reasons from, so each states what the
-     * engine actually does with the field — in particular whether it narrows <em>candidacy</em> (which
-     * metros are recommended) or only <em>placement</em> (which recommended metro a single workload
-     * lands in), because the two read identically in a payload and only one of them changes the
-     * ranked list. A field the engine reads nowhere is not documented here; it is removed, so the
-     * model cannot spend a turn setting a knob that moves nothing.</p>
+     * @return the registrations
      */
-    private static Map<String, Object> optimizationProps() {
-        Map<String, Object> workloadItem = object(props(
-                "label", string("Short name for this workload, e.g. 'ML training'."),
-                "type", stringEnum("The workload archetype. It selects this workload's default profile: "
-                                + "its latency sensitivity, whether placement is pulled toward the user sites, "
-                                + "and any power/cooling needs. 'disaster_recovery' and 'cold_backup' are placed "
-                                + "in a different region from the primary where one is recommended. Power and "
-                                + "cooling are recorded on the result for cabinet/cage selection only — Fabric "
-                                + "publishes no per-metro power or cooling capability, so they never influence "
-                                + "the metro ranking.",
-                        lowerNames(WorkloadType.class)),
-                "bandwidth_mbps", integer("Sustained bandwidth this workload needs, in Mbps. Used for cost "
-                        + "sizing only: all workloads' bandwidth is summed and split across the recommended "
-                        + "metros to price a representative Fabric connection. It does not change which metros "
-                        + "are recommended. Where the archetype declares a higher floor, that floor is priced "
-                        + "instead and the raise is named in explanation.assumptions."),
-                "latency_sensitivity", stringEnum("How latency-sensitive the workload is. Only 'critical' "
-                                + "changes the outcome: it places this workload in the recommended metro with the "
-                                + "lowest site-weighted latency instead of the highest-scored one. 'high', "
-                                + "'medium' and 'low' are recorded but change neither placement nor ranking. To "
-                                + "make latency bind, use max_latency_ms (this workload) or "
-                                + "constraints.max_latency_ms (the whole deployment).",
-                        lowerNames(LatencySensitivity.class)),
-                "max_latency_ms", number("Hard latency ceiling from the user sites to this workload, in "
-                        + "milliseconds. It narrows PLACEMENT, not candidacy: the recommended metro set is "
-                        + "unchanged, but this workload is placed only in metros whose worst-case latency to "
-                        + "every site is within the ceiling. If no recommended metro honours it the workload is "
-                        + "still placed and the run says so — a HIGH WORKLOAD_LATENCY_TOLERANCE_UNMET finding "
-                        + "names the closest metro and its measured latency. With no 'sites' it cannot be "
-                        + "evaluated and is reported as such. Must be positive and finite; zero or negative is "
-                        + "rejected with an error."),
-                "requires_clouds", array("Cloud providers this workload must reach over private "
-                                + "interconnect. Two effects. (1) It HOMES this workload: the workload is placed in "
-                                + "the first recommended metro that carries all of them. (2) It widens CANDIDACY: a "
-                                + "metro carrying all of THIS workload's clouds qualifies as a candidate even when it "
-                                + "lacks one of the top-level require_clouds, so a single-cloud metro can be "
-                                + "recommended to host this single-cloud workload instead of being filtered out. If "
-                                + "one resolves to no metro, the workload is still placed and a "
-                                + "WORKLOAD_PROVIDER_UNAVAILABLE finding says so.",
-                        stringEnum("Cloud provider.", CLOUD_VALUES))),
-                "label");
-        Map<String, Object> siteItem = object(props(
-                "label", string("Short name for this user site, e.g. 'London HQ'."),
-                "metro_code", string("Nearest Equinix metro code (e.g. 'LD'). Give this OR "
-                        + "latitude+longitude. It must be a metro the Fabric catalogue publishes: an "
-                        + "unrecognised code has no coordinates to measure from and falls back to a 150 ms "
-                        + "placeholder latency for this site."),
-                "latitude", number("Site latitude in decimal degrees (use with 'longitude' when no "
-                        + "metro_code). Coordinates are measured by great-circle fibre distance whenever "
-                        + "Fabric publishes no metro-to-metro latency for the pair."),
-                "longitude", number("Site longitude in decimal degrees."),
-                "weight", number("Relative importance of this site when the per-site latencies are "
-                        + "averaged into the latency score. Must be positive. A site left unweighted is NOT "
-                        + "weighted 1.0 — it counts as an average site: with no site weighted at all every site "
-                        + "counts equally, and in a mixed request the unweighted sites take the mean of the "
-                        + "stated weights. Weights never affect candidacy, only the latency score and the "
-                        + "lowest-latency placement rule.")),
-                "label");
-        Map<String, Object> constraints = object(props(
-                "monthly_budget_max", number("Monthly budget ceiling in USD. Optional; omit it for NO cap "
-                        + "— nothing installs a hidden default ceiling. This is a REPORTING check, not a filter: no "
-                        + "metro is excluded or scored on it. The estimated monthly total is compared against it and "
-                        + "the answer appears as cost_estimate.within_budget; when the estimate exceeds the ceiling a "
-                        + "MEDIUM BUDGET_EXCEEDED finding is also raised. Cost scoring is regional and independent of "
-                        + "this value."),
-                "require_metros", array("Metro codes that must be part of the deployment. They are forced "
-                                + "in AFTER filtering, so they bypass every constraint including the latency bound, "
-                                + "and are counted separately from the metros that met the constraints. A code the "
-                                + "catalogue does not carry raises a HIGH REQUIRED_METRO_NOT_FOUND finding rather "
-                                + "than being dropped silently.",
-                        string("Metro code, e.g. 'DC'.")),
-                "exclude_metros", array("Metro codes that must not be used. Excluded before scoring.",
-                        string("Metro code, e.g. 'SV'.")),
-                "redundancy", stringEnum("Minimum redundancy tier. It raises the number of metros "
-                                + "recommended when max_metros is not set and drives the redundancy score from the "
-                                + "geographic diversity of the selected set. multi_region and multi_metro now HARD-"
-                                + "spread the selected set across regions: candidates are grouped by region and taken "
-                                + "round-robin best-per-region (regions where you have sites first), so no single "
-                                + "region can fill the set — geographic spread is enforced, not merely nudged in the "
-                                + "score. none and n_plus_1 keep the plain top-N-by-score selection. When "
-                                + "multi_region is requested but every qualifying metro sits in one region (spread "
-                                + "impossible under the given clouds/regions/compliance/latency), that is a HIGH "
-                                + "SINGLE_REGION finding naming exactly what to relax; too few metros for the tier is "
-                                + "a REDUNDANCY_GAP finding.",
-                        lowerNames(RedundancyTier.class)),
-                "max_metros", integer("Hard cap on how many metros are recommended. Defaults to 3, or — "
-                        + "when a redundancy tier is set — to the greater of 3 and the tier's minimum plus "
-                        + "one."),
-                "max_latency_ms", number("Ceiling on the estimated latency from a recommended metro to "
-                        + "EVERY user site, in milliseconds. Unlike the per-workload ceiling this narrows "
-                        + "CANDIDACY: metros beyond it are excluded before scoring (metros forced in by "
-                        + "require_metros bypass it and are flagged with a LATENCY_THRESHOLD finding instead). "
-                        + "With no 'sites' it cannot be evaluated and the run reports "
-                        + "LATENCY_BOUND_NOT_EVALUATED. Must be positive and finite; zero or negative is "
-                        + "rejected with an error.")));
-        return props(
-                "workloads", array("The workloads to place. At least one is required.", workloadItem),
-                "sites", array("User/office/data-center sites whose proximity should drive placement. "
-                        + "Without at least one site, latency neither ranks nor filters metros and every "
-                        + "latency ceiling in this request is reported as unevaluable.", siteItem),
-                "require_clouds", array("Clouds that must be reachable SOMEWHERE in the recommended set — a "
-                                + "coverage guarantee across the recommended metros, NOT a per-metro filter. A metro "
-                                + "is no longer excluded merely for lacking one; instead the engine guarantees each "
-                                + "listed cloud is carried by at least one recommended metro and raises a HIGH "
-                                + "REQUIRED_CLOUD_NOT_COVERED finding when the chosen set leaves one unreached (the "
-                                + "cloud exists in the account but no recommended metro carries it). Carrying all of "
-                                + "these clouds is one way a metro qualifies for candidacy; a metro also qualifies by "
-                                + "carrying all clouds of any single workload's requires_clouds, so single-cloud "
-                                + "metros are not shut out. A cloud that resolves to NO metro at all in the account "
-                                + "stays a separate CRITICAL PROVIDER_UNAVAILABLE finding, naming whether the lookup "
-                                + "missed or the matched profiles published no coverage.",
-                        stringEnum("Cloud provider.", CLOUD_VALUES)),
-                "prefer_clouds", array("Clouds that are nice to have; raises the provider-coverage score "
-                                + "but never disqualifies a metro.",
-                        stringEnum("Cloud provider.", CLOUD_VALUES)),
-                "strategy", stringEnum("Which scoring dimension leads. Default is balanced.",
-                        lowerNames(OptimizationStrategy.class)),
-                "constraints", constraints);
+    static List<ToolRegistration> tools() {
+        List<ToolRegistration> tools = new ArrayList<>(SpecTools.tools());
+        tools.add(optimize());
+        tools.add(analyzeResilience());
+        tools.add(ValueTools.growthAndTerms());
+        tools.add(ValueTools.estimateTco());
+        tools.add(ValueTools.compareCloudEgress());
+        tools.add(estimateLatency());
+        tools.add(MulticloudDesignTools.compareCloudToCloud());
+        tools.add(MulticloudDesignTools.listMulticloudEnvironments());
+        tools.add(analyzePeering());
+        tools.addAll(PlanTools.tools());
+        tools.add(DecisionRecordTools.decisionRecord());
+        return List.copyOf(tools);
     }
 
-    private static ToolRegistration optimizePlacement() {
+    // shared inputs
+
+    /** The {@code portfolio} argument schema. */
+    static Map<String, Object> portfolioSchema(String what) {
+        return with(array("Metro codes of the design to " + what + ", e.g. [\"LD\", \"NY\"]. Omit to use the "
+                + "recommendation of the stored design_optimize result for this spec (or, where stated, to run the "
+                + "optimizer).", with(string("Two-letter Fabric metro code."), "pattern", "^[A-Z]{2}$")),
+                "minItems", 1, "maxItems", 10);
+    }
+
+    /** The {@code spec_fingerprint} argument schema. */
+    static Map<String, Object> fingerprintSchema() {
+        return with(string("Instead of 'spec': the spec_fingerprint of a design_optimize result stored in this "
+                + "server process (60 minutes). The stored result's spec is used."), "pattern", "^[0-9a-f]{64}$");
+    }
+
+    /**
+     * The spec of a call: the {@code spec} argument, else the spec of the stored optimization named by
+     * {@code spec_fingerprint}.
+     *
+     * @param args the arguments
+     * @param ctx  the context
+     * @return the spec and the stored optimization when one was named or exists for the spec
+     */
+    static SpecAndRun specOf(JsonNode args, ServerContext ctx) {
+        if (args.hasNonNull(SpecInput.ARG)) {
+            DesignSpec spec = SpecInput.require(args, ctx.objectMapper());
+            DesignStore.Lookup<OptimizationResult> stored = ctx.designStore().optimization(spec.fingerprint());
+            return new SpecAndRun(spec, stored.found() ? stored.entry().value() : null);
+        }
+        Optional<String> fingerprint = Args.optString(args, SpecInput.FINGERPRINT_ARG);
+        if (fingerprint.isEmpty()) {
+            throw new IllegalArgumentException("Give 'spec' (a DesignSpec object or JSON/YAML string) or "
+                    + "'spec_fingerprint' (of a design_optimize result from this server process).");
+        }
+        DesignStore.Lookup<OptimizationResult> stored = ctx.designStore().optimization(fingerprint.get());
+        if (!stored.found()) {
+            throw new IllegalArgumentException(ctx.designStore().explainMissing(DesignStore.Kind.OPTIMIZATION,
+                    fingerprint.get(), stored.status()));
+        }
+        return new SpecAndRun(stored.entry().value().getSpec(), stored.entry().value());
+    }
+
+    /**
+     * A spec and, when available, its stored optimization.
+     *
+     * @param spec      the spec
+     * @param optimized the stored optimization for this spec, or {@code null}
+     */
+    record SpecAndRun(DesignSpec spec, OptimizationResult optimized) {
+    }
+
+    /**
+     * Reads the {@code portfolio} argument.
+     *
+     * @param args the arguments
+     * @return the portfolio, or empty when absent
+     */
+    static Optional<MetroPortfolio> portfolio(JsonNode args) {
+        List<String> codes = Args.stringList(args, "portfolio");
+        if (codes.isEmpty()) {
+            return Optional.empty();
+        }
+        List<String> upper = new ArrayList<>();
+        for (String code : codes) {
+            String c = code.trim().toUpperCase(Locale.ROOT);
+            if (!METRO.matcher(c).matches()) {
+                throw new IllegalArgumentException("'portfolio' entry '" + code + "' is not a metro code: use the "
+                        + "two-letter Fabric code, e.g. LD, NY, DC.");
+            }
+            upper.add(c);
+        }
+        return Optional.of(MetroPortfolio.ofCodes(upper.toArray(new String[0])));
+    }
+
+    /**
+     * Runs the optimizer for a spec under the call's pricing budget and cancellation, stores the result
+     * and returns it.
+     *
+     * @param spec         the spec
+     * @param ctx          the context
+     * @param budget       the call's pricing budget (read on the calling thread)
+     * @param guards       collects the guarded live Equinix pricing layer
+     * @param cancellation the call's signal
+     * @return the result and what the store evicted
+     * @throws Exception when the run fails or is cancelled
+     */
+    static Optimized optimize(DesignSpec spec, ServerContext ctx, PricingBudget budget, List<TimeoutRateCard> guards,
+                              CancellationSignal cancellation) throws Exception {
+        FabricGateway fabric = ctx.fabric();
+        MetroOptimizer optimizer = MetroOptimizer.forSpec(fabric, spec)
+                .rateCard(TimeoutRateCard.equinixChain(fabric, budget, guards))
+                .multicloudEnvironments(ctx.multicloudEnvironments());
+        OptimizationResult result = EngineRunner.run("the optimization", cancellation, optimizer::run);
+        DesignStore.Put put = ctx.designStore().putOptimization(result);
+        return new Optimized(result, put.evicted());
+    }
+
+    /**
+     * An optimization this call ran.
+     *
+     * @param result  the result
+     * @param evicted store entries evicted to keep it
+     */
+    record Optimized(OptimizationResult result, List<String> evicted) {
+    }
+
+    /**
+     * The recommended portfolio of an optimization.
+     *
+     * @param result the result
+     * @return the portfolio, or empty when nothing was feasible
+     */
+    static Optional<MetroPortfolio> recommended(OptimizationResult result) {
+        return result == null || result.getRecommended() == null ? Optional.empty()
+                : Optional.of(result.getRecommended().portfolio());
+    }
+
+    static void reportEvicted(ObjectNode payload, List<String> evicted, DesignStore.Kind kind) {
+        if (!evicted.isEmpty()) {
+            ObjectNode e = payload.putObject("evicted_from_store");
+            e.put("kind", kind.name().toLowerCase(Locale.ROOT));
+            ArrayNode ids = e.putArray("ids");
+            evicted.forEach(ids::add);
+            e.put("note", "The store keeps at most its capacity per kind; these older entries can no longer be "
+                    + "resolved by id.");
+        }
+    }
+
+    // design_optimize
+
+    private static ToolRegistration optimize() {
         return ToolRegistration.builder()
-                .name("design_optimize_placement")
-                .title("Optimize Equinix metro placement")
-                .description("Runs the Metro Optimizer engine: scores every Equinix metro against the given "
-                        + "workloads, user sites, cloud requirements, and constraints (excluded/required "
-                        + "metros, required-provider availability, redundancy, compliance, and a latency "
-                        + "ceiling) and returns a ranked recommendation with per-dimension scores, reasons, "
-                        + "workload placements, cost estimate, risk findings, and methodology. Cost is scored "
-                        + "regionally and the budget is reported against rather than enforced. Read the "
-                        + "risk_assessment findings and explanation.assumptions: they name every input the run "
-                        + "could not honour. Use this before design_plan_deployment. Requires at least one "
-                        + "workload.")
-                .inputSchema(object(optimizationProps(), "workloads"))
-                .outputSchema(looseObject("Ranked metro recommendations with scores, reasons, the workloads "
-                        + "placed in each metro and why, cost estimate (with price provenance), risk "
-                        + "assessment, and the optimizer's methodology."))
-                .toolset(Toolset.DESIGN)
-                .handler((args, ctx) -> optimizationPayload(runOptimizer(args, ctx), ctx.objectMapper()))
-                .build();
-    }
-
-    private static OptimizationResult runOptimizer(JsonNode spec, ServerContext ctx) {
-        MetroOptimizer.Builder builder = ctx.design().optimizeMetros();
-        // Beta: the native multicloud environment catalog the engine reads for its informational
-        // NATIVE_MULTICLOUD_ALTERNATIVE finding, and that the Deployment Wizard inherits.
-        builder.multicloudEnvironments(ctx.multicloudEnvironments());
-
-        JsonNode workloads = spec.get("workloads");
-        if (workloads == null || !workloads.isArray() || workloads.isEmpty()) {
-            throw new IllegalArgumentException("'workloads' is required: give at least one workload object "
-                    + "with a 'label' (and ideally a 'type' and 'bandwidth_mbps').");
-        }
-        for (JsonNode w : workloads) {
-            MetroOptimizer.WorkloadBuilder wb = builder.addWorkload(requireString(w, "label"));
-            optEnum(w, "type", WorkloadType.class).ifPresent(wb::type);
-            optEnum(w, "latency_sensitivity", LatencySensitivity.class).ifPresent(wb::latencySensitivity);
-            optInt(w, "bandwidth_mbps").ifPresent(wb::bandwidthMbps);
-            optNumber(w, "max_latency_ms").ifPresent(wb::maxLatencyToleranceMs);
-            for (String cloud : Args.stringList(w, "requires_clouds")) {
-                wb.dependsOn(cloudProvider(cloud, "requires_clouds"));
-            }
-            wb.done();
-        }
-
-        JsonNode sites = spec.get("sites");
-        if (sites != null && sites.isArray()) {
-            for (JsonNode s : sites) {
-                MetroOptimizer.SiteBuilder sb = builder.addSite(requireString(s, "label"));
-                Optional<String> metroCode = optString(s, "metro_code");
-                if (metroCode.isPresent()) {
-                    sb.nearestMetro(metroCode.get());
-                }
-                else {
-                    double lat = requireNumber(s, "latitude");
-                    double lon = requireNumber(s, "longitude");
-                    sb.coordinates(lat, lon);
-                }
-                optNumber(s, "weight").ifPresent(sb::weight);
-                sb.done();
-            }
-        }
-
-        for (String cloud : Args.stringList(spec, "require_clouds")) {
-            builder.requireProvider(cloudProvider(cloud, "require_clouds")).done();
-        }
-        for (String cloud : Args.stringList(spec, "prefer_clouds")) {
-            builder.preferProvider(cloudProvider(cloud, "prefer_clouds")).done();
-        }
-        optEnum(spec, "strategy", OptimizationStrategy.class).ifPresent(builder::strategy);
-
-        JsonNode c = spec.get("constraints");
-        if (c != null && c.isObject()) {
-            MetroOptimizer.ConstraintsBuilder cb = builder.constraints();
-            // Only the ceiling is accepted. BudgetRange.minMonthly is read by nothing in the engine —
-            // it neither filters nor scores nor appears in any diagnostic — so exposing a
-            // 'monthly_budget_min' knob asked the model to state a floor that could never bind.
-            // The ceiling is kept because it does produce an observable answer
-            // (CostEstimate.withinBudget), and its schema description says that is all it does.
-            optNumber(c, "monthly_budget_max").ifPresent(max -> cb.monthlyBudget(0.0, max));
-            List<String> required = Args.stringList(c, "require_metros");
-            if (!required.isEmpty()) {
-                cb.requireMetro(required.toArray(new String[0]));
-            }
-            List<String> excluded = Args.stringList(c, "exclude_metros");
-            if (!excluded.isEmpty()) {
-                cb.excludeMetro(excluded.toArray(new String[0]));
-            }
-            optEnum(c, "redundancy", RedundancyTier.class).ifPresent(cb::redundancy);
-            optInt(c, "max_metros").ifPresent(cb::maxMetros);
-            optNumber(c, "max_latency_ms").ifPresent(cb::maxLatencyMs);
-            cb.done();
-        }
-
-        return builder.optimize();
-    }
-
-    private static ObjectNode optimizationPayload(OptimizationResult result, ObjectMapper mapper) {
-        ObjectNode payload = mapper.createObjectNode();
-        payload.put("summary", result.toSummary());
-
-        ArrayNode recommendations = payload.putArray("recommendations");
-        List<MetroRecommendation> all = result.getRecommendations();
-        for (MetroRecommendation rec : all.subList(0, Math.min(all.size(), MAX_RECOMMENDATIONS))) {
-            ObjectNode r = recommendations.addObject();
-            r.put("rank", rec.getRank());
-            r.put("metro", String.valueOf(rec.getMetroId()));
-            r.put("metro_name", rec.getMetroName());
-            if (rec.getRegion() != null) {
-                r.put("region", rec.getRegion().name());
-            }
-            if (rec.getScore() != null) {
-                r.put("composite_score", round1(rec.getScore().getComposite()));
-                ArrayNode components = r.putArray("score_components");
-                rec.getScore().getComponents().forEach(sc -> {
-                    ObjectNode cn = components.addObject();
-                    cn.put("category", String.valueOf(sc.getCategory()));
-                    cn.put("score", round1(sc.getScore()));
-                    cn.put("weight", sc.getWeight());
-                    cn.put("explanation", sc.getExplanation());
-                });
-            }
-            ArrayNode reasons = r.putArray("reasons");
-            if (rec.getReasons() != null) {
-                rec.getReasons().forEach(reasons::add);
-            }
-            if (rec.getEstimatedCost() != null) {
-                ObjectNode cost = r.putObject("estimated_cost");
-                cost.put("monthly_recurring", rec.getEstimatedCost().getMonthlyRecurring());
-                cost.put("non_recurring", rec.getEstimatedCost().getNonRecurring());
-                cost.put("price_source", String.valueOf(rec.getEstimatedCost().getSource()));
-            }
-            // The workloads placed here, with the engine's rationale. This is the only place the
-            // per-workload levers become visible: a workload's own max_latency_ms, its recorded
-            // power/cooling requirements, and an unhonoured provider dependency are all stated on the
-            // placement rationale. Omitting it left those levers invisible from the tool surface even
-            // after the engine started honouring and disclosing them.
-            if (rec.getAssignedWorkloads() != null && !rec.getAssignedWorkloads().isEmpty()) {
-                ArrayNode placed = r.putArray("assigned_workloads");
-                rec.getAssignedWorkloads().forEach(wp -> {
-                    ObjectNode w = placed.addObject();
-                    w.put("workload", wp.getWorkloadLabel());
-                    w.put("reasoning", wp.getReasoning());
-                });
-            }
-        }
-        if (all.size() > MAX_RECOMMENDATIONS) {
-            payload.put("truncated", true);
-            payload.put("truncation_note",
-                    "Showing top " + MAX_RECOMMENDATIONS + " of " + all.size() + " scored metros.");
-        }
-
-        CostEstimate cost = result.getCostEstimate();
-        if (cost != null) {
-            ObjectNode c = payload.putObject("cost_estimate");
-            c.put("monthly_total", cost.getMonthlyTotal());
-            c.put("setup_total", cost.getSetupTotal());
-            c.put("currency", cost.getCurrency());
-            c.put("within_budget", cost.isWithinBudget());
-            c.put("price_source", String.valueOf(cost.getSource()));
-            c.put("disclaimer", cost.getCostDisclaimer());
-        }
-
-        if (result.getRiskAssessment() != null) {
-            ObjectNode risk = payload.putObject("risk_assessment");
-            risk.put("overall_severity", String.valueOf(result.getRiskAssessment().getOverallSeverity()));
-            risk.put("resiliency_score", round1(result.getRiskAssessment().getResiliencyScore()));
-            ArrayNode findings = risk.putArray("findings");
-            List<com.eqixiac.equinix.design.optimizer.model.RiskFinding> riskFindings =
-                    result.getRiskAssessment().getFindings();
-            if (riskFindings != null) {
-                riskFindings.stream().limit(MAX_FINDINGS).forEach(f -> {
-                    ObjectNode fn = findings.addObject();
-                    fn.put("severity", String.valueOf(f.getSeverity()));
-                    fn.put("category", f.getCategory());
-                    fn.put("description", f.getDescription());
-                    fn.put("recommendation", f.getRecommendation());
-                });
-            }
-        }
-
-        if (result.getExplanation() != null) {
-            ObjectNode explanation = payload.putObject("explanation");
-            explanation.put("methodology", result.getExplanation().getMethodology());
-            ArrayNode assumptions = explanation.putArray("assumptions");
-            if (result.getExplanation().getAssumptions() != null) {
-                result.getExplanation().getAssumptions().forEach(assumptions::add);
-            }
-            explanation.put("data_freshness", result.getExplanation().getDataFreshness());
-            explanation.put("human_readable", result.getExplanation().getHumanReadable());
-        }
-        if (result.getComputedAt() != null) {
-            payload.put("computed_at", result.getComputedAt().toString());
-        }
-        payload.put("compute_time_ms", result.getComputeTimeMs());
-        return payload;
-    }
-
-    // ── design_plan_deployment ──────────────────────────────────────────────
-
-    private static ToolRegistration planDeployment() {
-        Map<String, Object> deployment = object(props(
-                "customer_asn", integer("Your BGP ASN, stamped on every planned BGP routing protocol "
-                        + "(e.g. 65001). Defaults to 65100 when omitted."),
-                "router_package", stringEnum("Fabric Cloud Router package code. Case-insensitive; any "
-                                + "other value is rejected with an error naming the valid codes.",
-                        "LAB", "BASIC", "STANDARD", "ADVANCED", "PREMIUM"),
-                "router_name_prefix", string("Name prefix for the planned Cloud Routers and every "
-                        + "connection derived from them ('{prefix}-{metro}'). Defaults to 'FCR'."),
-                "backbone_topology", stringEnum("Inter-metro backbone shape. Only applies when the "
-                                + "optimization recommends more than one metro; with a single metro no backbone "
-                                + "link is planned at all.",
-                        lowerNames(BackboneTopology.class)),
-                "backbone_bandwidth_mbps", integer("Bandwidth for each inter-metro backbone link, in Mbps. "
-                        + "Defaults to 10000. Applies only to backbone links, never to provider connections, "
-                        + "which are sized from the workloads placed at each metro."),
-                "cloud_to_cloud_strategy", stringEnum("Beta. How the plan treats a flow between two "
-                                + "clouds. A flow exists when one workload's requires_clouds lists two or more "
-                                + "clouds; each pair is one flow. Default compare. equinix_only: plan the "
-                                + "Equinix path only; the native multicloud environment catalog is not read "
-                                + "and native_multicloud_links is absent. compare: plan the Equinix path "
-                                + "exactly as equinix_only does and, where the catalog lists the planned "
-                                + "region pair, attach a native provider-to-provider link as a priced "
-                                + "ALTERNATIVE. native_when_available: omit the Cloud Router to cloud "
-                                + "connections for a flow only where the replacement rule allows (GA "
-                                + "environment with a covering size, no user site in the request, the cloud "
-                                + "is not a top-level require_clouds entry, no other workload uses the "
-                                + "connection) and carry the link as a REPLACEMENT; otherwise keep them and "
-                                + "carry it as an ALTERNATIVE with the reason. native_only: as "
-                                + "native_when_available, and a flow with no usable catalog environment is a "
-                                + "validation error (the plan is invalid). Limit of this tool: the optimizer "
-                                + "plans a Cloud Router to cloud connection only for a cloud named in "
-                                + "require_clouds or prefer_clouds, and the replacement rule keeps the "
-                                + "connection of every such cloud, so here native_when_available and "
-                                + "native_only return ALTERNATIVE links whose reasoning names the rule that "
-                                + "kept each connection; REPLACEMENT arises only through the SDK, from an "
-                                + "optimization result without request-level clouds. Under every value the "
-                                + "native link is planned and priced only; this server never provisions it.",
-                        lowerNames(CloudToCloudStrategy.class)),
-                "multicloud_path_tier", integer("Beta. AWS connectivity-scope tier used to price the AWS "
-                        + "side of a native multicloud link, 1-5: 1 local (default), 2 regional, 3 "
-                        + "continental, 4 long-haul, 5 maximum scope. An input, never derived: AWS publishes "
-                        + "no region-path-to-tier table. It changes native_multicloud_links pricing only."),
-                "project_id", string("Equinix Fabric project id recorded on each planned Cloud Router."),
-                "account_number", integer("Equinix billing account number recorded on each planned Cloud "
-                        + "Router. OPTIONAL: when omitted it is auto-resolved from the authenticated "
-                        + "identity's billing accounts — a single visible account is used automatically, "
-                        + "and when several are visible you are prompted to choose (or, when the client "
-                        + "cannot prompt, the plan comes back as 'choice_required' naming the candidate "
-                        + "account numbers to pass here). Supplying it explicitly skips resolution "
-                        + "entirely. If none can be resolved, no number is fabricated — the plan is "
-                        + "returned without one and says so."),
-                "notifications", array("REQUIRED for provisioning: email address(es) for provisioning "
-                                + "notifications. Fabric MANDATES at least one notification recipient on EVERY "
-                                + "Cloud Router — a plan whose routers have none fails structural validation "
-                                + "with a clear 'requires a notification email' error (the live API rejects a "
-                                + "notification-less router with HTTP 400 EQ-3040013), so supply at least one. "
-                                + "EVERY address is applied to every planned Cloud Router and connection — all "
-                                + "of them are sent on the wire bodies and rendered into exported HCL.",
-                        string("Email address."))));
-        return ToolRegistration.builder()
-                .name("design_plan_deployment")
-                .title("Plan a deployment (no execution)")
-                .description("Runs the Metro Optimizer and then the Deployment Wizard in PLAN-ONLY mode: "
-                        + "produces a reviewable deployment plan (Cloud Routers, provider connections, "
-                        + "backbone links, routing protocols) with aggregated pricing and LAYERED "
-                        + "validation. NOTHING is provisioned — this tool never executes a plan. "
-                        + "Validation needs ZERO provisioned resources, so a brand-new customer targeting a "
-                        + "metro where they own nothing still gets a fully validated plan: "
-                        + "validation.validated_now covers structural + catalog checks and a live Cloud "
-                        + "Router dry-run (routers are self-contained, so this is real), and its "
-                        + "new_market_gaps flag any required cloud/profile not offered at a targeted metro. "
-                        + "The live CONNECTION endpoint dry-run cannot run here — it needs the target Cloud "
-                        + "Router (created at apply time) and the customer's cloud authorization keys — so "
-                        + "it is listed under validation.deferred_to_provisioning and runs when the plan is "
-                        + "applied through the SDK (or at plan time only when a pre-existing endpoint and "
-                        + "its authorization key are supplied through the SDK). Deferred items are NOT "
-                        + "errors: a structurally sound "
-                        + "plan is validation.valid=true with items there. There is also a THIRD bucket, "
-                        + "validation.skipped: when a live dry-run CANNOT be performed — the credential is "
-                        + "not entitled to it yet (a brand-new customer, HTTP 403), the API is "
-                        + "rate-limited (429), a server or transport error hit, or the API is simply "
-                        + "unreachable/offline — the check is neither an error nor deferred. It is SKIPPED "
-                        + "and reported there with a plain reason saying what could not be checked and why. "
-                        + "A SKIPPED check NEVER invalidates a structurally-sound plan: validation.valid "
-                        + "stays true and the structural + catalog validity still stands even when the live "
-                        + "dry-runs cannot run — the skip is called out, not hidden. required_inputs is a "
-                        + "per-connection checklist of exactly what the customer must gather before "
-                        + "provisioning (the cloud authorization key, a VLAN tag, and for Azure the peering "
-                        + "type) — never fabricated. Every planned Cloud Router additionally REQUIRES a "
-                        + "notification recipient: supply deployment.notifications (Fabric rejects a Cloud "
-                        + "Router created without one, HTTP 400 EQ-3040013), or the plan is invalid with a "
-                        + "clear per-router error. The billing account_number is OPTIONAL and "
-                        + "auto-resolved from the authenticated identity: a single visible account is used, "
-                        + "several prompt you to choose (and, when the client cannot prompt, the tool "
-                        + "returns 'choice_required' naming the candidate account numbers instead of a "
-                        + "plan), and when none can be resolved the plan comes back without one and says so "
-                        + "— never a fabricated number; the resolution is reported under account_resolution. "
-                        + "Each provider connection carries a profile_selection block showing the requested "
-                        + "bandwidth, the billable tier it was stamped at (rounded up to the nearest "
-                        + "service-profile tier when no exact tier exists — surfaced, never silent), the "
-                        + "chosen service profile and seller region, and every covering alternative; when a "
-                        + "connection has more than one covering profile you are prompted to pick, defaulting "
-                        + "to the tightest fit when the client cannot prompt. CLOUD-TO-CLOUD FLOWS (Beta): a "
-                        + "workload whose requires_clouds lists two or more clouds implies a flow between "
-                        + "each pair. Name the same clouds in optimization.require_clouds or prefer_clouds "
-                        + "too: the optimizer resolves per-metro cloud availability, and so plans "
-                        + "connections, only for request-level clouds. "
-                        + "deployment.cloud_to_cloud_strategy (default compare) decides how the "
-                        + "plan treats it. Under compare the Equinix path is planned unchanged and, where "
-                        + "the bundled native multicloud environment catalog lists the planned region pair, "
-                        + "native_multicloud_links carries a direct provider-to-provider link as a priced "
-                        + "ALTERNATIVE: both providers' sides with price source, the Equinix fixed cost for "
-                        + "the same flow, the break-even sustained rate in Mbps (both directions summed), a "
-                        + "recommendation, and the create-then-accept steps the customer performs with the "
-                        + "two cloud providers. An unpriced side is null with a reason, never 0. This "
-                        + "server never provisions a native link, and its charges are never part of "
-                        + "pricing.monthly_total. Pricing is not term-scoped: the rate cards this server "
-                        + "reads resolve by product, bandwidth and metro only, so no contract term is "
-                        + "accepted or applied. The returned plan_id can be passed to "
-                        + "design_export_terraform while this server process is running (plans are held in "
-                        + "memory for 30 minutes).")
+                .name("design_optimize")
+                .title("Optimize metro placement for a DesignSpec")
+                .description("Runs the Metro Optimizer on a DesignSpec: enumerates metro portfolios (sets of metros) "
+                        + "within the spec's min/max metros, rejects those breaking a hard constraint (required/"
+                        + "excluded metros and regions, compliance and geo zones, redundancy tier, ROUND-TRIP latency "
+                        + "ceilings, required clouds, pinned workloads, single-currency budget), scores the rest on "
+                        + "the spec's objectives (latency, cost, provider coverage, resilience, compliance) and "
+                        + "returns the recommendation, the Pareto frontier, sensitivity (how far each weight can move "
+                        + "before the answer changes, nearest alternative, binding constraints), findings, and the "
+                        + "cost with every line's source (live Equinix price, reference figure or estimate, with "
+                        + "low/high range) converted into commercial.currency (pinned, live ECB or bundled rates, each "
+                        + "conversion listed). Returns the spec_fingerprint (later tools accept it instead of the "
+                        + "spec; the result is kept in this server process for 60 minutes) and pinned_spec: the spec "
+                        + "with the exchange rates it used pinned, so a re-run reproduces the figures. READ-ONLY; "
+                        + "reads the live Fabric catalogue and prices. Takes tens of seconds; cancellable. Live "
+                        + "pricing shares the call's EQUINIX_MCP_PRICING_TIMEOUT_MS budget: lookups past it fall back "
+                        + "to reference figures and are listed under equinix_live_pricing. Unknown values are null, "
+                        + "never 0.")
                 .inputSchema(object(props(
-                                "optimization", object(optimizationProps(), "workloads"),
-                                "deployment", deployment),
-                        "optimization"))
-                .outputSchema(looseObject("The serialized deployment plan: plan_id, planned resources, "
-                        + "native_multicloud_links (Beta; present only when a cloud-to-cloud flow matched "
-                        + "a catalog environment or a native link was required), "
-                        + "pricing with provenance, and layered validation — validation.valid, "
-                        + "validation.validated_now (structural + catalog + Cloud Router dry-run, with "
-                        + "new_market_gaps), validation.deferred_to_provisioning (the connection endpoint "
-                        + "dry-run, deferred to apply time — not errors), validation.skipped (live checks "
-                        + "that could not be attempted now — offline, unreachable, not entitled, "
-                        + "throttled, or server-side — each with a reason; not errors), and required_inputs "
-                        + "(the per-connection customer-authorization checklist)."))
+                                SpecInput.ARG, objectOrString(SpecTools.SPEC_ARG_DESCRIPTION),
+                                "detail", detail("summary", "standard adds sensitivity, cost lines, constraint "
+                                        + "verdicts, workload placement, solver notes and data provenance.")),
+                        SpecInput.ARG))
+                .outputSchema(DesignPayloads.outputSchema("status, recommended design (portfolio, objectives, cost), "
+                        + "frontier, findings, currency_conversions, pinned_spec, spec_fingerprint, provenance; more "
+                        + "with detail=standard/full.", "status", "spec_fingerprint"))
                 .toolset(Toolset.DESIGN)
-                .handler(DesignToolFactory::handlePlanDeployment)
+                .handler((ToolHandler.Cancellable) DesignToolFactory::handleOptimize)
                 .build();
     }
 
-    private static ObjectNode handlePlanDeployment(JsonNode args, ServerContext ctx) {
-        JsonNode optimization = args.get("optimization");
-        if (optimization == null || !optimization.isObject()) {
-            throw new IllegalArgumentException("'optimization' is required: the same specification "
-                    + "design_optimize_placement takes (workloads, sites, clouds, constraints).");
-        }
-        OptimizationResult optimized = runOptimizer(optimization, ctx);
-        if (optimized.getRecommendations() == null || optimized.getRecommendations().isEmpty()) {
-            throw new IllegalStateException("The optimizer found no viable metros for this specification, "
-                    + "so there is nothing to plan. Relax the constraints and try again.");
-        }
-
-        // The MCP client exchange bound for this call (null outside a served call). It is what lets a
-        // handler prompt the user — for the multi-account choice and any multi-profile connection.
-        McpSyncServerExchange exchange = ctx.currentExchange();
-
-        DeploymentWizard.Builder wizard = ctx.design().deploymentWizard(optimized);
-        JsonNode d = args.get("deployment");
-        Optional<Long> explicitAccount = Optional.empty();
-        if (d != null && d.isObject()) {
-            optLong(d, "customer_asn").ifPresent(wizard::customerAsn);
-            optString(d, "router_package").ifPresent(wizard::routerPackage);
-            optString(d, "router_name_prefix").ifPresent(wizard::routerNamePrefix);
-            optEnum(d, "backbone_topology", BackboneTopology.class).ifPresent(wizard::backboneTopology);
-            optInt(d, "backbone_bandwidth_mbps").ifPresent(wizard::backboneBandwidthMbps);
-            optString(d, "project_id").ifPresent(wizard::projectId);
-            optEnum(d, "cloud_to_cloud_strategy", CloudToCloudStrategy.class)
-                    .ifPresent(wizard::cloudToCloudStrategy);
-            optInt(d, "multicloud_path_tier").ifPresent(tier -> {
-                try {
-                    wizard.multicloudPathTier(tier);
-                }
-                catch (IllegalArgumentException e) {
-                    throw new IllegalArgumentException("'deployment.multicloud_path_tier' must be between 1 "
-                            + "and 5: " + tier + ".");
-                }
-            });
-            explicitAccount = optLong(d, "account_number");
-            List<String> notifications = Args.stringList(d, "notifications");
-            if (!notifications.isEmpty()) {
-                wizard.notifications(notifications.toArray(new String[0]));
-            }
-            // No 'term' knob: see the note on handleEstimateTco. The wizard prices through
-            // EquinixRateCard, which resolves a price row by product/bandwidth/metro and never by
-            // term, so a term accepted here would change no figure in the returned plan.
-        }
-
-        // Billing account: an explicit account_number wins and skips resolution entirely; otherwise
-        // auto-resolve it from the authenticated identity. A multi-account case the client cannot (or
-        // the user did not) resolve returns a 'choice_required' result naming the candidates rather
-        // than a plan; a zero/failed resolution leaves the account unset and is called out honestly —
-        // a number is never fabricated.
-        ObjectNode accountBlock;
-        if (explicitAccount.isPresent()) {
-            wizard.accountNumber(explicitAccount.get());
-            accountBlock = explicitAccountBlock(ctx, explicitAccount.get());
-        }
-        else {
-            AccountResolver.Resolution resolution = AccountResolver.resolve(ctx, exchange);
-            if (resolution.kind() == AccountResolver.Kind.CHOICE_REQUIRED) {
-                return accountChoiceRequiredPayload(ctx, resolution);
-            }
-            if (resolution.kind() == AccountResolver.Kind.RESOLVED) {
-                wizard.accountNumber(resolution.accountNumber());
-            }
-            accountBlock = accountResolutionBlock(ctx, resolution);
-        }
-
-        DeploymentPlan plan = wizard.plan();
-
-        // Profile choice: for every provider connection whose bandwidth can be carried by more than one
-        // service profile, prompt the user to pick. When the client cannot elicit (or the user declines)
-        // the wizard's already-valid default is kept. Non-fatal — a prompt failure never fails the plan.
-        ProfileChoices choices = applyProfileChoices(plan, ctx, exchange);
-        plan = choices.plan();
-
-        // A profile pick that moved a connection onto a different service profile can change its billable
-        // bandwidth tier; the rebuilt plan still carries the pricing computed from the pre-swap tiers, so
-        // recompute it from the now-current connections (same rate card + term the plan was built with).
-        // Only when a choice actually changed the plan — repricing an unchanged plan is a no-op-equivalent.
-        if (choices.changed()) {
-            plan = wizard.reprice(plan);
-        }
-
-        String planId = ctx.planStore().put(plan);
-        ObjectNode payload = planPayload(plan, planId, ctx, choices);
-        payload.set("account_resolution", accountBlock);
+    private static ObjectNode handleOptimize(JsonNode args, ServerContext ctx, CancellationSignal cancellation)
+            throws Exception {
+        DesignSpec spec = SpecInput.require(args, ctx.objectMapper());
+        Detail detail = Detail.of(args, Detail.SUMMARY);
+        PricingBudget budget = ctx.pricingBudget();
+        List<TimeoutRateCard> guards = new ArrayList<>();
+        Optimized run = optimize(spec, ctx, budget, guards, cancellation);
+        ObjectNode payload = optimizationPayload(run.result(), detail, ctx.objectMapper());
+        reportEvicted(payload, run.evicted(), DesignStore.Kind.OPTIMIZATION);
+        TimeoutRateCard.reportEquinix(payload, guards, budget);
         return payload;
     }
 
-    // ── account-number resolution (serialization) ───────────────────────────
-
-    /** The account_resolution block for an explicitly supplied account number (resolution skipped). */
-    private static ObjectNode explicitAccountBlock(ServerContext ctx, long account) {
-        ObjectNode block = ctx.objectMapper().createObjectNode();
-        block.put("resolution", "explicit");
-        block.put("account_number", String.valueOf(account));
-        block.put("source", "the account_number supplied in the request — auto-resolution was skipped");
-        return block;
-    }
-
-    /** The account_resolution block for an auto-resolved or unresolved account number. */
-    private static ObjectNode accountResolutionBlock(ServerContext ctx, AccountResolver.Resolution resolution) {
-        ObjectNode block = ctx.objectMapper().createObjectNode();
-        if (resolution.kind() == AccountResolver.Kind.RESOLVED) {
-            block.put("resolution", "auto_resolved");
-            block.put("account_number", resolution.accountNumberText());
-            block.put("source", resolution.source());
-        }
-        else {
-            block.put("resolution", "unresolved");
-            block.putNull("account_number");
-            block.put("message", resolution.message());
-        }
-        return block;
-    }
-
-    /**
-     * The whole tool result when a multi-account choice must be made but was not (the client cannot
-     * elicit, or the user declined): a 'choice_required' payload naming every candidate account number,
-     * so the agent can re-call with an explicit account_number. No plan is built or stored.
-     */
-    private static ObjectNode accountChoiceRequiredPayload(ServerContext ctx, AccountResolver.Resolution resolution) {
-        ObjectNode payload = ctx.objectMapper().createObjectNode();
-        payload.put("status", "choice_required");
-        payload.put("executed", false);
-        payload.put("reason", resolution.message());
-        ObjectNode account = payload.putObject("account_number");
-        account.put("resolution", "choice_required");
-        account.put("message", resolution.message());
-        ArrayNode candidates = account.putArray("candidates");
-        resolution.candidates().forEach(candidate -> {
-            ObjectNode c = candidates.addObject();
-            c.put("account_number", candidate.number());
-            c.put("account_name", candidate.name());
-        });
-        payload.put("next_step", "Re-call design_plan_deployment with an explicit account_number chosen "
-                + "from the candidates above.");
-        return payload;
-    }
-
-    // ── profile-choice elicitation ──────────────────────────────────────────
-
-    /**
-     * For each provider connection with more than one covering service profile, prompts the user to
-     * pick one; a pick that differs from the wizard's default rebuilds that connection (and the plan)
-     * onto the chosen profile. When the client cannot elicit, or the user declines, the default is kept
-     * — it is always valid. Returns the (possibly rebuilt) plan plus a per-connection record of what
-     * happened, for serialization. Never throws: a prompt failure keeps the default.
-     */
-    static ProfileChoices applyProfileChoices(DeploymentPlan plan, ServerContext ctx, McpSyncServerExchange exchange) {
-        Map<String, ProfileChoiceRecord> records = new LinkedHashMap<>();
-        List<PlannedConnection> connections = plan.getProviderConnections();
-        if (connections == null || connections.isEmpty()) {
-            return new ProfileChoices(plan, records, false);
-        }
-        boolean canElicit = ElicitationSupport.supportsForm(exchange);
-        List<PlannedConnection> rebuilt = new ArrayList<>(connections.size());
-        boolean changed = false;
-        for (PlannedConnection conn : connections) {
-            ProfileSelection selection = conn.getProfileSelection();
-            if (selection == null || !selection.hasChoice()) {
-                rebuilt.add(conn);
-                continue;
-            }
-            if (!canElicit) {
-                records.put(conn.getName(), ProfileChoiceRecord.keptDefault(selection.getSelectedProfileUuid(),
-                        "the client did not declare elicitation support — kept the default (tightest-fit) profile"));
-                rebuilt.add(conn);
-                continue;
-            }
-
-            List<ElicitationSupport.Option> options = new ArrayList<>();
-            for (ProfileCandidate candidate : selection.getAlternatives()) {
-                String detail = candidate.getCoveringTierMbps() + " Mbps"
-                        + (candidate.firstSellerRegion() != null ? " @ " + candidate.firstSellerRegion() : "")
-                        + (candidate.getServiceProfileUuid().equals(selection.getSelectedProfileUuid())
-                        ? " (default)" : "");
-                options.add(new ElicitationSupport.Option(candidate.getServiceProfileUuid(),
-                        "Profile " + candidate.getServiceProfileUuid(), detail));
-            }
-            ElicitationSupport.Outcome outcome = ElicitationSupport.chooseOne(ctx, exchange,
-                    "Connection '" + conn.getName() + "' can be carried by more than one service profile. "
-                            + "Which profile should it use?", options);
-
-            if (!outcome.picked()) {
-                records.put(conn.getName(), ProfileChoiceRecord.keptDefault(selection.getSelectedProfileUuid(),
-                        outcome.detail() + " — kept the default (tightest-fit) profile"));
-                rebuilt.add(conn);
-                continue;
-            }
-            String pickedUuid = outcome.option().id();
-            if (pickedUuid.equals(selection.getSelectedProfileUuid())) {
-                records.put(conn.getName(), ProfileChoiceRecord.picked(pickedUuid,
-                        "the user confirmed the default profile"));
-                rebuilt.add(conn);
-                continue;
-            }
-            ProfileCandidate chosen = candidateByUuid(selection, pickedUuid);
-            if (chosen == null) {
-                records.put(conn.getName(), ProfileChoiceRecord.keptDefault(selection.getSelectedProfileUuid(),
-                        "the selection matched no candidate — kept the default profile"));
-                rebuilt.add(conn);
-                continue;
-            }
-            rebuilt.add(withChosenProfile(conn, selection, chosen));
-            records.put(conn.getName(), ProfileChoiceRecord.picked(pickedUuid,
-                    "the user selected profile " + pickedUuid + " at " + chosen.getCoveringTierMbps() + " Mbps"));
-            changed = true;
-        }
-        return new ProfileChoices(changed ? rebuildWithConnections(plan, rebuilt) : plan, records, changed);
-    }
-
-    private static ProfileCandidate candidateByUuid(ProfileSelection selection, String uuid) {
-        if (selection.getAlternatives() == null) {
-            return null;
-        }
-        for (ProfileCandidate candidate : selection.getAlternatives()) {
-            if (candidate.getServiceProfileUuid().equals(uuid)) {
-                return candidate;
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Rebuilds a planned connection onto a user-chosen covering profile: the Z-side service profile,
-     * its seller region and the billable tier this profile uses, plus a refreshed {@link ProfileSelection}
-     * with the pick as the default and the alternatives reordered pick-first.
-     */
-    private static PlannedConnection withChosenProfile(PlannedConnection conn, ProfileSelection selection,
-                                                       ProfileCandidate chosen) {
-        List<ProfileCandidate> reordered = new ArrayList<>();
-        reordered.add(chosen);
-        for (ProfileCandidate candidate : selection.getAlternatives()) {
-            if (!candidate.getServiceProfileUuid().equals(chosen.getServiceProfileUuid())) {
-                reordered.add(candidate);
-            }
-        }
-        String reasoning = (selection.getReasoning() == null ? "" : selection.getReasoning() + " ")
-                + "User selected profile " + chosen.getServiceProfileUuid() + " at "
-                + chosen.getCoveringTierMbps() + " Mbps.";
-        ProfileSelection updated = ProfileSelection.builder()
-                .requestedMbps(selection.getRequestedMbps())
-                .selectedProfileUuid(chosen.getServiceProfileUuid())
-                .selectedSellerRegion(chosen.firstSellerRegion())
-                .selectedTierMbps(chosen.getCoveringTierMbps())
-                .roundedUp(chosen.getCoveringTierMbps() > selection.getRequestedMbps())
-                .alternatives(reordered)
-                .reasoning(reasoning)
-                .build();
-        return conn.toBuilder()
-                .zSideServiceProfileUuid(chosen.getServiceProfileUuid())
-                .zSideSellerRegion(chosen.firstSellerRegion())
-                .bandwidthMbps(chosen.getCoveringTierMbps())
-                .profileSelection(updated)
-                .build();
-    }
-
-    /** Rebuilds an otherwise-identical plan with a replaced provider-connection list. */
-    private static DeploymentPlan rebuildWithConnections(DeploymentPlan plan, List<PlannedConnection> connections) {
-        // toBuilder() copies every field, so a field added to DeploymentPlan later (the native
-        // multicloud links were one) is carried without an edit here.
-        return plan.toBuilder().providerConnections(connections).build();
-    }
-
-    static ObjectNode planPayload(DeploymentPlan plan, String planId, ServerContext ctx,
-                                  ProfileChoices choices) {
-        ObjectMapper mapper = ctx.objectMapper();
+    static ObjectNode optimizationPayload(OptimizationResult result, Detail detail, ObjectMapper mapper) {
         ObjectNode payload = mapper.createObjectNode();
-        payload.put("plan_id", planId);
-        payload.put("plan_id_scope", "Valid only inside this MCP server process, for "
-                + ctx.planStore().ttl().toMinutes() + " minutes. Pass it to design_export_terraform.");
-        payload.put("executed", false);
-        payload.put("summary", plan.toSummary());
+        DesignOption recommended = result.getRecommended();
+        payload.put("status", recommended == null ? "no_feasible_design" : "recommended");
+        payload.put("spec_fingerprint", result.getSpecFingerprint());
+        payload.put("spec_name", result.getSpec() == null ? null : result.getSpec().name());
+        payload.set("summary", UntrustedText.document(result.toSummary()));
 
-        ArrayNode routers = payload.putArray("cloud_routers");
-        if (plan.getCloudRouters() != null) {
-            plan.getCloudRouters().forEach(cr -> {
-                ObjectNode r = routers.addObject();
-                r.put("name", cr.getName());
-                r.put("metro", String.valueOf(cr.getMetroId()));
-                r.put("package", String.valueOf(cr.getPackageCode()));
-                r.put("project_id", cr.getProjectId());
-                // The resolved (or explicitly supplied) billing account, stamped on the router body the
-                // plan will dry-run/create — null when no account could be resolved (never fabricated).
-                if (cr.getAccountNumber() != null) {
-                    r.put("account_number", cr.getAccountNumber());
-                }
-                else {
-                    r.putNull("account_number");
-                }
+        Map<String, MetroRecommendation> byCode = new java.util.HashMap<>();
+        if (result.getRecommendations() != null) {
+            result.getRecommendations().forEach(r -> byCode.put(String.valueOf(r.getMetroId()), r));
+        }
+        if (recommended != null) {
+            ObjectNode rec = payload.putObject("recommended");
+            option(rec, recommended, detail, byCode);
+        }
+        List<DesignOption> frontier = result.getFrontier() == null ? List.of() : result.getFrontier();
+        int frontierCap = detail == Detail.SUMMARY ? 3 : detail.cap();
+        capped(payload, "frontier", frontier, frontierCap, (array, option) -> {
+            ObjectNode o = array.addObject();
+            o.put("portfolio", option.portfolio().key());
+            o.put("weighted_score", round1(option.weightedScore()));
+            ObjectNode values = o.putObject("objectives");
+            option.values().forEach((id, v) -> values.put(id, v.known() ? round1(v.value()) : null));
+            ObjectNode c = DesignPayloads.cost(o, "cost", option.cost(), false, 5);
+            c.remove("unpriced");
+        });
+
+        List<RiskFinding> findings = result.getRiskAssessment() == null
+                || result.getRiskAssessment().getFindings() == null ? List.of()
+                : result.getRiskAssessment().getFindings();
+        capped(payload, "findings", findings, detail.cap(), (array, f) -> {
+            ObjectNode n = array.addObject();
+            n.put("severity", String.valueOf(f.getSeverity()));
+            n.put("category", f.getCategory());
+            UntrustedText.put(n, "description", f.getDescription());
+            UntrustedText.put(n, "recommendation", f.getRecommendation());
+        });
+
+        List<PortfolioCost> costs = new ArrayList<>();
+        if (recommended != null) {
+            costs.add(recommended.cost());
+        }
+        frontier.forEach(o -> costs.add(o.cost()));
+        DesignPayloads.conversions(payload, costs);
+        if (result.getCostComparability() != null && result.getCostComparability().incomplete()) {
+            payload.put("cost_comparability", result.getCostComparability().headline());
+        }
+
+        DesignSpec pinned = result.getSpec() == null ? null : result.specWithUsedRatesPinned();
+        if (pinned != null && !pinned.fingerprint().equals(result.getSpecFingerprint())) {
+            payload.set("pinned_spec", SpecInput.toNode(pinned, mapper));
+            payload.put("pinned_spec_fingerprint", pinned.fingerprint());
+            payload.put("pinned_spec_note", "The spec with every exchange rate this run used pinned in "
+                    + "commercial.exchangeRates: optimizing it again reproduces these figures exactly. It has its own "
+                    + "fingerprint.");
+        } else {
+            payload.putNull("pinned_spec");
+            payload.put("pinned_spec_note", "No currency conversion was needed: the spec already reproduces these "
+                    + "figures.");
+        }
+
+        if (result.getSolveStatistics() != null) {
+            payload.set("solve_statistics", mapper.valueToTree(result.getSolveStatistics()));
+        }
+
+        if (detail.atLeast(Detail.STANDARD)) {
+            sensitivity(payload, result.getSensitivity(), detail);
+            List<ConstraintVerdict> verdicts = result.getConstraintVerdicts() == null ? List.of()
+                    : result.getConstraintVerdicts();
+            List<ConstraintVerdict> shown = detail == Detail.FULL ? verdicts
+                    : verdicts.stream().filter(v -> !v.satisfied()).toList();
+            ObjectNode cv = payload.putObject("constraint_verdicts");
+            cv.put("checked", verdicts.size());
+            cv.put("failed", verdicts.stream().filter(v -> !v.satisfied()).count());
+            capped(cv, "verdicts", shown, detail.cap(), (array, v) -> {
+                ObjectNode n = array.addObject();
+                n.put("constraint", v.constraintId());
+                n.put("satisfied", v.satisfied());
+                UntrustedText.put(n, "reason", v.reason());
             });
+            placement(payload, result.getPlacement(), detail);
+            DesignPayloads.strings(payload, "solver_notes", result.getSolverNotes(), detail.cap(), true);
+            DesignPayloads.strings(payload, "data_provenance", result.getDataProvenance(), detail.cap(), true);
+            if (result.getLatencyCalibration() != null) {
+                payload.put("latency_calibration", result.getLatencyCalibration().describe());
+            }
+        }
+        if (detail == Detail.FULL) {
+            payload.set("markdown", UntrustedText.document(result.toMarkdown()));
+        }
+        ArrayNode next = payload.putArray("next_steps");
+        if (recommended != null) {
+            next.add("design_analyze_resilience with spec_fingerprint " + result.getSpecFingerprint()
+                    + " to see what breaks when an element fails");
+            next.add("design_growth_and_terms / design_estimate_tco with the same spec_fingerprint");
+            next.add("design_plan_deployment with spec_fingerprint (plans the recommended design; dry-run "
+                    + "validation only)");
+        } else {
+            next.add("Relax the constraint named in findings (NO_FEASIBLE_DESIGN) and optimize again.");
         }
 
-        ArrayNode connections = payload.putArray("provider_connections");
-        if (plan.getProviderConnections() != null) {
-            plan.getProviderConnections().forEach(pc -> {
-                ObjectNode cn = connections.addObject();
-                cn.put("name", pc.getName());
-                cn.put("bandwidth_mbps", pc.getBandwidthMbps());
-                cn.put("metro", String.valueOf(pc.getASideMetro()));
-                cn.put("provider", pc.getZSideProviderLabel());
-                cn.put("seller_region", pc.getZSideSellerRegion());
-                cn.put("router", pc.getASideRouterName());
-                // The bandwidth-aware profile selection: the requested speed, the billable tier it was
-                // stamped at (possibly rounded up), the chosen profile/region, every covering
-                // alternative, and — when the connection had a genuine choice — how it was resolved.
-                serializeProfileSelection(cn, pc, choices);
-            });
-        }
-
-        ArrayNode backbone = payload.putArray("backbone_links");
-        if (plan.getBackboneLinks() != null) {
-            plan.getBackboneLinks().forEach(bl -> {
-                ObjectNode ln = backbone.addObject();
-                ln.put("name", bl.getName());
-                ln.put("metro_a", String.valueOf(bl.getMetroA()));
-                ln.put("metro_z", String.valueOf(bl.getMetroZ()));
-                ln.put("bandwidth_mbps", bl.getBandwidthMbps());
-            });
-        }
-
-        payload.put("routing_protocol_count",
-                plan.getRoutingProtocols() == null ? 0 : plan.getRoutingProtocols().size());
-
-        PlanPricing pricing = plan.getPricing();
-        if (pricing != null) {
-            ObjectNode p = payload.putObject("pricing");
-            p.put("monthly_total", pricing.getMonthlyTotal());
-            p.put("setup_total", pricing.getSetupTotal());
-            p.put("currency", pricing.getCurrency());
-            p.put("router_monthly", pricing.getRouterMonthlyCost());
-            p.put("provider_connection_monthly", pricing.getProviderConnectionMonthlyCost());
-            p.put("backbone_monthly", pricing.getBackboneMonthlyCost());
-            p.put("price_source", String.valueOf(pricing.getSource()));
-            p.put("disclaimer", pricing.getDisclaimer());
-        }
-
-        // Beta: native provider-to-provider links for the plan's cloud-to-cloud flows. Emits nothing
-        // for a plan without any, so a single-cloud plan's payload is unchanged.
-        MulticloudDesignTools.serializePlanLinks(payload, plan, mapper);
-
-        // Validation is layered and honest. It separates what was validated NOW — structural +
-        // catalog checks and the live Cloud Router dry-run (POST /routers?dryRun=true), all of which
-        // need zero provisioned customer resources — from what is DEFERRED to provisioning: the live
-        // connection endpoint dry-run, which needs the target Cloud Router (created at apply time) and
-        // the customer's cloud authorization keys. Deferred items are NOT errors, so a structurally
-        // sound plan reads valid:true even with items listed there. This replaces the old flat
-        // 'validation_errors' array, which reported a structurally-fine, not-yet-provisionable
-        // connection as a failure.
-        ObjectNode validation = payload.putObject("validation");
-        validation.put("valid", plan.isValid());
-
-        List<String> validationErrors = plan.getValidationErrors() == null
-                ? List.of() : plan.getValidationErrors();
-        ObjectNode validatedNow = validation.putObject("validated_now");
-        validatedNow.put("scope", "Structural + catalog checks and the live Cloud Router dry-run "
-                + "(POST /routers?dryRun=true). Runs against the public catalog with nothing the "
-                + "customer owns, so a brand-new customer targeting an empty metro still gets these fully "
-                + "checked. A non-empty 'errors' list makes the plan invalid.");
-        ArrayNode errors = validatedNow.putArray("errors");
-        validationErrors.forEach(errors::add);
-        validatedNow.put("error_count", validationErrors.size());
-        // New-market gaps (a required cloud/profile not offered at a targeted metro) are recorded by the
-        // validator as hard errors; surface them as a filtered subset so an agent can call out, to a
-        // customer entering a new market, exactly which provider/metro is missing. They remain in
-        // 'errors' above — this is a convenience view, not an additional finding.
-        ArrayNode newMarketGaps = validatedNow.putArray("new_market_gaps");
-        validationErrors.stream()
-                .filter(e -> e != null && e.toLowerCase(Locale.ROOT).contains("new-market"))
-                .forEach(newMarketGaps::add);
-
-        List<String> deferredValidations = plan.getDeferredValidations() == null
-                ? List.of() : plan.getDeferredValidations();
-        ObjectNode deferred = validation.putObject("deferred_to_provisioning");
-        deferred.put("scope", "The live connection endpoint dry-run. Each provider connection needs "
-                + "its A-side Cloud Router (created at provisioning) and the customer's cloud "
-                + "authorization key, so it is validated when the plan is applied through the SDK — not "
-                + "here. Supplying a pre-existing endpoint and its authorization key through the SDK "
-                + "upgrades a connection to a live plan-time dry-run instead. These are NOT errors.");
-        ArrayNode deferredNotes = deferred.putArray("notes");
-        deferredValidations.forEach(deferredNotes::add);
-        deferred.put("count", deferredValidations.size());
-
-        // The THIRD bucket, a sibling of deferred_to_provisioning: live checks that could NOT be
-        // ATTEMPTED now. This is an infeasibility, never a plan defect — so it can never invalidate the
-        // plan (validation.valid stays == validationErrors.isEmpty(); deferred and skipped both leave a
-        // plan valid). Read it identically to the deferred list, with the same null-guard: it may be null
-        // on hand-built plans. Owner requirement: when a dry-run cannot be done, skip it and CALL IT OUT —
-        // each note names exactly what could not be checked and why.
-        List<String> skippedValidations = plan.getSkippedValidations() == null
-                ? List.of() : plan.getSkippedValidations();
-        ObjectNode skipped = validation.putObject("skipped");
-        skipped.put("scope", "Live checks that could not be ATTEMPTED: the gateway served no live surface "
-                + "(offline / bare stub), or a live dry-run was answered with a non-rejection failure "
-                + "(401/403 not entitled — the brand-new-customer case, 429 throttled, 5xx server-side, or "
-                + "a transport/timeout error). These are NOT errors and do not invalidate the plan; each "
-                + "note says what could not be checked and why.");
-        ArrayNode skippedNotes = skipped.putArray("notes");
-        skippedValidations.forEach(skippedNotes::add);
-        skipped.put("count", skippedValidations.size());
-
-        // The per-connection authorization a (brand-new) customer must gather before each provider
-        // connection can be provisioned — the cloud-specific key, the VLAN tag, and (Azure) the peering
-        // type. Populated for every provider connection so a first-time customer sees the full checklist.
-        ArrayNode requiredInputs = payload.putArray("required_inputs");
-        if (plan.getRequiredInputs() != null) {
-            plan.getRequiredInputs().forEach(req -> {
-                ObjectNode r = requiredInputs.addObject();
-                r.put("connection", req.getConnectionName());
-                r.put("provider", req.getProviderLabel());
-                r.put("cloud_type", String.valueOf(req.getCloudType()));
-                r.put("authentication_key_required", req.isAuthenticationKeyRequired());
-                if (req.isAuthenticationKeyRequired()) {
-                    r.put("authentication_key_label", req.getAuthenticationKeyLabel());
-                }
-                r.put("authentication_key_provided", req.isAuthenticationKeyProvided());
-                r.put("vlan_tag_required", req.isVlanTagRequired());
-                r.put("peering_type_required", req.isPeeringTypeRequired());
-                r.put("summary", req.describe());
-            });
-        }
+        Set<PriceSource> priceSources = new TreeSet<>();
+        costs.forEach(c -> priceSources.addAll(DesignPayloads.sources(c)));
+        List<String> sources = new ArrayList<>();
+        sources.add("Fabric metro catalogue and service profiles (live, read-only)");
+        priceSources.forEach(s -> sources.add("prices: " + s.name().toLowerCase(Locale.ROOT)));
+        DesignPayloads.provenance(payload, priceSources.isEmpty() ? "live" : DesignPayloads.kindOf(priceSources),
+                result.getDataAsOf() == null ? null : result.getDataAsOf().toString(), result.getSpecFingerprint(),
+                sources);
         return payload;
     }
 
-    /**
-     * Serializes a provider connection's {@link ProfileSelection} into a {@code profile_selection} block
-     * on {@code cn}: the requested bandwidth, the billable tier (with the round-up made explicit), the
-     * chosen profile and seller region, every covering alternative, and — for a connection that had a
-     * genuine choice — how the choice was resolved (elicited pick, or default kept and why). Emits
-     * nothing for a connection with no selection (a backbone link or a legacy availability entry).
-     */
-    private static void serializeProfileSelection(ObjectNode cn, PlannedConnection pc, ProfileChoices choices) {
-        ProfileSelection selection = pc.getProfileSelection();
-        if (selection == null) {
+    private static void option(ObjectNode rec, DesignOption option, Detail detail,
+                               Map<String, MetroRecommendation> byCode) {
+        rec.put("portfolio", option.portfolio().key());
+        ArrayNode metros = rec.putArray("metros");
+        option.portfolio().metros().forEach(id -> {
+            ObjectNode m = metros.addObject();
+            m.put("code", id.code());
+            MetroRecommendation r = byCode.get(id.code());
+            if (r != null) {
+                UntrustedText.put(m, "name", r.getMetroName());
+                if (r.getRegion() != null) {
+                    m.put("region", r.getRegion().name());
+                }
+            }
+        });
+        rec.put("weighted_score", round1(option.weightedScore()));
+        rec.put("pareto_optimal", option.paretoOptimal());
+        ObjectNode objectives = rec.putObject("objectives");
+        for (Map.Entry<String, ObjectiveValue> e : option.values().entrySet()) {
+            ObjectNode v = objectives.putObject(e.getKey());
+            ObjectiveValue value = e.getValue();
+            if (value.known()) {
+                v.put("value", round1(value.value()));
+            } else {
+                v.putNull("value");
+            }
+            Double score = option.scores().get(e.getKey());
+            if (score != null) {
+                v.put("score", round1(score));
+            }
+            UntrustedText.put(v, "explanation", value.explanation());
+        }
+        DesignPayloads.cost(rec, "cost", option.cost(), detail.atLeast(Detail.STANDARD), detail.cap());
+    }
+
+    private static void sensitivity(ObjectNode payload, SensitivityReport report, Detail detail) {
+        if (report == null) {
             return;
         }
-        ObjectNode ps = cn.putObject("profile_selection");
-        ps.put("requested_mbps", selection.getRequestedMbps());
-        ps.put("selected_tier_mbps", selection.getSelectedTierMbps());
-        ps.put("rounded_up", selection.isRoundedUp());
-        ps.put("rounded_up_by_mbps", selection.roundedUpByMbps());
-        ps.put("selected_profile_uuid", selection.getSelectedProfileUuid());
-        ps.put("seller_region", selection.getSelectedSellerRegion());
-        ps.put("has_choice", selection.hasChoice());
-        if (selection.getReasoning() != null) {
-            ps.put("reasoning", selection.getReasoning());
+        ObjectNode s = payload.putObject("sensitivity");
+        capped(s, "weight_ranges", report.weightRanges(), detail.cap(), (array, r) -> {
+            ObjectNode n = array.addObject();
+            n.put("objective", r.objective());
+            n.put("weight", round4(r.weight()));
+            n.put("stable_from", round4(r.low()));
+            n.put("stable_to", round4(r.high()));
+            n.put("below_takes_over", r.belowTakeover());
+            n.put("above_takes_over", r.aboveTakeover());
+        });
+        if (report.nearest() != null) {
+            ObjectNode n = s.putObject("nearest_alternative");
+            n.put("portfolio", report.nearest().portfolio());
+            n.put("distance", round4(report.nearest().distance()));
+            ObjectNode deltas = n.putObject("deltas");
+            report.nearest().deltas().forEach((k, v) -> deltas.put(k, round4(v)));
         }
+        capped(s, "binding_constraints", report.constraints(), detail.cap(), (array, b) -> {
+            ObjectNode n = array.addObject();
+            n.put("constraint", b.constraint());
+            n.put("binding", b.binding());
+            n.put("rejected_alone", b.rejectedAlone());
+            n.put("alternative", b.alternative());
+            UntrustedText.put(n, "explanation", b.explanation());
+        });
+        DesignPayloads.strings(s, "notes", report.notes(), detail.cap(), true);
+    }
 
-        ArrayNode alternatives = ps.putArray("alternatives");
-        if (selection.getAlternatives() != null) {
-            for (ProfileCandidate candidate : selection.getAlternatives()) {
-                ObjectNode a = alternatives.addObject();
-                a.put("service_profile_uuid", candidate.getServiceProfileUuid());
-                a.put("covering_tier_mbps", candidate.getCoveringTierMbps());
-                a.put("allow_custom_bandwidth", candidate.isAllowCustomBandwidth());
-                ArrayNode regions = a.putArray("seller_regions");
-                if (candidate.getSellerRegions() != null) {
-                    candidate.getSellerRegions().forEach(regions::add);
+    private static void placement(ObjectNode payload, PlacementPlan plan, Detail detail) {
+        if (plan == null) {
+            return;
+        }
+        ObjectNode p = payload.putObject("placement");
+        capped(p, "workloads", plan.placements(), detail.cap(), (array, w) -> {
+            ObjectNode n = array.addObject();
+            n.put("workload", w.workload());
+            n.put("primary", w.primary() == null ? null : w.primary().code());
+            n.put("standby", w.standby() == null ? null : w.standby().code());
+            ArrayNode clouds = n.putArray("clouds");
+            w.clouds().forEach(clouds::add);
+            if (w.bandwidthMbps() != null) {
+                n.put("bandwidth_mbps", w.bandwidthMbps());
+            }
+            UntrustedText.put(n, "reasoning", w.reasoning());
+            ArrayNode issues = n.putArray("issues");
+            w.issues().forEach(i -> UntrustedText.add(issues, i));
+        });
+        capped(p, "cloud_legs", plan.legs(), detail.cap(), (array, leg) -> {
+            ObjectNode n = array.addObject();
+            n.put("metro", leg.metro().code());
+            n.put("cloud", leg.cloudId());
+            n.put("sized_mbps", leg.sizedMbps());
+        });
+    }
+
+    // design_analyze_resilience
+
+    private static ToolRegistration analyzeResilience() {
+        return ToolRegistration.builder()
+                .name("design_analyze_resilience")
+                .title("Simulate failures of a design (what breaks if X fails)")
+                .description("Simulates the failure of every element of a design (each metro, cloud on-ramp, "
+                        + "connection and Cloud Router, plus shared-fate events: a cloud region, an Equinix region) "
+                        + "and bounded pairs of failures, and returns: the N-1 verdict (single element failures; "
+                        + "shared-fate events are reported, not counted) and N-2 verdict, single points of failure, "
+                        + "the blast-radius ranking (share of service lost, site weight affected, capacity "
+                        + "shortfall in Mbps), correlated risks, remediations (each re-simulated where possible), "
+                        + "estimated availability per workload under stated planning assumptions (not SLAs), and "
+                        + "the design graph as Mermaid text. The design is 'portfolio' when given; else the stored "
+                        + "design_optimize recommendation for the spec; else the optimizer runs first (and its result "
+                        + "is stored). Pass 'failures' (scenario ids, or element names such as a metro code or cloud "
+                        + "id) to get the full outcome of those scenarios: which workloads go down or fail over and "
+                        + "the ROUND-TRIP latency of the surviving paths. READ-ONLY; reads the live Fabric catalogue. "
+                        + "Cancellable.")
+                .inputSchema(object(props(
+                                SpecInput.ARG, objectOrString(SpecTools.SPEC_ARG_DESCRIPTION),
+                                SpecInput.FINGERPRINT_ARG, fingerprintSchema(),
+                                "portfolio", portfolioSchema("analyse"),
+                                "failures", with(array("Scenarios to explain in full: a scenario id from the "
+                                        + "result's scenarios list, or text matched against scenario descriptions and "
+                                        + "failed elements (e.g. 'LD', 'aws-use1').", string("Scenario id or "
+                                        + "element.")), "maxItems", 10),
+                                "max_pair_scenarios", with(integer("Most failure pairs simulated for N-2 (a "
+                                        + "deterministic subset above it; the result says whether N-2 was "
+                                        + "exhaustive). Default 2000."), "minimum", 0, "maximum", 20000),
+                                "detail", detail("summary", "standard adds every single-failure scenario id, "
+                                        + "availability formulas, assumptions and notes."))))
+                .outputSchema(DesignPayloads.outputSchema("portfolio and its source, n1/n2 verdicts, "
+                        + "single_points_of_failure, blast_radius, correlated_risks, remediations, availability, "
+                        + "graph_mermaid, scenario details for 'failures', spec_fingerprint, provenance.",
+                        "portfolio", "n1", "spec_fingerprint"))
+                .toolset(Toolset.DESIGN)
+                .handler((ToolHandler.Cancellable) DesignToolFactory::handleResilience)
+                .build();
+    }
+
+    private static ObjectNode handleResilience(JsonNode args, ServerContext ctx, CancellationSignal cancellation)
+            throws Exception {
+        SpecAndRun input = specOf(args, ctx);
+        DesignSpec spec = input.spec();
+        Detail detail = Detail.of(args, Detail.SUMMARY);
+        PricingBudget budget = ctx.pricingBudget();
+        List<TimeoutRateCard> guards = new ArrayList<>();
+        ResilienceOptions options = ResilienceOptions.defaults();
+        Optional<Integer> pairs = optInt(args, "max_pair_scenarios");
+        if (pairs.isPresent()) {
+            if (pairs.get() < 0) {
+                throw new IllegalArgumentException("'max_pair_scenarios' must not be negative.");
+            }
+            options = options.withMaxPairScenarios(pairs.get());
+        }
+        ResilienceAnalyzer analyzer = ResilienceAnalyzer.forSpec(ctx.fabric(), spec).options(options);
+        Optional<MetroPortfolio> given = portfolio(args);
+        List<String> evicted = List.of();
+        String optimizationSource = null;
+        if (given.isPresent()) {
+            analyzer.portfolio(given.get());
+        } else {
+            OptimizationResult result = input.optimized();
+            optimizationSource = "stored design_optimize result";
+            if (result == null) {
+                Optimized run = optimize(spec, ctx, budget, guards, cancellation);
+                result = run.result();
+                evicted = run.evicted();
+                optimizationSource = "design_optimize run by this call (now stored)";
+            }
+            if (result.getRecommended() == null) {
+                throw new IllegalArgumentException("The optimizer found no feasible design for this spec, so there "
+                        + "is nothing to analyse. Relax the constraints (see design_optimize findings) or give "
+                        + "'portfolio'.");
+            }
+            analyzer.optimization(result);
+        }
+        ResilienceReport report = EngineRunner.run("the resilience simulation", cancellation, analyzer::run);
+
+        ObjectNode payload = resiliencePayload(report, detail, Args.stringList(args, "failures"), ctx.objectMapper());
+        if (optimizationSource != null) {
+            payload.put("optimization_source", optimizationSource);
+        }
+        reportEvicted(payload, evicted, DesignStore.Kind.OPTIMIZATION);
+        TimeoutRateCard.reportEquinix(payload, guards, budget);
+        return payload;
+    }
+
+    static ObjectNode resiliencePayload(ResilienceReport report, Detail detail, List<String> failures,
+                                        ObjectMapper mapper) {
+        ObjectNode payload = mapper.createObjectNode();
+        payload.put("spec_fingerprint", report.specFingerprint());
+        payload.put("portfolio", report.portfolio());
+        payload.put("portfolio_source", report.portfolioSource());
+        payload.set("summary", UntrustedText.document(report.toSummary()));
+        payload.set("n1", mapper.valueToTree(report.n1()));
+        payload.set("n2", mapper.valueToTree(report.n2()));
+        if (report.pairs() != null) {
+            ObjectNode p = payload.putObject("pairs");
+            p.put("total", report.pairs().total());
+            p.put("evaluated", report.pairs().evaluated());
+            p.put("exhaustive", report.pairs().exhaustive());
+        }
+        capped(payload, "single_points_of_failure", report.singlePointsOfFailure(), detail.cap(), (array, s) -> {
+            ObjectNode n = array.addObject();
+            n.put("scenario_id", s.scenarioId());
+            n.put("kind", s.kind().name());
+            UntrustedText.put(n, "fails", s.description());
+            UntrustedText.put(n, "effect", s.effect());
+        });
+        capped(payload, "blast_radius", report.blastRadius(), detail.cap(), (array, r) -> ranked(array.addObject(), r));
+        capped(payload, "correlated_risks", report.correlatedRisks(), detail.cap(), (array, r) -> {
+            ObjectNode n = array.addObject();
+            n.put("severity", r.severity().name());
+            n.put("shared_domain", r.sharedDomain());
+            ArrayNode el = n.putArray("elements");
+            r.elements().forEach(el::add);
+            n.put("scenario_id", r.scenarioId());
+            UntrustedText.put(n, "description", r.description());
+        });
+        capped(payload, "remediations", report.remediations(), detail.cap(), (array, r) -> {
+            ObjectNode n = array.addObject();
+            UntrustedText.put(n, "action", r.action());
+            ArrayNode addresses = n.putArray("addresses");
+            r.addresses().forEach(addresses::add);
+            UntrustedText.put(n, "rationale", r.rationale());
+            n.put("verified_by_simulation", r.verified());
+        });
+        capped(payload, "availability", report.availability(), detail.cap(), (array, a) -> availability(array, a,
+                detail));
+        if (report.availabilityAssumptions() != null) {
+            payload.put("availability_basis", "Planning assumptions, not SLAs: "
+                    + report.availabilityAssumptions().source());
+        }
+        if (report.graph() != null) {
+            payload.put("graph_mermaid", report.graph().toMermaid());
+        }
+        if (!failures.isEmpty()) {
+            ArrayNode details = payload.putArray("failure_details");
+            List<String> unmatched = new ArrayList<>();
+            for (String wanted : failures) {
+                List<ScenarioOutcome> matches = match(report, wanted);
+                if (matches.isEmpty()) {
+                    unmatched.add(wanted);
                 }
-                ArrayNode bandwidths = a.putArray("supported_bandwidths");
-                if (candidate.getSupportedBandwidths() != null) {
-                    for (Integer bandwidth : candidate.getSupportedBandwidths()) {
-                        bandwidths.add(bandwidth);
-                    }
-                }
-                if (candidate.getVcBandwidthMax() != null) {
-                    a.put("vc_bandwidth_max_mbps", candidate.getVcBandwidthMax());
-                }
+                matches.stream().limit(3).forEach(o -> details.add(scenario(o, mapper)));
+            }
+            if (!unmatched.isEmpty()) {
+                ArrayNode u = payload.putArray("failures_unmatched");
+                unmatched.forEach(u::add);
+                payload.put("failures_hint", "Use a scenario id from 'scenarios' (detail=standard) or an element "
+                        + "named in the graph: a metro code, a cloud id, a connection or router id.");
             }
         }
+        if (detail.atLeast(Detail.STANDARD)) {
+            capped(payload, "scenarios", report.singleFailures(), detail == Detail.FULL ? 200 : 50, (array, o) -> {
+                ObjectNode n = array.addObject();
+                n.put("id", o.scenario().id());
+                n.put("kind", o.scenario().kind().name());
+                UntrustedText.put(n, "fails", o.scenario().description());
+                n.put("verdict", o.verdict().name());
+                n.put("impact", round4(o.impact()));
+            });
+            DesignPayloads.strings(payload, "assumptions", report.assumptions(), detail.cap(), true);
+            DesignPayloads.strings(payload, "notes", report.notes(), detail.cap(), true);
+        }
+        if (detail == Detail.FULL) {
+            payload.set("markdown", UntrustedText.document(report.toMarkdown()));
+        }
+        DesignPayloads.provenance(payload, "computed",
+                report.dataAsOf() == null ? null : report.dataAsOf().toString(), report.specFingerprint(),
+                List.of("Fabric metro catalogue and measured round-trip latency (live, read-only)",
+                        "failure simulation over the design graph (this server)",
+                        "availability: planning assumptions, not SLAs"));
+        return payload;
+    }
 
-        // How a genuine choice was resolved for this connection (elicited pick, or default kept).
-        ProfileChoiceRecord record = choices == null ? null : choices.records().get(pc.getName());
-        if (record != null) {
-            ObjectNode choice = ps.putObject("choice");
-            choice.put("status", record.status());
-            choice.put("selected_profile_uuid", record.selectedProfileUuid());
-            choice.put("detail", record.detail());
+    private static void ranked(ObjectNode n, ResilienceFindings.RankedScenario r) {
+        n.put("rank", r.rank());
+        n.put("scenario_id", r.scenarioId());
+        n.put("kind", r.kind().name());
+        UntrustedText.put(n, "fails", r.description());
+        n.put("verdict", r.verdict().name());
+        n.put("service_lost", round4(r.impact()));
+        n.put("site_weight_affected", round4(r.siteWeightAffected()));
+        n.put("shortfall_mbps", round1(r.shortfallMbps()));
+        ArrayNode down = n.putArray("workloads_down");
+        r.workloadsDown().forEach(down::add);
+    }
+
+    private static void availability(ArrayNode array, WorkloadAvailability a, Detail detail) {
+        ObjectNode n = array.addObject();
+        n.put("workload", a.workload());
+        n.put("percent", round4(a.percent()));
+        n.put("downtime_minutes_per_year", round1(a.downtimeMinutesPerYear()));
+        if (detail.atLeast(Detail.STANDARD)) {
+            n.put("formula", a.formula());
         }
     }
 
-    /**
-     * The result of resolving profile choices for a plan: the (possibly rebuilt) plan and a
-     * per-connection-name record of how each genuine choice was resolved.
-     *
-     * @param plan the plan, rebuilt onto any user-chosen profiles (or the original when nothing changed)
-     * @param records the per-connection choice records, keyed by connection name
-     * @param changed whether a pick actually rebuilt the plan (a connection moved to a different profile);
-     *                {@code true} means the plan's connections — and possibly their billable tiers —
-     *                differ from the wizard's default, so the plan's pricing must be recomputed
-     */
-    record ProfileChoices(DeploymentPlan plan, Map<String, ProfileChoiceRecord> records, boolean changed) {
+    private static List<ScenarioOutcome> match(ResilienceReport report, String wanted) {
+        String w = wanted.trim().toLowerCase(Locale.ROOT);
+        Set<ScenarioOutcome> found = new LinkedHashSet<>();
+        for (ScenarioOutcome o : report.singleFailures()) {
+            if (o.scenario().id().equalsIgnoreCase(wanted.trim())) {
+                return List.of(o);
+            }
+        }
+        for (ScenarioOutcome o : report.singleFailures()) {
+            boolean hit = o.scenario().description().toLowerCase(Locale.ROOT).contains(w)
+                    || o.scenario().failedNodes().stream().anyMatch(n -> n.toLowerCase(Locale.ROOT).contains(w))
+                    || o.scenario().failedEdges().stream().anyMatch(n -> n.toLowerCase(Locale.ROOT).contains(w));
+            if (hit) {
+                found.add(o);
+            }
+        }
+        return new ArrayList<>(found);
     }
 
-    /**
-     * How one connection's profile choice was resolved.
-     *
-     * @param status {@code "picked"} (the user chose) or {@code "kept_default"} (no prompt / declined)
-     * @param selectedProfileUuid the profile the plan ended up on
-     * @param detail a human/LLM-readable explanation
-     */
-    record ProfileChoiceRecord(String status, String selectedProfileUuid, String detail) {
-
-        static ProfileChoiceRecord picked(String profileUuid, String detail) {
-            return new ProfileChoiceRecord("picked", profileUuid, detail);
-        }
-
-        static ProfileChoiceRecord keptDefault(String profileUuid, String detail) {
-            return new ProfileChoiceRecord("kept_default", profileUuid, detail);
-        }
+    private static ObjectNode scenario(ScenarioOutcome o, ObjectMapper mapper) {
+        ObjectNode n = mapper.createObjectNode();
+        n.put("scenario_id", o.scenario().id());
+        n.put("kind", o.scenario().kind().name());
+        UntrustedText.put(n, "fails", o.scenario().description());
+        n.put("verdict", o.verdict().name());
+        n.put("service_lost", round4(o.impact()));
+        n.put("relative_survival", round4(o.relativeSurvival()));
+        n.put("site_weight_affected", round4(o.siteWeightAffected()));
+        n.put("site_weight_disconnected", round4(o.siteWeightDisconnected()));
+        n.put("demand_mbps", round1(o.demandMbps()));
+        n.put("served_mbps", round1(o.servedMbps()));
+        n.put("shortfall_mbps", round1(o.shortfallMbps()));
+        ArrayNode down = n.putArray("workloads_down");
+        o.workloadsDown().forEach(down::add);
+        ArrayNode clouds = n.putArray("required_clouds_lost");
+        o.requiredCloudsAffected().forEach(clouds::add);
+        ArrayNode breaks = n.putArray("latency_limits_broken");
+        o.constraintBreaks().forEach(b -> UntrustedText.add(breaks, b));
+        ArrayNode zones = n.putArray("geo_zone_violations");
+        o.zoneViolations().forEach(z -> UntrustedText.add(zones, z));
+        ArrayNode workloads = n.putArray("workloads");
+        o.workloads().forEach(w -> {
+            ObjectNode wn = workloads.addObject();
+            wn.put("workload", w.workload());
+            wn.put("status", w.status().name());
+            wn.put("active_metro", w.activeMetro());
+            wn.put("failed_over", w.failedOver());
+            wn.put("service_index", round4(w.serviceIndex()));
+            if (w.worstSiteLatencyMs() != null) {
+                wn.put("worst_site_round_trip_ms", round1(w.worstSiteLatencyMs()));
+            } else {
+                wn.putNull("worst_site_round_trip_ms");
+            }
+            ObjectNode sitePaths = wn.putObject("site_paths");
+            w.sitePaths().forEach((k, v) -> sitePaths.set(k, UntrustedText.node(v)));
+            ObjectNode cloudPaths = wn.putObject("cloud_paths");
+            w.cloudPaths().forEach((k, v) -> cloudPaths.set(k, UntrustedText.node(v)));
+            ArrayNode issues = wn.putArray("issues");
+            w.issues().forEach(i -> UntrustedText.add(issues, i));
+        });
+        return n;
     }
 
-    // ── design_estimate_latency ─────────────────────────────────────────────
+    // design_estimate_latency
 
     private static ToolRegistration estimateLatency() {
         return ToolRegistration.builder()
                 .name("design_estimate_latency")
-                .title("Estimate metro/IBX latency")
-                .description("Estimates fibre latency between two Equinix endpoints using speed-of-light "
-                        + "geometry over the live metro catalogue: great-circle distance between the two "
-                        + "endpoints' coordinates × the refractive index of glass fibre. Endpoints are "
-                        + "metro codes (e.g. 'DC', 'LD') or IBX data-center codes (e.g. 'DC11'). This is a "
-                        + "physics lower bound, not a measured path — real routes are longer.")
+                .title("Round-trip latency between two Equinix metros or IBXs")
+                .description("Returns the ROUND-TRIP latency in ms between two endpoints (metro codes such as 'DC', "
+                        + "'LD', or IBX codes such as 'DC11'): measured_round_trip_ms is Fabric's published "
+                        + "metro-to-metro average (connectedMetros.avgLatency, live) when the pair has one, else null; "
+                        + "floor_round_trip_ms is the straight-fibre physics floor (great-circle distance at the speed "
+                        + "of light in glass, refractive index 1.467) that no path beats; estimated_round_trip_ms is "
+                        + "the measured figure, or the floor times the route factor (1.75, the default; a live "
+                        + "calibration on 2026-11-11 fitted a median of 1.73 over 2,140 measured pairs) with "
+                        + "basis='estimated'. READ-ONLY; reads the live metro catalogue.")
                 .inputSchema(object(props(
-                                "from", string("Origin endpoint: an Equinix metro code (e.g. 'DC') or IBX code (e.g. 'DC11')."),
-                                "to", string("Destination endpoint: metro code or IBX code."),
-                                "mode", stringEnum("round_trip (RTT, default) or one_way.", "round_trip", "one_way")),
+                                "from", string("Origin: Equinix metro code (e.g. 'DC') or IBX code (e.g. 'DC11')."),
+                                "to", string("Destination: metro code or IBX code.")),
                         "from", "to"))
-                .outputSchema(looseObject("Distance in km, estimated latency in ms, the calculation method, "
-                        + "and its caveats."))
+                .outputSchema(DesignPayloads.outputSchema("Endpoints, distance_km, measured/floor/estimated "
+                        + "round-trip ms, basis, caveats, provenance.", "estimated_round_trip_ms", "basis"))
                 .toolset(Toolset.DESIGN)
                 .handler(DesignToolFactory::handleEstimateLatency)
                 .build();
@@ -1117,93 +800,96 @@ final class DesignToolFactory {
     private static ObjectNode handleEstimateLatency(JsonNode args, ServerContext ctx) {
         String fromCode = requireString(args, "from");
         String toCode = requireString(args, "to");
-        boolean oneWay = optString(args, "mode").map(m -> m.equalsIgnoreCase("one_way")).orElse(false);
-
         MetroRegistry registry = ctx.metroRegistry();
         Endpoint from = resolveEndpoint(registry, fromCode, "from");
         Endpoint to = resolveEndpoint(registry, toCode, "to");
 
-        SpeedOfLightLatency latency = oneWay ? SpeedOfLightLatency.oneWay() : SpeedOfLightLatency.roundTrip();
+        SpeedOfLightLatency floor = SpeedOfLightLatency.roundTrip();
         double km;
-        double ms;
+        double floorMs;
         if (from.metro != null && to.metro != null) {
             km = SpeedOfLightLatency.distanceKm(from.metro, to.metro);
-            ms = latency.millisBetween(from.metro, to.metro);
-        }
-        else if (from.ibx != null && to.ibx != null) {
+            floorMs = floor.millisBetween(from.metro, to.metro);
+        } else if (from.ibx != null && to.ibx != null) {
             km = SpeedOfLightLatency.distanceKm(from.ibx, to.ibx);
-            ms = latency.millisBetween(from.ibx, to.ibx);
-        }
-        else if (from.ibx != null) {
+            floorMs = floor.millisBetween(from.ibx, to.ibx);
+        } else if (from.ibx != null) {
             km = SpeedOfLightLatency.distanceKm(from.ibx, to.metro);
-            ms = latency.millisBetween(from.ibx, to.metro);
-        }
-        else {
+            floorMs = floor.millisBetween(from.ibx, to.metro);
+        } else {
             km = SpeedOfLightLatency.distanceKm(from.metro, to.ibx);
-            ms = latency.millisBetween(from.metro, to.ibx);
+            floorMs = floor.millisBetween(from.metro, to.ibx);
         }
+        Metro fromMetro = from.metro != null ? from.metro : registry.get(from.ibx.getMetroCode()).orElse(null);
+        Metro toMetro = to.metro != null ? to.metro : registry.get(to.ibx.getMetroCode()).orElse(null);
+        Double measured = measured(fromMetro, toMetro);
 
         ObjectNode payload = ctx.objectMapper().createObjectNode();
         payload.set("from", from.describe(ctx.objectMapper()));
         payload.set("to", to.describe(ctx.objectMapper()));
-        payload.put("distance_km", Math.round(km * 10.0) / 10.0);
-        payload.put("estimated_latency_ms", Math.round(ms * 100.0) / 100.0);
-        payload.put("mode", oneWay ? "one_way" : "round_trip");
-        payload.put("method", "Great-circle (haversine) distance between endpoint coordinates, over fibre "
-                + "with refractive index " + SpeedOfLightLatency.DEFAULT_FIBER_REFRACTIVE_INDEX + ".");
+        payload.put("distance_km", round1(km));
+        payload.put("floor_round_trip_ms", Math.round(floorMs * 100.0) / 100.0);
+        if (measured != null) {
+            payload.put("measured_round_trip_ms", measured);
+            payload.put("estimated_round_trip_ms", measured);
+            payload.put("basis", "measured");
+            payload.put("route_factor_observed", Math.round(measured / floorMs * 100.0) / 100.0);
+        } else {
+            Region a = fromMetro == null ? null : fromMetro.getRegion();
+            Region b = toMetro == null ? null : toMetro.getRegion();
+            double estimate = RouteFactorCalibration.uncalibrated().estimateRoundTripMs(km, a, b);
+            payload.putNull("measured_round_trip_ms");
+            payload.put("estimated_round_trip_ms", Math.round(estimate * 100.0) / 100.0);
+            payload.put("basis", "estimated");
+            payload.put("route_factor", RouteFactorCalibration.DEFAULT_FACTOR);
+        }
         ArrayNode caveats = payload.putArray("caveats");
-        caveats.add("This is a straight-fibre physics lower bound; real routes add path length and equipment latency.");
-        caveats.add("Metro endpoints use the metro centroid; IBX endpoints use the building's coordinates.");
-        caveats.add("For contractual latency figures use Equinix's published Fabric latency statistics.");
+        caveats.add("All figures are ROUND-TRIP milliseconds.");
+        caveats.add("Measured figures are Fabric's metro-to-metro averages between metros, not between your "
+                + "devices; IBX endpoints use their metro's figure.");
+        caveats.add("The floor is a physics bound: real routes are longer (measured routes run about 1.5-2x it).");
+        DesignPayloads.provenance(payload, measured != null ? "live" : "estimate", null, null,
+                List.of("Fabric /fabric/v4/metros connectedMetros.avgLatency (live)", "great-circle geometry"));
         return payload;
+    }
+
+    private static Double measured(Metro from, Metro to) {
+        if (from == null || to == null || from.getConnectedMetros() == null) {
+            return null;
+        }
+        String target = to.metroId().code();
+        for (ConnectedMetro c : from.getConnectedMetros()) {
+            if (c != null && target.equalsIgnoreCase(c.getCodeValue()) && c.getAvgLatency() != null
+                    && c.getAvgLatency() > 0) {
+                return c.getAvgLatency();
+            }
+        }
+        return null;
     }
 
     private static Endpoint resolveEndpoint(MetroRegistry registry, String code, String field) {
         Optional<Metro> metro = registry.get(code.toUpperCase(Locale.ROOT));
         if (metro.isPresent()) {
-            return Endpoint.ofMetro(metro.get());
+            return new Endpoint(metro.get(), null);
         }
         Optional<Ibx> ibx = registry.ibx(code.toUpperCase(Locale.ROOT));
         if (ibx.isPresent()) {
-            return Endpoint.ofIbx(ibx.get());
+            return new Endpoint(null, ibx.get());
         }
         throw new IllegalArgumentException("'" + field + "' value '" + code + "' is neither a known metro code "
                 + "nor a known IBX code. Metro codes are two letters (e.g. 'DC'); IBX codes are metro code + "
-                + "number (e.g. 'DC11'). IBX coordinates require the enriched registry — if IBX codes keep "
-                + "failing, use metro codes.");
+                + "number (e.g. 'DC11'). If IBX codes keep failing, use metro codes.");
     }
 
-    private static final class Endpoint {
-        private final Metro metro;
-        private final Ibx ibx;
-
-        private Endpoint(Metro metro, Ibx ibx) {
-            this.metro = metro;
-            this.ibx = ibx;
-        }
-
-        static Endpoint ofMetro(Metro metro) {
-            return new Endpoint(metro, null);
-        }
-
-        static Endpoint ofIbx(Ibx ibx) {
-            return new Endpoint(null, ibx);
-        }
+    private record Endpoint(Metro metro, Ibx ibx) {
 
         ObjectNode describe(ObjectMapper mapper) {
             ObjectNode node = mapper.createObjectNode();
             if (metro != null) {
                 node.put("kind", "metro");
-                // Render the exact metro code (metroId), not getCode(): getCode() returns the
-                // MetroCode enum, which collapses any metro this SDK's enum does not list to
-                // UNKNOWN — emitting a misleading "UNKNOWN" code for a metro that has a real one.
-                // metroId() preserves the raw code verbatim, matching how metros are identified in
-                // the other handlers (e.g. getMetroId()). Only registry-resolved metros reach here,
-                // and the registry never holds a null-code metro, so metroId() is non-null.
                 node.put("code", metro.metroId().code());
-                node.put("name", metro.getName());
-            }
-            else {
+                UntrustedText.put(node, "name", metro.getName());
+            } else {
                 node.put("kind", "ibx");
                 node.put("code", ibx.getIbxCode());
                 node.put("metro", ibx.getMetroCode());
@@ -1212,452 +898,105 @@ final class DesignToolFactory {
         }
     }
 
-    // ── design_estimate_tco ─────────────────────────────────────────────────
-
-    private static ToolRegistration estimateTco() {
-        return ToolRegistration.builder()
-                .name("design_estimate_tco")
-                .title("Estimate total cost of ownership")
-                .description("Runs the TCO engine over the layered rate-card machinery: models the monthly "
-                        + "and setup cost of the same workload across deployment archetypes — public cloud "
-                        + "over the internet, on-prem, and Equinix private interconnect — and reports each "
-                        + "line item with its price provenance (live Equinix pricing vs reference figures). "
-                        + "Give the monthly egress volume and the cloud it leaves from. CLOUD-TO-CLOUD "
-                        + "(Beta): give peer_cloud to compare how two clouds are joined. The comparison "
-                        + "then becomes two-sided (internet and private egress from both clouds, two Fabric "
-                        + "virtual connections, both cloud interconnect ports) and gains the "
-                        + "native_multicloud_interconnect archetype: the two providers' flat hourly link "
-                        + "fees at 730 h/month plus the link's per-GB rate. A native side with no published "
-                        + "price leaves that archetype fully_priced=false with the reason in its note; a "
-                        + "partially priced archetype is never recommended. Without peer_cloud the inputs, "
-                        + "archetypes and output are the single-cloud ones. Figures are not "
-                        + "term-scoped: the rate cards this server reads (live Fabric prices, then reference "
-                        + "figures) resolve by product, bandwidth, metro and region only, so no contract term "
-                        + "is accepted or applied.")
-                .inputSchema(object(props(
-                                "monthly_egress_gb", number("Data leaving the cloud per month, in GB."),
-                                "cloud", stringEnum("The cloud provider the egress leaves from.", CLOUD_VALUES),
-                                "region", string("The provider region the egress leaves from, e.g. 'us-east-1'."),
-                                "peer_cloud", stringEnum("Beta. The cloud at the other end. Must differ from "
-                                        + "'cloud'. Makes the comparison cloud-to-cloud; the reverse volume "
-                                        + "(peer_cloud to cloud) is assumed equal to monthly_egress_gb and "
-                                        + "traffic_note says so.", CLOUD_VALUES),
-                                "peer_region", string("Beta. peer_cloud's region in its own notation, e.g. "
-                                        + "'us-east4'. Requires peer_cloud. Selects the peer's egress rates "
-                                        + "and Google's transport location for the native link; without it a "
-                                        + "Google Cloud side is priced at the North America location and the "
-                                        + "provenance says so."),
-                                "path_tier", integer("Beta. AWS connectivity-scope tier of the native link, "
-                                        + "1-5: 1 local (default), 2 regional, 3 continental, 4 long-haul, 5 "
-                                        + "maximum scope. Requires peer_cloud. An input, never derived."),
-                                "metro_code", string("Equinix metro for the interconnect side, e.g. 'DC'. Used "
-                                        + "to prefer a metro-specific price row where the live catalogue "
-                                        + "publishes one; without it (or without such a row) the same-bandwidth "
-                                        + "price is used whatever the metro."),
-                                "bandwidth_mbps", integer("Interconnect bandwidth in Mbps, default 1000. Prices "
-                                        + "the Equinix connection AND sizes the on-prem archetype's carrier IP "
-                                        + "transit line item, so it moves both sides of the comparison."),
-                                "cloud_router_package", string("Include a Fabric Cloud Router of this package "
-                                        + "code (e.g. 'STANDARD') in the Equinix archetype. Skipped silently if "
-                                        + "no rate card can price that code."),
-                                "power_kw", number("On-prem power draw in kW, default 5. Used by the on-prem "
-                                        + "archetype only; it is ignored if 'archetypes' excludes on_prem."),
-                                "archetypes", array("Restrict the comparison to these archetypes. "
-                                                + "native_multicloud_interconnect requires peer_cloud. With "
-                                                + "peer_cloud the default set omits on_prem (its inputs carry no "
-                                                + "cloud egress); an explicit on_prem is then reported unpriced.",
-                                        stringEnum("Deployment archetype.", lowerNames(DeploymentArchetype.class))),
-                                "on_prem_transit_per_mbps_month", number("Override: on-prem IP transit $ per Mbps per month."),
-                                "on_prem_hardware_monthly", number("Override: amortized on-prem hardware $ per month."),
-                                "on_prem_cross_connect_monthly", number("Override: on-prem cross-connect $ per month."),
-                                "on_prem_power_per_kw_month", number("Override: on-prem power $ per kW per month.")),
-                        "monthly_egress_gb", "cloud", "region"))
-                .outputSchema(looseObject("Per-archetype cost breakdowns with line items and price provenance, "
-                        + "the recommended archetype, and savings vs the baseline. With peer_cloud: "
-                        + "traffic_note and a per-breakdown provenance list (source URL, retrieval date, "
-                        + "unit conversion)."))
-                .toolset(Toolset.DESIGN)
-                .handler(DesignToolFactory::handleEstimateTco)
-                .build();
-    }
-
-    private static ObjectNode handleEstimateTco(JsonNode args, ServerContext ctx) {
-        TcoCalculator.Builder builder = ctx.design().tcoComparison()
-                .egress(requireNumber(args, "monthly_egress_gb"),
-                        com.eqixiac.equinix.design.value.savings.DataUnit.GIGABYTE)
-                .fromCloud(cloudProvider(requireString(args, "cloud"), "cloud"))
-                .inRegion(requireString(args, "region"));
-        // Beta: the cloud-to-cloud levers. They are validated here, in the tool's own field names,
-        // because the calculator's messages name its Java builder methods.
-        Optional<String> peerCloud = optString(args, "peer_cloud");
-        Optional<String> peerRegion = optString(args, "peer_region");
-        Optional<Integer> pathTier = optInt(args, "path_tier");
-        if (peerCloud.isEmpty()) {
-            if (peerRegion.isPresent()) {
-                throw new IllegalArgumentException("'peer_region' requires 'peer_cloud'.");
-            }
-            if (pathTier.isPresent()) {
-                throw new IllegalArgumentException("'path_tier' requires 'peer_cloud': it prices the native "
-                        + "multicloud link, which exists only in a cloud-to-cloud comparison.");
-            }
-            if (Args.stringList(args, "archetypes").stream().anyMatch(archetype -> archetype
-                    .equalsIgnoreCase(DeploymentArchetype.NATIVE_MULTICLOUD_INTERCONNECT.name()))) {
-                throw new IllegalArgumentException("'archetypes' value 'native_multicloud_interconnect' "
-                        + "requires 'peer_cloud'.");
-            }
-        }
-        else {
-            CloudProviderType peer = cloudProvider(peerCloud.get(), "peer_cloud");
-            if (peer == cloudProvider(requireString(args, "cloud"), "cloud")) {
-                throw new IllegalArgumentException("'peer_cloud' must differ from 'cloud'; both are '"
-                        + peerCloud.get() + "'.");
-            }
-            builder.toCloud(peer);
-            peerRegion.ifPresent(builder::toRegion);
-            if (pathTier.isPresent()) {
-                if (pathTier.get() < 1 || pathTier.get() > 5) {
-                    throw new IllegalArgumentException("'path_tier' must be between 1 and 5: "
-                            + pathTier.get() + ".");
-                }
-                builder.pathTier(pathTier.get());
-            }
-        }
-        optString(args, "metro_code").ifPresent(code -> builder.viaMetro(metroCode(code)));
-        optInt(args, "bandwidth_mbps").ifPresent(builder::bandwidthMbps);
-        // No 'term' knob. TcoCalculator.term() only binds against a CustomRateCard, and this server
-        // always prices through RateCard.standardChain (EquinixRateCard, then ReferenceRateCard) —
-        // neither of which resolves a rate by term. Accepting a term here would have let the model
-        // report "priced at a 36-month term" over figures identical to the 12-month ones. Reinstate
-        // it (schema field + builder::term) only once a rate card in the MCP chain resolves by term.
-        optString(args, "cloud_router_package").ifPresent(builder::includeCloudRouter);
-        optNumber(args, "power_kw").ifPresent(builder::powerKw);
-        List<String> archetypes = Args.stringList(args, "archetypes");
-        if (!archetypes.isEmpty()) {
-            builder.archetypes(archetypes.stream()
-                    .map(a -> enumValue(DeploymentArchetype.class, a, "archetypes"))
-                    .toArray(DeploymentArchetype[]::new));
-        }
-        optNumber(args, "on_prem_transit_per_mbps_month")
-                .ifPresent(v -> builder.onPremTransitPerMbpsMonth(BigDecimal.valueOf(v)));
-        optNumber(args, "on_prem_hardware_monthly")
-                .ifPresent(v -> builder.onPremHardwareMonthly(BigDecimal.valueOf(v)));
-        optNumber(args, "on_prem_cross_connect_monthly")
-                .ifPresent(v -> builder.onPremCrossConnectMonthly(BigDecimal.valueOf(v)));
-        optNumber(args, "on_prem_power_per_kw_month")
-                .ifPresent(v -> builder.onPremPowerPerKwMonth(BigDecimal.valueOf(v)));
-
-        TcoComparison comparison = builder.compare();
-
-        ObjectNode payload = ctx.objectMapper().createObjectNode();
-        ArrayNode breakdowns = payload.putArray("breakdowns");
-        if (comparison.getBreakdowns() != null) {
-            comparison.getBreakdowns().forEach(b -> {
-                ObjectNode bn = breakdowns.addObject();
-                bn.put("archetype", String.valueOf(b.getArchetype()));
-                bn.put("monthly_total", b.getMonthlyTotal());
-                bn.put("setup_total", b.getSetupTotal());
-                bn.put("currency", b.getCurrency());
-                bn.put("fully_priced", b.isPriced());
-                ObjectNode items = bn.putObject("line_items");
-                if (b.getLineItems() != null) {
-                    b.getLineItems().forEach(items::put);
-                }
-                bn.put("note", b.getNote());
-                // Present only for a cloud-to-cloud comparison: per-figure source URL, retrieval
-                // date and unit conversion.
-                if (b.getProvenance() != null) {
-                    ArrayNode provenance = bn.putArray("provenance");
-                    b.getProvenance().forEach(provenance::add);
-                }
-            });
-        }
-        if (comparison.getTrafficNote() != null) {
-            payload.put("traffic_note", comparison.getTrafficNote());
-        }
-        payload.put("recommended_archetype", String.valueOf(comparison.getRecommended()));
-        payload.put("baseline_archetype", String.valueOf(comparison.getBaseline()));
-        payload.put("monthly_savings_vs_baseline", comparison.getMonthlySavingsVsBaseline());
-        payload.put("annual_savings_vs_baseline", comparison.getAnnualSavingsVsBaseline());
-        payload.put("currency", comparison.getCurrency());
-        payload.put("as_of", comparison.getAsOf());
-        payload.put("disclaimer", comparison.getDisclaimer());
-        payload.put("price_provenance_note", "Each breakdown's 'note' names its price sources; "
-                + "'fully_priced' is false where reference figures filled gaps.");
-        return payload;
-    }
-
-    // ── design_compare_cloud_egress ─────────────────────────────────────────
-
-    private static ToolRegistration compareCloudEgress() {
-        return ToolRegistration.builder()
-                .name("design_compare_cloud_egress")
-                .title("Compare cloud egress: internet vs private interconnect")
-                .description("Runs the Savings Calculator with LIVE provider pricing where available: fetches "
-                        + "the named cloud's current internet-egress rate (AWS/Azure/OCI public price APIs; "
-                        + "GCP when a GCP_BILLING_API_KEY is configured), compares it against the same "
-                        + "volume over Equinix private interconnect, and reports monthly/annual savings, "
-                        + "break-even volume, and payback. Live lookups run under a hard timeout — when a "
-                        + "provider API is slow or down the result degrades to reference rates and names "
-                        + "the provider that failed instead of hanging. Figures are not term-scoped: no rate "
-                        + "card in this server's chain resolves a price by contract term, so none is "
-                        + "accepted.")
-                .inputSchema(object(props(
-                                "monthly_egress_gb", number("Data leaving the cloud per month, in GB."),
-                                "cloud", stringEnum("The cloud provider to compare.", CLOUD_VALUES),
-                                "region", string("The provider region the egress leaves from, e.g. 'us-east-1'. "
-                                        + "Drives the live egress-rate lookup, so give the real region."),
-                                "metro_code", string("Equinix metro for the interconnect side, e.g. 'DC'. Used "
-                                        + "to prefer a metro-specific Fabric price row where one is published; "
-                                        + "without it the same-bandwidth price is used whatever the metro."),
-                                "bandwidth_mbps", integer("Interconnect bandwidth to price, in Mbps. Default 1000."),
-                                "cloud_router_package", string("Also price a Fabric Cloud Router of this package "
-                                        + "code. Skipped silently if no rate card can price that code.")),
-                        "monthly_egress_gb", "cloud", "region"))
-                .outputSchema(looseObject("The savings estimate (rates, monthly costs, net savings, break-even, "
-                        + "payback) plus live-pricing provenance and any degraded providers."))
-                .toolset(Toolset.DESIGN)
-                .openWorld(true)
-                .handler(DesignToolFactory::handleCompareCloudEgress)
-                .build();
-    }
-
-    private static ObjectNode handleCompareCloudEgress(JsonNode args, ServerContext ctx) {
-        CloudProviderType provider = cloudProvider(requireString(args, "cloud"), "cloud");
-        Optional<RateCard> liveCard = ctx.providerRateCard(provider);
-        TimeoutRateCard guarded = liveCard
-                .map(card -> new TimeoutRateCard(provider.name(), card, ctx.pricingTimeoutMillis()))
-                .orElse(null);
-
-        RateCard chain = guarded != null
-                ? RateCard.layered(guarded, RateCard.standardChain(ctx.fabric()))
-                : RateCard.standardChain(ctx.fabric());
-
-        try {
-            SavingsCalculator.Builder builder = ctx.design().savingsCalculator()
-                    .egressGigabytes(requireNumber(args, "monthly_egress_gb"))
-                    .fromCloud(provider)
-                    .inRegion(requireString(args, "region"))
-                    .rateCard(chain);
-            optString(args, "metro_code").ifPresent(code -> builder.viaMetro(metroCode(code)));
-            optInt(args, "bandwidth_mbps").ifPresent(builder::bandwidthMbps);
-            optString(args, "cloud_router_package").ifPresent(builder::includeCloudRouter);
-            // No 'term' knob: see the note on handleEstimateTco. Neither the live provider cards nor
-            // the Equinix/reference chain resolves a rate by term, so it could change no figure here.
-
-            SavingsEstimate estimate = builder.calculate();
-
-            ObjectNode payload = ctx.objectMapper().createObjectNode();
-            payload.put("provider", provider.name());
-            payload.put("region", estimate.getRegion());
-            payload.put("monthly_egress_gb", estimate.getMonthlyEgressGb());
-            payload.put("internet_rate_per_gb", estimate.getInternetRatePerGb());
-            payload.put("private_rate_per_gb", estimate.getPrivateRatePerGb());
-            payload.put("internet_egress_monthly_cost", estimate.getInternetEgressMonthlyCost());
-            payload.put("private_egress_monthly_cost", estimate.getPrivateEgressMonthlyCost());
-            payload.put("monthly_egress_savings", estimate.getMonthlyEgressSavings());
-            payload.put("equinix_monthly_cost", estimate.getEquinixMonthlyCost());
-            payload.put("equinix_setup_cost", estimate.getEquinixSetupCost());
-            payload.put("net_monthly_savings", estimate.getNetMonthlySavings());
-            payload.put("annual_net_savings", estimate.getAnnualNetSavings());
-            payload.put("first_year_net_savings", estimate.getFirstYearNetSavings());
-            payload.put("break_even_gb_per_month", estimate.getBreakEvenGbPerMonth());
-            payload.put("payback_months", estimate.getPaybackMonths());
-            payload.put("currency", estimate.getCurrency());
-            payload.put("complete", estimate.isComplete());
-            payload.put("disclaimer", estimate.getDisclaimer());
-
-            ObjectNode live = payload.putObject("live_pricing");
-            live.put("attempted", guarded != null);
-            if (guarded == null) {
-                live.put("note", provider == CloudProviderType.GOOGLE_CLOUD
-                        ? "No live GCP adapter: set GCP_BILLING_API_KEY to enable the Cloud Billing "
-                        + "Catalog lookup. Reference rates were used."
-                        : "No live pricing adapter exists for " + provider.name() + "; reference rates were used.");
-            }
-            else if (guarded.degraded()) {
-                live.put("degraded", true);
-                ArrayNode failures = live.putArray("failures");
-                guarded.failures().forEach(failures::add);
-                live.put("note", "Live " + provider.name() + " pricing was unavailable within "
-                        + ctx.pricingTimeoutMillis() + " ms; the estimate fell back to reference rates.");
-            }
-            else {
-                live.put("degraded", false);
-            }
-            return payload;
-        }
-        finally {
-            if (guarded != null) {
-                guarded.shutdown();
-            }
-        }
-    }
-
-    // ── design_analyze_peering ──────────────────────────────────────────────
+    // design_analyze_peering
 
     private static ToolRegistration analyzePeering() {
         return ToolRegistration.builder()
                 .name("design_analyze_peering")
-                .title("Analyze peering intelligence for ASNs")
-                .description("Runs the Peering Intelligence engine: cross-references the given ASNs against "
-                        + "PeeringDB and the Equinix IX footprint to report where each network is present, "
-                        + "concrete peering opportunities (shared IXes per metro), and a resiliency "
-                        + "assessment. Two of the three sections are conditional: peering_opportunities is "
-                        + "empty without 'customer_asn', and resiliency is absent without 'metros'. Uses the "
-                        + "EQUINIX_PEERINGDB_KEY environment variable when configured (higher PeeringDB rate "
-                        + "limits); anonymous otherwise.")
+                .title("Peering intelligence for a DesignSpec's peers")
+                .description("Runs Peering Intelligence for the spec's peers (peers[].asn): where each network is "
+                        + "present (PeeringDB and the Equinix IX footprint), peering opportunities from customer_asn "
+                        + "(empty without it), and a resiliency assessment across the spec's metros (sites[].metro "
+                        + "plus constraints.requiredMetros; absent when there are none). The spec must declare at "
+                        + "least one peer. Uses EQUINIX_PEERINGDB_KEY when configured; anonymous PeeringDB access is "
+                        + "heavily rate-limited, so call this sparingly. READ-ONLY. Cancellable.")
                 .inputSchema(object(props(
-                                "asns", array("The ASNs to analyze (at least one), e.g. [13335, 15169].",
-                                        integer("An autonomous system number.")),
-                                "metros", array("The metros where YOU are present. These do not restrict the "
-                                                + "analysis — the ASNs are reported wherever they are present — they "
-                                                + "add your metros to the presence matrix and are the metros the "
-                                                + "resiliency assessment measures blast radius and diversity across. "
-                                                + "Without them no resiliency assessment is produced.",
-                                        string("Metro code, e.g. 'FR'.")),
-                                "customer_asn", integer("Your own ASN. Peering opportunities are computed from "
-                                        + "your side, so without it the peering_opportunities list is empty.")),
-                        "asns"))
-                .outputSchema(looseObject("Per-ASN presence, peering opportunities (when customer_asn is "
-                        + "given), resiliency assessment (when metros are given), and the data sources "
-                        + "consulted."))
+                                SpecInput.ARG, objectOrString(SpecTools.SPEC_ARG_DESCRIPTION),
+                                SpecInput.FINGERPRINT_ARG, fingerprintSchema(),
+                                "customer_asn", with(integer("Your own ASN: peering opportunities are computed from "
+                                        + "your side."), "minimum", 1, "maximum", 4_294_967_295L),
+                                "detail", detail("summary", "standard and full raise the list caps."))))
+                .outputSchema(DesignPayloads.outputSchema("networks, peering_opportunities, resiliency, data_sources, "
+                        + "spec_fingerprint, provenance.", "networks", "spec_fingerprint"))
                 .toolset(Toolset.DESIGN)
-                .openWorld(true)
-                .handler(DesignToolFactory::handleAnalyzePeering)
+                .handler((ToolHandler.Cancellable) DesignToolFactory::handleAnalyzePeering)
                 .build();
     }
 
-    private static ObjectNode handleAnalyzePeering(JsonNode args, ServerContext ctx) {
-        JsonNode asns = args.get("asns");
-        if (asns == null || !asns.isArray() || asns.isEmpty()) {
-            throw new IllegalArgumentException("'asns' is required: an array with at least one ASN, e.g. [13335].");
+    private static ObjectNode handleAnalyzePeering(JsonNode args, ServerContext ctx, CancellationSignal cancellation)
+            throws Exception {
+        DesignSpec spec = specOf(args, ctx).spec();
+        if (spec.peers().isEmpty()) {
+            throw new IllegalArgumentException("The spec declares no peers: add peers: [{asn: 13335, label: "
+                    + "Cloudflare}] (one entry per network to analyse).");
         }
-
-        PeeringIntelligence.Builder builder = ctx.env(ServerContext.ENV_PEERINGDB_KEY)
-                .map(key -> PeeringIntelligence.builder(ctx.fabric(), key))
-                .orElseGet(() -> PeeringIntelligence.builder(ctx.fabric()));
-
-        for (JsonNode asn : asns) {
-            if (!asn.isNumber()) {
-                throw new IllegalArgumentException("'asns' entries must be numbers, e.g. [13335, 15169].");
-            }
-            builder.addAsn(asn.asLong());
-        }
-        List<String> metros = Args.stringList(args, "metros");
-        if (!metros.isEmpty()) {
-            builder.customerMetros(metros.toArray(new String[0]));
-        }
+        Detail detail = Detail.of(args, Detail.SUMMARY);
+        PeeringIntelligence.Builder builder = PeeringIntelligence.forSpec(ctx.fabric(), spec,
+                ctx.env(ServerContext.ENV_PEERINGDB_KEY).orElse(null));
         optLong(args, "customer_asn").ifPresent(builder::customerAsn);
-        // No 'include_fabric_connections' knob. The peering engine now ALWAYS cross-references the
-        // Fabric service-profile catalog (its best-effort Phase 3.5, analyzeFabricAvailability:
-        // per-target/per-metro fabricAvailable, degrading to "not analyzed" with a warning when the
-        // catalog cannot be read), so there is nothing left for the flag to gate —
-        // PeeringIntelligence.Builder still accepts it and PeeringRequest stores it, but the engine
-        // reads it nowhere. includeResiliency IS read (it gates the resiliency assessment, which
-        // also needs customerMetros).
-        builder.includeCapacity(true)
-                .includePolicies(true)
-                .includeResiliency(true);
+        PeeringIntelligenceResult result = EngineRunner.run("the peering analysis", cancellation, builder::analyze);
 
-        PeeringIntelligenceResult result = builder.analyze();
-
-        ObjectMapper mapper = ctx.objectMapper();
-        ObjectNode payload = mapper.createObjectNode();
-
-        ArrayNode networks = payload.putArray("networks");
-        if (result.getNetworkPresences() != null) {
-            result.getNetworkPresences().values().forEach(np -> {
-                ObjectNode n = networks.addObject();
-                n.put("asn", np.getAsn());
-                n.put("label", np.getLabel());
-                n.put("peeringdb_name", np.getPeeringDbName());
-                n.put("peering_policy", String.valueOf(np.getPeeringPolicy()));
-                n.put("network_type", String.valueOf(np.getNetworkType()));
-                n.put("traffic_volume", np.getTrafficVolume());
-                n.put("traffic_ratio", np.getTrafficRatio());
-                n.put("route_server_participant", np.isRouteServerParticipant());
-                n.put("ipv6_capable", np.isIpv6Capable());
-            });
-        }
-
-        ArrayNode opportunities = payload.putArray("peering_opportunities");
-        if (result.getPeeringOpportunities() != null) {
-            List<com.eqixiac.equinix.design.peering.model.PeeringOpportunity> all = result.getPeeringOpportunities();
-            all.stream().limit(MAX_OPPORTUNITIES).forEach(op -> {
-                ObjectNode o = opportunities.addObject();
-                o.put("customer_asn", op.getCustomerAsn());
-                o.put("target_asn", op.getTargetAsn());
-                o.put("target_label", op.getTargetLabel());
-                o.put("metro", String.valueOf(op.getMetro()));
-                o.put("ix_name", op.getIxName());
-                o.put("target_policy", String.valueOf(op.getTargetPolicy()));
-                o.put("target_uses_route_server", op.isTargetUsesRouteServer());
-            });
-            if (all.size() > MAX_OPPORTUNITIES) {
-                payload.put("truncated", true);
-                payload.put("truncation_note", "Showing " + MAX_OPPORTUNITIES + " of " + all.size()
-                        + " peering opportunities.");
-            }
-        }
-
+        ObjectNode payload = ctx.objectMapper().createObjectNode();
+        payload.put("spec_fingerprint", result.getSpecFingerprint() != null ? result.getSpecFingerprint()
+                : spec.fingerprint());
+        List<com.eqixiac.equinix.design.peering.model.NetworkPresence> networks = result.getNetworkPresences() == null
+                ? List.of() : new ArrayList<>(result.getNetworkPresences().values());
+        capped(payload, "networks", networks, detail.cap(), (array, np) -> {
+            ObjectNode n = array.addObject();
+            n.put("asn", np.getAsn());
+            UntrustedText.put(n, "label", np.getLabel());
+            UntrustedText.put(n, "peeringdb_name", np.getPeeringDbName());
+            n.put("peering_policy", String.valueOf(np.getPeeringPolicy()));
+            n.put("network_type", String.valueOf(np.getNetworkType()));
+            UntrustedText.put(n, "traffic_volume", np.getTrafficVolume());
+            UntrustedText.put(n, "traffic_ratio", np.getTrafficRatio());
+            n.put("route_server_participant", np.isRouteServerParticipant());
+            n.put("ipv6_capable", np.isIpv6Capable());
+        });
+        List<com.eqixiac.equinix.design.peering.model.PeeringOpportunity> opportunities =
+                result.getPeeringOpportunities() == null ? List.of() : result.getPeeringOpportunities();
+        capped(payload, "peering_opportunities", opportunities, detail == Detail.SUMMARY ? 10 : detail.cap(),
+                (array, op) -> {
+                    ObjectNode o = array.addObject();
+                    o.put("customer_asn", op.getCustomerAsn());
+                    o.put("target_asn", op.getTargetAsn());
+                    UntrustedText.put(o, "target_label", op.getTargetLabel());
+                    o.put("metro", String.valueOf(op.getMetro()));
+                    UntrustedText.put(o, "ix_name", op.getIxName());
+                    o.put("target_policy", String.valueOf(op.getTargetPolicy()));
+                    o.put("target_uses_route_server", op.isTargetUsesRouteServer());
+                });
         if (result.getResiliency() != null) {
             ObjectNode resiliency = payload.putObject("resiliency");
             resiliency.put("overall_score", round1(result.getResiliency().getOverallScore()));
             resiliency.put("overall_rating", result.getResiliency().getOverallRating());
-            ArrayNode findings = resiliency.putArray("findings");
-            if (result.getResiliency().getFindings() != null) {
-                result.getResiliency().getFindings().stream().limit(MAX_FINDINGS).forEach(findings::add);
-            }
+            DesignPayloads.strings(resiliency, "findings", result.getResiliency().getFindings(), detail.cap(), true);
         }
-
-        ArrayNode sources = payload.putArray("data_sources");
-        if (result.getDataSources() != null) {
-            result.getDataSources().forEach(sources::add);
-        }
-        if (result.getComputedAt() != null) {
-            payload.put("computed_at", result.getComputedAt().toString());
-        }
+        DesignPayloads.strings(payload, "warnings", result.warnings(), detail.cap(), true);
+        List<String> sources = result.getDataSources() == null ? List.of() : result.getDataSources();
+        DesignPayloads.strings(payload, "data_sources", sources, 20, false);
+        DesignPayloads.provenance(payload, "live", result.getComputedAt() == null ? null
+                        : result.getComputedAt().toString(), payload.get("spec_fingerprint").asText(),
+                List.of("PeeringDB (live)", "Equinix IX footprint and Fabric service profiles (live, read-only)"));
         return payload;
     }
 
-    // ── design_export_terraform ─────────────────────────────────────────────
+    // shared helpers
 
-    private static ToolRegistration exportTerraform() {
-        return ToolRegistration.builder()
-                .name("design_export_terraform")
-                .title("Export a planned deployment as Terraform")
-                .description("Renders the deployment plan identified by plan_id (from a previous "
-                        + "design_plan_deployment call in THIS server process) as Terraform HCL using the "
-                        + "official equinix/equinix provider — Cloud Routers, connections, and routing "
-                        + "protocols as infrastructure-as-code. Plans are held in memory for 30 minutes; "
-                        + "if the id has expired, re-run design_plan_deployment first.")
-                .inputSchema(object(props(
-                                "plan_id", string("The plan_id returned by design_plan_deployment.")),
-                        "plan_id"))
-                .outputSchema(looseObject("The Terraform HCL for the plan, plus the plan_id and scope note."))
-                .toolset(Toolset.DESIGN)
-                .handler(DesignToolFactory::handleExportTerraform)
-                .build();
+    /**
+     * The Fabric gateway when this context can supply one, else empty (a test context that injects only a
+     * design facade).
+     *
+     * @param ctx the context
+     * @return the gateway, or empty
+     */
+    static Optional<FabricGateway> fabricIfAvailable(ServerContext ctx) {
+        try {
+            return Optional.ofNullable(ctx.fabric());
+        } catch (IllegalStateException e) {
+            return Optional.empty();
+        }
     }
-
-    private static ObjectNode handleExportTerraform(JsonNode args, ServerContext ctx) {
-        String planId = requireString(args, "plan_id");
-        DeploymentPlan plan = ctx.planStore().get(planId).orElseThrow(() -> new IllegalArgumentException(
-                "plan_id '" + planId + "' is unknown, expired, or from another server process. Plans live "
-                        + "in this process's memory for " + ctx.planStore().ttl().toMinutes() + " minutes — "
-                        + "run design_plan_deployment again and use the fresh plan_id."));
-        String hcl = new TerraformExporter().export(plan);
-        ObjectNode payload = ctx.objectMapper().createObjectNode();
-        payload.put("plan_id", planId);
-        payload.put("format", "terraform-hcl");
-        payload.put("resource_count", plan.totalResourceCount());
-        payload.put("terraform", hcl);
-        payload.put("note", "Review before applying; the plan was produced from an optimization estimate "
-                + "and has not been provisioned by this server.");
-        return payload;
-    }
-
-    // ── shared helpers ──────────────────────────────────────────────────────
 
     static CloudProviderType cloudProvider(String raw, String field) {
         String normalized = raw.trim().toLowerCase(Locale.ROOT);
@@ -1673,14 +1012,9 @@ final class DesignToolFactory {
     static MetroCode metroCode(String code) {
         try {
             return MetroCode.fromCode(code);
-        }
-        catch (RuntimeException e) {
+        } catch (RuntimeException e) {
             throw new IllegalArgumentException("'" + code + "' is not a known Equinix metro code. Use the "
                     + "two-letter code, e.g. 'DC' (Ashburn), 'LD' (London), 'SG' (Singapore).");
         }
-    }
-
-    private static double round1(double value) {
-        return Math.round(value * 10.0) / 10.0;
     }
 }

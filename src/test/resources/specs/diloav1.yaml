@@ -1,0 +1,1706 @@
+openapi: 3.0.0
+info:
+  title: Digital LOA API
+  description: Digital LOA API
+  termsOfService: https://www.equinix.com/about/legal/terms
+  contact:
+    name: Equinix API Support
+    url: https://docs.equinix.com/api-support.htm
+  version: 1.0.0
+servers:
+  - url: https://api.equinix.com
+    description: Production server (uses live data)
+security:
+  - BearerAuth: []
+tags:
+  - name: Loa
+    description: Loa
+  - name: LoaRequests
+    description: Loa Requests
+  - name: LoaChanges
+    description: Loa Changes
+  - name: Private Beta Access
+    description: Private Beta Access
+  - name: User Profile
+    description: User Profile
+  - name: Marketplace Organizations
+    description: Marketplace Organizations
+paths:
+  /diloa/v1/organizations:
+    get:
+      tags:
+        - Marketplace Organizations
+      summary: Marketplace organizations selection
+      description: Search organizations available in a given IBX data center.
+      operationId: findOrganizations
+      parameters:
+        - name: location.ibx
+          in: query
+          description: IBX data center identifier.
+          required: true
+          schema:
+            type: string
+          example: AM11
+        - name: product.type
+          in: query
+          description: Product types.
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+              example: CROSS_CONNECT
+              enum:
+                - CROSS_CONNECT
+            default:
+              - CROSS_CONNECT
+      responses:
+        "200":
+          description: List of available organizations
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerOrganizations'
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorList'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorList'
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorList'
+  /diloa/v1/privateBetaAccess:
+    get:
+      tags:
+        - Private Beta Access
+      summary: Check private beta permission
+      description: Checks if the user is authorized to use Digital LOA Manager private
+        beta.
+      operationId: isPrivateBetaAllowed
+      responses:
+        "200":
+          description: Returns private beta permission
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PrivateBetaPermission'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorList'
+        "500":
+          description: Something went wrong please contact customer service.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorList'
+              example:
+                - errorCode: EQ-7200030
+                  errorMessage: The server has encountered an unexpected exception.
+                    We apologize for the inconvenience and suggest trying again later.
+                  correlationId: "200929150051795"
+    post:
+      tags:
+        - Private Beta Access
+      summary: Create private beta access request
+      description: Creates a request for an access to private beta Digital LOA Manager.
+      operationId: createPrivateBetaAccessRequest
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PrivateBetaAccessRequest'
+        required: true
+      responses:
+        "202":
+          description: Private Beta Access Request Sent
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorList'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorList'
+        "500":
+          description: Something went wrong please contact customer service.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorList'
+              example:
+                - errorCode: EQ-7200030
+                  errorMessage: The server has encountered an unexpected exception.
+                    We apologize for the inconvenience and suggest trying again later.
+                  correlationId: "200929150051795"
+  /diloa/v1/betaTermsAgreement:
+    get:
+      tags:
+        - User Profile
+      summary: Get beta terms agreement
+      description: Returns information whether the user has accepted beta terms agreement.
+      operationId: getBetaTermsAgreement
+      responses:
+        "200":
+          description: Get beta terms agreement
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BetaTermsAgreement'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorList'
+        "500":
+          description: Something went wrong please contact customer service.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorList'
+              example:
+                - errorCode: EQ-7200030
+                  errorMessage: The server has encountered an unexpected exception.
+                    We apologize for the inconvenience and suggest trying again later.
+                  correlationId: "200929150051795"
+    put:
+      tags:
+        - User Profile
+      summary: Update beta terms agreement
+      description: Updates beta terms agreement for current user.
+      operationId: updateBetaTermsAgreement
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BetaTermsAgreement'
+      responses:
+        "200":
+          description: Updated beta terms agreement
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BetaTermsAgreement'
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorList'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorList'
+        "500":
+          description: Something went wrong please contact customer service.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorList'
+              example:
+                - errorCode: EQ-7200030
+                  errorMessage: The server has encountered an unexpected exception.
+                    We apologize for the inconvenience and suggest trying again later.
+                  correlationId: "200929150051795"
+  /diloa/v1/digitalLoas:
+    post:
+      tags:
+        - Loa
+      summary: Create Digital LOA document
+      description: Creates a Digital LOA document.
+      operationId: create
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateLoa'
+        required: true
+      responses:
+        "202":
+          description: Created Digital Loa UUID
+          headers:
+            Location:
+              description: response header - location of a resource
+              schema:
+                type: string
+                example: diloa/v1/digitalLoas/402cbf99-97d7-440f-8291-1a4b9639154a
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoaBasic'
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorList'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorList'
+        "500":
+          description: Something went wrong please contact customer service.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorList'
+              example:
+                - errorCode: EQ-7200030
+                  errorMessage: The server has encountered an unexpected exception.
+                    We apologize for the inconvenience and suggest trying again later.
+                  correlationId: "200929150051795"
+  /diloa/v1/digitalLoas/{uuid}/actions:
+    post:
+      tags:
+        - Loa
+      summary: Perform action on Digital LOA document.
+      description: Performs an action on a given Digital LOA document.
+      operationId: performAction
+      parameters:
+        - name: uuid
+          in: path
+          description: Digital LOA document identifier.
+          required: true
+          schema:
+            type: string
+          example: 079dc798-05e8-11ed-b939-0242ac120002
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserAction'
+        required: true
+      responses:
+        "200":
+          description: Action performed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Loa'
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorList'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorList'
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorList'
+        "500":
+          description: Something went wrong please contact customer service.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorList'
+              example:
+                - errorCode: EQ-7200030
+                  errorMessage: The server has encountered an unexpected exception.
+                    We apologize for the inconvenience and suggest trying again later.
+                  correlationId: "200929150051795"
+  /diloa/v1/digitalLoas/{uuid}:
+    get:
+      tags:
+        - Loa
+      summary: Get specified Digital LOA document.
+      description: Returns details of a specified Digital LOA document.
+      operationId: findByUuid
+      parameters:
+        - name: uuid
+          in: path
+          description: Digital LOA document identifier.
+          required: true
+          schema:
+            type: string
+          example: 079dc798-05e8-11ed-b939-0242ac120002
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Loa'
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorList'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorList'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorList'
+        "500":
+          description: Something went wrong please contact customer service.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorList'
+              example:
+                - errorCode: EQ-7200030
+                  errorMessage: The server has encountered an unexpected exception.
+                    We apologize for the inconvenience and suggest trying again later.
+                  correlationId: "200929150051795"
+    delete:
+      tags:
+        - Loa
+      summary: Delete Digital LOA document
+      description: Invalidates a specified Digital LOA document and sets its status
+        to CANCELLED.
+      operationId: cancelByUuid
+      parameters:
+        - name: uuid
+          in: path
+          description: Digital LOA document identifier.
+          required: true
+          schema:
+            type: string
+          example: 079dc798-05e8-11ed-b939-0242ac120002
+      responses:
+        "204":
+          description: LOA successfully cancelled
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorList'
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorList'
+        "500":
+          description: Something went wrong please contact customer service.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorList'
+              example:
+                - errorCode: EQ-7200030
+                  errorMessage: The server has encountered an unexpected exception.
+                    We apologize for the inconvenience and suggest trying again later.
+                  correlationId: "200929150051795"
+    patch:
+      tags:
+        - Loa
+      summary: Modify a Digital LOA document
+      description: Modifies a given Digital LOA document.
+      operationId: patchByUuid
+      parameters:
+        - name: uuid
+          in: path
+          description: Digital LOA document identifier.
+          required: true
+          schema:
+            type: string
+          example: 079dc798-05e8-11ed-b939-0242ac120002
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchRequest'
+        required: true
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Loa'
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorList'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorList'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorList'
+        "500":
+          description: Something went wrong please contact customer service.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorList'
+              example:
+                - errorCode: EQ-7200030
+                  errorMessage: The server has encountered an unexpected exception.
+                    We apologize for the inconvenience and suggest trying again later.
+                  correlationId: "200929150051795"
+  /diloa/v1/digitalLoas/search:
+    post:
+      tags:
+        - Loa
+      summary: Retrieve Digital LOA Documents
+      description: Returns Digital LOA documents that match the specified criteria.
+      operationId: search
+      parameters:
+        - name: offset
+          in: query
+          description: Index of the first item returned in the response.
+          required: false
+          schema:
+            minimum: 0
+            type: integer
+            default: 0
+          example: 0
+        - name: limit
+          in: query
+          description: Maximum number of items returned per page.
+          required: false
+          schema:
+            minimum: 1
+            type: integer
+            default: 20
+          example: 20
+        - name: sort
+          in: query
+          description: |
+            Search results sorting settings:
+              * `/` - Ascending, i.e. '/expiryDateTime'
+              * `-/` - Descending, i.e. '-/expiryDateTime'
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+              example: /expiryDateTime
+              enum:
+                - /changeLog/createdDateTime
+                - -/changeLog/createdDateTime
+                - /expiryDateTime
+                - -/expiryDateTime
+                - /products/zSide/patchPanel/location/ibx
+                - -/products/zSide/patchPanel/location/ibx
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoaSearch'
+        required: true
+      responses:
+        "200":
+          description: List of Digital LOA documents related with user organization
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageableAndSortableLoa'
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorList'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorList'
+        "500":
+          description: Something went wrong please contact customer service.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorList'
+              example:
+                - errorCode: EQ-7200030
+                  errorMessage: The server has encountered an unexpected exception.
+                    We apologize for the inconvenience and suggest trying again later.
+                  correlationId: "200929150051795"
+  /diloa/v1/digitalLoas/loaRequests:
+    post:
+      tags:
+        - LoaRequests
+      summary: Create Digital LOA Request
+      description: Creates a Digital LOA request.
+      operationId: createRequest
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateLoaRequest'
+        required: true
+      responses:
+        "202":
+          description: Digital LOA Request Submitted
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorList'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorList'
+        "500":
+          description: Something went wrong please contact customer service.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorList'
+              example:
+                - errorCode: EQ-7200030
+                  errorMessage: The server has encountered an unexpected exception.
+                    We apologize for the inconvenience and suggest trying again later.
+                  correlationId: "200929150051795"
+  /diloa/v1/digitalLoas/{uuid}/changes:
+    get:
+      tags:
+        - LoaChanges
+      summary: Get specified Digital LOA changes
+      description: Returns a set of Digital LOA changes.
+      operationId: findChangesByLoaUuid
+      parameters:
+        - name: uuid
+          in: path
+          description: Digital LOA unique identifier.
+          required: true
+          schema:
+            type: string
+          example: 079dc798-05e8-11ed-b939-0242ac120002
+      responses:
+        "200":
+          description: List of Digital LOA changes
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoaChangeList'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorList'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorList'
+        "500":
+          description: Something went wrong please contact customer service.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorList'
+              example:
+                - errorCode: EQ-7200030
+                  errorMessage: The server has encountered an unexpected exception.
+                    We apologize for the inconvenience and suggest trying again later.
+                  correlationId: "200929150051795"
+  /diloa/v1/digitalLoas/{uuid}/changes/{changeUuid}:
+    get:
+      tags:
+        - LoaChanges
+      summary: Get specified Digital LOA change
+      description: Returns details of a specified Digital LOA change.
+      operationId: findChangeByUuid
+      parameters:
+        - name: uuid
+          in: path
+          description: Digital LOA unique identifier.
+          required: true
+          schema:
+            type: string
+          example: 079dc798-05e8-11ed-b939-0242ac120002
+        - name: changeUuid
+          in: path
+          description: Digital LOA change unique identifier.
+          required: true
+          schema:
+            type: string
+          example: 4c7d67e2-bbf2-4407-bcff-05a385ed0d4e
+      responses:
+        "200":
+          description: Digital LOA change record
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoaChange'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorList'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorList'
+        "500":
+          description: Something went wrong please contact customer service.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorList'
+              example:
+                - errorCode: EQ-7200030
+                  errorMessage: The server has encountered an unexpected exception.
+                    We apologize for the inconvenience and suggest trying again later.
+                  correlationId: "200929150051795"
+components:
+  schemas:
+    State:
+      type: string
+      description: Digital LOA document status.
+      example: USED
+      enum:
+        - READY_FOR_USE
+        - LOCKED
+        - USED
+        - CANCELLED
+        - EXPIRED
+        - PENDING_REQUESTOR_ACCEPTANCE
+        - PENDING_PROVIDER_AUTHORIZATION
+    ProductType:
+      type: string
+      description: Product type
+      example: CROSS_CONNECT
+      enum:
+        - CROSS_CONNECT
+    UserAction:
+      required:
+        - type
+      type: object
+      properties:
+        type:
+          type: string
+          description: |
+            Action type performed on a Digital LOA document.
+              * `ACCEPT` - Accepts Digital LOA Requestor as a valid Equinix customer
+              * `AUTHORIZE` - Authorizes Requestor as a party of Digital LOA by its Provider
+              * `UNAUTHORIZE` - Unauthorizes Requestor as a party of LOA by its Provider
+              * `SEND_LOA` - Sends emails with Digital LOA details
+          example: ACCEPT
+          enum:
+            - ACCEPT
+            - AUTHORIZE
+            - UNAUTHORIZE
+            - SEND_LOA
+      discriminator:
+        propertyName: type
+        mapping:
+          ACCEPT: '#/components/schemas/AcceptAction'
+          AUTHORIZE: '#/components/schemas/AuthorizeAction'
+          UNAUTHORIZE: '#/components/schemas/UnauthorizeAction'
+          SEND_LOA: '#/components/schemas/SendLoaAction'
+    AcceptAction:
+      description: Action interface for LOA Accept
+      allOf:
+        - $ref: '#/components/schemas/UserAction'
+        - $ref: '#/components/schemas/AcceptActionDef'
+    AuthorizeAction:
+      description: Action interface for LOA Authorization
+      allOf:
+        - $ref: '#/components/schemas/UserAction'
+        - $ref: '#/components/schemas/AuthorizeActionDef'
+    UnauthorizeAction:
+      description: Action interface for LOA Unauthorization
+      allOf:
+        - $ref: '#/components/schemas/UserAction'
+        - $ref: '#/components/schemas/UnauthorizeActionDef'
+    SendLoaAction:
+      description: Action interface for Sending LOA details
+      allOf:
+        - $ref: '#/components/schemas/UserAction'
+        - $ref: '#/components/schemas/SendLoaActionDef'
+    Party:
+      required:
+        - type
+      type: object
+      properties:
+        type:
+          type: string
+          description: Party type
+          example: CUSTOMER_ORGANIZATION
+          enum:
+            - NEW_RELATIONSHIP
+            - CUSTOMER_ORGANIZATION
+      description: Party interface for Customer Organization
+      discriminator:
+        propertyName: type
+        mapping:
+          NEW_RELATIONSHIP: '#/components/schemas/PartyNewRelationship'
+          CUSTOMER_ORGANIZATION: '#/components/schemas/PartyCustomerOrganization'
+    PartyCustomerOrganization:
+      description: Party interface for Customer Organization
+      allOf:
+        - $ref: '#/components/schemas/Party'
+        - $ref: '#/components/schemas/PartyCustomerOrganizationDef'
+    PartyNewRelationship:
+      allOf:
+        - $ref: '#/components/schemas/Party'
+        - $ref: '#/components/schemas/PartyNewRelationshipDef'
+    Location:
+      required:
+        - address
+        - countryCode
+        - ibx
+        - metroCode
+        - metroName
+        - region
+      type: object
+      properties:
+        ibx:
+          type: string
+          description: IBX data center identifier.
+          example: TY1
+        region:
+          type: string
+          description: Region
+          example: EMEA
+          enum:
+            - AMER
+            - APAC
+            - EMEA
+        metroName:
+          type: string
+          description: Metropolitan area name.
+          example: Amsterdam
+        metroCode:
+          type: string
+          description: Metropolitan area identifier.
+          example: AM
+        countryCode:
+          type: string
+          description: Country code.
+          example: NL
+        address:
+          type: string
+          description: IBX data center address information.
+          example: "8 Buckingham Avenue, Slough Trading Estate, SL1 4AX Slough, England"
+      description: Location
+    Contact:
+      required:
+        - details
+        - type
+      type: object
+      properties:
+        type:
+          type: string
+          description: Notification messages category relevant to a given contact
+            person.
+          example: NOTIFICATION
+          enum:
+            - NOTIFICATION
+            - TECHNICAL
+            - ORDERING
+            - RESELLING
+            - BILLING
+        registeredUser:
+          type: string
+          description: "Registered user identified by contactId, userId, or userKey.\
+            \ If a registered user is specified, you don't have to provide first name\
+            \ and last name information."
+          example: Registered
+        firstName:
+          type: string
+          description: Contact person's first name. Required if registeredUser isn't
+            provided.
+          example: John
+        lastName:
+          type: string
+          description: Contact person's last name. Required if registeredUser isn't
+            provided.
+          example: Smith
+        timezone:
+          type: string
+          description: Contact Timezone
+          example: Australia/Perth
+        availability:
+          type: string
+          description: Contact person's availability.
+          example: ANYTIME
+          enum:
+            - WORK_HOURS
+            - ANYTIME
+        details:
+          minItems: 1
+          type: array
+          description: Means of contact.
+          items:
+            $ref: '#/components/schemas/ContactDetails'
+      description: Contact interface
+    Product:
+      required:
+        - crossConnect
+        - type
+        - uuid
+      type: object
+      properties:
+        uuid:
+          type: string
+          description: Product identifier.
+          format: uuid
+          example: 535caeaf-bba4-46e0-99bc-bf39c72b275f
+        type:
+          $ref: '#/components/schemas/ProductType'
+        crossConnect:
+          $ref: '#/components/schemas/CrossConnect'
+      description: Product interface
+    ChangeLog:
+      type: object
+      properties:
+        createdDateTime:
+          type: string
+          description: Date and time of Digital LOA document creation.
+          format: date-time
+          example: 2022-11-17T22:59:59.999Z
+      description: Change interface
+    Change:
+      type: object
+      properties:
+        uuid:
+          type: string
+          description: Digital LOA document identifier.
+          format: uuid
+          example: 079dc798-05e8-11ed-b939-0242ac120002
+        href:
+          type: string
+          description: Digital LOA document URI.
+          example: diloa/v1/digitalLoas/402cbf99-97d7-440f-8291-1a4b9639154a
+        type:
+          type: string
+          description: Operation type.
+          example: LOA_UPDATE
+          enum:
+            - LOA_CREATION
+            - LOA_UPDATE
+      description: Change interface
+    CustomerOrganizations:
+      type: array
+      description: Customer Organization List
+      items:
+        $ref: '#/components/schemas/CustomerOrganization'
+    ErrorList:
+      type: array
+      description: Error list
+      items:
+        $ref: '#/components/schemas/Error'
+    PrivateBetaPermission:
+      type: object
+      properties:
+        privateBetaTests:
+          type: boolean
+          description: Defines if the user is allowed to use application in the private
+            beta phase.
+          example: true
+      description: Private beta permission
+    PrivateBetaAccessRequest:
+      required:
+        - companyName
+        - email
+      type: object
+      properties:
+        email:
+          type: string
+          description: Email of the user submitting a request.
+          format: email
+          example: kyle@mail.com
+        companyName:
+          type: string
+          description: Name of the company of user submitting a request.
+          example: XYZ Inc.
+      description: Private beta access request
+    BetaTermsAgreement:
+      type: object
+      properties:
+        agreementAccepted:
+          type: boolean
+          description: User-accepted beta terms.
+          example: true
+      description: Beta Terms Agreement
+    CreateLoa:
+      required:
+        - products
+        - provider
+        - requestor
+      type: object
+      properties:
+        products:
+          minItems: 1
+          type: array
+          description: Specification of services that the given LOA document is valid
+            for.
+          items:
+            $ref: '#/components/schemas/CreateProduct'
+        requestor:
+          $ref: '#/components/schemas/Party'
+        provider:
+          $ref: '#/components/schemas/PartyContacts'
+        notes:
+          type: string
+          description: "Additional information, added to the Digital LOA document,\
+            \ that should be taken under consideration."
+          example: "Rack access: weekdays - 18:00 to 22:00 CET; Saturday - 10:00 to\
+            \ 14:00 CET."
+        expiryDateTime:
+          type: string
+          description: Digital LOA expiration date.
+          format: date-time
+          example: 2022-11-17T22:59:59.999Z
+      description: Digital Letter of Authorization
+    LoaBasic:
+      type: object
+      properties:
+        token:
+          type: string
+          description: User-friendly Digital LOA document identifier.
+          example: REDF-4R56
+        uuid:
+          type: string
+          description: Digital LOA document identifier.
+          format: uuid
+          example: 079dc798-05e8-11ed-b939-0242ac120002
+        state:
+          $ref: '#/components/schemas/State'
+        draft:
+          type: boolean
+          description: "Default: false"
+          example: false
+        changeLog:
+          $ref: '#/components/schemas/ChangeLog'
+        links:
+          $ref: '#/components/schemas/Links'
+        change:
+          $ref: '#/components/schemas/Change'
+        expiryDateTime:
+          type: string
+          description: Digital LOA document expiration date.
+          format: date-time
+          example: 2022-11-17T22:59:59.999Z
+        href:
+          type: string
+          description: Digital LOA document URI.
+          example: diloa/v1/digitalLoas/402cbf99-97d7-440f-8291-1a4b9639154a
+      description: Created Digital Letter of Authorization
+    Loa:
+      type: object
+      properties:
+        token:
+          type: string
+          description: User-friendly Digital LOA document identifier.
+          example: REDF-4R56
+        uuid:
+          type: string
+          description: Digital LOA document identifier.
+          format: uuid
+          example: 079dc798-05e8-11ed-b939-0242ac120002
+        state:
+          $ref: '#/components/schemas/State'
+        products:
+          minItems: 1
+          type: array
+          description: Specification of services that the given LOA document is valid
+            for.
+          items:
+            $ref: '#/components/schemas/Product'
+        requestor:
+          $ref: '#/components/schemas/Party'
+        provider:
+          $ref: '#/components/schemas/Party'
+        changeLog:
+          $ref: '#/components/schemas/ChangeLog'
+        links:
+          $ref: '#/components/schemas/Links'
+        notes:
+          type: string
+          description: Additional information to be considered.
+          example: Please contact me
+        expiryDateTime:
+          type: string
+          description: Digital LOA document expiration date.
+          format: date-time
+          example: 2022-11-17T22:59:59.999Z
+        href:
+          type: string
+          description: Digital LOA document URI.
+          example: diloa/v1/digitalLoas/402cbf99-97d7-440f-8291-1a4b9639154a
+      description: Digital Letter of Authorization
+    PatchRequest:
+      type: array
+      description: Patch Object
+      items:
+        $ref: '#/components/schemas/PatchDocument'
+    LoaSearch:
+      required:
+        - filter
+      type: object
+      properties:
+        filter:
+          $ref: '#/components/schemas/LoaSearchItem'
+      description: Search criteria body
+    PageableAndSortableLoa:
+      required:
+        - data
+        - pagination
+        - sort
+      type: object
+      properties:
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+        sort:
+          type: array
+          description: Search results sorting settings.
+          items:
+            $ref: '#/components/schemas/Sort'
+        data:
+          type: array
+          description: Data set containing Digital LOA documents.
+          items:
+            $ref: '#/components/schemas/Loa'
+      description: Pageable Letter of Authorization list
+    CreateLoaRequest:
+      required:
+        - ibx
+        - provider
+        - requestedNumber
+        - requestor
+      type: object
+      properties:
+        ibx:
+          type: string
+          description: IBX data center identifier.
+          example: CH1
+        requestedNumber:
+          type: integer
+          description: Number of requested connections.
+          example: 2
+        requestor:
+          $ref: '#/components/schemas/PartyContacts'
+        provider:
+          $ref: '#/components/schemas/Party'
+        notes:
+          type: string
+          description: Additional information to be considered.
+          example: Please contact me
+      description: Create Digital Letter of Authorization request
+    LoaChangeList:
+      type: array
+      description: Digital LOA change list
+      items:
+        $ref: '#/components/schemas/LoaChange'
+    LoaChange:
+      type: object
+      properties:
+        createdDateTime:
+          type: string
+          description: Date and time of Digital LOA change creation.
+          format: date-time
+          example: 2021-11-17T22:59:59.999Z
+        updatedDateTime:
+          type: string
+          description: Date and time of Digital LOA change update.
+          format: date-time
+          example: 2021-11-17T22:59:59.999Z
+        data:
+          type: string
+          description: Changes to Digital LOA according to JSON representation.
+          example: "{\"type\": \"ACCEPT\"}"
+        description:
+          type: string
+          description: Additional Digital LOA change information.
+          example: Create Loa
+        href:
+          type: string
+          description: Digital LOA document URI.
+          example: diloa/v1/digitalLoas/402cbf99-97d7-440f-8291-1a4b9639154a
+        links:
+          $ref: '#/components/schemas/Links'
+        type:
+          type: string
+          description: Digital LOA change type.
+          example: LOA_CREATION
+          enum:
+            - LOA_CREATION
+            - LOA_AUTHORIZATION
+            - LOA_CANCELLATION
+            - LOA_PATCHING
+            - LOA_LOCK_ACQUISITION
+            - LOA_LOCK_RELEASE
+            - LOA_USAGE
+            - LOA_ACCEPTANCE
+            - LOA_UNAUTHORIZATION
+            - LOA_EXPIRATION
+            - TYPE_UNKNOWN
+        uuid:
+          type: string
+          description: Digital LOA change unique identifier.
+          format: uuid
+          example: 4c7d67e2-bbf2-4407-bcff-05a385ed0d4e
+        status:
+          type: string
+          description: Digital LOA change status.
+          example: COMPLETED
+          enum:
+            - REQUESTED
+            - COMPLETED
+            - FAILED
+        result:
+          $ref: '#/components/schemas/ChangeResult'
+      description: LOA change record
+    AcceptActionDef:
+      type: object
+      description: Action interface for LOA Accept
+    AuthorizeActionDef:
+      type: object
+      description: Action interface for LOA Authorization
+    UnauthorizeActionDef:
+      type: object
+      description: Action interface for LOA Unauthorization
+    SendLoaActionDef:
+      type: object
+      description: Action interface for Sending LOA details
+    PartyCustomerOrganizationDef:
+      required:
+        - contacts
+        - name
+        - orgIds
+      type: object
+      properties:
+        orgIds:
+          minItems: 1
+          type: array
+          description: Customer organization identifiers.
+          items:
+            type: string
+            description: Organization identifier.
+            example: "7384"
+        name:
+          type: string
+          description: Customer organization name.
+          example: XYZ Inc.
+        contacts:
+          minItems: 1
+          type: array
+          description: Organization contact information.
+          items:
+            $ref: '#/components/schemas/Contact'
+      description: Party interface for Customer Organization
+    PartyNewRelationshipDef:
+      required:
+        - email
+        - name
+      type: object
+      properties:
+        email:
+          type: string
+          description: Organization representative email address.
+          format: email
+          example: kyle@mail.com
+        name:
+          type: string
+          description: Organization name.
+          example: XYZ Inc.
+      description: Party interface for Customer Organization
+    CustomerOrganization:
+      type: object
+      properties:
+        orgIds:
+          type: array
+          description: Organization identifiers.
+          items:
+            type: string
+            description: Organization identifier.
+            example: "7436"
+        name:
+          type: string
+          description: Organization name
+          example: XYZ Inc.
+      description: Customer organization
+    Error:
+      required:
+        - errorCode
+        - errorMessage
+      type: object
+      properties:
+        errorCode:
+          type: string
+          description: Error code in equinix standard
+          example: EQ-7200030
+        errorMessage:
+          type: string
+          description: Error message
+          example: Not found
+        details:
+          type: string
+          description: LOA not found
+          example: Error details
+        correlationId:
+          type: string
+          description: 8f1dh8123d
+          example: Correlation ID to trace the error back
+        help:
+          type: string
+          description: URL to a help page for the corresponding errorCode
+          example: URL to a help page for the corresponding errorCode
+        additionalInfo:
+          type: array
+          description: List of additional information regarding the error
+          items:
+            $ref: '#/components/schemas/AdditionalInfo'
+      description: Error with details
+    CreateProduct:
+      required:
+        - crossConnect
+        - type
+      type: object
+      properties:
+        type:
+          type: string
+          description: Product type.
+          example: CROSS_CONNECT
+          enum:
+            - CROSS_CONNECT
+        crossConnect:
+          $ref: '#/components/schemas/CreateCrossConnect'
+      description: Product interface
+    PartyContacts:
+      required:
+        - contacts
+      type: object
+      properties:
+        contacts:
+          minItems: 1
+          type: array
+          description: Organization contact information.
+          items:
+            $ref: '#/components/schemas/Contact'
+      description: Party contacts
+    Links:
+      minItems: 0
+      type: array
+      description: HATEOAS links specifying possible follow-up interactions.
+      items:
+        $ref: '#/components/schemas/Link'
+    PatchDocument:
+      required:
+        - op
+        - path
+      type: object
+      properties:
+        op:
+          type: string
+          description: The operation to be performed
+          example: replace
+          enum:
+            - add
+            - remove
+            - replace
+            - move
+            - copy
+            - test
+        path:
+          type: string
+          description: A path to property being patched
+          example: /state
+          enum:
+            - /state
+            - /requestor/contacts
+        value:
+          type: object
+          description: The value to be used within the operations.
+        from:
+          type: string
+          description: A string containing a JSON Pointer value.
+          example: READY_FOR_USE
+      description: A JSONPatch document as defined by RFC 6902
+    LoaSearchItem:
+      required:
+        - and
+      type: object
+      properties:
+        and:
+          minItems: 1
+          type: array
+          description: Search criterion list
+          items:
+            $ref: '#/components/schemas/OrExpressionItem'
+      description: Search criteria body
+    Pagination:
+      required:
+        - limit
+        - offset
+        - total
+      type: object
+      properties:
+        offset:
+          type: integer
+          description: Index of the first item returned in the response.
+          example: 0
+        limit:
+          type: integer
+          description: Maximum number of items returned per page.
+          example: 500
+        total:
+          type: integer
+          description: Total number of items returned.
+          example: 900
+        next:
+          type: string
+          description: Link to the next page of the collection
+          example: /diloa/v1/digitalLoas?offset=10&limit=20
+        previous:
+          type: string
+          description: Link to the previous page of the collection
+          example: /diloa/v1/digitalLoas?offset=0&limit=20
+      description: Pagination
+    Sort:
+      required:
+        - direction
+        - property
+      type: object
+      properties:
+        direction:
+          type: string
+          description: Search results sorting direction.
+          example: ASC
+          enum:
+            - ASC
+            - DESC
+        property:
+          type: string
+          description: Search results sorting parameter.
+          example: /expiryDateTime
+          enum:
+            - /changeLog/createdDateTime
+            - /expiryDateTime
+            - /products/zSide/patchPanel/location/ibx
+      description: Sort
+    ChangeResult:
+      type: object
+      properties:
+        loa:
+          $ref: '#/components/schemas/LoaResult'
+      description: Change result
+    CrossConnect:
+      required:
+        - connectionService
+        - mediaType
+        - protocolType
+        - zSide
+      type: object
+      properties:
+        connectionService:
+          type: string
+          description: "Connection service type. For applicable values, use the Equinix\
+            \ Customer Portal - Lookup - Get Patch Panel Details API request."
+          example: MULTI_MODE_FIBER
+        mediaType:
+          type: string
+          description: "Media type. For applicable values, use the Equinix Customer\
+            \ Portal - Lookup - Get Patch Panel Details API request."
+          example: 50_MICRON_MULTI_MODE_FIBER_OM3
+        protocolType:
+          type: string
+          description: "Connection protocol. For applicable values, use the Equinix\
+            \ Customer Portal - Lookup - Get Patch Panel Details API request."
+          example: 100_GIG_ETHERNET
+        aSide:
+          $ref: '#/components/schemas/PatchPanelPort'
+        zSide:
+          $ref: '#/components/schemas/PatchPanelPort'
+      description: Cross Connect interface
+    ContactDetails:
+      required:
+        - type
+        - value
+      type: object
+      properties:
+        notes:
+          type: string
+          description: Additional note applicable to the given contact option.
+          example: Do not call me after 6 P.M. CEST
+        value:
+          type: string
+          description: Value specific to the given contact type.
+          example: kyle@mail.com
+        type:
+          type: string
+          description: Means of contact.
+          example: EMAIL
+          enum:
+            - EMAIL
+            - PHONE
+            - MOBILE
+            - SECONDARY_EMAIL
+      description: Contact details
+    AdditionalInfo:
+      type: object
+      properties:
+        reason:
+          type: string
+          description: Error reason
+          example: missing id
+        property:
+          type: string
+          description: Incorrect field name.
+          example: id
+      description: Additional information for error.
+    CreateCrossConnect:
+      required:
+        - connectionService
+        - mediaType
+        - protocolType
+        - zSide
+      type: object
+      properties:
+        connectionService:
+          type: string
+          description: "Connection service type. For applicable values, use the Equinix\
+            \ Customer Portal - Lookup - Get Patch Panel Details API request."
+          example: MULTI_MODE_FIBER
+        mediaType:
+          type: string
+          description: "Media type. For applicable values, use the Equinix Customer\
+            \ Portal - Lookup - Get Patch Panel Details API request."
+          example: 50_MICRON_MULTI_MODE_FIBER_OM3
+        protocolType:
+          type: string
+          description: "Connection protocol. For applicable values, use the Equinix\
+            \ Customer Portal - Lookup - Get Patch Panel Details API request."
+          example: 100_GIG_ETHERNET
+        aSide:
+          $ref: '#/components/schemas/CreatePatchPanelPort'
+        zSide:
+          $ref: '#/components/schemas/CreatePatchPanelPort'
+      description: Create Cross Connect interface
+    Link:
+      required:
+        - href
+        - rel
+      type: object
+      properties:
+        rel:
+          type: string
+          description: Attribute describing the relationship ('rel') of the linked
+            resource to its associated document.
+          example: info
+          enum:
+            - self
+            - info
+            - update
+            - delete
+            - statistics
+            - events
+        href:
+          type: string
+          description: "An absolute URL that is the subject of the link's context,\
+            \ such as a link to a service profile or set of statistics."
+          example: "diloa/v1/digitalLoas/{resource-path}"
+        method:
+          type: string
+          description: HTTP method used in the API call to request the specified resource.
+          example: GET
+          enum:
+            - POST
+            - GET
+            - PUT
+            - DELETE
+            - PATCH
+        contentType:
+          type: string
+          description: MIME type indicating the document format. Syntax complies with
+            IETF RFC 6838.
+          example: application/json
+        authenticate:
+          type: boolean
+          description: Flag showing whether authentication is required to access the
+            linked resource. The default value is false.
+          example: true
+      description: An element describing the current document's relationship to a
+        designated external resource.
+    OrExpressionItem:
+      type: object
+      description: AND or OR expression type.
+      oneOf:
+        - $ref: '#/components/schemas/Expression'
+        - $ref: '#/components/schemas/LoaCriterion'
+    LoaResult:
+      type: object
+      properties:
+        state:
+          $ref: '#/components/schemas/State'
+      description: Digital LOA change result
+    PatchPanelPort:
+      required:
+        - connectorType
+        - patchPanel
+        - portA
+      type: object
+      properties:
+        circuitId:
+          maxLength: 200
+          type: string
+          description: "Optional, customer-defined Cross Connect instance identifier."
+          example: "34234535"
+        connectorType:
+          type: string
+          description: Patch panel connector type.
+          example: ST
+        patchPanel:
+          $ref: '#/components/schemas/PatchPanel'
+        portA:
+          type: integer
+          description: Port A
+          format: int32
+          example: 12
+        portB:
+          type: integer
+          description: Port B
+          format: int32
+          example: 13
+    CreatePatchPanelPort:
+      required:
+        - connectorType
+        - patchPanelId
+        - portA
+      type: object
+      properties:
+        connectorType:
+          type: string
+          description: Patch panel connector type.
+          example: ST
+        circuitId:
+          maxLength: 200
+          type: string
+          description: "Optional, customer-defined Cross Connect instance identifier."
+          example: "34234535"
+        patchPanelId:
+          type: string
+          description: Patch panel identifier.
+          example: CP:0218:0102:13008148
+        portA:
+          type: integer
+          description: Port A
+          format: int32
+          example: 12
+        portB:
+          type: integer
+          description: Port B
+          format: int32
+          example: 13
+    Expression:
+      type: object
+      properties:
+        or:
+          type: array
+          description: Search criterion item displaying a record if any of the conditions
+            separated by 'or' is true
+          items:
+            $ref: '#/components/schemas/LoaCriterion'
+      description: Search criterion
+    LoaCriterion:
+      type: object
+      properties:
+        property:
+          type: string
+          description: Search property name
+          example: /token
+          enum:
+            - /token
+            - /products/zSide/patchPanel/location/ibx
+            - /state
+            - /provider/name
+            - /requestor/name
+            - /provider/orgIds
+            - /requestor/orgIds
+        operator:
+          type: string
+          description: Criterion operator
+          example: =
+          enum:
+            - =
+            - IN
+            - LIKE
+            - CONTAINS
+        values:
+          minItems: 1
+          type: array
+          description: Criterion values
+          items:
+            type: string
+            description: Criterion value
+            example: RE4E-91PA
+      description: Search criterion item
+    PatchPanel:
+      required:
+        - cabinetSpaceId
+        - cageSpaceId
+        - id
+        - location
+      type: object
+      properties:
+        id:
+          type: string
+          description: Patch panel identifier.
+          example: CP:0218:0102:13008148
+        cabinetSpaceId:
+          type: string
+          description: Cabinet space identifier.
+          example: TY1:04:000050:1613-S14
+        cageSpaceId:
+          type: string
+          description: Cage space identifier.
+          example: TY1:04:000050
+        location:
+          $ref: '#/components/schemas/Location'
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

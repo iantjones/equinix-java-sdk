@@ -21,7 +21,7 @@ import com.eqixiac.equinix.internetaccess.model.PatchPanel;
 
 /**
  * Client interface for the Equinix Internet Access (EIA) v1 product-availability lookup
- * ({@code GET /internetAccess/v1/patchPanels}) — the patch panels a customer has in a given cage
+ * ({@code GET /internetAccess/v1/patchPanels}) - the patch panels a customer has in a given cage
  * and cabinet.
  */
 public interface InternetAccessPatchPanels {

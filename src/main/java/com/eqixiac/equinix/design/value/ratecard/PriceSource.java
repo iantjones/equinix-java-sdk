@@ -12,12 +12,12 @@ package com.eqixiac.equinix.design.value.ratecard;
  * cover; {@link #PROVIDER_API} is live and accurate for the <em>cloud-provider</em>
  * side but is public list pricing, not a negotiated rate; and
  * {@link #REFERENCE}/{@link #ESTIMATE} are indicative only. {@link #COMPOSITE}
- * inherits the trust of whatever it aggregated — consult the quote's note and
+ * inherits the trust of whatever it aggregated - consult the quote's note and
  * the surrounding disclaimer.</p>
  */
 public enum PriceSource {
 
-    /** Live figure from the Equinix Fabric Pricing API — authoritative for Equinix-side costs. */
+    /** Live figure from the Equinix Fabric Pricing API - authoritative for Equinix-side costs. */
     EQUINIX_LIVE,
 
     /** Caller-supplied figure (e.g. a negotiated contract rate) declared on a {@link CustomRateCard}. */
@@ -26,14 +26,14 @@ public enum PriceSource {
     /**
      * Live figure from a public cloud-provider pricing API (AWS Price List, Azure Retail
      * Prices, GCP Billing Catalog, OCI Price List). Accurate and current for the provider
-     * side, but a public <em>list</em> price — negotiated discounts are not reflected.
+     * side, but a public <em>list</em> price - negotiated discounts are not reflected.
      */
     PROVIDER_API,
 
-    /** Bundled, dated indicative figure from the {@link ReferenceRateCard} — an estimate, not a quote. */
+    /** Bundled, dated indicative figure from the {@link ReferenceRateCard} - an estimate, not a quote. */
     REFERENCE,
 
-    /** Heuristic or derived figure with no external source — the least trustworthy provenance. */
+    /** Heuristic or derived figure with no external source - the least trustworthy provenance. */
     ESTIMATE,
 
     /**

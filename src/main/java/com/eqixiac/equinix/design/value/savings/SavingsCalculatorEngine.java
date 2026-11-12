@@ -1,7 +1,12 @@
 package com.eqixiac.equinix.design.value.savings;
 
+import com.eqixiac.equinix.design.cost.ConvertingRateCard;
+import com.eqixiac.equinix.design.cost.CurrencyConverters;
+import com.eqixiac.equinix.design.spec.CommercialTerms;
 import com.eqixiac.equinix.design.value.CurrencyReconciler;
+import com.eqixiac.equinix.design.value.ratecard.ConnectionModel;
 import com.eqixiac.equinix.design.value.ratecard.EgressPath;
+import com.eqixiac.equinix.design.value.ratecard.PriceLookup;
 import com.eqixiac.equinix.design.value.ratecard.EgressRate;
 import com.eqixiac.equinix.design.value.ratecard.MulticloudLinkQuote;
 import com.eqixiac.equinix.design.value.ratecard.MulticloudLinkRequest;
@@ -37,17 +42,21 @@ final class SavingsCalculatorEngine {
     static SavingsEstimate compute(SavingsCalculator.Builder b) {
         // Default: live Equinix interconnect pricing, then bundled reference figures
         // (which also supply the cloud egress rates the savings calculation needs).
-        RateCard rateCard = b.getRateCard() != null ? b.getRateCard() : RateCard.standardChain(b.getFabric());
+        RateCard base = b.getRateCard() != null ? b.getRateCard() : RateCard.standardChain(b.getFabric());
+        // Every figure in one currency, converted as RateCardCostModel and the TCO model convert.
+        ConvertingRateCard rateCard = ConvertingRateCard.of(base, b.getCurrency(), CurrencyConverters.forTerms(
+                CommercialTerms.builder().currency(b.getCurrency()).exchangeRates(b.getExchangeRates()).build(),
+                b.getCurrencyConverter(), b.getDefaultRates()));
         Term term = b.getTerm();
 
         BigDecimal gb = b.getEgressUnit().toGigabytes(BigDecimal.valueOf(b.getEgressAmount()));
 
-        // ── Egress rates (internet vs private) ──
+        // Egress rates (internet vs private)
         Optional<EgressRate> internet = rateCard.egress(b.getProvider(), b.getRegion(), EgressPath.INTERNET, term);
         Optional<EgressRate> priv = rateCard.egress(b.getProvider(), b.getRegion(), EgressPath.PRIVATE, term);
         Currency internetCur = internet.map(EgressRate::getCurrency).orElse(null);
         Currency privCur = priv.map(EgressRate::getCurrency).orElse(null);
-        // internet − private is a subtraction, so the two rates must be in one currency. If they are
+        // internet - private is a subtraction, so the two rates must be in one currency. If they are
         // known to differ, egress savings cannot be computed (rather than fabricated).
         boolean egressCurrencyMismatch = CurrencyReconciler.knownDifferent(internetCur, privCur);
         boolean egressPriced = internet.isPresent() && priv.isPresent() && !egressCurrencyMismatch;
@@ -58,7 +67,7 @@ final class SavingsCalculatorEngine {
         BigDecimal privateCost = privateRate.multiply(gb);
         BigDecimal egressSavings = egressPriced ? internetCost.subtract(privateCost) : BigDecimal.ZERO;
         if (!egressPriced) {
-            // Only one (or neither) egress rate resolved, or the two are in different currencies —
+            // Only one (or neither) egress rate resolved, or the two are in different currencies - 
             // don't surface a half-populated or cross-currency comparison; zero the per-line figures
             // so the report is internally consistent.
             internetRate = BigDecimal.ZERO;
@@ -69,7 +78,7 @@ final class SavingsCalculatorEngine {
         // The currency egress figures (and thus egressSavings) are expressed in.
         Currency egressCurrency = internetCur != null ? internetCur : privCur;
 
-        // ── Equinix interconnect cost ──
+        // Equinix interconnect cost
         Optional<PriceQuote> connection = rateCard.connection(
                 b.getConnectionType(), b.getBandwidthMbps(), b.getMetro(), term);
         boolean connectionPriced = connection.isPresent();
@@ -81,7 +90,7 @@ final class SavingsCalculatorEngine {
             equinixSetup = connection.get().getNonRecurring();
         }
         // A requested Cloud Router that cannot be folded in leaves the interconnect figures
-        // PARTIAL (connection only) — tracked with the exact reason so the disclaimer can name
+        // PARTIAL (connection only) - tracked with the exact reason so the disclaimer can name
         // the component rather than misstate the whole interconnect cost as unavailable.
         String routerExclusionReason = null;
         if (b.isIncludeRouter()) {
@@ -103,11 +112,11 @@ final class SavingsCalculatorEngine {
         }
         boolean equinixPriced = connectionPriced && routerExclusionReason == null;
 
-        // ── Cross-currency reconciliation (egress vs interconnect) ──
+        // Cross-currency reconciliation (egress vs interconnect)
         // The estimate is stamped with a single currency; figures in another currency must never
         // be rendered under that label. When the interconnect cost is in a different currency from
-        // the egress figures, it is excluded (zeroed) and reported via the disclaimer instead —
-        // the mixed/unpriced convention — and everything derived from it is omitted.
+        // the egress figures, it is excluded (zeroed) and reported via the disclaimer instead - 
+        // the mixed/unpriced convention - and everything derived from it is omitted.
         boolean crossCurrencyMismatch = CurrencyReconciler.knownDifferent(egressCurrency, equinixCurrency);
         String excludedEquinixFigures = null;
         if (crossCurrencyMismatch) {
@@ -122,7 +131,32 @@ final class SavingsCalculatorEngine {
             equinixPriced = false;
         }
 
-        // ── Net savings & break-even ──
+        // Cloud-provider interconnect port
+        // The private egress rate only applies over the provider's interconnect (AWS Direct Connect,
+        // Azure ExpressRoute, Google Cloud Interconnect), which carries its own port/circuit fee.
+        // TcoEngine already counts it; leaving it out here overstated net savings by that fee (about
+        // USD 219/month for AWS at 1 Gbps). The figure is the bundled reference rate, folded in only
+        // when it shares the egress currency.
+        ReferenceRateCard portReference = ReferenceRateCard.standard();
+        BigDecimal cloudPortMonthly = null;
+        String cloudPortNote = null;
+        // The hosted/partner connection a Fabric cloud connection is, priced exactly as the optimiser's
+        // RateCardCostModel and the TCO model price it: exact tier, or next tier up with a note, or unpriced.
+        PriceLookup<PriceQuote> cspPort = rateCard.toTarget(portReference.providerConnection(b.getProvider(),
+                ConnectionModel.HOSTED, b.getBandwidthMbps()));
+        if (cspPort.isPriced() && !CurrencyReconciler.knownDifferent(egressCurrency, cspPort.value().getCurrency())) {
+            cloudPortMonthly = cspPort.value().getMonthlyRecurring();
+        } else if (cspPort.isPriced()) {
+            cloudPortNote = " The " + b.getProvider() + " hosted-connection fee (reference, "
+                    + portReference.currencyCode() + ") is excluded: it cannot be combined with "
+                    + egressCurrency + " figures without an FX rate.";
+        } else {
+            cloudPortNote = " The " + b.getProvider() + " hosted-connection fee is unpriced ("
+                    + cspPort.unpricedReason() + "), so it is not included in the net figures.";
+        }
+        BigDecimal portMonthly = cloudPortMonthly != null ? cloudPortMonthly : BigDecimal.ZERO;
+
+        // Net savings & break-even
         // netMonthly nets the egress saving against the interconnect cost, so it is only meaningful
         // when the two are in the same currency. When they are known to differ, the net (and the
         // figures derived from it) are omitted rather than reported as a cross-currency subtraction.
@@ -130,7 +164,7 @@ final class SavingsCalculatorEngine {
         BigDecimal annualNet = null;
         BigDecimal firstYearNet = null;
         if (!crossCurrencyMismatch) {
-            netMonthly = egressSavings.subtract(equinixMonthly);
+            netMonthly = egressSavings.subtract(equinixMonthly).subtract(portMonthly);
             annualNet = netMonthly.multiply(BigDecimal.valueOf(12));
             firstYearNet = annualNet.subtract(equinixSetup);
         }
@@ -139,14 +173,33 @@ final class SavingsCalculatorEngine {
         // break-even divides the interconnect monthly (equinix currency) by the per-GB delta (egress
         // currency), so it too needs a single currency.
         BigDecimal breakEvenGb = (egressPriced && !crossCurrencyMismatch && perGbDelta.signum() > 0)
-                ? equinixMonthly.divide(perGbDelta, 2, RoundingMode.HALF_UP)
+                ? equinixMonthly.add(portMonthly).divide(perGbDelta, 2, RoundingMode.HALF_UP)
                 : null;
         BigDecimal paybackMonths = (netMonthly != null && netMonthly.signum() > 0 && equinixSetup.signum() > 0)
                 ? equinixSetup.divide(netMonthly, 1, RoundingMode.HALF_UP)
                 : null;
 
-        Currency currency = resolveCurrency(internet, priv, connection);
-        boolean complete = egressPriced && equinixPriced && !crossCurrencyMismatch;
+        Currency currency = Currency.getInstance(b.getCurrency());
+        boolean complete = egressPriced && equinixPriced && !crossCurrencyMismatch && cloudPortMonthly != null;
+        List<String> unpriced = new ArrayList<>();
+        if (!egressPriced) {
+            unpriced.add(egressCurrencyMismatch ? "Egress saving: internet (" + internetCur + ") and private ("
+                    + privCur + ") rates are in different currencies"
+                    : "Egress saving: " + (internet.isEmpty() ? "no internet egress rate" : "no private egress rate"));
+        }
+        if (!connectionPriced) {
+            unpriced.add("Equinix Fabric connection: the rate card has no figure");
+        }
+        if (routerExclusionReason != null) {
+            unpriced.add("Fabric Cloud Router:" + routerExclusionReason);
+        }
+        if (crossCurrencyMismatch) {
+            unpriced.add("Equinix interconnect: " + excludedEquinixFigures + " is in " + equinixCurrency
+                    + " and cannot be netted against " + egressCurrency + " egress without an exchange rate");
+        }
+        if (cloudPortMonthly == null) {
+            unpriced.add("Cloud provider hosted-connection fee:" + cloudPortNote);
+        }
 
         StringBuilder disclaimer = new StringBuilder(
                 "Design-time estimate, not a quote. Equinix interconnect costs use live Fabric pricing where "
@@ -167,6 +220,15 @@ final class SavingsCalculatorEngine {
         }
         if (routerExclusionReason != null) {
             disclaimer.append(routerExclusionReason);
+        }
+        if (cloudPortNote != null) {
+            disclaimer.append(cloudPortNote);
+        } else {
+            disclaimer.append(" Net savings include the ").append(b.getProvider())
+                    .append(" interconnect port fee at the bundled reference rate.");
+        }
+        for (String fxNote : rateCard.converter().notes()) {
+            disclaimer.append(" ").append(fxNote).append(".");
         }
         if (b.getPeerProvider() != null) {
             disclaimer.append(" The cloud-to-cloud section prices traffic in both directions; its native "
@@ -195,6 +257,7 @@ final class SavingsCalculatorEngine {
                 .monthlyEgressSavings(egressSavings)
                 .equinixMonthlyCost(equinixMonthly)
                 .equinixSetupCost(equinixSetup)
+                .cloudProviderPortMonthlyCost(cloudPortMonthly)
                 .netMonthlySavings(netMonthly)
                 .annualNetSavings(annualNet)
                 .firstYearNetSavings(firstYearNet)
@@ -204,6 +267,9 @@ final class SavingsCalculatorEngine {
                 .egressPriced(egressPriced)
                 .equinixPriced(equinixPriced)
                 .complete(complete)
+                .unpriced(unpriced)
+                .specFingerprint(b.getSpecFingerprint())
+                .assumptions(b.getSpecAssumptions())
                 .disclaimer(disclaimer.toString())
                 .multicloudComparison(b.getPeerProvider() == null ? null
                         : compareMulticloudPaths(b, rateCard, term, gb, internet, priv))
@@ -217,7 +283,7 @@ final class SavingsCalculatorEngine {
      * A path with any unpriced input, or whose inputs span currencies, has a {@code null} total
      * and a note naming the cause.
      */
-    private static MulticloudPathComparison compareMulticloudPaths(SavingsCalculator.Builder b, RateCard rateCard,
+    private static MulticloudPathComparison compareMulticloudPaths(SavingsCalculator.Builder b, ConvertingRateCard rateCard,
                                                                    Term term, BigDecimal gb,
                                                                    Optional<EgressRate> internetA,
                                                                    Optional<EgressRate> privateA) {
@@ -229,13 +295,13 @@ final class SavingsCalculatorEngine {
         List<String> notes = new ArrayList<>();
         ReferenceRateCard reference = ReferenceRateCard.standard();
 
-        // ── Public internet, both directions ──
+        // Public internet, both directions
         Optional<EgressRate> internetZ = rateCard.egress(z, b.getPeerRegion(), EgressPath.INTERNET, term);
         PathSum internet = new PathSum("Public internet path");
         internet.addEgress(a, internetA, gb, "internet", notes);
         internet.addEgress(z, internetZ, reverseGb, "internet", notes);
 
-        // ── Equinix Fabric, both clouds ──
+        // Equinix Fabric, both clouds
         Optional<EgressRate> privateZ = rateCard.egress(z, b.getPeerRegion(), EgressPath.PRIVATE, term);
         Optional<PriceQuote> connection = rateCard.connection(
                 b.getConnectionType(), b.getBandwidthMbps(), b.getMetro(), term);
@@ -269,7 +335,8 @@ final class SavingsCalculatorEngine {
                     + "that amount divided by the per-GB difference.");
         }
         for (CloudProviderType cloud : List.of(a, z)) {
-            Optional<PriceQuote> port = reference.cspInterconnectPortMonthlyQuote(cloud, b.getBandwidthMbps());
+            Optional<PriceQuote> port = rateCard.toTarget(reference.providerConnection(cloud, ConnectionModel.HOSTED,
+                    b.getBandwidthMbps())).toOptional();
             if (port.isPresent()) {
                 equinix.addFixed(port.get().getCurrency(), port.get().getMonthlyRecurring(), BigDecimal.ZERO);
                 notes.add("Equinix path: " + cloud + " interconnect port "
@@ -283,7 +350,7 @@ final class SavingsCalculatorEngine {
         equinix.addEgress(a, privateA, gb, "private", notes);
         equinix.addEgress(z, privateZ, reverseGb, "private", notes);
 
-        // ── Native multicloud link ──
+        // Native multicloud link
         MulticloudLinkRequest request = MulticloudLinkRequest.builder()
                 .providerA(a).regionA(b.getRegion())
                 .providerZ(z).regionZ(b.getPeerRegion())
@@ -320,13 +387,13 @@ final class SavingsCalculatorEngine {
         nativePath.addEgress(a, nativeRateA, gb, "native link", notes);
         nativePath.addEgress(z, nativeRateZ, reverseGb, "native link", notes);
 
-        // ── One comparison currency; a path in another currency is withheld, never converted ──
+        // One comparison currency; a path in another currency is withheld, never converted
         String currency = comparisonCurrency(internet, equinix, nativePath);
         for (PathSum path : List.of(internet, equinix, nativePath)) {
             path.settle(currency, notes);
         }
 
-        // ── Break-even (a property of the prices, not of the declared volumes) ──
+        // Break-even (a property of the prices, not of the declared volumes)
         BigDecimal breakEven = null;
         boolean nativeCheaperAbove = false;
         Map<EgressPath, BigDecimal> totals = new EnumMap<>(EgressPath.class);

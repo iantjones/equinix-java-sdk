@@ -59,22 +59,6 @@ public interface Backup {
      */
     Boolean restore();
 
-    /**
-     *
-     * @deprecated the restore endpoint is keyed by the backup uuid only; the supplied {@code device}
-     *             is ignored. Use {@link #restore()} instead.
-     */
-    @Deprecated
-    Boolean restoreToDevice(Device device);
-
-    /**
-     *
-     * @deprecated the restore endpoint is keyed by the backup uuid only; the supplied
-     *             {@code deviceUuid} is ignored. Use {@link #restore()} instead.
-     */
-    @Deprecated
-    Boolean restoreToDevice(String deviceUuid);
-
     BackupOperator.BackupUpdater update();
 
     Boolean save(BackupUpdaterJson updaterJson);

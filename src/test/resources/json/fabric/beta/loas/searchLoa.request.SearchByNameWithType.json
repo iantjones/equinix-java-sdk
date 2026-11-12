@@ -1,0 +1,30 @@
+{
+  "filter": {
+    "and": [
+      {
+        "property": "/name",
+        "operator": "ILIKE",
+        "values": [
+          "LOA-Equinix-SV1"
+        ]
+      },
+      {
+        "property": "/type",
+        "operator": "=",
+        "values": [
+          "PATCH_PANEL_PORT_LOA"
+        ]
+      }
+    ]
+  },
+  "pagination": {
+    "limit": 25,
+    "offset": 0
+  },
+  "sort": [
+    {
+      "property": "/changeLog/updatedDateTime",
+      "direction": "DESC"
+    }
+  ]
+}

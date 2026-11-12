@@ -17,6 +17,7 @@
 package com.eqixiac.equinix.internetaccess.enums;
 
 import com.eqixiac.equinix.core.model.APIParam;
+import com.fasterxml.jackson.annotation.JsonEnumDefaultValue;
 
 /**
  * Lifecycle state of an Equinix Internet Access (EIA) v2 service.
@@ -28,5 +29,8 @@ public enum ServiceState implements APIParam {
     INACTIVE,
     DEPROVISIONING,
     DEPROVISIONED,
-    FAILED
+    FAILED,
+    /** Read-side fallback for a state this SDK version does not know; never sent. */
+    @JsonEnumDefaultValue
+    UNKNOWN
 }

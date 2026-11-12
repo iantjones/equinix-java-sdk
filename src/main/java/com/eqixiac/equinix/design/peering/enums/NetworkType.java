@@ -23,14 +23,14 @@ import lombok.Getter;
  *
  * <p>The type of network affects peering dynamics and the nature of connectivity:</p>
  * <ul>
- *   <li>{@link #NSP} — Network Service Provider (transit). Peering provides route table access.</li>
- *   <li>{@link #CONTENT} — Content delivery (Netflix, Google). Peering receives their content.</li>
- *   <li>{@link #ENTERPRISE} — Enterprise network. Enterprise-to-enterprise peering is uncommon.</li>
- *   <li>{@link #CABLE_DSL_ISP} — Access ISP. Peering offloads eyeball traffic.</li>
- *   <li>{@link #EDUCATION} — Academic/research network (e.g., Internet2).</li>
- *   <li>{@link #NON_PROFIT} — Non-profit organization network.</li>
- *   <li>{@link #ROUTE_SERVER} — IX route server (e.g., Equinix MLPE RS).</li>
- *   <li>{@link #GOV} — Government network.</li>
+ *   <li>{@link #NSP} - Network Service Provider (transit). Peering provides route table access.</li>
+ *   <li>{@link #CONTENT} - Content delivery (Netflix, Google). Peering receives their content.</li>
+ *   <li>{@link #ENTERPRISE} - Enterprise network. Enterprise-to-enterprise peering is uncommon.</li>
+ *   <li>{@link #CABLE_DSL_ISP} - Access ISP. Peering offloads eyeball traffic.</li>
+ *   <li>{@link #EDUCATION} - Academic/research network (e.g., Internet2).</li>
+ *   <li>{@link #NON_PROFIT} - Non-profit organization network.</li>
+ *   <li>{@link #ROUTE_SERVER} - IX route server (e.g., Equinix MLPE RS).</li>
+ *   <li>{@link #GOV} - Government network.</li>
  * </ul>
  *
  * @author ianjones
@@ -53,7 +53,7 @@ public enum NetworkType {
     private final String description;
 
     /**
-     * Constructs a network type. Argument order is pinned here — the two
+     * Constructs a network type. Argument order is pinned here - the two
      * parameters are both {@code String}, so never regenerate this constructor
      * from field order.
      *

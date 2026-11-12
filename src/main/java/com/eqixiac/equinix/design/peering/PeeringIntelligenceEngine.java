@@ -23,7 +23,11 @@ import com.eqixiac.equinix.fabric.model.implementation.GeoCoordinate;
 import com.eqixiac.equinix.fabric.model.implementation.ServiceProfileMetro;
 import com.eqixiac.equinix.fabric.model.implementation.cloud.CloudProviderType;
 import com.eqixiac.equinix.core.model.MetroId;
+import com.eqixiac.equinix.core.enums.Region;
+import com.eqixiac.equinix.design.geo.RouteFactorCalibration;
 import com.eqixiac.equinix.design.geo.SpeedOfLightLatency;
+import com.eqixiac.equinix.design.optimizer.context.LatencyFigure;
+import com.eqixiac.equinix.fabric.model.implementation.ConnectedMetro;
 import com.eqixiac.equinix.design.peering.client.*;
 import com.eqixiac.equinix.design.peering.enums.*;
 import com.eqixiac.equinix.design.peering.model.*;
@@ -43,7 +47,7 @@ import java.util.stream.Collectors;
  * <p>Executes a multi-phase pipeline:</p>
  * <ol>
  *   <li>Load Equinix catalog from PeeringDB (org/2 with depth=2)</li>
- *   <li>Build IX ID → MetroId mapping</li>
+ *   <li>Build IX ID -> MetroId mapping</li>
  *   <li>Query PeeringDB for each target ASN (netixlan + netfac + net)</li>
  *   <li>Filter to Equinix IXes and facilities</li>
  *   <li>Build NetworkPresence per ASN</li>
@@ -62,7 +66,7 @@ class PeeringIntelligenceEngine {
 
     private static final double EARTH_RADIUS_KM = 6371.0;
 
-    /** Sentinel for a metro whose Fabric region was not loaded — an absence, never a real region. */
+    /** Sentinel for a metro whose Fabric region was not loaded - an absence, never a real region. */
     private static final String UNKNOWN_REGION = "UNKNOWN";
 
     private final FabricGateway fabric;
@@ -85,7 +89,7 @@ class PeeringIntelligenceEngine {
 
     /**
      * Per target ASN, the Equinix metros where a Fabric service profile matching that network is
-     * published: metro → the matching profile's UUID (first in catalog order when several match).
+     * published: metro -> the matching profile's UUID (first in catalog order when several match).
      * Populated by {@code analyzeFabricAvailability()}; empty for an ASN with no matching profile,
      * and empty overall when the Fabric service-profile catalog could not be read (in which case a
      * warning marks Fabric availability as NOT analyzed rather than genuinely absent).
@@ -93,19 +97,31 @@ class PeeringIntelligenceEngine {
     private final Map<Long, Map<MetroId, String>> fabricProfilesByAsn = new LinkedHashMap<>();
 
     /**
-     * Live Fabric metro geo data, loaded once per analysis from {@code fabric.metros()}: metro →
+     * Live Fabric metro geo data, loaded once per analysis from {@code fabric.metros()}: metro ->
      * [latitude, longitude] (used to bind PeeringDB facilities/IXes to metros and to compute
-     * geographic diversity) and metro → region (used for the same-region diversity descriptor).
+     * geographic diversity) and metro -> region (used for the same-region diversity descriptor).
      * Keyed by {@link MetroId}, so metros that are live in Fabric but not yet in the
      * {@code MetroCode} enum are still included and stay distinct.
      */
     private final Map<MetroId, double[]> metroCoordinates = new LinkedHashMap<>();
     private final Map<MetroId, String> metroRegion = new LinkedHashMap<>();
+    private final Map<MetroId, Region> metroRegionEnum = new LinkedHashMap<>();
+
+    /**
+     * Fabric's measured round trips ({@code connectedMetros.avgLatency}, round-trip ms as established live on
+     * 2026-11-11), keyed {@code "A|B"} in both directions, and the route factor fitted from them (the same
+     * {@link RouteFactorCalibration} the Metro Optimizer uses). Loaded in {@code loadMetroGeo()}.
+     */
+    private final Map<String, Double> measuredRtt = new HashMap<>();
+    private RouteFactorCalibration calibration = RouteFactorCalibration.uncalibrated();
     private final Map<String, MetroId> ibxToMetro = new LinkedHashMap<>();
+
+    /** Every metro the live Fabric catalogue returned; gates IBX-prefix resolution of PeeringDB names. */
+    private final Set<MetroId> liveMetros = new LinkedHashSet<>();
 
     /**
      * Per-metro representative coordinate derived from the actual Equinix IBX data centers in that
-     * metro — the centroid of the PeeringDB Equinix facility coordinates resolved to the metro. This
+     * metro - the centroid of the PeeringDB Equinix facility coordinates resolved to the metro. This
      * grounds the geographic-diversity distance in real data-center positions (IBX-to-IBX) rather than
      * the single Fabric metro centroid, and is preferred over {@link #metroCoordinates} when present.
      */
@@ -127,7 +143,7 @@ class PeeringIntelligenceEngine {
 
         try {
             // Phase 1: Load the Equinix catalog (PeeringDB) and live metro data (Fabric), then build
-            // the IX/facility -> metro bridge from the live IBX->metro map — facilities first (each
+            // the IX/facility -> metro bridge from the live IBX->metro map - facilities first (each
             // PeeringDB name carries its IBX code, e.g. "LA4", and seeds the city bridge), then IXes
             // (city-only, resolved via that bridge).
             peeringDb.loadEquinixCatalog();
@@ -135,7 +151,7 @@ class PeeringIntelligenceEngine {
             if (!metroCoordinates.isEmpty()) {
                 dataSources.add("Equinix Fabric");
             }
-            ixMapping = new EquinixIXMapping(ibxToMetro);
+            ixMapping = new EquinixIXMapping(ibxToMetro, liveMetros);
             ixMapping.mapFacilities(peeringDb.getEquinixFacMap());
             ixMapping.mapIxes(peeringDb.getEquinixIxMap());
             loadFacilityCoordinates();
@@ -184,6 +200,7 @@ class PeeringIntelligenceEngine {
 
             return PeeringIntelligenceResult.builder()
                     .request(request)
+                    .specFingerprint(request.getSpecFingerprint())
                     .presenceMatrix(matrix)
                     .networkPresences(networkPresences)
                     .metroReports(metroReports)
@@ -215,10 +232,10 @@ class PeeringIntelligenceEngine {
     private void queryTargetAsns() throws IOException {
         // ALL target ASNs are queried per endpoint in one batched call: the client uses
         // PeeringDB's asn__in query operator, collapsing the former one-request-per-ASN loop
-        // (3 x N requests) into one request per endpoint per 150-ASN chunk — the single most
+        // (3 x N requests) into one request per endpoint per 150-ASN chunk - the single most
         // effective way to stay under PeeringDB's anonymous ~20 req/min rate limit. The three
-        // endpoints (net, netixlan, netfac) are independent of one another, so they are fanned
-        // out onto a virtual-thread executor to overlap their blocking I/O; a failed sub-call
+        // endpoints are fanned out onto a virtual-thread executor to overlap their blocking I/O
+        // (netfac waits for net, whose network ids it filters by); a failed sub-call
         // still surfaces as an IOException out of this method.
         Set<Long> asns = new LinkedHashSet<>(request.getTargetAsns().keySet());
 
@@ -231,8 +248,13 @@ class PeeringIntelligenceEngine {
                     exec.submit(() -> peeringDb.getNetworks(asns));
             Future<Map<Long, List<PeeringDbNetIxlan>>> ixFuture =
                     exec.submit(() -> peeringDb.getEquinixIxPresence(asns));
+            // netfac is filtered by net_id (PeeringDB ignores asn filters there), so the facility
+            // lookup waits for the network lookup and reuses its ids instead of fetching /net again.
             Future<Map<Long, List<PeeringDbNetFac>>> facFuture =
-                    exec.submit(() -> peeringDb.getEquinixFacPresence(asns));
+                    exec.submit(() -> {
+                        awaitResult(netFuture);
+                        return peeringDb.getEquinixFacPresence(asns);
+                    });
 
             nets = awaitResult(netFuture);
             ixPresence = awaitResult(ixFuture);
@@ -309,7 +331,7 @@ class PeeringIntelligenceEngine {
                 MetroId metro = ixMapping.metroForIx(nix.getIxId());
                 if (metro == null) {
                     // An Equinix IX (already filtered to Equinix by the client) whose IX could not be
-                    // resolved to a metro — exclude it, but count it so the gap is surfaced.
+                    // resolved to a metro - exclude it, but count it so the gap is surfaced.
                     droppedIxRecords++;
                     continue;
                 }
@@ -402,7 +424,7 @@ class PeeringIntelligenceEngine {
     /**
      * Tokens too generic to identify a network in a Fabric service-profile name. A profile-name
      * match decides that a network is privately REACHABLE via Fabric, so a false positive is worse
-     * than a false negative (it silently promises an on-ramp that does not exist — the same
+     * than a false negative (it silently promises an on-ramp that does not exist - the same
      * asymmetry {@link CloudProviderType} documents for its curated alias sets). Corporate suffixes,
      * connectivity vocabulary, and plain industry words are therefore never accepted as evidence
      * on their own; only the remaining brand-distinctive tokens are.
@@ -428,15 +450,15 @@ class PeeringIntelligenceEngine {
      * <p>Matching mirrors the optimizer's provider-availability approach: whole-token,
      * brand-distinctive evidence only. Two complementary matchers run per target:</p>
      * <ol>
-     *   <li><b>Known cloud providers</b> — when the target's names identify a
+     *   <li><b>Known cloud providers</b> - when the target's names identify a
      *       {@link CloudProviderType} (e.g. label {@code "AWS"}, or PeeringDB name
      *       {@code "Amazon.com, Inc."} via the {@code amazon} alias), profiles are matched with
      *       {@code CloudProviderType.matchesServiceProfileName}, which bridges the
      *       corporate-vs-product naming gap: marketplace profiles are named after the
      *       <em>product</em> ("AWS Direct Connect"), not the corporation.</li>
-     *   <li><b>Everything else</b> — the profile name must contain, on whole-token boundaries, a
+     *   <li><b>Everything else</b> - the profile name must contain, on whole-token boundaries, a
      *       brand-distinctive token of the target's label/PeeringDB names (generic corporate and
-     *       connectivity words are excluded — see {@link #GENERIC_NAME_TOKENS} — so an NSP's
+     *       connectivity words are excluded - see {@link #GENERIC_NAME_TOKENS} - so an NSP's
      *       "&lt;NSP&gt; Direct Connect" is never mis-attributed to a target).</li>
      * </ol>
      *
@@ -493,7 +515,7 @@ class PeeringIntelligenceEngine {
 
     /**
      * Resolves the target to a known {@link CloudProviderType} when any of its names identifies
-     * one (whole-token, brand-distinctive matching — the same test used for profile names), or
+     * one (whole-token, brand-distinctive matching - the same test used for profile names), or
      * {@code null} for targets that are not a recognized cloud provider.
      */
     private static CloudProviderType resolveCloudProvider(List<String> evidence) {
@@ -529,8 +551,8 @@ class PeeringIntelligenceEngine {
     /**
      * Whether a Fabric service-profile name identifies the target: via the resolved cloud
      * provider's curated matching when the target is a known cloud, or via a brand-distinctive
-     * whole-token hit otherwise. Matching is one-directional — the profile name must contain the
-     * evidence, never the reverse — because over-claiming reachability is the damaging error.
+     * whole-token hit otherwise. Matching is one-directional - the profile name must contain the
+     * evidence, never the reverse - because over-claiming reachability is the damaging error.
      */
     private static boolean profileMatchesTarget(String profileName, CloudProviderType provider,
                                                 Set<String> distinctiveTokens) {
@@ -551,7 +573,7 @@ class PeeringIntelligenceEngine {
 
     /**
      * Lower-cases and collapses every run of non-alphanumeric characters to a single space, so
-     * token-boundary containment is well-defined ("Amazon.com, Inc." → "amazon com inc").
+     * token-boundary containment is well-defined ("Amazon.com, Inc." -> "amazon com inc").
      */
     private static String normalizeName(String raw) {
         if (raw == null) return "";
@@ -579,7 +601,7 @@ class PeeringIntelligenceEngine {
             allMetros.addAll(np.getAllMetros());
         }
 
-        // Metros where a target is reachable via a Fabric service profile are presence too —
+        // Metros where a target is reachable via a Fabric service profile are presence too - 
         // a Fabric-only metro still earns a column (ConnectivityType.FABRIC_CONNECTION).
         for (Map<MetroId, String> fabricMetros : fabricProfilesByAsn.values()) {
             allMetros.addAll(fabricMetros.keySet());
@@ -820,7 +842,7 @@ class PeeringIntelligenceEngine {
 
         // Generate findings
         if (request.getCustomerMetros().size() == 1) {
-            findings.add("Single customer metro detected — no geographic redundancy for IX peering.");
+            findings.add("Single customer metro detected - no geographic redundancy for IX peering.");
         }
         for (BlastRadiusReport br : blastReports) {
             if (br.getImpactRatio() > 0.5) {
@@ -829,7 +851,7 @@ class PeeringIntelligenceEngine {
             }
         }
         // Correlated failures here are all single-customer-metro cases (an ASN that peers at only ONE
-        // of the customer's metros), created with HIGH/MEDIUM severity — never CRITICAL. The old finding
+        // of the customer's metros), created with HIGH/MEDIUM severity - never CRITICAL. The old finding
         // gated on "CRITICAL" so it could never fire, and its "no IX failover path" wording was wrong
         // (the ASN may still peer at non-customer metros). Report the real, reachable condition instead.
         long singleMetroAsns = correlatedFailures.stream()
@@ -837,7 +859,7 @@ class PeeringIntelligenceEngine {
                 .count();
         if (singleMetroAsns > 0) {
             findings.add(singleMetroAsns + " analyzed network(s) have IX peering at only one of your "
-                    + "metros — a failure of that metro removes IX peering to them from your footprint. "
+                    + "metros - a failure of that metro removes IX peering to them from your footprint. "
                     + "Establish IX peering at a second metro for these networks.");
         }
         // Metros with no analyzed-ASN presence carry no blast signal and are EXCLUDED from the
@@ -848,7 +870,7 @@ class PeeringIntelligenceEngine {
         if (noPresenceMetros > 0) {
             findings.add(noPresenceMetros + " customer metro(s) have no presence from any analyzed "
                     + "ASN; they were excluded from blast-radius scoring (an empty metro is not "
-                    + "resilience) — establish connectivity there or drop them from the analysis.");
+                    + "resilience) - establish connectivity there or drop them from the analysis.");
         }
 
         return ResiliencyAssessment.builder()
@@ -902,7 +924,7 @@ class PeeringIntelligenceEngine {
                 boolean anyRouteServer = sessions.stream().anyMatch(IxPresenceDetail::isRouteServerPeer);
                 long aggregateSpeedMbps = sessions.stream().mapToLong(IxPresenceDetail::getSpeedMbps).sum();
 
-                // Both present at this IX — peering opportunity!
+                // Both present at this IX - peering opportunity!
                 double feasibility = np.getPeeringPolicy().getFeasibilityScore();
                 if (anyRouteServer) feasibility = Math.min(1.0, feasibility + 0.3);
 
@@ -1012,7 +1034,7 @@ class PeeringIntelligenceEngine {
      * Resolves a target ASN's display label, null-safely: the caller-supplied label when one was
      * given, otherwise the {@link NetworkPresence} label (PeeringDB name, or {@code "AS<asn>"}).
      * The request map stores a {@code null} value for {@code addAsn(long)} without a label, so a
-     * plain {@code getOrDefault} would return {@code null} — the key exists.
+     * plain {@code getOrDefault} would return {@code null} - the key exists.
      */
     private String resolveLabel(long asn) {
         String label = request.getTargetAsns().get(asn);
@@ -1035,7 +1057,7 @@ class PeeringIntelligenceEngine {
         boolean sameRegion = isSameRegion(metro1, metro2);
 
         // If either metro has no known coordinate, the distance is genuinely UNAVAILABLE. Do NOT
-        // fabricate 0 km — that would misread as a CRITICAL "same-site" pairing, invent a "0 km apart"
+        // fabricate 0 km - that would misread as a CRITICAL "same-site" pairing, invent a "0 km apart"
         // narrative, and drag the resiliency score toward 0. Model it as absent instead: NaN distance,
         // an UNKNOWN rating (excluded from the score), and an explanation that names the missing metros.
         if (c1 == null || c2 == null) {
@@ -1043,13 +1065,15 @@ class PeeringIntelligenceEngine {
             if (c1 == null) missing.add(metro1.code());
             if (c2 == null) missing.add(metro2.code());
             String explanation = "Geographic distance between " + metro1 + " and " + metro2
-                    + " is unavailable — no Equinix facility or Fabric coordinates for "
+                    + " is unavailable - no Equinix facility or Fabric coordinates for "
                     + String.join(" and ", missing) + "; diversity could not be assessed for this pair.";
+            LatencyFigure rtt = roundTrip(metro1, metro2, null);
             return DiversityScore.builder()
                     .primaryMetro(metro1)
                     .backupMetro(metro2)
-                    .distanceKm(Double.NaN)
-                    .estimatedRttMs(Double.NaN)
+                    .estimatedRttMs(rtt.roundTripMs())
+                    .rttBasis(rtt.roundTripMs() == null ? null : rtt.basis())
+                    .rttNote(rtt.note())
                     .distanceUnavailable(true)
                     .sameRegion(sameRegion)
                     .rating(DiversityRating.UNKNOWN)
@@ -1060,35 +1084,80 @@ class PeeringIntelligenceEngine {
         double distance = haversineKm(c1[0], c1[1], c2[0], c2[1]);
         DiversityRating rating = DiversityRating.fromDistance(distance);
 
-        // Speed-of-light floor for the round-trip between the two metros (physical lower bound).
-        double rttMs = SpeedOfLightLatency.roundTrip().millisForKm(distance);
-        String rttHint = String.format(" (~%.1f ms RTT floor)", rttMs);
+        // Speed-of-light floor for the round-trip between the two metros (physical lower bound), and the
+        // round trip as the optimiser states it: Fabric's measurement, else the floor x the fitted route factor.
+        double floorMs = SpeedOfLightLatency.roundTrip().millisForKm(distance);
+        LatencyFigure rtt = roundTrip(metro1, metro2, distance);
+        String rttHint = String.format(java.util.Locale.ROOT, " (%s round trip; %.1f ms fibre floor)", rtt.render(),
+                floorMs);
 
         String explanation;
         if (rating == DiversityRating.EXCELLENT) {
             explanation = metro1 + " and " + metro2 + " are " + (int) distance +
-                    " km apart" + rttHint + " — excellent geographic diversity across regions.";
+                    " km apart" + rttHint + " - excellent geographic diversity across regions.";
         } else if (rating == DiversityRating.GOOD) {
             explanation = metro1 + " and " + metro2 + " are " + (int) distance +
-                    " km apart" + rttHint + " — good diversity within the same continent.";
+                    " km apart" + rttHint + " - good diversity within the same continent.";
         } else if (rating == DiversityRating.MODERATE) {
             explanation = metro1 + " and " + metro2 + " are " + (int) distance +
-                    " km apart" + rttHint + " — moderate diversity; some shared infrastructure risk.";
+                    " km apart" + rttHint + " - moderate diversity; some shared infrastructure risk.";
         } else {
             explanation = metro1 + " and " + metro2 + " are only " + (int) distance +
-                    " km apart" + rttHint + " — limited geographic diversity; consider a more distant failover.";
+                    " km apart" + rttHint + " - limited geographic diversity; consider a more distant failover.";
         }
 
         return DiversityScore.builder()
                 .primaryMetro(metro1)
                 .backupMetro(metro2)
                 .distanceKm(distance)
-                .estimatedRttMs(rttMs)
+                .rttFloorMs(floorMs)
+                .estimatedRttMs(rtt.roundTripMs())
+                .rttBasis(rtt.basis())
+                .rttNote(rtt.note())
                 .distanceUnavailable(false)
                 .sameRegion(sameRegion)
                 .rating(rating)
                 .explanation(explanation)
                 .build();
+    }
+
+    /** Fits the route factor from Fabric's measured pairs that have coordinates on both ends. */
+    private void fitCalibration() {
+        List<RouteFactorCalibration.MeasuredPair> pairs = new ArrayList<>();
+        for (Map.Entry<String, Double> e : measuredRtt.entrySet()) {
+            String[] codes = e.getKey().split("\\|");
+            if (codes[0].compareTo(codes[1]) > 0) {
+                continue;
+            }
+            double[] a = metroCoordinates.get(MetroId.of(codes[0]));
+            double[] b = metroCoordinates.get(MetroId.of(codes[1]));
+            if (a == null || b == null) {
+                continue;
+            }
+            pairs.add(new RouteFactorCalibration.MeasuredPair(metroRegionEnum.get(MetroId.of(codes[0])),
+                    metroRegionEnum.get(MetroId.of(codes[1])), SpeedOfLightLatency.distanceKm(a[0], a[1], b[0], b[1]),
+                    e.getValue()));
+        }
+        calibration = RouteFactorCalibration.fit(pairs);
+    }
+
+    /**
+     * The round trip between two metros: Fabric's measurement when published, else the calibrated estimate for
+     * {@code distanceKm}, else unknown.
+     */
+    private LatencyFigure roundTrip(MetroId a, MetroId b, Double distanceKm) {
+        Double ms = measuredRtt.get(a.code() + "|" + b.code());
+        if (ms != null) {
+            return new LatencyFigure(ms, LatencyFigure.Basis.MEASURED, "Fabric measured " + a.code() + "-" + b.code());
+        }
+        if (distanceKm == null) {
+            return LatencyFigure.unknown("no Fabric measurement and no coordinates for " + a.code() + "-" + b.code());
+        }
+        Region ra = metroRegionEnum.get(a);
+        Region rb = metroRegionEnum.get(b);
+        return new LatencyFigure(calibration.estimateRoundTripMs(distanceKm, ra, rb), LatencyFigure.Basis.ESTIMATED,
+                String.format(java.util.Locale.ROOT, "%.0f km x route factor %.2f (%s)", distanceKm,
+                        calibration.fitFor(ra, rb).factor(), calibration.fitFor(ra, rb).scope()));
     }
 
     /**
@@ -1106,12 +1175,24 @@ class PeeringIntelligenceEngine {
                 if (code == null) {
                     continue;
                 }
+                liveMetros.add(code);
                 GeoCoordinate geo = metro.geoCoordinates();
                 if (geo != null && geo.getLatitude() != null && geo.getLongitude() != null) {
                     metroCoordinates.put(code, new double[]{geo.getLatitude(), geo.getLongitude()});
                 }
                 if (metro.getRegion() != null) {
                     metroRegion.put(code, metro.getRegion().name());
+                    metroRegionEnum.put(code, metro.getRegion());
+                }
+                if (metro.getConnectedMetros() != null) {
+                    for (ConnectedMetro connected : metro.getConnectedMetros()) {
+                        Double ms = connected == null ? null : connected.getAvgLatency();
+                        if (connected != null && connected.metroId() != null && ms != null && ms > 0
+                                && Double.isFinite(ms) && !connected.metroId().equals(code)) {
+                            measuredRtt.put(code.code() + "|" + connected.metroId().code(), ms);
+                            measuredRtt.putIfAbsent(connected.metroId().code() + "|" + code.code(), ms);
+                        }
+                    }
                 }
                 if (metro.getIbxs() != null) {
                     for (String ibx : metro.getIbxs()) {
@@ -1121,9 +1202,11 @@ class PeeringIntelligenceEngine {
                     }
                 }
             }
+            fitCalibration();
         }
         catch (RuntimeException e) {
-            // Fabric metros unavailable: proceed with whatever loaded, but never swallow it silently —
+            fitCalibration();
+            // Fabric metros unavailable: proceed with whatever loaded, but never swallow it silently - 
             // geographic diversity and the IX/facility-to-metro bridge are degraded, so say so.
             warnings.add("Equinix Fabric metro data could not be fully loaded (" + describe(e) + "); "
                     + "geographic diversity scoring and IX/facility-to-metro binding are degraded for "
@@ -1132,7 +1215,7 @@ class PeeringIntelligenceEngine {
     }
 
     /**
-     * Builds {@link #metroFacilityCoordinates} — a per-metro representative coordinate from the actual
+     * Builds {@link #metroFacilityCoordinates} - a per-metro representative coordinate from the actual
      * Equinix IBX data centers, computed as the centroid of the PeeringDB Equinix facility coordinates
      * resolved to each metro (via the IBX-name bridge). Requires {@link EquinixIXMapping#mapFacilities}
      * to have run. Best-effort: facilities without coordinates or without a resolvable metro are
@@ -1200,7 +1283,7 @@ class PeeringIntelligenceEngine {
 
     private String getRegionForMetro(MetroId metro) {
         // Live Fabric region (AMER/EMEA/APAC), loaded in loadMetroGeo(); the geographic-distance
-        // measure in computeDiversity() — not this coarse bucket — is the primary diversity signal.
+        // measure in computeDiversity() - not this coarse bucket - is the primary diversity signal.
         return metroRegion.getOrDefault(metro, UNKNOWN_REGION);
     }
 
@@ -1211,7 +1294,7 @@ class PeeringIntelligenceEngine {
 
         // Factor 1: Average blast radius impact (lower is better), computed over ONLY the customer
         // metros that have some analyzed-ASN presence to lose. A metro with ZERO relevant presence
-        // has impactRatio 0, and folding it in would score the absence as a perfect 1.0 — rewarding
+        // has impactRatio 0, and folding it in would score the absence as a perfect 1.0 - rewarding
         // a customer for having nothing at a site. Absence is excluded, never rewarded; if NO metro
         // has relevant presence the blast factor is neutral (0.5), not perfect.
         OptionalDouble avgImpact = blastReports.stream()
@@ -1226,7 +1309,7 @@ class PeeringIntelligenceEngine {
                 .count();
         double correlationPenalty = Math.min(0.3, criticalCorrelations * 0.1);
 
-        // Factor 3: Diversity bonus. Pairs whose distance is unavailable are EXCLUDED — they carry no
+        // Factor 3: Diversity bonus. Pairs whose distance is unavailable are EXCLUDED - they carry no
         // real diversity signal, and folding their placeholder score in would drag the result toward 0
         // (a data gap must not masquerade as poor resiliency). If every pair is unavailable, fall back
         // to a neutral 0.5 rather than inventing a diversity verdict.
@@ -1281,16 +1364,16 @@ class PeeringIntelligenceEngine {
         StringBuilder sb = new StringBuilder();
         if ("Automatic".equals(complexity)) {
             sb.append("Both networks are at ").append(ix.getIxName());
-            sb.append(" and ").append(np.getLabel()).append(" uses route servers — ");
+            sb.append(" and ").append(np.getLabel()).append(" uses route servers - ");
             sb.append("peering can be established automatically by connecting to the MLPE route server.");
         } else if ("Simple".equals(complexity)) {
             sb.append("Both networks are at ").append(ix.getIxName());
-            sb.append(". ").append(np.getLabel()).append(" has an Open peering policy — ");
+            sb.append(". ").append(np.getLabel()).append(" has an Open peering policy - ");
             sb.append("configure a bilateral BGP session to establish peering.");
         } else {
             sb.append("Both networks are at ").append(ix.getIxName());
             sb.append(". ").append(np.getLabel()).append(" has a ").append(np.getPeeringPolicy().getDisplayName());
-            sb.append(" peering policy — contact their peering team to negotiate terms.");
+            sb.append(" peering policy - contact their peering team to negotiate terms.");
         }
         return sb.toString();
     }

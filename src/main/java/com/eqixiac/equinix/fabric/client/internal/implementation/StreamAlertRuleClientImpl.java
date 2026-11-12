@@ -52,7 +52,8 @@ public class StreamAlertRuleClientImpl extends ResourceClientBase<StreamAlertRul
     }
 
     public StreamAlertRuleJson update(String streamId, String uuid, StreamAlertRulePutJson putJson) {
-        // PATCH /streams/{streamId}/alertRules/{uuid} with a full AlertRulePutRequest body (application/json).
+        // PUT /streams/{streamId}/alertRules/{uuid} with a full AlertRulePutRequest body (application/json);
+        // the Fabric v4 spec defines no PATCH on this path.
         return updateOne("UpdateStreamAlertRule", Map.of("streamId", streamId, "uuid", uuid), putJson);
     }
 

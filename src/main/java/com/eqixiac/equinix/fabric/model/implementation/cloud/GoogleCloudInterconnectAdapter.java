@@ -44,7 +44,8 @@ import lombok.Getter;
  *         attachment,
  *         attachment.getPairingKey(),           // GCP Pairing Key
  *         attachment.getRegion(),               // e.g., "us-east1"
- *         "equinix-gcp-profile-uuid"            // Equinix service profile for GCP
+ *         "equinix-gcp-profile-uuid",            // Equinix service profile for GCP
+ *     "SV"                                   // Equinix metro of the provider port
  *     );
  *
  * Connection conn = fabric.connections()
@@ -62,7 +63,8 @@ import lombok.Getter;
  * GoogleCloudInterconnectAdapter<?> adapter = GoogleCloudInterconnectAdapter.of(
  *     "xxxx/xxxx/xxxx/xxxx",                   // GCP Pairing Key
  *     "us-east1",                               // Region
- *     "equinix-gcp-profile-uuid"                // Equinix service profile
+ *     "equinix-gcp-profile-uuid",                // Equinix service profile
+ *     "SV"                                   // Equinix metro of the provider port
  * );
  * }</pre>
  *
@@ -77,6 +79,7 @@ public class GoogleCloudInterconnectAdapter<T> implements CloudProviderConnectio
     private final String authenticationKey;
     private final String sellerRegion;
     private final String serviceProfileUuid;
+    private final String metroCode;
 
     /**
      * Creates an adapter wrapping a Google Cloud Interconnect SDK object.
@@ -85,12 +88,15 @@ public class GoogleCloudInterconnectAdapter<T> implements CloudProviderConnectio
      * @param gcpPairingKey      the GCP Pairing Key provided by Google Cloud
      * @param gcpRegion          the GCP region (e.g., {@code "us-east1"})
      * @param serviceProfileUuid the Equinix Fabric service profile UUID for Google Cloud
+     * @param metroCode          the Equinix metro the provider is reached in, e.g. {@code "SV"}; required,
+     *                           sent as {@code zSide.accessPoint.location.metroCode}
      */
-    public GoogleCloudInterconnectAdapter(T source, String gcpPairingKey, String gcpRegion, String serviceProfileUuid) {
+    public GoogleCloudInterconnectAdapter(T source, String gcpPairingKey, String gcpRegion, String serviceProfileUuid, String metroCode) {
         this.source = source;
         this.authenticationKey = gcpPairingKey;
         this.sellerRegion = gcpRegion;
         this.serviceProfileUuid = serviceProfileUuid;
+        this.metroCode = AdapterArguments.requireMetro(metroCode);
     }
 
     /**
@@ -99,10 +105,12 @@ public class GoogleCloudInterconnectAdapter<T> implements CloudProviderConnectio
      * @param gcpPairingKey      the GCP Pairing Key
      * @param gcpRegion          the GCP region
      * @param serviceProfileUuid the Equinix Fabric service profile UUID for Google Cloud
+     * @param metroCode          the Equinix metro the provider is reached in, e.g. {@code "SV"}; required,
+     *                           sent as {@code zSide.accessPoint.location.metroCode}
      * @return a new adapter configured for Google Cloud Interconnect
      */
-    public static GoogleCloudInterconnectAdapter<Void> of(String gcpPairingKey, String gcpRegion, String serviceProfileUuid) {
-        return new GoogleCloudInterconnectAdapter<>(null, gcpPairingKey, gcpRegion, serviceProfileUuid);
+    public static GoogleCloudInterconnectAdapter<Void> of(String gcpPairingKey, String gcpRegion, String serviceProfileUuid, String metroCode) {
+        return new GoogleCloudInterconnectAdapter<>(null, gcpPairingKey, gcpRegion, serviceProfileUuid, metroCode);
     }
 
     @Override

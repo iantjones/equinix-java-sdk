@@ -25,40 +25,40 @@ import com.eqixiac.equinix.internetaccess.model.implementation.GeoCoordinates;
  * Estimates network latency from geographic distance using the speed of light in optical fiber.
  *
  * <p>Light in glass fiber travels at {@code c / n}, where {@code n} ≈ {@value #DEFAULT_FIBER_REFRACTIVE_INDEX}
- * is the refractive index — roughly 204,000&nbsp;km/s, or ~4.9&nbsp;µs per km one-way. The estimate is:</p>
+ * is the refractive index - roughly 204,000&nbsp;km/s, or ~4.9&nbsp;µs per km one-way. The estimate is:</p>
  *
  * <pre>{@code one-way ms = distanceKm * routeFactor / (c / n / 1000)}</pre>
  *
  * <p>and round-trip is twice that. {@code routeFactor} (default {@value #DEFAULT_ROUTE_FACTOR}) inflates
  * the great-circle distance for non-direct fibre paths; leave it at 1.0 for the theoretical
- * speed-of-light floor, or set ~1.3–1.5 for a realistic terrestrial route. The result is a physical
- * lower bound (or estimate) — it excludes switching, queuing, and serialization delay.</p>
+ * speed-of-light floor, or set ~1.3-1.5 for a realistic terrestrial route. The result is a physical
+ * lower bound (or estimate) - it excludes switching, queuing, and serialization delay.</p>
  *
  * <p>The {@linkplain Mode#ROUND_TRIP round-trip (RTT)} mode is the default, since RTT is what most
  * latency budgets are quoted in.</p>
  *
- * <p>Latency is computed <strong>IBX-to-IBX</strong> — between two specific Equinix data centers
- * using each IBX's own {@linkplain Ibx#getGeoCoordinates() coordinates} — not between metro
+ * <p>Latency is computed <strong>IBX-to-IBX</strong> - between two specific Equinix data centers
+ * using each IBX's own {@linkplain Ibx#getGeoCoordinates() coordinates} - not between metro
  * centroids, so two IBXes in the same metro have a real (small, non-zero) distance.</p>
  *
  * <h3>Endpoint types</h3>
  * <p>Latency can be computed between any mix of the SDK's location-bearing types:</p>
  * <ul>
- *   <li><b>IBX ↔ IBX</b> — {@link #millisBetween(Ibx, Ibx)}: the most precise figure, using each
+ *   <li><b>IBX to IBX</b> - {@link #millisBetween(Ibx, Ibx)}: the most precise figure, using each
  *       data center's own coordinates (from {@code internetAccess.ibxs()}); two IBXes in the same
  *       metro get a real, small, non-zero distance.</li>
- *   <li><b>Metro ↔ Metro</b> — {@link #millisBetween(Metro, Metro)}: metro-centroid figure using
+ *   <li><b>Metro to Metro</b> - {@link #millisBetween(Metro, Metro)}: metro-centroid figure using
  *       Fabric's metro coordinates (from {@code fabric.metros()} / {@code fabric.metroRegistry()}).
  *       Fine for city-to-city planning; same-metro pairs compute as 0.</li>
- *   <li><b>IBX ↔ Metro</b> — {@link #millisBetween(Ibx, Metro)} / {@link #millisBetween(Metro, Ibx)}:
+ *   <li><b>IBX to Metro</b> - {@link #millisBetween(Ibx, Metro)} / {@link #millisBetween(Metro, Ibx)}:
  *       mixed precision, e.g. "from my cage in LA4 to the Dallas metro".</li>
- *   <li><b>Raw</b> — {@link #millisBetween(GeoCoordinate, GeoCoordinate)},
+ *   <li><b>Raw</b> - {@link #millisBetween(GeoCoordinate, GeoCoordinate)},
  *       {@link #distanceKm(double, double, double, double)} and {@link #millisForKm(double)} for
  *       arbitrary coordinates or known distances, fully offline.</li>
  * </ul>
  *
  * <p>Coordinates are optional in both source APIs, so every typed overload throws
- * {@link IllegalArgumentException} naming the offending IBX/metro when coordinates are missing —
+ * {@link IllegalArgumentException} naming the offending IBX/metro when coordinates are missing - 
  * fail loud rather than return a bogus zero.</p>
  *
  * <p>For metro-to-metro, compare the calculated floor against Equinix's <em>measured</em>
@@ -149,8 +149,13 @@ public final class SpeedOfLightLatency {
      *
      * @param distanceKm the distance in kilometres (negative values are treated as 0)
      * @return the estimated latency in milliseconds, round-trip or one-way per {@link #getMode()}
+     * @throws IllegalArgumentException if {@code distanceKm} is NaN or infinite (a missing distance
+     *                                  must not turn into a latency figure)
      */
     public double millisForKm(double distanceKm) {
+        if (!Double.isFinite(distanceKm)) {
+            throw new IllegalArgumentException("distanceKm must be a finite number, got " + distanceKm);
+        }
         double km = Math.max(0.0, distanceKm);
         double fibreSpeedKmPerMs = SPEED_OF_LIGHT_KM_PER_S / refractiveIndex / 1000.0;
         double oneWayMs = (km * routeFactor) / fibreSpeedKmPerMs;
@@ -186,7 +191,7 @@ public final class SpeedOfLightLatency {
     /**
      * Fibre latency between two Equinix metros, using each metro's Fabric centroid
      * {@linkplain Metro#geoCoordinates() coordinates}. This is a metro-level figure: two IBXes in
-     * the same metro compute as 0 — use {@link #millisBetween(Ibx, Ibx)} for per-data-center
+     * the same metro compute as 0 - use {@link #millisBetween(Ibx, Ibx)} for per-data-center
      * precision.
      *
      * @param a one metro
@@ -199,7 +204,7 @@ public final class SpeedOfLightLatency {
     }
 
     /**
-     * Fibre latency between an IBX data center and a metro centroid (mixed precision) — e.g.
+     * Fibre latency between an IBX data center and a metro centroid (mixed precision) - e.g.
      * "from my cage in LA4 to the Dallas metro".
      *
      * @param a the IBX
@@ -338,9 +343,18 @@ public final class SpeedOfLightLatency {
     /**
      * Great-circle (haversine) distance between two latitude/longitude pairs.
      *
+     * @param lat1 latitude of the first point, decimal degrees
+     * @param lon1 longitude of the first point, decimal degrees
+     * @param lat2 latitude of the second point, decimal degrees
+     * @param lon2 longitude of the second point, decimal degrees
      * @return the distance in kilometres
+     * @throws IllegalArgumentException if any coordinate is NaN or infinite
      */
     public static double distanceKm(double lat1, double lon1, double lat2, double lon2) {
+        if (!Double.isFinite(lat1) || !Double.isFinite(lon1) || !Double.isFinite(lat2) || !Double.isFinite(lon2)) {
+            throw new IllegalArgumentException("coordinates must be finite numbers, got (" + lat1 + ", " + lon1
+                    + ") and (" + lat2 + ", " + lon2 + ")");
+        }
         double dLat = Math.toRadians(lat2 - lat1);
         double dLon = Math.toRadians(lon2 - lon1);
         double h = Math.sin(dLat / 2) * Math.sin(dLat / 2)
@@ -359,7 +373,7 @@ public final class SpeedOfLightLatency {
 
         /**
          * Sets the reporting mode. Unlike the other two setters, a {@code null} argument does not
-         * throw — it is silently ignored and the current mode (initially
+         * throw - it is silently ignored and the current mode (initially
          * {@link Mode#ROUND_TRIP}) is kept.
          *
          * @param mode one-way or round-trip; {@code null} is ignored
@@ -375,17 +389,17 @@ public final class SpeedOfLightLatency {
         /**
          * Sets the fibre refractive index. Only {@code > 0} is enforced; note that values below
          * 1.0 are physically meaningless for fibre (they yield a floor faster than light in
-         * vacuum) — real single-mode fibre is ~{@value #DEFAULT_FIBER_REFRACTIVE_INDEX}, and
+         * vacuum) - real single-mode fibre is ~{@value #DEFAULT_FIBER_REFRACTIVE_INDEX}, and
          * meaningful values are {@code >= 1.0}.
          *
          * @param refractiveIndex the fibre refractive index (must be &gt; 0); defaults to
          *                        {@value #DEFAULT_FIBER_REFRACTIVE_INDEX}
          * @return this builder
-         * @throws IllegalArgumentException if {@code refractiveIndex <= 0}
+         * @throws IllegalArgumentException if {@code refractiveIndex <= 0} or it is NaN or infinite
          */
         public Builder refractiveIndex(double refractiveIndex) {
-            if (refractiveIndex <= 0) {
-                throw new IllegalArgumentException("refractiveIndex must be > 0");
+            if (!(refractiveIndex > 0) || !Double.isFinite(refractiveIndex)) {
+                throw new IllegalArgumentException("refractiveIndex must be a finite number > 0, got " + refractiveIndex);
             }
             this.refractiveIndex = refractiveIndex;
             return this;
@@ -398,11 +412,11 @@ public final class SpeedOfLightLatency {
          * @param routeFactor path inflation over the great-circle distance (must be &gt;= 1.0);
          *                   defaults to {@value #DEFAULT_ROUTE_FACTOR}
          * @return this builder
-         * @throws IllegalArgumentException if {@code routeFactor < 1.0}
+         * @throws IllegalArgumentException if {@code routeFactor < 1.0} or it is NaN or infinite
          */
         public Builder routeFactor(double routeFactor) {
-            if (routeFactor < 1.0) {
-                throw new IllegalArgumentException("routeFactor must be >= 1.0");
+            if (!(routeFactor >= 1.0) || !Double.isFinite(routeFactor)) {
+                throw new IllegalArgumentException("routeFactor must be a finite number >= 1.0, got " + routeFactor);
             }
             this.routeFactor = routeFactor;
             return this;

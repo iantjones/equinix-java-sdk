@@ -1,0 +1,2511 @@
+{
+ "_comment": "Fixture -> OpenAPI response (or request) schema. One entry per file under src/test/resources/json. validate=false entries must say why. Checked by spec.FixtureSpecConformanceTest.",
+ "specSource": "Vendored from docs.equinix.com/.well-known/api-catalog on 2026-11-11 (Fabric v4 4.34.0; Network Edge ne.json; accessv1, accesstokenv1, stsv1, internetaccess v1+v2, smartview v2, Projects v2 and the Customer Portal specs that have fixtures). Initial mapping derived 2026-11-12 by schema best-fit (derivation=best-fit), by operationId + example name (fabric/beta), or by hand (manual).",
+ "fixtures": {
+  "core/apiParams_CoreTest.json": {
+   "validate": false,
+   "reason": "SDK endpoint-catalogue test resource (apiParams format), not an API payload"
+  },
+  "core/empty_paginated_response.json": {
+   "validate": false,
+   "reason": "generic empty {pagination,data:[]} envelope reused for many endpoints; no single response schema"
+  },
+  "core/error_404_response.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/ErrorList",
+   "derivation": "best-fit"
+  },
+  "core/error_409_response.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/ErrorList",
+   "derivation": "best-fit"
+  },
+  "core/error_500_response.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/ErrorList",
+   "derivation": "best-fit"
+  },
+  "core/errors/apigee_401.json": {
+   "validate": false,
+   "reason": "API-gateway (Apigee) error body; no product specification describes gateway errors"
+  },
+  "core/errors/operations_400.json": {
+   "validate": false,
+   "reason": "generic Customer Portal error envelope ({errors:[{code,fields,message,messageParams}]}) captured live; none of the vendored Customer Portal specs declares this shape"
+  },
+  "core/errors/fabric_400.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/ErrorList",
+   "derivation": "best-fit"
+  },
+  "core/errors/gateway_404.json": {
+   "validate": false,
+   "reason": "API-gateway error body; no product specification describes gateway errors"
+  },
+  "core/errors/iam_400.json": {
+   "spec": "accessv1.yaml",
+   "schema": "#/components/schemas/ErrorResponse",
+   "derivation": "best-fit"
+  },
+  "core/errors/smarthands_400.json": {
+   "spec": "smarthandsv1.yaml",
+   "schema": "#/definitions/genericError",
+   "derivation": "best-fit"
+  },
+  "core/errors/smartview_v1_400.json": {
+   "spec": "smartviewv2.yaml",
+   "schema": "#/components/schemas/Error",
+   "derivation": "best-fit"
+  },
+  "core/errors/smartview_v2_400.json": {
+   "spec": "smartviewv2.yaml",
+   "schema": "#/components/schemas/ApiErrorResponse",
+   "derivation": "manual (reviewed 2026-11-12)"
+  },
+  "core/errors/sts_400.json": {
+   "spec": "stsv1.yaml",
+   "schema": "#/components/schemas/TokenErrorResponse",
+   "derivation": "manual (reviewed 2026-11-12)"
+  },
+  "core/errors/sts_400_camel.json": {
+   "spec": "stsv1.yaml",
+   "schema": "#/components/schemas/TokenErrorResponse",
+   "derivation": "best-fit"
+  },
+  "core/oauth_token_response.json": {
+   "spec": "accesstokenv1.yaml",
+   "schema": "#/components/schemas/Oauth2TokenResponse",
+   "derivation": "best-fit"
+  },
+  "operations/asset_response.json": {
+   "spec": "assetsv1.yaml",
+   "schema": "#/definitions/assetsSummary",
+   "derivation": "best-fit"
+  },
+  "operations/attachment_response.json": {
+   "spec": "attachmentsv1.yaml",
+   "schema": "#/definitions/attachment",
+   "derivation": "best-fit"
+  },
+  "operations/billing_account_response.json": {
+   "spec": "billingv1.yaml",
+   "schema": "#/definitions/account",
+   "derivation": "best-fit"
+  },
+  "operations/billing_account_v2_response.json": {
+   "spec": "basv2.yaml",
+   "schema": "#/components/schemas/BillingAccount",
+   "derivation": "best-fit"
+  },
+  "operations/digital_loa_response.json": {
+   "spec": "diloav1.yaml",
+   "schema": "#/components/schemas/Loa",
+   "derivation": "best-fit"
+  },
+  "operations/email_details_response.json": {
+   "spec": "supportv2.yaml",
+   "schema": "#/components/schemas/EmailDetailsResponse",
+   "derivation": "best-fit"
+  },
+  "operations/notification_response.json": {
+   "spec": "notificationsv1.yaml",
+   "schema": "#/definitions/ibx-notification",
+   "derivation": "best-fit"
+  },
+  "operations/order_history_locations_response.json": {
+   "spec": "orderhistoryv1.yaml",
+   "schema": "#/definitions/order-history-location-response",
+   "derivation": "best-fit"
+  },
+  "operations/order_history_search_response.json": {
+   "spec": "orderhistoryv1.yaml",
+   "schema": "#/definitions/order-history-response",
+   "derivation": "best-fit"
+  },
+  "operations/order_history_search_response_live.json": {
+   "spec": "orderhistoryv1.yaml",
+   "schema": "#/definitions/order-history-response",
+   "derivation": "manual (reviewed 2026-11-12)"
+  },
+  "operations/order_response.json": {
+   "spec": "ordersv2.yaml",
+   "schema": "#/components/schemas/Orders",
+   "derivation": "best-fit"
+  },
+  "operations/paginated_assets.json": {
+   "spec": "assetsv1.yaml",
+   "schema": "#/definitions/assets-search-response",
+   "derivation": "best-fit"
+  },
+  "operations/paginated_attachments.json": {
+   "spec": "attachmentsv1.yaml",
+   "schema": "#/definitions/records",
+   "derivation": "best-fit"
+  },
+  "operations/paginated_billing_accounts.json": {
+   "spec": "billingv1.yaml",
+   "schema": "#/definitions/records",
+   "derivation": "best-fit"
+  },
+  "operations/paginated_billing_accounts_v2.json": {
+   "spec": "basv2.yaml",
+   "schema": "#/components/schemas/SearchResponse",
+   "derivation": "best-fit"
+  },
+  "operations/paginated_digital_loa_changes.json": {
+   "spec": "diloav1.yaml",
+   "schema": "#/components/schemas/LoaChangeList",
+   "derivation": "best-fit"
+  },
+  "operations/paginated_invoice_details.json": {
+   "spec": "billingv2.yaml",
+   "schema": "#/components/schemas/invoiceResponse",
+   "derivation": "best-fit"
+  },
+  "operations/paginated_invoice_summaries.json": {
+   "spec": "billingv2.yaml",
+   "schema": "#/components/schemas/invoiceSummaryResponse",
+   "derivation": "best-fit"
+  },
+  "operations/paginated_reports.json": {
+   "spec": "reportsv1.yaml",
+   "schema": "#/definitions/search-report-response",
+   "derivation": "best-fit"
+  },
+  "operations/paginated_support_plans.json": {
+   "spec": "supportplansv2.yaml",
+   "schema": "#/components/schemas/supportPlanResponse",
+   "derivation": "best-fit"
+  },
+  "operations/paginated_unified_notifications.json": {
+   "spec": "unifiednotificationv2.yaml",
+   "schema": "#/components/schemas/EventSearchResponse",
+   "derivation": "best-fit"
+  },
+  "operations/quote_response.json": {
+   "spec": "quotesv2.yaml",
+   "schema": "#/components/schemas/quote_response",
+   "derivation": "best-fit"
+  },
+  "operations/report_definition_response.json": {
+   "spec": "reportsv1.yaml",
+   "schema": "#/definitions/reportRequest",
+   "derivation": "best-fit"
+  },
+  "operations/report_definitions_response.json": {
+   "spec": "reportsv1.yaml",
+   "schema": "#/paths/~1v1~1reportCenter~1reports~1definitions/get/responses/200/schema",
+   "derivation": "best-fit"
+  },
+  "operations/report_response.json": {
+   "spec": "reportsv1.yaml",
+   "schema": "#/definitions/downloadable-report",
+   "derivation": "best-fit"
+  },
+  "operations/scheduled_report_response.json": {
+   "spec": "reportsv1.yaml",
+   "schema": "#/definitions/scheduledReport",
+   "derivation": "best-fit"
+  },
+  "operations/scheduled_reports_response.json": {
+   "spec": "reportsv1.yaml",
+   "schema": "#/definitions/search-scheduled-report-response",
+   "derivation": "best-fit"
+  },
+  "operations/support_case_response.json": {
+   "spec": "supportv2.yaml",
+   "schema": "#/components/schemas/SingleCaseResponseV2",
+   "derivation": "best-fit"
+  },
+  "operations/support_plan_response.json": {
+   "spec": "supportplansv2.yaml",
+   "schema": "#/components/schemas/supports",
+   "derivation": "best-fit"
+  },
+  "operations/trouble_ticket_locations_response.json": {
+   "spec": "smarthandsv1.yaml",
+   "schema": "#/paths/~1v1~1orders~1smarthands~1locations/get/responses/200/schema",
+   "derivation": "best-fit"
+  },
+  "operations/trouble_ticket_response.json": {
+   "spec": "ticketsv2.yaml",
+   "schema": "#/components/schemas/Tickets",
+   "derivation": "best-fit"
+  },
+  "operations/trouble_ticket_types_response.json": {
+   "spec": "troubleticketv1.yaml",
+   "schema": "#/paths/~1v1~1orders~1troubleticket~1types/get/responses/200/schema",
+   "derivation": "best-fit"
+  },
+  "design/estate/connections_search_page1.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/ConnectionSearchResponse",
+   "derivation": "best-fit"
+  },
+  "design/estate/connections_search_page2.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/ConnectionSearchResponse",
+   "derivation": "best-fit"
+  },
+  "design/estate/inventory_snapshot.json": {
+   "validate": false,
+   "reason": "SDK-produced estate inventory snapshot (design.estate), not an API payload"
+  },
+  "design/estate/metrics_connection_search_response.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/GetMetricsByAssetResponse",
+   "derivation": "best-fit"
+  },
+  "design/estate/metrics_empty_search_response.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/GetMetricsByAssetResponse",
+   "derivation": "best-fit"
+  },
+  "design/estate/ne_device_response.json": {
+   "spec": "ne.json",
+   "schema": "#/components/schemas/VirtualDeviceDetailsResponse",
+   "derivation": "best-fit"
+  },
+  "design/estate/networks_search_response.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/NetworkSearchResponse",
+   "derivation": "best-fit"
+  },
+  "design/estate/ports_list_response.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/AllPortsResponse",
+   "derivation": "best-fit"
+  },
+  "design/estate/router_packages_response.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/PackageResponse",
+   "derivation": "best-fit"
+  },
+  "design/estate/routers_search_response.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/SearchResponse",
+   "derivation": "best-fit"
+  },
+  "fabric/agent_response.json": {
+   "validate": false,
+   "reason": "/fabric/v4/agents and /agentTemplates are absent from Fabric spec 4.34.0 although the live service serves them (200, observed 2026-11-11)"
+  },
+  "fabric/agent_template_response.json": {
+   "validate": false,
+   "reason": "/fabric/v4/agents and /agentTemplates are absent from Fabric spec 4.34.0 although the live service serves them (200, observed 2026-11-11)"
+  },
+  "fabric/beta-live/asns_search_live_shape.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/AsnSearchResponseBody",
+   "derivation": "best-fit"
+  },
+  "fabric/beta/appdomains/createAppDomain.request.CreateAppDomain.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/AppDomainPostRequest",
+   "derivation": "operationId createAppDomain request example CreateAppDomain"
+  },
+  "fabric/beta/appdomains/createAppDomain.response.AppDomainResponse.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/AppDomain",
+   "derivation": "operationId createAppDomain response example AppDomainResponse"
+  },
+  "fabric/beta/appdomains/deleteAppDomainByUuid.response.AppDomainResponse.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/AppDomain",
+   "derivation": "operationId deleteAppDomainByUuid response example AppDomainResponse"
+  },
+  "fabric/beta/appdomains/getAppDomainByUuid.response.AppDomainResponse.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/AppDomain",
+   "derivation": "operationId getAppDomainByUuid response example AppDomainResponse"
+  },
+  "fabric/beta/appdomains/getAttachedAppLinksByAppDomainId.response.Example.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/AppDomainAttachedAppLinks",
+   "derivation": "operationId getAttachedAppLinksByAppDomainId response example Example"
+  },
+  "fabric/beta/appdomains/searchAppDomains.request.SearchFilterByName.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/AppDomainSearchRequest",
+   "derivation": "operationId searchAppDomains request example SearchFilterByName"
+  },
+  "fabric/beta/appdomains/searchAppDomains.request.SearchFilterByStatus.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/AppDomainSearchRequest",
+   "derivation": "operationId searchAppDomains request example SearchFilterByStatus"
+  },
+  "fabric/beta/appdomains/searchAppDomains.request.SearchFilterOrAnd.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/AppDomainSearchRequest",
+   "derivation": "operationId searchAppDomains request example SearchFilterOrAnd"
+  },
+  "fabric/beta/appdomains/searchAppDomains.response.Example.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/AppDomainSearchResponse",
+   "derivation": "operationId searchAppDomains response example Example"
+  },
+  "fabric/beta/appdomains/updateAppDomainByUuid.request.UpdateDescription.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/AppDomainUpdateRequest",
+   "derivation": "operationId updateAppDomainByUuid request example UpdateDescription"
+  },
+  "fabric/beta/appdomains/updateAppDomainByUuid.response.AppDomainResponse.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/AppDomain",
+   "derivation": "operationId updateAppDomainByUuid response example AppDomainResponse"
+  },
+  "fabric/beta/applinks/attachAppDomainToAppLink.response.AppLinkAttachDomainResponse.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/AppLinkAppDomainAttachment",
+   "derivation": "operationId attachAppDomainToAppLink response example AppLinkAttachDomainResponse"
+  },
+  "fabric/beta/applinks/attachAppProcessorToAppLink.request.AttachAppProcessorToAppLink.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/AppLinkAttachProcessorRequest",
+   "derivation": "operationId attachAppProcessorToAppLink request example AttachAppProcessorToAppLink"
+  },
+  "fabric/beta/applinks/attachAppProcessorToAppLink.response.AppLinkAttachProcessorResponse.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/AppLinkAppProcessorAttachment",
+   "derivation": "operationId attachAppProcessorToAppLink response example AppLinkAttachProcessorResponse"
+  },
+  "fabric/beta/applinks/attachAppServiceToAppLink.request.AttachAppLinkToService.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/AppLinkAttachServiceRequest",
+   "derivation": "operationId attachAppServiceToAppLink request example AttachAppLinkToService"
+  },
+  "fabric/beta/applinks/attachAppServiceToAppLink.response.AppLinkResponse.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/AppLinkAppServiceAttachment",
+   "derivation": "operationId attachAppServiceToAppLink response example AppLinkResponse"
+  },
+  "fabric/beta/applinks/createAppLink.request.CreateAppLink.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/AppLinkPostRequest",
+   "derivation": "operationId createAppLink request example CreateAppLink"
+  },
+  "fabric/beta/applinks/createAppLink.response.AppLinkResponse.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/AppLink",
+   "derivation": "operationId createAppLink response example AppLinkResponse"
+  },
+  "fabric/beta/applinks/deleteAppLinkByUuid.response.AppLinkResponse.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/AppLink",
+   "derivation": "operationId deleteAppLinkByUuid response example AppLinkResponse"
+  },
+  "fabric/beta/applinks/detachAppDomainFromAppLink.response.AppLinkDetachDomainResponse.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/AppLinkAppDomainAttachment",
+   "derivation": "operationId detachAppDomainFromAppLink response example AppLinkDetachDomainResponse"
+  },
+  "fabric/beta/applinks/detachAppProcessorFromAppLink.response.AppLinkDetachProcessorResponse.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/AppLinkAppProcessorAttachment",
+   "derivation": "operationId detachAppProcessorFromAppLink response example AppLinkDetachProcessorResponse"
+  },
+  "fabric/beta/applinks/detachAppServiceFromAppLink.response.AppLinkResponse.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/AppLinkAppServiceAttachment",
+   "derivation": "operationId detachAppServiceFromAppLink response example AppLinkResponse"
+  },
+  "fabric/beta/applinks/getAppLinkByUuid.response.AppLinkResponse.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/AppLink",
+   "derivation": "operationId getAppLinkByUuid response example AppLinkResponse"
+  },
+  "fabric/beta/applinks/getAttachedAppDomainByUuid.response.AppLinkDomainResponse.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/AppLinkAppDomainAttachment",
+   "derivation": "operationId getAttachedAppDomainByUuid response example AppLinkDomainResponse"
+  },
+  "fabric/beta/applinks/getAttachedAppDomainsByAppLinkId.response.Example.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/AppLinkAttachedAppDomains",
+   "derivation": "operationId getAttachedAppDomainsByAppLinkId response example Example"
+  },
+  "fabric/beta/applinks/getAttachedAppProcessor.response.AppLinkAttachProcessorGetResponse.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/AppLinkAppProcessorAttachment",
+   "derivation": "operationId getAttachedAppProcessor response example AppLinkAttachProcessorGetResponse"
+  },
+  "fabric/beta/applinks/getAttachedAppProcessorsByAppLinkId.response.Example.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/AppLinkAttachedAppProcessors",
+   "derivation": "operationId getAttachedAppProcessorsByAppLinkId response example Example"
+  },
+  "fabric/beta/applinks/getAttachedAppServiceByUuid.response.AppLinkResponse.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/AppLinkAppServiceAttachment",
+   "derivation": "operationId getAttachedAppServiceByUuid response example AppLinkResponse"
+  },
+  "fabric/beta/applinks/getAttachedAppServicesByAppLinkId.response.Example.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/AppLinkAttachedAppServices",
+   "derivation": "operationId getAttachedAppServicesByAppLinkId response example Example"
+  },
+  "fabric/beta/applinks/searchAppLinks.request.SearchFilterByName.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/AppLinkSearchRequest",
+   "derivation": "operationId searchAppLinks request example SearchFilterByName"
+  },
+  "fabric/beta/applinks/searchAppLinks.request.SearchFilterByStatus.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/AppLinkSearchRequest",
+   "derivation": "operationId searchAppLinks request example SearchFilterByStatus"
+  },
+  "fabric/beta/applinks/searchAppLinks.request.SearchFilterOrAnd.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/AppLinkSearchRequest",
+   "derivation": "operationId searchAppLinks request example SearchFilterOrAnd"
+  },
+  "fabric/beta/applinks/searchAppLinks.response.Example.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/AppLinkSearchResponse",
+   "derivation": "operationId searchAppLinks response example Example"
+  },
+  "fabric/beta/applinks/searchAttachedAppDomains.request.SearchAttachedDomainFilterByStatus.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/AppLinkAttachDomainSearchRequest",
+   "derivation": "operationId searchAttachedAppDomains request example SearchAttachedDomainFilterByStatus"
+  },
+  "fabric/beta/applinks/searchAttachedAppDomains.request.SearchAttachedDomainFilterOrAnd.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/AppLinkAttachDomainSearchRequest",
+   "derivation": "operationId searchAttachedAppDomains request example SearchAttachedDomainFilterOrAnd"
+  },
+  "fabric/beta/applinks/searchAttachedAppDomains.response.Example.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/AppLinkAttachDomainSearchResponse",
+   "derivation": "operationId searchAttachedAppDomains response example Example"
+  },
+  "fabric/beta/applinks/searchAttachedAppProcessors.request.SearchAttachedProcessorFilterByStatus.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/AppLinkAttachProcessorSearchRequest",
+   "derivation": "operationId searchAttachedAppProcessors request example SearchAttachedProcessorFilterByStatus"
+  },
+  "fabric/beta/applinks/searchAttachedAppProcessors.response.Example.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/AppLinkAttachProcessorSearchResponse",
+   "derivation": "operationId searchAttachedAppProcessors response example Example"
+  },
+  "fabric/beta/applinks/searchAttachedAppServices.request.SearchAttachedServiceFilterByStatus.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/AppLinkAttachServiceSearchRequest",
+   "derivation": "operationId searchAttachedAppServices request example SearchAttachedServiceFilterByStatus"
+  },
+  "fabric/beta/applinks/searchAttachedAppServices.request.SearchAttachedServiceFilterOrAnd.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/AppLinkAttachServiceSearchRequest",
+   "derivation": "operationId searchAttachedAppServices request example SearchAttachedServiceFilterOrAnd"
+  },
+  "fabric/beta/applinks/searchAttachedAppServices.response.Example.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/AppLinkAttachServiceSearchResponse",
+   "derivation": "operationId searchAttachedAppServices response example Example"
+  },
+  "fabric/beta/applinks/updateAppLinkByUuid.request.UpdateName.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/AppLinkUpdateRequest",
+   "derivation": "operationId updateAppLinkByUuid request example UpdateName"
+  },
+  "fabric/beta/applinks/updateAppLinkByUuid.response.AppLinkResponse.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/AppLink",
+   "derivation": "operationId updateAppLinkByUuid response example AppLinkResponse"
+  },
+  "fabric/beta/applinks/updateAppServiceAttachmentToAppLink.request.UpdateDestinationIp.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/AppLinkAttachServiceUpdateRequest",
+   "derivation": "operationId updateAppServiceAttachmentToAppLink request example UpdateDestinationIp"
+  },
+  "fabric/beta/applinks/updateAppServiceAttachmentToAppLink.response.AppLinkResponse.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/AppLinkAppServiceAttachment",
+   "derivation": "operationId updateAppServiceAttachmentToAppLink response example AppLinkResponse"
+  },
+  "fabric/beta/appprocessors/getAppProcessorByUuid.response.AppProcessorResponse.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/AppProcessor",
+   "derivation": "operationId getAppProcessorByUuid response example AppProcessorResponse"
+  },
+  "fabric/beta/appprocessors/searchAppProcessors.request.SearchFilterByName.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/AppProcessorSearchRequest",
+   "derivation": "operationId searchAppProcessors request example SearchFilterByName"
+  },
+  "fabric/beta/appprocessors/searchAppProcessors.request.SearchFilterByStatus.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/AppProcessorSearchRequest",
+   "derivation": "operationId searchAppProcessors request example SearchFilterByStatus"
+  },
+  "fabric/beta/appprocessors/searchAppProcessors.request.SearchFilterOrAnd.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/AppProcessorSearchRequest",
+   "derivation": "operationId searchAppProcessors request example SearchFilterOrAnd"
+  },
+  "fabric/beta/appprocessors/searchAppProcessors.response.Example.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/AppProcessorSearchResponse",
+   "derivation": "operationId searchAppProcessors response example Example"
+  },
+  "fabric/beta/appservices/createAppService.request.CreateAppService.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/AppServicePostRequest",
+   "derivation": "operationId createAppService request example CreateAppService"
+  },
+  "fabric/beta/appservices/createAppService.response.AppServiceResponse.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/AppService",
+   "derivation": "operationId createAppService response example AppServiceResponse"
+  },
+  "fabric/beta/appservices/deleteAppServiceByUuid.response.AppServiceResponse.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/AppService",
+   "derivation": "operationId deleteAppServiceByUuid response example AppServiceResponse"
+  },
+  "fabric/beta/appservices/getAppServiceByUuid.response.AppServiceResponse.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/AppService",
+   "derivation": "operationId getAppServiceByUuid response example AppServiceResponse"
+  },
+  "fabric/beta/appservices/getAttachedAppLinksByAppServiceId.response.Example.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/AppServiceAttachedAppLinks",
+   "derivation": "operationId getAttachedAppLinksByAppServiceId response example Example"
+  },
+  "fabric/beta/appservices/getAttachedAppSubscriptionsByAppServiceId.response.Example.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/AppServiceAttachedAppSubscriptions",
+   "derivation": "operationId getAttachedAppSubscriptionsByAppServiceId response example Example"
+  },
+  "fabric/beta/appservices/searchAppServices.request.SearchFilterByName.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/AppServiceSearchRequest",
+   "derivation": "operationId searchAppServices request example SearchFilterByName"
+  },
+  "fabric/beta/appservices/searchAppServices.request.SearchFilterByStatus.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/AppServiceSearchRequest",
+   "derivation": "operationId searchAppServices request example SearchFilterByStatus"
+  },
+  "fabric/beta/appservices/searchAppServices.request.SearchFilterOrAnd.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/AppServiceSearchRequest",
+   "derivation": "operationId searchAppServices request example SearchFilterOrAnd"
+  },
+  "fabric/beta/appservices/searchAppServices.response.Example.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/AppServiceSearchResponse",
+   "derivation": "operationId searchAppServices response example Example"
+  },
+  "fabric/beta/appservices/searchAttachedAppSubscriptionsByAppServiceId.response.Example.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/AppServiceAttachedAppSubscriptionSearchResponse",
+   "derivation": "operationId searchAttachedAppSubscriptionsByAppServiceId response example Example"
+  },
+  "fabric/beta/appservices/updateAppServiceByUuid.request.UpdateName.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/AppServiceUpdateRequest",
+   "derivation": "operationId updateAppServiceByUuid request example UpdateName"
+  },
+  "fabric/beta/appservices/updateAppServiceByUuid.response.AppServiceResponse.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/AppService",
+   "derivation": "operationId updateAppServiceByUuid response example AppServiceResponse"
+  },
+  "fabric/beta/appsubscriptions/createAppSubscription.request.CreateAppSubscription.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/AppSubscriptionPostRequest",
+   "derivation": "operationId createAppSubscription request example CreateAppSubscription"
+  },
+  "fabric/beta/appsubscriptions/createAppSubscription.response.AppSubscriptionResponse.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/AppSubscription",
+   "derivation": "operationId createAppSubscription response example AppSubscriptionResponse"
+  },
+  "fabric/beta/appsubscriptions/deleteAppSubscriptionByUuid.response.AppSubscriptionResponse.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/AppSubscription",
+   "derivation": "operationId deleteAppSubscriptionByUuid response example AppSubscriptionResponse"
+  },
+  "fabric/beta/appsubscriptions/getAppSubscriptionByUuid.response.AppSubscriptionResponse.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/AppSubscription",
+   "derivation": "operationId getAppSubscriptionByUuid response example AppSubscriptionResponse"
+  },
+  "fabric/beta/appsubscriptions/searchAppSubscriptions.request.SearchFilterByStatus.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/AppSubscriptionSearchRequest",
+   "derivation": "operationId searchAppSubscriptions request example SearchFilterByStatus"
+  },
+  "fabric/beta/appsubscriptions/searchAppSubscriptions.request.SearchFilterOrAnd.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/AppSubscriptionSearchRequest",
+   "derivation": "operationId searchAppSubscriptions request example SearchFilterOrAnd"
+  },
+  "fabric/beta/appsubscriptions/searchAppSubscriptions.response.Example.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/AppSubscriptionSearchResponse",
+   "derivation": "operationId searchAppSubscriptions response example Example"
+  },
+  "fabric/beta/appsubscriptions/updateAppSubscriptionByUuid.request.UpdateSourceIpSubnets.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/AppSubscriptionUpdateRequest",
+   "derivation": "operationId updateAppSubscriptionByUuid request example UpdateSourceIpSubnets"
+  },
+  "fabric/beta/appsubscriptions/updateAppSubscriptionByUuid.response.AppSubscriptionResponse.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/AppSubscription",
+   "derivation": "operationId updateAppSubscriptionByUuid response example AppSubscriptionResponse"
+  },
+  "fabric/beta/asns/createAsn.request.CreatePrivateAsn.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/CreateAsnRequest",
+   "derivation": "operationId createAsn request example CreatePrivateAsn"
+  },
+  "fabric/beta/asns/createAsn.request.CreatePublicAsn.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/CreateAsnRequest",
+   "derivation": "operationId createAsn request example CreatePublicAsn"
+  },
+  "fabric/beta/asns/createAsn.response.PrivateAsnCreated.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/Asn",
+   "derivation": "operationId createAsn response example PrivateAsnCreated"
+  },
+  "fabric/beta/asns/createAsn.response.PublicAsnCreated.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/Asn",
+   "derivation": "operationId createAsn response example PublicAsnCreated"
+  },
+  "fabric/beta/asns/deleteAsnById.response.PrivateAsnCreated.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/Asn",
+   "derivation": "operationId deleteAsnById response example PrivateAsnCreated"
+  },
+  "fabric/beta/asns/deleteAsnById.response.PublicAsnCreated.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/Asn",
+   "derivation": "operationId deleteAsnById response example PublicAsnCreated"
+  },
+  "fabric/beta/asns/getAsnById.response.PublicAsnRetrieved.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/Asn",
+   "derivation": "operationId getAsnById response example PublicAsnRetrieved"
+  },
+  "fabric/beta/asns/patchAsnById.request.AddOwnershipSignature.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/AsnPatchRequest",
+   "derivation": "operationId patchAsnById request example AddOwnershipSignature"
+  },
+  "fabric/beta/asns/patchAsnById.response.PrivateAsnCreated.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/Asn",
+   "derivation": "operationId patchAsnById response example PrivateAsnCreated"
+  },
+  "fabric/beta/asns/patchAsnById.response.PublicAsnCreated.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/Asn",
+   "derivation": "operationId patchAsnById response example PublicAsnCreated"
+  },
+  "fabric/beta/asns/searchAsns.request.SearchByProject.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/AsnSearchRequestBody",
+   "derivation": "operationId searchAsns request example SearchByProject"
+  },
+  "fabric/beta/asns/searchAsns.response.SearchAsnsByProject.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/AsnSearchResponseBody",
+   "derivation": "operationId searchAsns response example SearchAsnsByProject"
+  },
+  "fabric/beta/crossconnects/createCrossConnect.request.DiverseWithExistingCrossConnect.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/CreateCrossConnect",
+   "derivation": "operationId createCrossConnect request example DiverseWithExistingCrossConnect"
+  },
+  "fabric/beta/crossconnects/createCrossConnect.request.ExtendedCrossConnectEquinixManaged.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/CreateCrossConnect",
+   "derivation": "operationId createCrossConnect request example ExtendedCrossConnectEquinixManaged"
+  },
+  "fabric/beta/crossconnects/createCrossConnect.request.ExtendedCrossConnectSelfManaged.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/CreateCrossConnect",
+   "derivation": "operationId createCrossConnect request example ExtendedCrossConnectSelfManaged"
+  },
+  "fabric/beta/crossconnects/createCrossConnect.request.StandardCrossConnect.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/CreateCrossConnect",
+   "derivation": "operationId createCrossConnect request example StandardCrossConnect"
+  },
+  "fabric/beta/crossconnects/createCrossConnect.request.StandardCrossConnectByLoa.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/CreateCrossConnect",
+   "derivation": "operationId createCrossConnect request example StandardCrossConnectByLoa"
+  },
+  "fabric/beta/crossconnects/createCrossConnect.request.StandardCrossConnectByPatchPanel.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/CreateCrossConnect",
+   "derivation": "operationId createCrossConnect request example StandardCrossConnectByPatchPanel"
+  },
+  "fabric/beta/crossconnects/createCrossConnect.request.StandardCrossConnectWithServices.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/CreateCrossConnect",
+   "derivation": "operationId createCrossConnect request example StandardCrossConnectWithServices"
+  },
+  "fabric/beta/crossconnects/createCrossConnect.response.DiverseWithExistingCrossConnect.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/CrossConnectResponse",
+   "derivation": "operationId createCrossConnect response example DiverseWithExistingCrossConnect"
+  },
+  "fabric/beta/crossconnects/createCrossConnect.response.ExtendedCrossConnectEquinixManaged.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/CrossConnectResponse",
+   "derivation": "operationId createCrossConnect response example ExtendedCrossConnectEquinixManaged"
+  },
+  "fabric/beta/crossconnects/createCrossConnect.response.ExtendedCrossConnectSelfManaged.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/CrossConnectResponse",
+   "derivation": "operationId createCrossConnect response example ExtendedCrossConnectSelfManaged"
+  },
+  "fabric/beta/crossconnects/createCrossConnect.response.StandardCrossConnectByLoa.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/CrossConnectResponse",
+   "derivation": "operationId createCrossConnect response example StandardCrossConnectByLoa"
+  },
+  "fabric/beta/crossconnects/createCrossConnect.response.StandardCrossConnectByPatchPanel.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/CrossConnectResponse",
+   "derivation": "operationId createCrossConnect response example StandardCrossConnectByPatchPanel"
+  },
+  "fabric/beta/crossconnects/createDiverseCrossConnect.request.DiverseCrossConnectPair.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/DiverseCrossConnectRequest",
+   "derivation": "operationId createDiverseCrossConnect request example DiverseCrossConnectPair"
+  },
+  "fabric/beta/crossconnects/createDiverseCrossConnect.response.DiverseCrossConnectPair.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/CrossConnectDiverse",
+   "derivation": "operationId createDiverseCrossConnect response example DiverseCrossConnectPair"
+  },
+  "fabric/beta/crossconnects/getCrossConnectActionByUuid.response.AcceptProposedDateTime.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/CrossConnectActionResponse",
+   "derivation": "operationId getCrossConnectActionByUuid response example AcceptProposedDateTime"
+  },
+  "fabric/beta/crossconnects/getCrossConnectActionByUuid.response.CancelCrossConnect.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/CrossConnectActionResponse",
+   "derivation": "operationId getCrossConnectActionByUuid response example CancelCrossConnect"
+  },
+  "fabric/beta/crossconnects/getCrossConnectActionByUuid.response.DeinstallCrossConnect.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/CrossConnectActionResponse",
+   "derivation": "operationId getCrossConnectActionByUuid response example DeinstallCrossConnect"
+  },
+  "fabric/beta/crossconnects/getCrossConnectActionByUuid.response.RejectProposedDateTime.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/CrossConnectActionResponse",
+   "derivation": "operationId getCrossConnectActionByUuid response example RejectProposedDateTime"
+  },
+  "fabric/beta/crossconnects/getCrossConnectActionByUuid.response.SendSignatureQuote.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/CrossConnectActionResponse",
+   "derivation": "operationId getCrossConnectActionByUuid response example SendSignatureQuote"
+  },
+  "fabric/beta/crossconnects/getCrossConnectActionByUuid.response.UpdateInformation.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/CrossConnectActionResponse",
+   "derivation": "operationId getCrossConnectActionByUuid response example UpdateInformation"
+  },
+  "fabric/beta/crossconnects/getCrossConnectAttachmentsByUuid.response.GetCrossConnectAttachments.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/CrossConnectAttachmentsResponse",
+   "derivation": "operationId getCrossConnectAttachmentsByUuid response example GetCrossConnectAttachments"
+  },
+  "fabric/beta/crossconnects/getCrossConnectByUuid.response.ExtendedCrossConnectEquinixManaged.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/CrossConnectResponse",
+   "derivation": "operationId getCrossConnectByUuid response example ExtendedCrossConnectEquinixManaged"
+  },
+  "fabric/beta/crossconnects/getCrossConnectByUuid.response.ExtendedCrossConnectSelfManaged.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/CrossConnectResponse",
+   "derivation": "operationId getCrossConnectByUuid response example ExtendedCrossConnectSelfManaged"
+  },
+  "fabric/beta/crossconnects/getCrossConnectByUuid.response.StandardCrossConnectByLoa.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/CrossConnectResponse",
+   "derivation": "operationId getCrossConnectByUuid response example StandardCrossConnectByLoa"
+  },
+  "fabric/beta/crossconnects/getCrossConnectByUuid.response.StandardCrossConnectByPatchPanel.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/CrossConnectResponse",
+   "derivation": "operationId getCrossConnectByUuid response example StandardCrossConnectByPatchPanel"
+  },
+  "fabric/beta/crossconnects/getCrossConnectNotesByUuid.response.GetCrossConnectNotes.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/CrossConnectNotesResponse",
+   "derivation": "operationId getCrossConnectNotesByUuid response example GetCrossConnectNotes"
+  },
+  "fabric/beta/crossconnects/getCrossConnectSchedulesByUuid.response.SchedulesExample.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/SchedulesResponse",
+   "derivation": "operationId getCrossConnectSchedulesByUuid response example SchedulesExample"
+  },
+  "fabric/beta/crossconnects/getCrossConnectServicesByUuid.response.GetCrossConnectServices.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/CrossConnectServicesResponse",
+   "derivation": "operationId getCrossConnectServicesByUuid response example GetCrossConnectServices"
+  },
+  "fabric/beta/crossconnects/performCrossConnectAction.request.AcceptProposedDateTime.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/CrossConnectActionRequest",
+   "derivation": "operationId performCrossConnectAction request example AcceptProposedDateTime"
+  },
+  "fabric/beta/crossconnects/performCrossConnectAction.request.CancelCrossConnect.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/CrossConnectActionRequest",
+   "derivation": "operationId performCrossConnectAction request example CancelCrossConnect"
+  },
+  "fabric/beta/crossconnects/performCrossConnectAction.request.DeinstallCrossConnect.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/CrossConnectActionRequest",
+   "derivation": "operationId performCrossConnectAction request example DeinstallCrossConnect"
+  },
+  "fabric/beta/crossconnects/performCrossConnectAction.request.RejectProposedDateTime.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/CrossConnectActionRequest",
+   "derivation": "operationId performCrossConnectAction request example RejectProposedDateTime"
+  },
+  "fabric/beta/crossconnects/performCrossConnectAction.request.SendSignatureQuote.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/CrossConnectActionRequest",
+   "derivation": "operationId performCrossConnectAction request example SendSignatureQuote"
+  },
+  "fabric/beta/crossconnects/performCrossConnectAction.request.UpdateInformation.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/CrossConnectActionRequest",
+   "derivation": "operationId performCrossConnectAction request example UpdateInformation"
+  },
+  "fabric/beta/crossconnects/performCrossConnectAction.response.AcceptProposedDateTime.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/CrossConnectActionResponse",
+   "derivation": "operationId performCrossConnectAction response example AcceptProposedDateTime"
+  },
+  "fabric/beta/crossconnects/performCrossConnectAction.response.CancelCrossConnect.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/CrossConnectActionResponse",
+   "derivation": "operationId performCrossConnectAction response example CancelCrossConnect"
+  },
+  "fabric/beta/crossconnects/performCrossConnectAction.response.DeinstallCrossConnect.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/CrossConnectActionResponse",
+   "derivation": "operationId performCrossConnectAction response example DeinstallCrossConnect"
+  },
+  "fabric/beta/crossconnects/performCrossConnectAction.response.RejectProposedDateTime.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/CrossConnectActionResponse",
+   "derivation": "operationId performCrossConnectAction response example RejectProposedDateTime"
+  },
+  "fabric/beta/crossconnects/performCrossConnectAction.response.SendSignatureQuote.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/CrossConnectActionResponse",
+   "derivation": "operationId performCrossConnectAction response example SendSignatureQuote"
+  },
+  "fabric/beta/crossconnects/performCrossConnectAction.response.UpdateInformation.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/CrossConnectActionResponse",
+   "derivation": "operationId performCrossConnectAction response example UpdateInformation"
+  },
+  "fabric/beta/crossconnects/searchCrossConnectAction.request.ActionTypeSearch.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/CrossConnectActionSearchRequest",
+   "derivation": "operationId searchCrossConnectAction request example ActionTypeSearch"
+  },
+  "fabric/beta/crossconnects/searchCrossConnectAction.response.CrossConnectActionSearchExample.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/CrossConnectActionSearchResponse",
+   "derivation": "operationId searchCrossConnectAction response example CrossConnectActionSearchExample"
+  },
+  "fabric/beta/crossconnects/searchCrossConnectSchedules.request.SearchInstallSchedules.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/CrossConnectScheduleSearchRequest",
+   "derivation": "operationId searchCrossConnectSchedules request example SearchInstallSchedules"
+  },
+  "fabric/beta/crossconnects/searchCrossConnectSchedules.response.SearchInstallSchedules.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/SearchSchedulesResponse",
+   "derivation": "operationId searchCrossConnectSchedules response example SearchInstallSchedules"
+  },
+  "fabric/beta/crossconnects/searchCrossConnects.request.SearchByIbxWithType.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/CrossConnectSearchRequest",
+   "derivation": "operationId searchCrossConnects request example SearchByIbxWithType"
+  },
+  "fabric/beta/crossconnects/searchCrossConnects.request.SearchByNameWithState.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/CrossConnectSearchRequest",
+   "derivation": "operationId searchCrossConnects request example SearchByNameWithState"
+  },
+  "fabric/beta/crossconnects/searchCrossConnects.response.example.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/CrossConnectSearchResponse",
+   "derivation": "operationId searchCrossConnects response example example"
+  },
+  "fabric/beta/exchangeservices/createExchangeService.request.ExchangeServiceCreateRequest.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/ExchangeServiceCreateRequest",
+   "derivation": "operationId createExchangeService request example ExchangeServiceCreateRequest"
+  },
+  "fabric/beta/exchangeservices/createExchangeService.response.CreateExchangeServiceResponse.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/ExchangeServiceResponse",
+   "derivation": "operationId createExchangeService response example CreateExchangeServiceResponse"
+  },
+  "fabric/beta/exchangeservices/createExchangeServiceAction.request.ActivateExchangeServiceRequest.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/ExchangeServiceActionRequest",
+   "derivation": "operationId createExchangeServiceAction request example ActivateExchangeServiceRequest"
+  },
+  "fabric/beta/exchangeservices/createExchangeServiceAction.request.RetryExchangeServiceRequest.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/ExchangeServiceActionRequest",
+   "derivation": "operationId createExchangeServiceAction request example RetryExchangeServiceRequest"
+  },
+  "fabric/beta/exchangeservices/createExchangeServiceAction.request.ValidateExchangeServiceRequest.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/ExchangeServiceActionRequest",
+   "derivation": "operationId createExchangeServiceAction request example ValidateExchangeServiceRequest"
+  },
+  "fabric/beta/exchangeservices/createExchangeServiceAction.response.example.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/ExchangeServiceActionResponse",
+   "derivation": "operationId createExchangeServiceAction response example example"
+  },
+  "fabric/beta/exchangeservices/getExchangeServiceById.response.GetExchangeServiceResponse.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/ExchangeServiceResponse",
+   "derivation": "operationId getExchangeServiceById response example GetExchangeServiceResponse"
+  },
+  "fabric/beta/exchangeservices/searchExchangeService.request.ExchangeServiceBandwidthSearch.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/ExchangeServiceSearchRequest",
+   "derivation": "operationId searchExchangeService request example ExchangeServiceBandwidthSearch"
+  },
+  "fabric/beta/exchangeservices/searchExchangeService.request.ExchangeServiceMetroCodeSearch.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/ExchangeServiceSearchRequest",
+   "derivation": "operationId searchExchangeService request example ExchangeServiceMetroCodeSearch"
+  },
+  "fabric/beta/exchangeservices/searchExchangeService.request.ExchangeServiceMultiBandwidthSearch.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/ExchangeServiceSearchRequest",
+   "derivation": "operationId searchExchangeService request example ExchangeServiceMultiBandwidthSearch"
+  },
+  "fabric/beta/exchangeservices/searchExchangeService.request.ExchangeServiceMultiMetroCodeSearch.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/ExchangeServiceSearchRequest",
+   "derivation": "operationId searchExchangeService request example ExchangeServiceMultiMetroCodeSearch"
+  },
+  "fabric/beta/exchangeservices/searchExchangeService.request.ExchangeServiceMultiProjectIdSearch.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/ExchangeServiceSearchRequest",
+   "derivation": "operationId searchExchangeService request example ExchangeServiceMultiProjectIdSearch"
+  },
+  "fabric/beta/exchangeservices/searchExchangeService.request.ExchangeServiceMultiStateSearch.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/ExchangeServiceSearchRequest",
+   "derivation": "operationId searchExchangeService request example ExchangeServiceMultiStateSearch"
+  },
+  "fabric/beta/exchangeservices/searchExchangeService.request.ExchangeServiceSearchProjectId.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/ExchangeServiceSearchRequest",
+   "derivation": "operationId searchExchangeService request example ExchangeServiceSearchProjectId"
+  },
+  "fabric/beta/exchangeservices/searchExchangeService.request.ExchangeServiceStateSearch.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/ExchangeServiceSearchRequest",
+   "derivation": "operationId searchExchangeService request example ExchangeServiceStateSearch"
+  },
+  "fabric/beta/exchangeservices/searchExchangeService.response.example.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/ExchangeServiceSearchResponse",
+   "derivation": "operationId searchExchangeService response example example"
+  },
+  "fabric/beta/exchangeservices/updateExchangeServiceById.request.ExchangeServicePatchCustomerAsnRequest.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/JsonPatch",
+   "derivation": "operationId updateExchangeServiceById request example ExchangeServicePatchCustomerAsnRequest"
+  },
+  "fabric/beta/exchangeservices/updateExchangeServiceById.request.ExchangeServicePatchMacAddressRequest.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/JsonPatch",
+   "derivation": "operationId updateExchangeServiceById request example ExchangeServicePatchMacAddressRequest"
+  },
+  "fabric/beta/exchangeservices/updateExchangeServiceById.request.ExchangeServicePatchRoutingProtocolIPv4PrefixesRequest.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/JsonPatch",
+   "derivation": "operationId updateExchangeServiceById request example ExchangeServicePatchRoutingProtocolIPv4PrefixesRequest"
+  },
+  "fabric/beta/exchangeservices/updateExchangeServiceById.request.ExchangeServicePatchRoutingProtocolIPv6PrefixesRequest.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/JsonPatch",
+   "derivation": "operationId updateExchangeServiceById request example ExchangeServicePatchRoutingProtocolIPv6PrefixesRequest"
+  },
+  "fabric/beta/exchangeservices/updateExchangeServiceById.response.PatchExchangeServiceResponse.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/ExchangeServiceResponse",
+   "derivation": "operationId updateExchangeServiceById response example PatchExchangeServiceResponse"
+  },
+  "fabric/beta/loas/createLoa.request.IssueLoa-OnCageWithCageId.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/CreateLoa",
+   "derivation": "operationId createLoa request example IssueLoa-OnCageWithCageId"
+  },
+  "fabric/beta/loas/createLoa.request.IssueLoa-OnPatchPanel.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/CreateLoa",
+   "derivation": "operationId createLoa request example IssueLoa-OnPatchPanel"
+  },
+  "fabric/beta/loas/createLoa.request.IssueLoa-OnPatchPanelPort.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/CreateLoa",
+   "derivation": "operationId createLoa request example IssueLoa-OnPatchPanelPort"
+  },
+  "fabric/beta/loas/createLoa.request.RequestLoa-OnCage.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/CreateLoa",
+   "derivation": "operationId createLoa request example RequestLoa-OnCage"
+  },
+  "fabric/beta/loas/createLoa.request.RequestLoa-OnPatchPanel.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/CreateLoa",
+   "derivation": "operationId createLoa request example RequestLoa-OnPatchPanel"
+  },
+  "fabric/beta/loas/createLoa.request.RequestLoa-OnPatchPanelPort.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/CreateLoa",
+   "derivation": "operationId createLoa request example RequestLoa-OnPatchPanelPort"
+  },
+  "fabric/beta/loas/createLoa.response.ByIssuerWithCageType.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/LoaResponse",
+   "derivation": "operationId createLoa response example ByIssuerWithCageType"
+  },
+  "fabric/beta/loas/createLoa.response.ByIssuerWithPatchPanelPortType.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/LoaResponse",
+   "derivation": "operationId createLoa response example ByIssuerWithPatchPanelPortType"
+  },
+  "fabric/beta/loas/createLoa.response.ByIssuerWithPatchPanelType.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/LoaResponse",
+   "derivation": "operationId createLoa response example ByIssuerWithPatchPanelType"
+  },
+  "fabric/beta/loas/createLoa.response.ByRequestor.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/LoaResponse",
+   "derivation": "operationId createLoa response example ByRequestor"
+  },
+  "fabric/beta/loas/createLoaNoteByLoaId.request.LoaNoteRequest.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/CreateLoaNote",
+   "derivation": "operationId createLoaNoteByLoaId request example LoaNoteRequest"
+  },
+  "fabric/beta/loas/createLoaNoteByLoaId.response.CreateLoaNoteExample.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/LoaNoteDetails",
+   "derivation": "operationId createLoaNoteByLoaId response example CreateLoaNoteExample"
+  },
+  "fabric/beta/loas/getLoaActionsByUuid.response.AuthorizeLoaActionExample.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/LoaActionResponse",
+   "derivation": "operationId getLoaActionsByUuid response example AuthorizeLoaActionExample"
+  },
+  "fabric/beta/loas/getLoaByUuid.response.LoaExample.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/LoaResponse",
+   "derivation": "operationId getLoaByUuid response example LoaExample"
+  },
+  "fabric/beta/loas/getLoaConsumersByLoaId.response.LoaConsumersExample.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/LoaConsumersResponse",
+   "derivation": "operationId getLoaConsumersByLoaId response example LoaConsumersExample"
+  },
+  "fabric/beta/loas/getLoaNotesByUuid.response.GetLoaNotesExample.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/LoaNotesResponse",
+   "derivation": "operationId getLoaNotesByUuid response example GetLoaNotesExample"
+  },
+  "fabric/beta/loas/performLoaAction.request.AcceptLoa.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/LoaActionRequest",
+   "derivation": "operationId performLoaAction request example AcceptLoa"
+  },
+  "fabric/beta/loas/performLoaAction.request.AuthorizeLoa.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/LoaActionRequest",
+   "derivation": "operationId performLoaAction request example AuthorizeLoa"
+  },
+  "fabric/beta/loas/performLoaAction.request.CancelLoa.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/LoaActionRequest",
+   "derivation": "operationId performLoaAction request example CancelLoa"
+  },
+  "fabric/beta/loas/performLoaAction.request.CopyLoa.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/LoaActionRequest",
+   "derivation": "operationId performLoaAction request example CopyLoa"
+  },
+  "fabric/beta/loas/performLoaAction.request.SendLoa.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/LoaActionRequest",
+   "derivation": "operationId performLoaAction request example SendLoa"
+  },
+  "fabric/beta/loas/performLoaAction.response.AcceptLoa.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/LoaActionResponse",
+   "derivation": "operationId performLoaAction response example AcceptLoa"
+  },
+  "fabric/beta/loas/performLoaAction.response.AuthorizeLoa.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/LoaActionResponse",
+   "derivation": "operationId performLoaAction response example AuthorizeLoa"
+  },
+  "fabric/beta/loas/performLoaAction.response.CopyLoa.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/LoaActionResponse",
+   "derivation": "operationId performLoaAction response example CopyLoa"
+  },
+  "fabric/beta/loas/performLoaAction.response.SendLoa.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/LoaActionResponse",
+   "derivation": "operationId performLoaAction response example SendLoa"
+  },
+  "fabric/beta/loas/searchLoa.request.SearchByNameWithType.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/LoaSearchRequest",
+   "derivation": "operationId searchLoa request example SearchByNameWithType"
+  },
+  "fabric/beta/loas/searchLoa.request.SearchByStateWithPartnerOrIbx.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/LoaSearchRequest",
+   "derivation": "operationId searchLoa request example SearchByStateWithPartnerOrIbx"
+  },
+  "fabric/beta/loas/searchLoa.response.example.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/LoaSearchResponse",
+   "derivation": "operationId searchLoa response example example"
+  },
+  "fabric/beta/loas/searchLoaAction.request.ActionTypeSearch.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/LoaActionSearchRequest",
+   "derivation": "operationId searchLoaAction request example ActionTypeSearch"
+  },
+  "fabric/beta/loas/searchLoaAction.response.LoaActionSearchExample.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/LoaActionSearchResponse",
+   "derivation": "operationId searchLoaAction response example LoaActionSearchExample"
+  },
+  "fabric/beta/loas/updateLoaByUuid.request.LoaPatchRequest.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/LoaUpdate",
+   "derivation": "operationId updateLoaByUuid request example LoaPatchRequest"
+  },
+  "fabric/beta/loas/updateLoaByUuid.response.PatchLoaResponse.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/LoaResponse",
+   "derivation": "operationId updateLoaByUuid response example PatchLoaResponse"
+  },
+  "fabric/beta/opticalconnects/createBulkOpticalConnect.request.COLOToBMMR.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/BulkOpticalConnectRequest",
+   "derivation": "operationId createBulkOpticalConnect request example COLOToBMMR"
+  },
+  "fabric/beta/opticalconnects/createBulkOpticalConnect.request.COLOToCOLO.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/BulkOpticalConnectRequest",
+   "derivation": "operationId createBulkOpticalConnect request example COLOToCOLO"
+  },
+  "fabric/beta/opticalconnects/createBulkOpticalConnect.request.COLOToRemote.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/BulkOpticalConnectRequest",
+   "derivation": "operationId createBulkOpticalConnect request example COLOToRemote"
+  },
+  "fabric/beta/opticalconnects/createBulkOpticalConnect.response.COLOToBMMR.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/OpticalConnectBulk",
+   "derivation": "operationId createBulkOpticalConnect response example COLOToBMMR"
+  },
+  "fabric/beta/opticalconnects/createBulkOpticalConnect.response.COLOToCOLO.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/OpticalConnectBulk",
+   "derivation": "operationId createBulkOpticalConnect response example COLOToCOLO"
+  },
+  "fabric/beta/opticalconnects/createBulkOpticalConnect.response.COLOToRemote.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/OpticalConnectBulk",
+   "derivation": "operationId createBulkOpticalConnect response example COLOToRemote"
+  },
+  "fabric/beta/opticalconnects/createOpticalConnect.request.COLOToBMMR.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/OpticalConnectPostRequest",
+   "derivation": "operationId createOpticalConnect request example COLOToBMMR"
+  },
+  "fabric/beta/opticalconnects/createOpticalConnect.request.COLOToCOLO.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/OpticalConnectPostRequest",
+   "derivation": "operationId createOpticalConnect request example COLOToCOLO"
+  },
+  "fabric/beta/opticalconnects/createOpticalConnect.request.COLOToRemote.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/OpticalConnectPostRequest",
+   "derivation": "operationId createOpticalConnect request example COLOToRemote"
+  },
+  "fabric/beta/opticalconnects/createOpticalConnect.response.COLOToBMMR.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/OpticalConnectResponse",
+   "derivation": "operationId createOpticalConnect response example COLOToBMMR"
+  },
+  "fabric/beta/opticalconnects/createOpticalConnect.response.COLOToCOLO.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/OpticalConnectResponse",
+   "derivation": "operationId createOpticalConnect response example COLOToCOLO"
+  },
+  "fabric/beta/opticalconnects/createOpticalConnect.response.COLOToRemote.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/OpticalConnectResponse",
+   "derivation": "operationId createOpticalConnect response example COLOToRemote"
+  },
+  "fabric/beta/opticalconnects/getOpticalConnectByUuid.response.COLOToBMMR.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/OpticalConnectResponse",
+   "derivation": "operationId getOpticalConnectByUuid response example COLOToBMMR"
+  },
+  "fabric/beta/opticalconnects/getOpticalConnectByUuid.response.COLOToCOLO.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/OpticalConnectResponse",
+   "derivation": "operationId getOpticalConnectByUuid response example COLOToCOLO"
+  },
+  "fabric/beta/opticalconnects/getOpticalConnectByUuid.response.COLOToRemote.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/OpticalConnectResponse",
+   "derivation": "operationId getOpticalConnectByUuid response example COLOToRemote"
+  },
+  "fabric/beta/opticalconnects/searchOpticalConnect.request.SearchFilterByName.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/OpticalConnectSearchRequest",
+   "derivation": "operationId searchOpticalConnect request example SearchFilterByName"
+  },
+  "fabric/beta/opticalconnects/searchOpticalConnect.request.SearchFilterByStatus.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/OpticalConnectSearchRequest",
+   "derivation": "operationId searchOpticalConnect request example SearchFilterByStatus"
+  },
+  "fabric/beta/opticalconnects/searchOpticalConnect.request.SearchFilterOrAnd.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/OpticalConnectSearchRequest",
+   "derivation": "operationId searchOpticalConnect request example SearchFilterOrAnd"
+  },
+  "fabric/beta/opticalconnects/searchOpticalConnect.response.Example.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/OpticalConnectServiceSearchResponse",
+   "derivation": "operationId searchOpticalConnect response example Example"
+  },
+  "fabric/bgp_action_response.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/BGPActionData",
+   "derivation": "best-fit"
+  },
+  "fabric/cloud_event_response.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/CloudEvent",
+   "derivation": "best-fit"
+  },
+  "fabric/cloud_events_search_response.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/GetCloudEventsByAssetResponse",
+   "derivation": "best-fit"
+  },
+  "fabric/cloud_router_action_response.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/CloudRouterActionResponse",
+   "derivation": "best-fit"
+  },
+  "fabric/cloud_router_command_response.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/CloudRouterCommand",
+   "derivation": "best-fit"
+  },
+  "fabric/cloud_router_not_provisioned_response.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/CloudRouter",
+   "derivation": "best-fit"
+  },
+  "fabric/cloud_router_package_response.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/CloudRouterPackage",
+   "derivation": "best-fit"
+  },
+  "fabric/cloud_router_provisioning_response.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/CloudRouter",
+   "derivation": "best-fit"
+  },
+  "fabric/cloud_router_response.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/CloudRouter",
+   "derivation": "best-fit"
+  },
+  "fabric/company_profile_private_services_response.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/ServiceProfiles",
+   "derivation": "best-fit"
+  },
+  "fabric/company_profile_response.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/CompanyProfileResponse",
+   "derivation": "best-fit"
+  },
+  "fabric/company_profile_service_profiles_response.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/ServiceProfiles",
+   "derivation": "best-fit"
+  },
+  "fabric/company_profile_tags_response.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/TagListResponse",
+   "derivation": "best-fit"
+  },
+  "fabric/connection_provisioned_response.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/Connection",
+   "derivation": "best-fit"
+  },
+  "fabric/connection_response.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/Connection",
+   "derivation": "best-fit"
+  },
+  "fabric/connection_route_aggregation_attachment_response.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/ConnectionRouteAggregationData",
+   "derivation": "best-fit"
+  },
+  "fabric/connection_route_filter_attachment_response.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/ConnectionRouteFilterData",
+   "derivation": "best-fit"
+  },
+  "fabric/eia_service_response.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/InternetAccessService",
+   "derivation": "manual (reviewed 2026-11-12)"
+  },
+  "fabric/health_response.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/HealthResponse",
+   "derivation": "best-fit"
+  },
+  "fabric/ip_block_response.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/IpBlock",
+   "derivation": "best-fit"
+  },
+  "fabric/live_events_search_response.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/SearchLiveEventResponse",
+   "derivation": "best-fit"
+  },
+  "fabric/marketplace_subscription_response.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/SubscriptionResponse",
+   "derivation": "best-fit"
+  },
+  "fabric/metrics_search_response.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/GetMetricsByAssetResponse",
+   "derivation": "best-fit"
+  },
+  "fabric/metro_single_response.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/Metro",
+   "derivation": "best-fit"
+  },
+  "fabric/network_change_response.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/NetworkChange",
+   "derivation": "manual (reviewed 2026-11-12)"
+  },
+  "fabric/network_changes_response.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/NetworkChangeResponse",
+   "derivation": "manual (reviewed 2026-11-12)"
+  },
+  "fabric/network_response.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/Network",
+   "derivation": "best-fit"
+  },
+  "fabric/paginated_agent_activities.json": {
+   "validate": false,
+   "reason": "/fabric/v4/agents and /agentTemplates are absent from Fabric spec 4.34.0 although the live service serves them (200, observed 2026-11-11)"
+  },
+  "fabric/paginated_agent_templates.json": {
+   "validate": false,
+   "reason": "/fabric/v4/agents and /agentTemplates are absent from Fabric spec 4.34.0 although the live service serves them (200, observed 2026-11-11)"
+  },
+  "fabric/paginated_agents.json": {
+   "validate": false,
+   "reason": "/fabric/v4/agents and /agentTemplates are absent from Fabric spec 4.34.0 although the live service serves them (200, observed 2026-11-11)"
+  },
+  "fabric/paginated_bgp_actions.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/BGPActionsBulkData",
+   "derivation": "best-fit"
+  },
+  "fabric/paginated_cloud_router_actions.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/CloudRouterActionsSearchResponse",
+   "derivation": "best-fit"
+  },
+  "fabric/paginated_cloud_router_commands.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/GetAllCloudRouterCommands",
+   "derivation": "best-fit"
+  },
+  "fabric/paginated_cloud_router_packages.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/PackageResponse",
+   "derivation": "best-fit"
+  },
+  "fabric/paginated_cloud_routers.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/SearchResponse",
+   "derivation": "best-fit"
+  },
+  "fabric/paginated_company_profiles.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/CompanyProfileSearchResponse",
+   "derivation": "best-fit"
+  },
+  "fabric/paginated_connections.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/ConnectionSearchResponse",
+   "derivation": "best-fit"
+  },
+  "fabric/paginated_eia_services.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/InternetAccessServices",
+   "derivation": "manual (reviewed 2026-11-12)"
+  },
+  "fabric/paginated_ip_blocks.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/IpBlockSearchResponseBody",
+   "derivation": "best-fit"
+  },
+  "fabric/paginated_metros_forward_compat.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/MetroResponse",
+   "derivation": "best-fit"
+  },
+  "fabric/paginated_metros_list.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/MetroResponse",
+   "derivation": "best-fit"
+  },
+  "fabric/paginated_networks.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/NetworkSearchResponse",
+   "derivation": "best-fit"
+  },
+  "fabric/paginated_port_vlans.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/LinkProtocolGetResponse",
+   "derivation": "best-fit"
+  },
+  "fabric/paginated_ports.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/AllPortsResponse",
+   "derivation": "best-fit"
+  },
+  "fabric/paginated_prices.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/PriceSearchResponse",
+   "derivation": "best-fit"
+  },
+  "fabric/paginated_prices_fidelity.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/PriceSearchResponse",
+   "derivation": "best-fit"
+  },
+  "fabric/paginated_prices_metrotoken.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/PriceSearchResponse",
+   "derivation": "best-fit"
+  },
+  "fabric/paginated_prices_multi.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/PriceSearchResponse",
+   "derivation": "best-fit"
+  },
+  "fabric/paginated_prices_structured.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/PriceSearchResponse",
+   "derivation": "best-fit"
+  },
+  "fabric/paginated_prices_termed.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/PriceSearchResponse",
+   "derivation": "best-fit"
+  },
+  "fabric/paginated_prices_unpriced.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/PriceSearchResponse",
+   "derivation": "best-fit"
+  },
+  "fabric/paginated_route_aggregation_attachments.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/GetAllConnectionRouteAggregationsResponse",
+   "derivation": "best-fit"
+  },
+  "fabric/paginated_route_aggregation_rules.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/GetRouteAggregationRulesResponse",
+   "derivation": "best-fit"
+  },
+  "fabric/paginated_route_aggregations.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/RouteAggregationsSearchResponse",
+   "derivation": "best-fit"
+  },
+  "fabric/paginated_route_filter_attachments.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/GetAllConnectionRouteFiltersResponse",
+   "derivation": "best-fit"
+  },
+  "fabric/paginated_route_filter_rules.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/GetRouteFilterRulesResponse",
+   "derivation": "best-fit"
+  },
+  "fabric/paginated_route_filters.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/RouteFiltersSearchResponse",
+   "derivation": "best-fit"
+  },
+  "fabric/paginated_route_table_entries.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/ConnectionRouteTableEntrySearchResponse",
+   "derivation": "best-fit"
+  },
+  "fabric/paginated_routing_protocols.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/GetResponse",
+   "derivation": "best-fit"
+  },
+  "fabric/paginated_service_profiles.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/ServiceProfiles",
+   "derivation": "best-fit"
+  },
+  "fabric/paginated_service_tokens.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/ServiceTokens",
+   "derivation": "best-fit"
+  },
+  "fabric/paginated_stream_alert_rules.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/GetAllStreamAlertRuleResponse",
+   "derivation": "best-fit"
+  },
+  "fabric/paginated_stream_subscriptions.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/GetAllStreamSubscriptionResponse",
+   "derivation": "best-fit"
+  },
+  "fabric/paginated_streams.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/GetAllStreamResponse",
+   "derivation": "best-fit"
+  },
+  "fabric/paginated_tags.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/TagListResponse",
+   "derivation": "best-fit"
+  },
+  "fabric/paginated_time_service_connections.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/precisionTimeServiceConnectionsResponse",
+   "derivation": "best-fit"
+  },
+  "fabric/paginated_time_service_packages.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/precisionTimeServicePackagesResponse",
+   "derivation": "best-fit"
+  },
+  "fabric/paginated_time_services.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/ServiceSearchResponse",
+   "derivation": "best-fit"
+  },
+  "fabric/port_packages_response.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/AllPortPackagesResponse",
+   "derivation": "best-fit"
+  },
+  "fabric/port_response.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/Port",
+   "derivation": "best-fit"
+  },
+  "fabric/precision_time_response.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/precisionTimeServiceResponse",
+   "derivation": "best-fit"
+  },
+  "fabric/route_aggregation_change_response.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/RouteAggregationChangeData",
+   "derivation": "manual (reviewed 2026-11-12)"
+  },
+  "fabric/route_aggregation_changes_response.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/RouteAggregationChangeDataResponse",
+   "derivation": "best-fit"
+  },
+  "fabric/route_aggregation_response.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/RouteAggregationsData",
+   "derivation": "best-fit"
+  },
+  "fabric/route_aggregation_rule_response.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/RouteAggregationRulesData",
+   "derivation": "best-fit"
+  },
+  "fabric/route_filter_change_response.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/RouteFilterChangeData",
+   "derivation": "manual (reviewed 2026-11-12)"
+  },
+  "fabric/route_filter_changes_response.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/RouteFilterChangeDataResponse",
+   "derivation": "best-fit"
+  },
+  "fabric/route_filter_response.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/RouteFiltersData",
+   "derivation": "best-fit"
+  },
+  "fabric/route_filter_rule_response.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/RouteFilterRulesData",
+   "derivation": "best-fit"
+  },
+  "fabric/routing_protocol_change_response.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/RoutingProtocolChangeData",
+   "derivation": "best-fit"
+  },
+  "fabric/routing_protocol_changes_response.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/RoutingProtocolChangeDataResponse",
+   "derivation": "best-fit"
+  },
+  "fabric/routing_protocol_response.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/RoutingProtocolData",
+   "derivation": "best-fit"
+  },
+  "fabric/routing_protocols_bulk_response.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/GetResponse",
+   "derivation": "best-fit"
+  },
+  "fabric/service_profile_action_response.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/ServiceProfileActionResponse",
+   "derivation": "best-fit"
+  },
+  "fabric/service_profile_environment_action_response.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/EnvironmentActionResponse",
+   "derivation": "best-fit"
+  },
+  "fabric/service_profile_environments_response.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/ProviderEnvironments",
+   "derivation": "best-fit"
+  },
+  "fabric/service_profile_metros_response.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/ServiceMetros",
+   "derivation": "best-fit"
+  },
+  "fabric/service_profile_response.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/ServiceProfile",
+   "derivation": "best-fit"
+  },
+  "fabric/service_token_response.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/ServiceToken",
+   "derivation": "best-fit"
+  },
+  "fabric/stream_alert_rule_response.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/StreamAlertRule",
+   "derivation": "best-fit"
+  },
+  "fabric/stream_asset_response.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/StreamSearchAsset",
+   "derivation": "best-fit"
+  },
+  "fabric/stream_assets_search_response.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/SearchStreamAssetResponse",
+   "derivation": "best-fit"
+  },
+  "fabric/stream_device_attaching_response.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/StreamSearchAsset",
+   "derivation": "best-fit"
+  },
+  "fabric/stream_device_detaching_response.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/StreamSearchAsset",
+   "derivation": "best-fit"
+  },
+  "fabric/stream_device_response.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/StreamSearchAsset",
+   "derivation": "best-fit"
+  },
+  "fabric/stream_response.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/Stream",
+   "derivation": "best-fit"
+  },
+  "fabric/stream_subscription_response.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/StreamSubscription",
+   "derivation": "best-fit"
+  },
+  "fabric/stream_subscriptions_search_response.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/SearchStreamSubscriptionResponse",
+   "derivation": "best-fit"
+  },
+  "fabric/streams_search_response.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/SearchStreamResponse",
+   "derivation": "best-fit"
+  },
+  "fabric/tag_response.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/TagResponse",
+   "derivation": "best-fit"
+  },
+  "fabric/time_service_package_response.json": {
+   "spec": "fabricv4.json",
+   "schema": "#/components/schemas/precisionTimePackageResponse",
+   "derivation": "best-fit"
+  },
+  "iam/access_policy_grant_list_response.json": {
+   "spec": "accessv1.yaml",
+   "schema": "#/components/schemas/AccessPolicyGrantList",
+   "derivation": "best-fit"
+  },
+  "iam/access_policy_grant_response.json": {
+   "spec": "accessv1.yaml",
+   "schema": "#/components/schemas/AccessPolicyGrant",
+   "derivation": "best-fit"
+  },
+  "iam/access_policy_list_empty_response.json": {
+   "spec": "accessv1.yaml",
+   "schema": "#/components/schemas/AccessPolicyList",
+   "derivation": "manual (reviewed 2026-11-12)"
+  },
+  "iam/access_policy_list_response.json": {
+   "spec": "accessv1.yaml",
+   "schema": "#/components/schemas/AccessPolicyList",
+   "derivation": "best-fit"
+  },
+  "iam/access_policy_response.json": {
+   "spec": "accessv1.yaml",
+   "schema": "#/components/schemas/AccessPolicy",
+   "derivation": "best-fit"
+  },
+  "iam/action_list_response.json": {
+   "spec": "accessv1.yaml",
+   "schema": "#/components/schemas/ActionList",
+   "derivation": "best-fit"
+  },
+  "iam/action_set_list_response.json": {
+   "spec": "accessv1.yaml",
+   "schema": "#/components/schemas/ServiceActionSetNoErnList",
+   "derivation": "best-fit"
+  },
+  "iam/effective_permissions_response.json": {
+   "spec": "accessv1.yaml",
+   "schema": "#/components/schemas/EffectivePermissions",
+   "derivation": "best-fit"
+  },
+  "iam/permission_set.json": {
+   "spec": "accessv1.yaml",
+   "schema": "#/components/schemas/PermissionSet",
+   "derivation": "best-fit"
+  },
+  "iam/permission_set_list.json": {
+   "spec": "accessv1.yaml",
+   "schema": "#/components/schemas/PermissionSetList",
+   "derivation": "best-fit"
+  },
+  "iam/permission_set_list_empty.json": {
+   "spec": "accessv1.yaml",
+   "schema": "#/components/schemas/PermissionSetList",
+   "derivation": "best-fit"
+  },
+  "iam/permission_set_list_page2.json": {
+   "spec": "accessv1.yaml",
+   "schema": "#/components/schemas/PermissionSetList",
+   "derivation": "best-fit"
+  },
+  "iam/permission_set_updated.json": {
+   "spec": "accessv1.yaml",
+   "schema": "#/components/schemas/PermissionSet",
+   "derivation": "best-fit"
+  },
+  "iam/policy_mask_list.json": {
+   "spec": "accessv1.yaml",
+   "schema": "#/components/schemas/PolicyMaskList",
+   "derivation": "best-fit"
+  },
+  "iam/policy_mask_list_empty.json": {
+   "spec": "accessv1.yaml",
+   "schema": "#/components/schemas/PolicyMaskList",
+   "derivation": "best-fit"
+  },
+  "iam/policy_mask_response.json": {
+   "spec": "accessv1.yaml",
+   "schema": "#/components/schemas/PolicyMask",
+   "derivation": "best-fit"
+  },
+  "iam/principal_policy_list.json": {
+   "spec": "accessv1.yaml",
+   "schema": "#/components/schemas/PrincipalPolicyList",
+   "derivation": "best-fit"
+  },
+  "iam/principal_policy_list_empty.json": {
+   "spec": "accessv1.yaml",
+   "schema": "#/components/schemas/PrincipalPolicyList",
+   "derivation": "best-fit"
+  },
+  "iam/principal_policy_response.json": {
+   "spec": "accessv1.yaml",
+   "schema": "#/components/schemas/PrincipalPolicy",
+   "derivation": "best-fit"
+  },
+  "iam/resource_type_action_page_response.json": {
+   "spec": "accessv1.yaml",
+   "schema": "#/components/schemas/ResourceTypeActionPage",
+   "derivation": "best-fit"
+  },
+  "iam/resource_type_list_empty.json": {
+   "spec": "accessv1.yaml",
+   "schema": "#/components/schemas/ResourceTypeList",
+   "derivation": "best-fit"
+  },
+  "iam/resource_type_list_response.json": {
+   "spec": "accessv1.yaml",
+   "schema": "#/components/schemas/ResourceTypeList",
+   "derivation": "best-fit"
+  },
+  "iam/role_assignment_response.json": {
+   "spec": "accessv1.yaml",
+   "schema": "#/components/schemas/RoleAssignment",
+   "derivation": "best-fit"
+  },
+  "iam/role_assignments_list.json": {
+   "spec": "accessv1.yaml",
+   "schema": "#/components/schemas/RoleAssignmentList",
+   "derivation": "best-fit"
+  },
+  "iam/roles_by_project.json": {
+   "spec": "accessv1.yaml",
+   "schema": "#/components/schemas/RoleList",
+   "derivation": "best-fit"
+  },
+  "iam/roles_empty.json": {
+   "spec": "accessv1.yaml",
+   "schema": "#/components/schemas/RoleList",
+   "derivation": "best-fit"
+  },
+  "iam/roles_list.json": {
+   "spec": "accessv1.yaml",
+   "schema": "#/components/schemas/RoleList",
+   "derivation": "best-fit"
+  },
+  "iam/service_policy_schema_response.json": {
+   "spec": "accessv1.yaml",
+   "schema": "#/components/schemas/ServicePolicySchema",
+   "derivation": "best-fit"
+  },
+  "ibxsmartview/affected_assets_response.json": {
+   "spec": "smartviewv2.yaml",
+   "schema": "#/components/schemas/HierarchyNodeForAssetAPI",
+   "derivation": "best-fit"
+  },
+  "ibxsmartview/alert_configurations_page1.json": {
+   "spec": "smartviewv2.yaml",
+   "schema": "#/components/schemas/AlertPaginatedResponse",
+   "derivation": "best-fit"
+  },
+  "ibxsmartview/alert_configurations_page2.json": {
+   "spec": "smartviewv2.yaml",
+   "schema": "#/components/schemas/AlertPaginatedResponse",
+   "derivation": "best-fit"
+  },
+  "ibxsmartview/asset_details_get_response.json": {
+   "spec": "smartviewv2.yaml",
+   "schema": "#/components/schemas/AssetDetailsGetResponse",
+   "derivation": "best-fit"
+  },
+  "ibxsmartview/asset_details_response.json": {
+   "spec": "smartviewv2.yaml",
+   "schema": "#/components/schemas/AssetDetailsResponse",
+   "derivation": "best-fit"
+  },
+  "ibxsmartview/assets_list_response.json": {
+   "spec": "smartviewv2.yaml",
+   "schema": "#/components/schemas/AssetsList",
+   "derivation": "best-fit"
+  },
+  "ibxsmartview/assets_search_response.json": {
+   "spec": "smartviewv2.yaml",
+   "schema": "#/components/schemas/Assets",
+   "derivation": "best-fit"
+  },
+  "ibxsmartview/current_tag_point_response.json": {
+   "spec": "smartviewv2.yaml",
+   "schema": "#/components/schemas/TagPointData",
+   "derivation": "best-fit"
+  },
+  "ibxsmartview/current_tag_points_response.json": {
+   "spec": "smartviewv2.yaml",
+   "schema": "#/components/schemas/TagPointData",
+   "derivation": "best-fit"
+  },
+  "ibxsmartview/environment_data_response.json": {
+   "spec": "smartviewv2.yaml",
+   "schema": "#/components/schemas/EnvironmentData",
+   "derivation": "best-fit"
+  },
+  "ibxsmartview/environment_list_current_response.json": {
+   "spec": "smartviewv2.yaml",
+   "schema": "#/components/schemas/EnvironmentDataResponse",
+   "derivation": "best-fit"
+  },
+  "ibxsmartview/environment_trending_response.json": {
+   "spec": "smartviewv2.yaml",
+   "schema": "#/components/schemas/TrendingEnvironmentData",
+   "derivation": "best-fit"
+  },
+  "ibxsmartview/location_hierarchy_response.json": {
+   "spec": "smartviewv2.yaml",
+   "schema": "#/components/schemas/LocationResponse",
+   "derivation": "best-fit"
+  },
+  "ibxsmartview/paginated_sensor_readings.json": {
+   "spec": "smartviewv2.yaml",
+   "schema": "#/components/schemas/SensorReadingsResponse",
+   "derivation": "best-fit"
+  },
+  "ibxsmartview/power_current_get_response.json": {
+   "spec": "smartviewv2.yaml",
+   "schema": "#/components/schemas/PowerData",
+   "derivation": "best-fit"
+  },
+  "ibxsmartview/power_current_ibx_response.json": {
+   "spec": "smartviewv2.yaml",
+   "schema": "#/components/schemas/PowerDataResponse_IBX",
+   "derivation": "best-fit"
+  },
+  "ibxsmartview/power_event_response.json": {
+   "spec": "smartviewv2.yaml",
+   "schema": "#/components/schemas/PowerEventReadModel",
+   "derivation": "best-fit"
+  },
+  "ibxsmartview/power_events_page1.json": {
+   "spec": "smartviewv2.yaml",
+   "schema": "#/components/schemas/PowerEventsPaginatedResponse",
+   "derivation": "best-fit"
+  },
+  "ibxsmartview/power_events_page2.json": {
+   "spec": "smartviewv2.yaml",
+   "schema": "#/components/schemas/PowerEventsPaginatedResponse",
+   "derivation": "best-fit"
+  },
+  "ibxsmartview/power_hierarchy_response.json": {
+   "spec": "smartviewv2.yaml",
+   "schema": "#/components/schemas/PowerResponse",
+   "derivation": "best-fit"
+  },
+  "ibxsmartview/power_trending_response.json": {
+   "spec": "smartviewv2.yaml",
+   "schema": "#/components/schemas/TrendingPowerData",
+   "derivation": "best-fit"
+  },
+  "ibxsmartview/sensor_reading_response.json": {
+   "spec": "smartviewv2.yaml",
+   "schema": "#/components/schemas/SensorReading",
+   "derivation": "best-fit"
+  },
+  "ibxsmartview/sensor_readings_page1.json": {
+   "spec": "smartviewv2.yaml",
+   "schema": "#/components/schemas/SensorReadingsResponse",
+   "derivation": "best-fit"
+  },
+  "ibxsmartview/sensor_readings_page2.json": {
+   "spec": "smartviewv2.yaml",
+   "schema": "#/components/schemas/SensorReadingsResponse",
+   "derivation": "best-fit"
+  },
+  "ibxsmartview/streaming_subscription_response.json": {
+   "spec": "smartviewv2.yaml",
+   "schema": "#/components/schemas/SubscriptionResponse",
+   "derivation": "best-fit"
+  },
+  "ibxsmartview/streaming_subscription_response_refreshed.json": {
+   "spec": "smartviewv2.yaml",
+   "schema": "#/components/schemas/SubscriptionResponse",
+   "derivation": "best-fit"
+  },
+  "ibxsmartview/streaming_subscriptions_list.json": {
+   "spec": "smartviewv2.yaml",
+   "schema": "#/paths/~1smartview~1v2~1streaming~1subscriptions/get/responses/200/content/application~1json/schema",
+   "derivation": "best-fit"
+  },
+  "ibxsmartview/subscription_certificate_response.json": {
+   "spec": "smartviewv2.yaml",
+   "schema": "#/components/schemas/SubscriptionCertificateResponse",
+   "derivation": "best-fit"
+  },
+  "ibxsmartview/subscription_data_response.json": {
+   "spec": "smartviewv2.yaml",
+   "schema": "#/components/schemas/SubscriptionData",
+   "derivation": "best-fit"
+  },
+  "ibxsmartview/system_alerts_search_response.json": {
+   "spec": "smartviewv2.yaml",
+   "schema": "#/components/schemas/PaginatedResponseAlertReadModel",
+   "derivation": "manual (reviewed 2026-11-12)"
+  },
+  "internetaccess/internet_access_service_response.json": {
+   "spec": "internetaccessv2.yaml",
+   "schema": "#/components/schemas/ServiceReadModel",
+   "derivation": "best-fit"
+  },
+  "internetaccess/paginated_connection_services.json": {
+   "spec": "internetaccessv1.yaml",
+   "schema": "#/components/schemas/ConnectionServicesPage",
+   "derivation": "best-fit"
+  },
+  "internetaccess/paginated_ibxs.json": {
+   "spec": "internetaccessv2.yaml",
+   "schema": "#/components/schemas/IbxPage",
+   "derivation": "best-fit"
+  },
+  "internetaccess/paginated_prices.json": {
+   "spec": "internetaccessv1.yaml",
+   "schema": "#/components/schemas/PriceSearchResponse",
+   "derivation": "best-fit"
+  },
+  "internetaccess/paginated_purchase_orders.json": {
+   "spec": "internetaccessv1.yaml",
+   "schema": "#/components/schemas/PurchaseOrdersPage",
+   "derivation": "best-fit"
+  },
+  "internetaccess/paginated_services.json": {
+   "spec": "internetaccessv1.yaml",
+   "schema": "#/components/schemas/SearchResponse",
+   "derivation": "best-fit"
+  },
+  "messaging/docs-billing-sample.json": {
+   "validate": false,
+   "reason": "Equinix Messaging Gateway notification (AsyncAPI emgv1 body example or docs sample, verbatim; provenance in messaging/Fixtures.java); the validator covers OpenAPI specs only"
+  },
+  "messaging/docs-fabric-sample.json": {
+   "validate": false,
+   "reason": "Equinix Messaging Gateway notification (AsyncAPI emgv1 body example or docs sample, verbatim; provenance in messaging/Fixtures.java); the validator covers OpenAPI specs only"
+  },
+  "messaging/docs-ibx-sample.json": {
+   "validate": false,
+   "reason": "Equinix Messaging Gateway notification (AsyncAPI emgv1 body example or docs sample, verbatim; provenance in messaging/Fixtures.java); the validator covers OpenAPI specs only"
+  },
+  "messaging/docs-network-sample.json": {
+   "validate": false,
+   "reason": "Equinix Messaging Gateway notification (AsyncAPI emgv1 body example or docs sample, verbatim; provenance in messaging/Fixtures.java); the validator covers OpenAPI specs only"
+  },
+  "messaging/docs-order-sample.json": {
+   "validate": false,
+   "reason": "Equinix Messaging Gateway notification (AsyncAPI emgv1 body example or docs sample, verbatim; provenance in messaging/Fixtures.java); the validator covers OpenAPI specs only"
+  },
+  "messaging/spec-billing-body.json": {
+   "validate": false,
+   "reason": "Equinix Messaging Gateway notification (AsyncAPI emgv1 body example or docs sample, verbatim; provenance in messaging/Fixtures.java); the validator covers OpenAPI specs only"
+  },
+  "messaging/spec-fabric-body.json": {
+   "validate": false,
+   "reason": "Equinix Messaging Gateway notification (AsyncAPI emgv1 body example or docs sample, verbatim; provenance in messaging/Fixtures.java); the validator covers OpenAPI specs only"
+  },
+  "messaging/spec-ibx-v1-body.json": {
+   "validate": false,
+   "reason": "Equinix Messaging Gateway notification (AsyncAPI emgv1 body example or docs sample, verbatim; provenance in messaging/Fixtures.java); the validator covers OpenAPI specs only"
+  },
+  "messaging/spec-ibx-v2-body.json": {
+   "validate": false,
+   "reason": "Equinix Messaging Gateway notification (AsyncAPI emgv1 body example or docs sample, verbatim; provenance in messaging/Fixtures.java); the validator covers OpenAPI specs only"
+  },
+  "messaging/spec-managed-services-body.json": {
+   "validate": false,
+   "reason": "Equinix Messaging Gateway notification (AsyncAPI emgv1 body example or docs sample, verbatim; provenance in messaging/Fixtures.java); the validator covers OpenAPI specs only"
+  },
+  "messaging/spec-network-v1-body.json": {
+   "validate": false,
+   "reason": "Equinix Messaging Gateway notification (AsyncAPI emgv1 body example or docs sample, verbatim; provenance in messaging/Fixtures.java); the validator covers OpenAPI specs only"
+  },
+  "messaging/spec-network-v2-body.json": {
+   "validate": false,
+   "reason": "Equinix Messaging Gateway notification (AsyncAPI emgv1 body example or docs sample, verbatim; provenance in messaging/Fixtures.java); the validator covers OpenAPI specs only"
+  },
+  "messaging/spec-order-body.json": {
+   "validate": false,
+   "reason": "Equinix Messaging Gateway notification (AsyncAPI emgv1 body example or docs sample, verbatim; provenance in messaging/Fixtures.java); the validator covers OpenAPI specs only"
+  },
+  "networkedge/account_list_response.json": {
+   "spec": "ne.json",
+   "schema": "#/components/schemas/PageResponseMetroAccountResponse",
+   "derivation": "best-fit"
+  },
+  "networkedge/acltemplate_list_response.json": {
+   "spec": "ne.json",
+   "schema": "#/components/schemas/GetACLTemplateResponse",
+   "derivation": "best-fit"
+  },
+  "networkedge/acltemplate_response.json": {
+   "spec": "ne.json",
+   "schema": "#/components/schemas/ACLTemplateDetailsResponse",
+   "derivation": "best-fit"
+  },
+  "networkedge/acltemplate_response_refreshed.json": {
+   "spec": "ne.json",
+   "schema": "#/components/schemas/ACLTemplateDetailsResponse",
+   "derivation": "best-fit"
+  },
+  "networkedge/agreement_status_response.json": {
+   "spec": "ne.json",
+   "schema": "#/components/schemas/AgreementStatusResponse",
+   "derivation": "best-fit"
+  },
+  "networkedge/allowed_interfaces_response.json": {
+   "spec": "ne.json",
+   "schema": "#/components/schemas/AllowedInterfaceResponse",
+   "derivation": "best-fit"
+  },
+  "networkedge/backup_create_response.json": {
+   "spec": "ne.json",
+   "schema": "#/components/schemas/SshUserCreateResponse",
+   "derivation": "manual (reviewed 2026-11-12)"
+  },
+  "networkedge/backup_list_response.json": {
+   "spec": "ne.json",
+   "schema": "#/components/schemas/GetDeviceBackupsResponse",
+   "derivation": "best-fit"
+  },
+  "networkedge/backup_response.json": {
+   "spec": "ne.json",
+   "schema": "#/components/schemas/DeviceBackupInfoVerbose",
+   "derivation": "best-fit"
+  },
+  "networkedge/backup_response_refreshed.json": {
+   "spec": "ne.json",
+   "schema": "#/components/schemas/DeviceBackupInfoVerbose",
+   "derivation": "best-fit"
+  },
+  "networkedge/bgppeering_list_response.json": {
+   "validate": false,
+   "reason": "/ne/v1/bgp and /ne/v1/vpn are absent from the current Network Edge spec (ne.json); live /ne/v1/vpn answers 200 and /ne/v1/bgp 403 (observed 2026-11-11)"
+  },
+  "networkedge/bgppeering_response.json": {
+   "validate": false,
+   "reason": "/ne/v1/bgp and /ne/v1/vpn are absent from the current Network Edge spec (ne.json); live /ne/v1/vpn answers 200 and /ne/v1/bgp 403 (observed 2026-11-11)"
+  },
+  "networkedge/bgppeering_response_refreshed.json": {
+   "validate": false,
+   "reason": "/ne/v1/bgp and /ne/v1/vpn are absent from the current Network Edge spec (ne.json); live /ne/v1/vpn answers 200 and /ne/v1/bgp 403 (observed 2026-11-11)"
+  },
+  "networkedge/device_acl_response.json": {
+   "spec": "ne.json",
+   "schema": "#/components/schemas/InitialDeviceACLResponse",
+   "derivation": "best-fit"
+  },
+  "networkedge/device_list_response.json": {
+   "spec": "ne.json",
+   "schema": "#/components/schemas/GetDevicesResponse",
+   "derivation": "best-fit"
+  },
+  "networkedge/device_response.json": {
+   "spec": "ne.json",
+   "schema": "#/components/schemas/VirtualDeviceDetailsResponse",
+   "derivation": "best-fit"
+  },
+  "networkedge/device_response_refreshed.json": {
+   "spec": "ne.json",
+   "schema": "#/components/schemas/VirtualDeviceDetailsResponse",
+   "derivation": "best-fit"
+  },
+  "networkedge/device_type_list_response.json": {
+   "spec": "ne.json",
+   "schema": "#/components/schemas/GetDeviceTypesResponse",
+   "derivation": "best-fit"
+  },
+  "networkedge/devicelink_list_response.json": {
+   "spec": "ne.json",
+   "schema": "#/components/schemas/GetLinksResponse",
+   "derivation": "best-fit"
+  },
+  "networkedge/devicelink_response.json": {
+   "spec": "ne.json",
+   "schema": "#/components/schemas/DeviceLinkGroup",
+   "derivation": "best-fit"
+  },
+  "networkedge/devicelink_response_refreshed.json": {
+   "spec": "ne.json",
+   "schema": "#/components/schemas/DeviceLinkGroup",
+   "derivation": "best-fit"
+  },
+  "networkedge/downloadable_image_list_response.json": {
+   "spec": "ne.json",
+   "schema": "#/components/schemas/GetDownloadableImageResponse",
+   "derivation": "best-fit"
+  },
+  "networkedge/downtime_notification_response.json": {
+   "spec": "ne.json",
+   "schema": "#/components/schemas/DowntimeNotification",
+   "derivation": "best-fit"
+  },
+  "networkedge/file_upload_response.json": {
+   "spec": "ne.json",
+   "schema": "#/components/schemas/FileUploadResponse",
+   "derivation": "best-fit"
+  },
+  "networkedge/image_download_response.json": {
+   "spec": "ne.json",
+   "schema": "#/components/schemas/PostDownloadImageResponse",
+   "derivation": "best-fit"
+  },
+  "networkedge/interface_stats_response.json": {
+   "spec": "ne.json",
+   "schema": "#/components/schemas/InterfaceStatsObject",
+   "derivation": "best-fit"
+  },
+  "networkedge/metro_list_response.json": {
+   "spec": "ne.json",
+   "schema": "#/components/schemas/GetMetrosResponse",
+   "derivation": "best-fit"
+  },
+  "networkedge/network_interface_list_response.json": {
+   "spec": "ne.json",
+   "schema": "#/components/schemas/GetVirtualDeviceInterfacesResponse",
+   "derivation": "best-fit"
+  },
+  "networkedge/pricing_response.json": {
+   "spec": "ne.json",
+   "schema": "#/components/schemas/CompositePriceResponse",
+   "derivation": "best-fit"
+  },
+  "networkedge/reload_history_response.json": {
+   "spec": "ne.json",
+   "schema": "#/components/schemas/GetDeviceReloadResponse",
+   "derivation": "best-fit"
+  },
+  "networkedge/restore_feasibility_response.json": {
+   "spec": "ne.json",
+   "schema": "#/components/schemas/RestoreBackupInfoVerbose",
+   "derivation": "best-fit"
+  },
+  "networkedge/terms_response.json": {
+   "spec": "ne.json",
+   "schema": "#/components/schemas/OrderTermsResponse",
+   "derivation": "best-fit"
+  },
+  "networkedge/upgrade_history_response.json": {
+   "spec": "ne.json",
+   "schema": "#/components/schemas/GetDeviceUpgradeResponse",
+   "derivation": "best-fit"
+  },
+  "networkedge/vpn_list_response.json": {
+   "validate": false,
+   "reason": "/ne/v1/bgp and /ne/v1/vpn are absent from the current Network Edge spec (ne.json); live /ne/v1/vpn answers 200 and /ne/v1/bgp 403 (observed 2026-11-11)"
+  },
+  "networkedge/vpn_response.json": {
+   "validate": false,
+   "reason": "/ne/v1/bgp and /ne/v1/vpn are absent from the current Network Edge spec (ne.json); live /ne/v1/vpn answers 200 and /ne/v1/bgp 403 (observed 2026-11-11)"
+  },
+  "networkedge/vpn_response_refreshed.json": {
+   "validate": false,
+   "reason": "/ne/v1/bgp and /ne/v1/vpn are absent from the current Network Edge spec (ne.json); live /ne/v1/vpn answers 200 and /ne/v1/bgp 403 (observed 2026-11-11)"
+  },
+  "peering/peeringdb_net_16509_response.json": {
+   "validate": false,
+   "reason": "PeeringDB public API response (external; no Equinix OpenAPI spec)"
+  },
+  "peering/peeringdb_netfac_16509_response.json": {
+   "validate": false,
+   "reason": "PeeringDB public API response (external; no Equinix OpenAPI spec)"
+  },
+  "peering/peeringdb_netixlan_16509_response.json": {
+   "validate": false,
+   "reason": "PeeringDB public API response (external; no Equinix OpenAPI spec)"
+  },
+  "peering/peeringdb_netixlan_65100_response.json": {
+   "validate": false,
+   "reason": "PeeringDB public API response (external; no Equinix OpenAPI spec)"
+  },
+  "peering/peeringdb_netixlan_response.json": {
+   "validate": false,
+   "reason": "PeeringDB public API response (external; no Equinix OpenAPI spec)"
+  },
+  "peering/peeringdb_network_response.json": {
+   "validate": false,
+   "reason": "PeeringDB public API response (external; no Equinix OpenAPI spec)"
+  },
+  "peering/peeringdb_org_response.json": {
+   "validate": false,
+   "reason": "PeeringDB public API response (external; no Equinix OpenAPI spec)"
+  },
+  "projects/project_response.json": {
+   "spec": "getprojectsv2.yaml",
+   "schema": "#/components/schemas/ProjectV2PaginatedResponse",
+   "derivation": "best-fit"
+  },
+  "projects/project_single.json": {
+   "spec": "getprojectsv2.yaml",
+   "schema": "#/components/schemas/ProjectV2Response",
+   "derivation": "best-fit"
+  },
+  "provider/aws_datatransfer.json": {
+   "validate": false,
+   "reason": "cloud-provider public pricing API response (external; no Equinix OpenAPI spec)"
+  },
+  "provider/aws_directconnect.json": {
+   "validate": false,
+   "reason": "cloud-provider public pricing API response (external; no Equinix OpenAPI spec)"
+  },
+  "provider/azure_bandwidth.json": {
+   "validate": false,
+   "reason": "cloud-provider public pricing API response (external; no Equinix OpenAPI spec)"
+  },
+  "provider/azure_expressroute.json": {
+   "validate": false,
+   "reason": "cloud-provider public pricing API response (external; no Equinix OpenAPI spec)"
+  },
+  "provider/azure_expressroute_page1.json": {
+   "validate": false,
+   "reason": "cloud-provider public pricing API response (external; no Equinix OpenAPI spec)"
+  },
+  "provider/azure_expressroute_page2.json": {
+   "validate": false,
+   "reason": "cloud-provider public pricing API response (external; no Equinix OpenAPI spec)"
+  },
+  "provider/gcp_skus.json": {
+   "validate": false,
+   "reason": "cloud-provider public pricing API response (external; no Equinix OpenAPI spec)"
+  },
+  "provider/gcp_skus_multi.json": {
+   "validate": false,
+   "reason": "cloud-provider public pricing API response (external; no Equinix OpenAPI spec)"
+  },
+  "provider/gcp_skus_page1.json": {
+   "validate": false,
+   "reason": "cloud-provider public pricing API response (external; no Equinix OpenAPI spec)"
+  },
+  "provider/gcp_skus_page2.json": {
+   "validate": false,
+   "reason": "cloud-provider public pricing API response (external; no Equinix OpenAPI spec)"
+  },
+  "provider/oci_prices.json": {
+   "validate": false,
+   "reason": "cloud-provider public pricing API response (external; no Equinix OpenAPI spec)"
+  },
+  "provider/oci_prices_page1.json": {
+   "validate": false,
+   "reason": "cloud-provider public pricing API response (external; no Equinix OpenAPI spec)"
+  },
+  "provider/oci_prices_page2.json": {
+   "validate": false,
+   "reason": "cloud-provider public pricing API response (external; no Equinix OpenAPI spec)"
+  },
+  "sts/access_policies_granted.json": {
+   "spec": "stsv1.yaml",
+   "schema": "#/components/schemas/ListAccessPoliciesGrantedOutput",
+   "derivation": "best-fit"
+  },
+  "sts/access_policies_granted_empty.json": {
+   "spec": "stsv1.yaml",
+   "schema": "#/components/schemas/ListAccessPoliciesGrantedOutput",
+   "derivation": "best-fit"
+  },
+  "sts/jwks.json": {
+   "spec": "stsv1.yaml",
+   "schema": "#/components/schemas/JwksResponse",
+   "derivation": "best-fit"
+  },
+  "sts/oidc_provider_patched_response.json": {
+   "spec": "stsv1.yaml",
+   "schema": "#/components/schemas/OIDCProvider",
+   "derivation": "best-fit"
+  },
+  "sts/oidc_provider_response.json": {
+   "spec": "stsv1.yaml",
+   "schema": "#/components/schemas/OIDCProvider",
+   "derivation": "best-fit"
+  },
+  "sts/oidc_providers_empty.json": {
+   "spec": "stsv1.yaml",
+   "schema": "#/components/schemas/OIDCProviderPage",
+   "derivation": "best-fit"
+  },
+  "sts/oidc_providers_page1.json": {
+   "spec": "stsv1.yaml",
+   "schema": "#/components/schemas/OIDCProviderPage",
+   "derivation": "best-fit"
+  },
+  "sts/oidc_providers_page2.json": {
+   "spec": "stsv1.yaml",
+   "schema": "#/components/schemas/OIDCProviderPage",
+   "derivation": "best-fit"
+  },
+  "sts/openid_configuration.json": {
+   "spec": "stsv1.yaml",
+   "schema": "#/components/schemas/OpenIdConfiguration",
+   "derivation": "best-fit"
+  },
+  "sts/openid_configuration_live.json": {
+   "spec": "stsv1.yaml",
+   "schema": "#/components/schemas/OpenIdConfiguration",
+   "derivation": "manual (reviewed 2026-11-12)"
+  },
+  "sts/token_response.json": {
+   "spec": "stsv1.yaml",
+   "schema": "#/components/schemas/TokenResponse",
+   "derivation": "best-fit"
+  }
+ }
+}

@@ -28,7 +28,7 @@ import lombok.Getter;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Getter
 public class Throughput {
-    
+
     @JsonProperty("supported")
     private Boolean supported;
 

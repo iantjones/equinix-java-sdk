@@ -1,0 +1,639 @@
+swagger: '2.0'
+info:
+  version: 1.0.0
+  title: Notification API
+  description:  Users can receive voice, SMS, or email notifications based on their notifications permissions in the Equinix Customer Portal. Once a user is granted notification permissions, they may view, subscribe, and select their notification preferences. Only email notifications will be returned in the notification APIs. These APIs search through these received notifications and can also retrieve the details for a specific notification.  
+  termsOfService: 'https://www.equinix.com/about/legal/terms'
+  contact:
+    name: Equinix API Support
+    url: 'https://docs.equinix.com/api-support.htm'
+host: 'api.equinix.com'
+schemes:
+  - https
+produces:
+  - application/json
+paths:
+  /v1/notifications/ibx/search:
+    post:
+      operationId: search-ibx-notifications
+      summary: Ibx Notifications Search
+      description: Based on filtering criteria, this API returns a summary list of IBX notifications received by a user.  
+      tags:
+        - IbxNotification
+      consumes:
+        - application/json
+      parameters:
+        - $ref: '#/parameters/offset'
+        - $ref: '#/parameters/limit'
+        - $ref: '#/parameters/authHeader'
+        - name: sorts
+          in: query
+          description: 'Notification sort to get the notification even in the response sorted in the particular order. for example, use ''-id'' to sort the notification by id in descending order. And ''id'' for ascending order. For descending order, the field name should be prefixed with ''-''. Default sort is -startDate.'
+          required: false
+          type: array
+          collectionFormat: csv
+          items:
+            type: string
+            enum:
+            - id
+            - status
+            - startDate
+            - endDate
+            - type
+            - '-id'
+            - '-status'
+            - '-startDate'
+            - '-endDate'
+            - '-type'
+          default: "-startDate"
+        - name: body
+          in: body
+          schema:
+            $ref: '#/definitions/ibx-search-request'
+      responses:
+        '200':
+          description: Success Response.
+          schema:
+            $ref: '#/definitions/ibx-notification-response'
+        '400':
+          description: Validation Error.
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/error-response'
+        '401':
+          description: Authentication failed or user doesn’t have permissions for requested operation.
+          schema:
+            $ref: '#/definitions/server-error'
+        '404':
+          description: Page Not Found.
+          schema:
+            $ref: '#/definitions/server-error'
+        '409':
+          description: Request could not be completed due to conflicting information.
+          schema:
+            $ref: '#/definitions/server-error'
+        '500':
+          description: Something went wrong please contact customer service.
+          schema:
+            $ref: '#/definitions/server-error'
+  /v1/notifications/network/search:
+    post:
+      operationId: search-network-notifications
+      summary: Network Notifications Search
+      description: Based on filtering criteria, this API returns a summary list of network notifications received by a user. 
+      tags:
+        - NetworkNotification
+      consumes:
+        - application/json
+      parameters:
+        - $ref: '#/parameters/offset'
+        - $ref: '#/parameters/limit'
+        - $ref: '#/parameters/authHeader'
+        - name: sorts
+          in: query
+          description: 'Notification sort to get the notification even in the response sorted in the particular order. for example, use ''-id'' to sort the notification by id in descending order. And ''id'' for ascending order. For descending order, the field name should be prefixed with ''-''. Default sort is -startDate. '
+          required: false
+          type: array
+          collectionFormat: csv
+          items:
+            type: string
+            enum:
+            - id
+            - status
+            - startDate
+            - endDate
+            - type
+            - '-id'
+            - '-status'
+            - '-startDate'
+            - '-endDate'
+            - '-type'
+          default: "-startDate"
+        - name: body
+          in: body
+          schema:
+            $ref: '#/definitions/network-search-request'
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/network-notification-response'
+        '400':
+          description: Validation Error.
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/error-response'
+        '401':
+          description: Authentication failed or user doesn’t have permissions for requested operation.
+          schema:
+            $ref: '#/definitions/server-error'
+        '404':
+          description: Page Not Found.
+          schema:
+            $ref: '#/definitions/server-error'
+        '409':
+          description: Request could not be completed due to conflicting information.
+          schema:
+            $ref: '#/definitions/server-error'
+        '500':
+          description: Something went wrong please contact customer service.
+          schema:
+            $ref: '#/definitions/server-error'
+  '/v1/notifications/ibx/{id}':
+    parameters:
+      - name: id
+        in: path
+        description: Ibx Notification Id of the record need to load.
+        required: true
+        type: string
+      - $ref: '#/parameters/authHeader'  
+    get:
+      operationId: get-ibx-Notification
+      summary: Get Ibx Notification
+      description: This API retrieves the details of a user's IBX notification by its identification (ID) number.
+      tags:
+        - IbxNotification
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/ibx-notification'
+        '400':
+          description: Validation Error
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/error-response'
+        '401':
+          description: Authentication failed or user doesn’t have permissions for requested operation.
+          schema:
+            $ref: '#/definitions/server-error'
+        '404':
+          description: Record Not Found.
+          schema:
+            $ref: '#/definitions/server-error'
+        '409':
+          description: Request could not be completed due to conflicting information.
+          schema:
+            $ref: '#/definitions/server-error'
+        '500':
+          description: Something went wrong please contact customer service.
+          schema:
+            $ref: '#/definitions/server-error'
+  '/v1/notifications/network/{id}':
+    parameters:
+      - name: id
+        in: path
+        description: Network Notification Id of the record need to load.
+        required: true
+        type: string
+      - $ref: '#/parameters/authHeader'  
+    get:
+      operationId: get-network-Notification
+      summary: Get Network Notification
+      description: This API retrieves the details of a user's network notification by its identification ID number.
+      tags:
+        - NetworkNotification
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/network-notification'
+        '400':
+          description: Validation Error.
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/error-response'
+        '401':
+          description: Authentication failed or user doesn’t have permissions for requested operation.
+          schema:
+            $ref: '#/definitions/server-error'
+        '404':
+          description: Record Not Found
+          schema:
+            $ref: '#/definitions/server-error'
+        '409':
+          description: Request could not be completed due to conflicting information.
+          schema:
+            $ref: '#/definitions/server-error'
+        '500':
+          description: Something went wrong please contact customer service.
+          schema:
+            $ref: '#/definitions/server-error'
+parameters:
+  offset:
+    name: offset
+    in: query
+    description: The start index from which the list is created.
+    required: false
+    type: integer
+    minimum: 0
+  limit:
+    name: limit
+    in: query
+    description: Number of entries in response.
+    required: false
+    type: integer
+    minimum: 1
+    maximum: 100
+  authHeader:
+    name: Authorization
+    in: header
+    description: Specify the Access token with prefix 'Bearer '.
+    type: string
+    minimum: 1
+    required: true    
+definitions:
+  network-search-request:
+    title: NetworkSearchRequest
+    type: object
+    properties:
+      filter:
+        description: Network Notification filter.
+        type: object
+        properties:
+          ibxs:
+            description: List of IBX to be filterd.
+            type: array
+            example: ["CH2", "SG1"]
+            items:
+              type: string
+              minLength: 1
+          types:
+            type: array
+            description: List of Network Notification type to be filtered.
+            example: ["NETWORK_INCIDENT"]
+            items:
+              type: string
+              enum:
+              - NETWORK_INCIDENT
+              - NETWORK_MAINTENANCE
+          productTypes:
+            type: array
+            description: 'List of network product type (Possible values: EXPEDITE, CLOUD_EXCHANGE, CLOUD_IX, CROSS_CONNECT, EQUINIX_CONNECT, ETHERNET_EXCHANGE, INTER_METRO_CONNECT, INTERNET_EXCHANGE, MANAGEMENT_ACCESS, METRO_CONNECT, MOBILITY_EXCHANGE, NETWORK_TIMING, VMMR_SDH, VOIP, BI_VLAN, BI_CLOUD). It may return UNKNOWN if no known product type is found.'
+            example: ["CLOUD_EXCHANGE", "METRO_CONNECT"]
+            items:
+              type: string
+              minLength: 1
+          statuses:
+            type: array
+            description: List of Network Notification type to be filterd.
+            example: ["RESCHEDULED", "NEW"]
+            items:
+              type: string
+              enum:
+              - EXTENDED
+              - RESCHEDULED
+              - CANCELLED
+              - COMPLETED
+              - IN_PROGRESS
+              - RESOLVED
+              - UPDATED
+              - NEW
+          dateRange:
+            description: Network Notification date Range filter.
+            type: object
+            properties:
+              fromDate:
+                type: string
+                description: Start date to filter the Notification event. Default will be the date 1 year prior to current date.
+                format: date-time
+                example: "2018-01-28T03:46:36.720Z"
+              toDate:
+                type: string
+                description: End date to filter the Notification event.
+                format: date-time
+                example: "2018-03-28T03:46:36.720Z"
+  notification-email:
+    title: NotificationEmail
+    type: object
+    properties:
+      subject:
+        type: string
+        description: Subject of ibx notification email.
+        example: "FR METRO AREA NEW INCIDENT NOTIFICATION - [5-122720103065]"
+      body:
+        type: string
+        description: IBX Notification event Email body content.
+        example: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum"
+      timestamp:
+        type: string
+        format: date-time
+        description: IBX Notification event Email information received time.
+        example: "2018-01-28T03:46:36.720Z"
+  error:
+    title: ErrorResponse
+    type: object
+    properties:
+      code:
+        type: string
+        description: Error code in format of EQX_XXXX
+        example:  EQX-414-1212
+      fields:
+        type: array
+        description: List of fields the error corresponds to.
+        example: ["/filter/statuses/0"]
+        items:
+          type: string
+      message:
+        type: string
+        description: Error message.
+        example: "instance value (%s) not found in enum (possible values: %s)"
+      messageParams:
+        type: array
+        description: Arguments to the error message. This filed is to be used to add the error specific args while picking the loacalized error messaged from resource bundle.
+        items:
+          type: string
+        example: ["wrong_arg", [ "EXTENDED", "RESCHEDULED", "COMPLETED", "NEW"]]
+  error-response:
+    title: List of errors for error response.
+    properties:
+      errors:
+        type: array
+        description: List of errors for error response.
+        items:
+          $ref: '#/definitions/error'
+      ticketId:
+        type: string
+        description: Unique identifier for the particular error.
+  ibx-notification-response:
+    title: RemedyNotificationResponse
+    allOf:
+      - properties:
+          data:
+            type: array
+            items:
+              $ref: '#/definitions/ibx-notification-summary'
+          page:
+            $ref: '#/definitions/page-info'
+          _links:
+            $ref: '#/definitions/_links'
+    type: object
+  page-info:
+    title: PageInfo
+    type: object
+    properties:
+      limit:
+        type: integer
+        description: Starting count based on offset.
+        example: 10
+      offset:
+        type: integer
+        description: Limit count per page.
+        example: 30
+      total:
+        type: integer
+        description: Matching record count / total number records matched with filter.
+        example: 223
+      sorts:
+        type: array
+        example: ["id", "-date"]
+        items:
+          type: string
+  network-notification-response:
+    title: NetworkNotificationResponse
+    allOf:
+      - properties:
+          data:
+            type: array
+            items:
+              $ref: '#/definitions/network-notification-summary'
+          page:
+            $ref: '#/definitions/page-info'
+          _links:
+            $ref: '#/definitions/_links'
+    type: object
+  network-notification:
+    title: NetworkNotification
+    type: object
+    allOf:
+      - $ref: '#/definitions/network-notification-summary'
+      - $ref: '#/definitions/notification-emails'
+    required:
+      - id
+      - type
+      - startTimestamp
+      - ibxs
+      - status
+  network-notification-summary:
+    title: NetworkNotification
+    type: object
+    description: Summary of Network Notification without email details.
+    properties:
+      id:
+        type: string
+        description: Notification Identification.
+        example: 5-122662504647
+      type:
+        $ref: '#/definitions/network-notification-type'
+      startTimestamp:
+        type: string
+        description: Event/Notification start date.
+        format: date-time
+        example: "2018-01-28T03:46:36.720Z"
+      endTimestamp:
+        type: string
+        format: date-time
+        description: Event/Notification start date.
+        example: "2018-01-29T03:46:36.720Z"
+      ibxs:
+        type: array
+        description: 'List of IBX'
+        example: ["SG1", "SG2"]
+        items:
+          type: string
+      status:
+        $ref: '#/definitions/notification-status'
+      productTypes:
+        type: array
+        description: 'List of network product type (example: ETHERNET_EXCHANGE, INTERNET_EXCHANGE, CROSS_CONNECT, METRO_CONNECT, CLOUD_IX). It may return UNKNOWN if no known product type is found.'
+        example: [INTERNET_EXCHANGE, METRO_CONNECT]
+        items:
+          type: string
+          minLength: 1
+      summary:
+        type: string
+        description: Summary information about the event / notification.
+        example: "line card replacement of dis01.wa1"
+    required:
+      - id
+      - type
+      - startTimestamp
+      - ibxs
+      - status
+  ibx-search-request:
+    title: IbxSearchRequest
+    type: object
+    properties:
+      filter:
+        description: IBX Notification filter.
+        type: object
+        properties:
+          ibxs:
+            description: List of IBX to be filtered.
+            type: array
+            items:
+              type: string
+              minLength: 1
+            example: ["SG2", "SV1"]
+          types:
+            type: array
+            description: List of IBX Notification type to be filtered.
+            items:
+              type: string
+              enum:
+              - IBX_MAINTENANCE
+              - IBX_INCIDENT
+              - IBX_ADVISORY
+              - IBX_SMARTVIEW
+            example: ["IBX_INCIDENT", "IBX_ADVISORY"]
+          statuses:
+            type: array
+            description: List of IBX Notification type to be filterd.
+            items:
+              type: string
+              enum:
+              - EXTENDED
+              - RESCHEDULED
+              - CANCELLED
+              - COMPLETED
+              - IN_PROGRESS
+              - RESOLVED
+              - UPDATED
+              - NEW
+            example: [RESCHEDULED, NEW]
+          dateRange:
+            description: IBX Notification date Range filter.
+            type: object
+            properties:
+              fromDate:
+                type: string
+                description: Start date to filter the Notification event. Default will be the date 1 year prior to current date.
+                format: date-time
+                example: "2018-01-28T03:46:36.720Z"
+              toDate:
+                type: string
+                description: End date to filter the Notification event.
+                format: date-time
+                example: "2018-03-28T03:46:36.720Z"
+  _links:
+    title: _links
+    type: object
+    properties:
+      next:
+        $ref: '#/definitions/reference-link'
+      self:
+        $ref: '#/definitions/reference-link'
+      previous:
+        $ref: '#/definitions/reference-link'
+  notification-emails:
+    properties:
+      emails:
+        type: array
+        description: Event/Notification Email Content
+        items:
+          $ref: '#/definitions/notification-email'
+  ibx-notification-summary:
+    title: IbxNotificationSummary
+    type: object
+    description: Summary of IBX Notification without email details.
+    properties:
+      id:
+        type: string
+        description: Notification Identification.
+        example: 5-122719992195
+      type:
+        $ref: '#/definitions/ibx-notification-type'
+      startTimestamp:
+        type: string
+        description: Event/Notification start date.
+        format: date-time
+        example: "2018-01-28T03:46:36.720Z"
+      endTimestamp:
+        type: string
+        format: date-time
+        description: Event/Notification start date
+        example: "2018-01-29T03:46:36.720Z"
+      ibxs:
+        type: array
+        description: 'List of IBX'
+        items:
+          type: string
+        example: ["SG1", "CH2"]
+      status:
+        $ref: '#/definitions/notification-status'
+      summary:
+        type: string
+        description: Summary information about the event / notification.
+        example: "Fire Alarm - IBX was Evacuated"
+    required:
+      - id
+      - type
+      - startTimestamp
+      - ibxs
+      - status
+  ibx-notification:
+    title: IbxNotification
+    type: object
+    allOf:
+      - $ref: '#/definitions/ibx-notification-summary'
+      - $ref: '#/definitions/notification-emails'
+    required:
+      - id
+      - type
+      - startTimestamp
+      - ibxs
+      - status
+  server-error:
+    title: List of errors for error response.
+    properties:
+      errors:
+        type: array
+        description: List of errors for error response.
+        items:
+          $ref: '#/definitions/error'
+      ticketId:
+        type: string
+        description: Unique identifier for the particular error.
+  network-notification-type:
+    type: string
+    description: Notification Type.
+    example: NETWORK_MAINTENANCE
+    enum:
+      - NETWORK_INCIDENT
+      - NETWORK_MAINTENANCE
+  ibx-notification-type:
+    type: string
+    description: Notification Type
+    example: IBX_ADVISORY
+    enum:
+      - IBX_MAINTENANCE
+      - IBX_INCIDENT
+      - IBX_ADVISORY
+      - IBX_SMARTVIEW
+  notification-status:
+    type: string
+    description: Event/Notification Status.
+    example: RESOLVED
+    enum:
+      - EXTENDED
+      - RESCHEDULED
+      - CANCELLED
+      - COMPLETED
+      - IN_PROGRESS
+      - RESOLVED
+      - UPDATED
+      - NEW
+      - OTHER
+  reference-link:
+    title: ReferenceLink
+    type: object
+    properties:
+      href:
+        type: string
+        example: "/v1/notifications/ibx?limit=10&offset=0"
+    required:
+      - href

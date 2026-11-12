@@ -49,6 +49,19 @@ public class DeviceCore {
     @JsonProperty("supported")
     private Boolean supported;
 
+    // The spec types tier as one integer; the live /ne/v1/deviceTypes returns an array of tiers for
+    // some device types (checked 2026-11-11). The shared mapper accepts a single value as a list.
     @JsonProperty("tier")
-    private Integer tier;
+    @Getter(lombok.AccessLevel.NONE)
+    private java.util.List<Integer> tier;
+
+    /** @return the first throughput tier, or {@code null}; see {@link #getTiers()} for all of them */
+    public Integer getTier() {
+        return tier == null || tier.isEmpty() ? null : tier.get(0);
+    }
+
+    /** @return every throughput tier the device type offers for this core count, never {@code null} */
+    public java.util.List<Integer> getTiers() {
+        return tier == null ? java.util.List.of() : java.util.List.copyOf(tier);
+    }
 }

@@ -24,6 +24,10 @@ import com.eqixiac.equinix.networkedge.model.json.creators.VPNOperator;
  * Client interface for managing VPN configurations on Network Edge devices. Provides
  * operations to list, retrieve, and create site-to-site VPN connections.
  *
+ * <p><b>Provenance.</b> {@code /ne/v1/vpn*} is not in the published network-edgev1 spec (1.0.0); these
+ * endpoints exist live ({@code GET /ne/v1/vpn} answered HTTP 200 on 2026-11-11). Request and response
+ * shapes follow the earlier Network Edge API reference and may change without a spec notice.</p>
+ *
  * @author ianjones
  */
 public interface VPNs {

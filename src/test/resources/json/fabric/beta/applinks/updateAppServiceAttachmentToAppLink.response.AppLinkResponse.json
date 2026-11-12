@@ -1,0 +1,28 @@
+{
+  "href": "https://api.equinix.com/fabric/v4/appLinks/23cd19ab-d3bb-478b-9f25-bd12a3af1914/appServices/5008a109-9d1c-485c-b0ba-de9736f283c2",
+  "uuid": "5008a109-9d1c-485c-b0ba-de9736f283c2",
+  "type": "APP_SERVICE",
+  "geoScope": "GLOBAL",
+  "destinationIp": "10.10.1.120",
+  "attachmentStatus": "ATTACHING",
+  "change": {
+    "uuid": "531c4ab5-43b0-4352-8975-ee9045325841",
+    "type": "APP_SERVICE_UPDATE",
+    "status": "REQUESTED",
+    "createdDateTime": "2026-06-27T04:20:55.471Z",
+    "updatedDateTime": "2026-06-27T04:20:55.471Z",
+    "data": [
+      {
+        "op": "replace",
+        "path": "/destinationIp",
+        "value": "10.10.1.120"
+      }
+    ]
+  },
+  "changeLog": {
+    "createdBy": "test",
+    "createdDateTime": "2026-06-27T04:20:55.471Z",
+    "updatedBy": "test",
+    "updatedDateTime": "2026-06-27T04:20:55.471Z"
+  }
+}

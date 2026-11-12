@@ -97,6 +97,60 @@ final class LayeredRateCard implements RateCard {
         return Optional.ofNullable(merged);
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * <p>Consults each layer's {@code connectionLookup} in order; the trail says which layer
+     * answered and why each earlier layer declined.</p>
+     */
+    @Override
+    public PriceLookup<PriceQuote> connectionLookup(ConnectionType type, int bandwidthMbps, MetroCode metro,
+                                                    Term term) {
+        return layered(card -> card.connectionLookup(type, bandwidthMbps, metro, term));
+    }
+
+    /** {@inheritDoc} Same layering and trail as {@link #connectionLookup}. */
+    @Override
+    public PriceLookup<PriceQuote> cloudRouterLookup(String packageCode, MetroCode metro, Term term) {
+        return layered(card -> card.cloudRouterLookup(packageCode, metro, term));
+    }
+
+    /** {@inheritDoc} Same layering and trail as {@link #connectionLookup}. */
+    @Override
+    public PriceLookup<EgressRate> egressLookup(CloudProviderType provider, String region, EgressPath path,
+                                                Term term) {
+        return layered(card -> card.egressLookup(provider, region, path, term));
+    }
+
+    /** {@inheritDoc} Same layering and trail as {@link #connectionLookup}. */
+    @Override
+    public PriceLookup<PriceQuote> colocationLookup(ColocationItem item, MetroCode metro, Term term) {
+        return layered(card -> card.colocationLookup(item, metro, term));
+    }
+
+    @Override
+    public String cardName() {
+        List<String> names = new ArrayList<>();
+        for (RateCard card : cards) {
+            names.add(card.cardName());
+        }
+        return "Layered[" + String.join(" > ", names) + "]";
+    }
+
+    private <T> PriceLookup<T> layered(java.util.function.Function<RateCard, PriceLookup<T>> lookup) {
+        List<PriceLookup<T>> results = new ArrayList<>();
+        List<String> names = new ArrayList<>();
+        for (RateCard card : cards) {
+            PriceLookup<T> result = lookup.apply(card);
+            results.add(result);
+            names.add(card.cardName());
+            if (result.isPriced()) {
+                break;
+            }
+        }
+        return PriceLookup.firstPriced(results, names);
+    }
+
     @Override
     public PriceSource source() {
         return PriceSource.COMPOSITE;

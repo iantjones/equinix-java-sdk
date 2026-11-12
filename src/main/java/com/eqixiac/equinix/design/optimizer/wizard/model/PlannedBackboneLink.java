@@ -3,6 +3,7 @@ package com.eqixiac.equinix.design.optimizer.wizard.model;
 import com.eqixiac.equinix.core.model.MetroId;
 import com.eqixiac.equinix.design.optimizer.wizard.enums.BackboneTopology;
 import lombok.Builder;
+import lombok.extern.jackson.Jacksonized;
 import lombok.Value;
 
 /**
@@ -14,6 +15,7 @@ import lombok.Value;
  */
 @Value
 @Builder
+@Jacksonized
 public class PlannedBackboneLink {
 
     /** The A-side metro of the link. */
@@ -22,7 +24,7 @@ public class PlannedBackboneLink {
     /** The Z-side metro of the link. */
     MetroId metroZ;
 
-    /** The generated link name — the same name as the underlying connection's. */
+    /** The generated link name - the same name as the underlying connection's. */
     String name;
 
     /** The link bandwidth in Mbps ({@code DeploymentWizard.Builder.backboneBandwidthMbps}). */

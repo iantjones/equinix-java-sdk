@@ -26,7 +26,7 @@ import com.eqixiac.equinix.internetaccess.model.json.CustomerRouteConfigurationJ
 
 /**
  * Internal client for the Equinix Internet Access (EIA) v1 customer-route-configuration lookup:
- * {@code GET /internetAccess/v1/customerRouteConfigurations} — the allowed customer-route
+ * {@code GET /internetAccess/v1/customerRouteConfigurations} - the allowed customer-route
  * configurations for a given use case, redundancy and routing-protocol type.
  */
 public interface CustomerRouteConfigurationClient extends Pageable<CustomerRouteConfiguration> {

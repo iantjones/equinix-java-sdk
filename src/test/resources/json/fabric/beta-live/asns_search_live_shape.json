@@ -1,0 +1,20 @@
+{
+  "pagination": {"limit": 5, "offset": 0, "total": 1},
+  "sort": [{"direction": "DESC", "property": "/changeLog/updatedDateTime"}],
+  "data": [
+    {
+      "href": "https://api.equinix.com/fabric/v4/asns/11111111-2222-3333-4444-555555555555",
+      "uuid": "11111111-2222-3333-4444-555555555555",
+      "type": "PRIVATE_ASN",
+      "state": "PROVISIONED",
+      "number": 64512,
+      "range": "16_BIT",
+      "location": {"metroCode": "SV"},
+      "project": {"projectId": "00000000-0000-0000-0000-000000000000"},
+      "changeLog": {"createdDateTime": "2026-01-01T00:00:00Z"},
+      "assets": [
+        {"uuid": "66666666-7777-8888-9999-000000000000", "state": "ATTACHED"}
+      ]
+    }
+  ]
+}

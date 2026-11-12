@@ -50,7 +50,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * WireMock-backed tests for the Equinix Internet Access (EIA) v1 read surfaces — the single-IBX
+ * WireMock-backed tests for the Equinix Internet Access (EIA) v1 read surfaces - the single-IBX
  * get, accounts/agreements, attribute/default configurations, purchase orders, order history and
  * the product-availability inventory. These verify the v1 URI/version routing (the
  * {@code defaultVersion: 1} groups in {@code apiParams_InternetAccess.json}), path/query parameter
@@ -431,7 +431,7 @@ class InternetAccessV1ReadWireMockTest extends WireMockTestBase {
      * ({@code GET /internetAccess/v2/ibxs}, the {@code Ibxs} group, {@code defaultVersion: 2})
      * driven by {@code availability(...)}, and the v1 single-IBX get
      * ({@code GET /internetAccess/v1/ibxs/{ibx}}, the {@code IbxsV1} group,
-     * {@code defaultVersion: 1}) driven by {@code getByCode(...)} — plus the query-parameter
+     * {@code defaultVersion: 1}) driven by {@code getByCode(...)} - plus the query-parameter
      * placement for each overload.
      */
     @Nested
@@ -451,7 +451,7 @@ class InternetAccessV1ReadWireMockTest extends WireMockTestBase {
             assertEquals("WA1", ibxs.get(0).getIbxCode());
             assertEquals("WA", ibxs.get(0).getMetroCode());
 
-            // v2 route (defaultVersion 2, no requestUri) — only the required connection type,
+            // v2 route (defaultVersion 2, no requestUri) - only the required connection type,
             // the two optional narrowing params must be absent.
             wireMock.verify(getRequestedFor(urlPathEqualTo("/internetAccess/v2/ibxs"))
                     .withQueryParam("service.connection.type", equalTo("IA_C"))

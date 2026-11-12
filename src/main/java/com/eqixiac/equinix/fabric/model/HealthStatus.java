@@ -31,5 +31,19 @@ public interface HealthStatus {
 
     String getState();
 
+    /**
+     * The first per-route service status. The live service returns a list (see
+     * {@link #getAllApiServices()}); this accessor keeps the original single-object signature.
+     *
+     * @return the first service status, or {@code null} when none is reported
+     */
     ApiServices getApiServices();
+
+    /**
+     * Every per-route service status the health endpoint reports (the live response carries one per
+     * Fabric API route).
+     *
+     * @return the service statuses, never {@code null}
+     */
+    java.util.List<ApiServices> getAllApiServices();
 }

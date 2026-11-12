@@ -18,13 +18,14 @@ package com.eqixiac.equinix.design.optimizer.wizard.model;
 
 import com.eqixiac.equinix.fabric.model.implementation.cloud.CloudProviderType;
 import lombok.Builder;
+import lombok.extern.jackson.Jacksonized;
 import lombok.Value;
 
 /**
  * The per-connection authorization a customer must gather before a provider connection can be
  * provisioned. A brand-new customer targeting a metro where they own nothing has no resources to
  * validate a connection against at plan time; this enumerates exactly what the connection's live
- * endpoint dry-run will need once the target Cloud Router exists — the cloud-specific authorization
+ * endpoint dry-run will need once the target Cloud Router exists - the cloud-specific authorization
  * key, the VLAN tag, and (for Azure) the peering type.
  *
  * <p>These are deliberately kept OUT of the plan's "validated now" section: they are inputs the
@@ -34,6 +35,7 @@ import lombok.Value;
  */
 @Value
 @Builder
+@Jacksonized
 public class ConnectionInputRequirement {
 
     /** The planned connection this requirement belongs to. */
@@ -57,7 +59,7 @@ public class ConnectionInputRequirement {
     /** Whether the authorization key has already been supplied on the plan (a lens-3b pre-flight). */
     boolean authenticationKeyProvided;
 
-    /** Whether a VLAN tag (DOT1Q encapsulation) must be supplied — always true for a cloud VC. */
+    /** Whether a VLAN tag (DOT1Q encapsulation) must be supplied - always true for a cloud VC. */
     boolean vlanTagRequired;
 
     /** Whether an Azure peering type ({@code PRIVATE}/{@code MICROSOFT}) must be supplied. */

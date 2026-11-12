@@ -22,7 +22,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 /**
  * Type of change applied to an Equinix Internet Access (EIA) v2 service (spec schema
  * {@code ChangeType}). {@link #UNKNOWN} is a read-side fallback for values added after this SDK
- * release — never send it.
+ * release - never send it.
  */
 public enum ChangeType implements APIParam {
     SERVICE_CREATION,

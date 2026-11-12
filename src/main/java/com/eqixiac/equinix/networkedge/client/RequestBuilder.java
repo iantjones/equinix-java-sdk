@@ -44,7 +44,7 @@ public class RequestBuilder {
     public static VPN vpn() {
         return new VPN();
     }
-    
+
     public static Backup backup() {
         return new Backup();
     }

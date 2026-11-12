@@ -67,21 +67,21 @@ import java.util.function.Supplier;
 
 /**
  * Layered, plan-time validation for the Deployment Wizard. Separates "validate the plan/data" from
- * "live dry-run a connection" so a brand-new customer — who owns no resources and may target a metro
- * with zero footprint — still gets a fully validated plan without provisioning anything first.
+ * "live dry-run a connection" so a brand-new customer - who owns no resources and may target a metro
+ * with zero footprint - still gets a fully validated plan without provisioning anything first.
  *
  * <ul>
- *   <li><b>Layer&nbsp;1 — structural / catalog (no provisioning, no live connection dry-run):</b>
- *       names (length/charset, asserted locally — never learned from a 400), duplicate names, IP /30
+ *   <li><b>Layer&nbsp;1 - structural / catalog (no provisioning, no live connection dry-run):</b>
+ *       names (length/charset, asserted locally - never learned from a 400), duplicate names, IP /30
  *       overlaps, ASN sanity, package/metro validity; and, against the public catalog the optimizer
  *       already fetched, that every Z-side service-profile uuid resolves, is offered in the connection's
  *       metro with a valid seller region, and that the bandwidth fits the profile's allowed tiers and
  *       the router package ceiling. A required cloud that is NOT offered at a targeted metro is flagged
  *       as a new-market gap rather than silently dropped.</li>
- *   <li><b>Layer&nbsp;2 — live router dry-run (self-contained, real):</b> each planned Cloud Router is
+ *   <li><b>Layer&nbsp;2 - live router dry-run (self-contained, real):</b> each planned Cloud Router is
  *       posted to {@code POST /fabric/v4/routers?dryRun=true}. FCRs have no dependency, so this fully
  *       validates package/metro/notifications at plan time with nothing provisioned.</li>
- *   <li><b>Layer&nbsp;3 — connection endpoint dry-run:</b> a connection whose A-side Cloud Router does
+ *   <li><b>Layer&nbsp;3 - connection endpoint dry-run:</b> a connection whose A-side Cloud Router does
  *       not exist yet is <em>not</em> sent a doomed endpoint-less dry-run; it is recorded as DEFERRED
  *       (validated structurally now; the live endpoint dry-run runs at provisioning, and needs the
  *       customer's authorization key). A connection whose A-side endpoint already exists (a
@@ -96,12 +96,12 @@ import java.util.function.Supplier;
  * <h3>Three outcome buckets</h3>
  * <p>A live-layer step reaches one of three distinct verdicts, never conflated:</p>
  * <ul>
- *   <li><b>ERROR</b> — the plan is wrong: a hard structural/catalog failure, or a genuine API
+ *   <li><b>ERROR</b> - the plan is wrong: a hard structural/catalog failure, or a genuine API
  *       <em>rejection</em> of a well-formed request (a 4xx validation rejection, e.g. HTTP 400/409).
  *       Errors invalidate the plan.</li>
- *   <li><b>DEFERRED</b> — will legitimately validate at provisioning: the connection endpoint dry-run
+ *   <li><b>DEFERRED</b> - will legitimately validate at provisioning: the connection endpoint dry-run
  *       postponed because the A-side Cloud Router does not exist yet (lens&nbsp;3a). Not an error.</li>
- *   <li><b>SKIPPED</b> — could not validate now, and here is why: an <em>infeasibility</em> — the live
+ *   <li><b>SKIPPED</b> - could not validate now, and here is why: an <em>infeasibility</em> - the live
  *       surface was unavailable (offline / bare stub / not connected), or the API answered with a
  *       non-rejection failure (401/403 not entitled, 429 throttled, 5xx server-side, or a
  *       transport/timeout error). A skip never invalidates the plan; it is surfaced with a
@@ -128,9 +128,9 @@ public final class PlanValidator {
     private PlanValidator() {}
 
     /**
-     * The outcome of validating a plan, in three distinct buckets — hard/rejection <b>errors</b> (which
-     * invalidate the plan), <b>deferred</b> validations (which do NOT — they run at provisioning), and
-     * <b>skipped</b> validations (which do NOT — they could not be attempted now, each with a reason) —
+     * The outcome of validating a plan, in three distinct buckets - hard/rejection <b>errors</b> (which
+     * invalidate the plan), <b>deferred</b> validations (which do NOT - they run at provisioning), and
+     * <b>skipped</b> validations (which do NOT - they could not be attempted now, each with a reason) - 
      * plus the per-connection customer inputs a first-time customer must gather.
      */
     public static final class Result {
@@ -142,7 +142,7 @@ public final class PlanValidator {
         /** Validations deferred to provisioning (the live connection endpoint dry-run); not errors. */
         public final List<String> deferred;
         /**
-         * Validations that could NOT be attempted now — an infeasibility, never a plan defect: a live
+         * Validations that could NOT be attempted now - an infeasibility, never a plan defect: a live
          * surface was unavailable (offline / bare stub), or the API answered with a non-rejection
          * failure (401/403/429/5xx or a transport/timeout error). Each entry is a human/LLM-readable
          * reason. Skipped validations never invalidate the plan.
@@ -228,7 +228,7 @@ public final class PlanValidator {
         List<String> skipped = new ArrayList<>();
         List<ConnectionInputRequirement> requiredInputs = new ArrayList<>();
 
-        // ── Layer 1: local structural checks (no API) ──
+        // Layer 1: local structural checks (no API)
         checkRouterReferences(rs, pcs, bbs, errors);
         checkNames(rs, pcs, bbs, rps, errors);
         checkDuplicateNames(rs, pcs, bbs, rps, errors);
@@ -238,20 +238,20 @@ public final class PlanValidator {
         checkNotifications(rs, errors);
         checkConnectionTypes(pcs, bbs, errors);
 
-        // ── Layer 1: new-market gap (required provider not available at a placed metro) ──
+        // Layer 1: new-market gap (required provider not available at a placed metro)
         checkNewMarketGaps(metros, request, topology, errors);
 
-        // ── Layer 1: catalog checks (best-effort — an unavailable surface is SKIPPED, not silent) ──
+        // Layer 1: catalog checks (best-effort - an unavailable surface is SKIPPED, not silent)
         catalogChecks(fabric, pcs, errors, skipped);
         packageCeilingChecks(fabric, rs, pcs, bbs, errors, skipped);
 
-        // ── Layer 2: live router dry-run ──
+        // Layer 2: live router dry-run
         routerDryRun(fabric, rs, errors, skipped);
 
-        // ── Layer 3: connection endpoint dry-run (deferred, real, or skipped when infeasible) ──
+        // Layer 3: connection endpoint dry-run (deferred, real, or skipped when infeasible)
         connectionDispatch(fabric, pcs, errors, deferred, skipped, requiredInputs);
 
-        // ── Native multicloud links: Layer-1 structure + NATIVE_ONLY availability, then SKIPPED ──
+        // Native multicloud links: Layer-1 structure + NATIVE_ONLY availability, then SKIPPED
         // Appended last so a plan without links produces exactly the buckets it did before.
         checkMulticloudLinks(nz(multicloudLinks), errors, skipped);
 
@@ -277,7 +277,7 @@ public final class PlanValidator {
             }
             else if (!seen.add(link.getName())) {
                 errors.add("Duplicate native multicloud link name '" + link.getName()
-                        + "' — every native link on a plan must be uniquely named");
+                        + "' - every native link on a plan must be uniquely named");
                 malformed = true;
             }
             if (link.getProviderA() == null || link.getProviderZ() == null
@@ -340,16 +340,14 @@ public final class PlanValidator {
                 + " <-> " + link.getProviderZ() + (link.getRegionZ() != null ? " " + link.getRegionZ() : "");
     }
 
-    // ══════════════════════════════════════════════
-    //  Layer 1 — local structural
-    // ══════════════════════════════════════════════
+    //  Layer 1 - local structural
 
     private static void checkRouterReferences(
             List<PlannedCloudRouter> routers, List<PlannedConnection> connections,
             List<PlannedBackboneLink> links, List<String> errors) {
 
         if (routers.isEmpty() && (!connections.isEmpty() || !links.isEmpty())) {
-            errors.add("No Cloud Routers planned — at least one metro recommendation is required");
+            errors.add("No Cloud Routers planned - at least one metro recommendation is required");
         }
 
         Set<String> routerNames = new LinkedHashSet<>();
@@ -404,7 +402,7 @@ public final class PlanValidator {
         }
         if (name.length() > 23) {
             errors.add(kind + " name '" + name + "' is " + name.length()
-                    + " characters — Fabric rejects names of 24 or more (EQ-3142539)");
+                    + " characters - Fabric rejects names of 24 or more (EQ-3142539)");
         }
         if (!name.matches("[A-Za-z0-9_-]+")) {
             errors.add(kind + " name '" + name + "' contains characters outside [A-Za-z0-9_-]");
@@ -429,7 +427,7 @@ public final class PlanValidator {
             }
         }
         for (String d : dupes) {
-            errors.add("Duplicate resource name '" + d + "' — every name in a plan must be unique");
+            errors.add("Duplicate resource name '" + d + "' - every name in a plan must be unique");
         }
     }
 
@@ -480,9 +478,9 @@ public final class PlanValidator {
      * Fabric REQUIRES at least one notification recipient to create a Cloud Router. A router POSTed
      * without one is rejected live with HTTP 400 {@code EQ-3040013} ("Notifications is mandatory field /
      * Property: $.notifications"). This asserts the requirement structurally, at plan time, so an omitted
-     * notification surfaces as a friendly pre-flight error here — and its router is skipped by the live
-     * router dry-run ({@link #routerDryRun}) — instead of a raw API 400 from a doomed dry-run.
-     * "No notification email" means the router's recipient LIST is empty (or holds only blanks) —
+     * notification surfaces as a friendly pre-flight error here - and its router is skipped by the live
+     * router dry-run ({@link #routerDryRun}) - instead of a raw API 400 from a doomed dry-run.
+     * "No notification email" means the router's recipient LIST is empty (or holds only blanks) - 
      * routers carry every configured address, not a single one.
      */
     private static void checkNotifications(List<PlannedCloudRouter> routers, List<String> errors) {
@@ -498,8 +496,8 @@ public final class PlanValidator {
     /**
      * Fabric accepts a virtual connection whose A-side is a Cloud Router only as {@code IP_VC}
      * (FCR A-side =&gt; IP_VC); the port-based types ({@code EVPL_VC}, ...) are rejected live. Every
-     * wizard-planned connection — provider connections (unless redeemed from a caller-supplied
-     * customer port) and all backbone links (Cloud Router to Cloud Router) — has an FCR A-side, so
+     * wizard-planned connection - provider connections (unless redeemed from a caller-supplied
+     * customer port) and all backbone links (Cloud Router to Cloud Router) - has an FCR A-side, so
      * an incompatible explicitly-configured type is a structural error here rather than a live 400.
      */
     private static void checkConnectionTypes(
@@ -521,18 +519,16 @@ public final class PlanValidator {
         ConnectionType type = conn.getConnectionType();
         if (type != null && type != ConnectionType.IP_VC) {
             errors.add(kind + " '" + conn.getName() + "': connection type " + type
-                    + " is incompatible with a Cloud Router A-side — Fabric only accepts IP_VC for "
+                    + " is incompatible with a Cloud Router A-side - Fabric only accepts IP_VC for "
                     + "FCR-originated connections (FCR A-side => IP_VC). Use IP_VC, or supply a "
                     + "customer port A-side for a port-based type.");
         }
     }
 
-    // ══════════════════════════════════════════════
-    //  Layer 1 — new-market gap
-    // ══════════════════════════════════════════════
+    //  Layer 1 - new-market gap
 
     /**
-     * Flags a metro that hosts a workload requiring a cloud provider which is NOT available there —
+     * Flags a metro that hosts a workload requiring a cloud provider which is NOT available there - 
      * the brand-new-market case, surfaced at plan time (which provider, which metro) rather than
      * silently omitted and only discovered at provisioning.
      */
@@ -571,7 +567,7 @@ public final class PlanValidator {
             for (String label : requiredLabels) {
                 if (!availableAt(metro, label)) {
                     errors.add("New-market gap: metro " + metroId + " hosts workload(s) that require provider '"
-                            + label + "', but it is not available there — no connection can be planned for it");
+                            + label + "', but it is not available there - no connection can be planned for it");
                 }
             }
         }
@@ -589,9 +585,7 @@ public final class PlanValidator {
         return false;
     }
 
-    // ══════════════════════════════════════════════
-    //  Layer 1 — catalog checks
-    // ══════════════════════════════════════════════
+    //  Layer 1 - catalog checks
 
     private static void catalogChecks(FabricGateway fabric, List<PlannedConnection> connections,
                                       List<String> errors, List<String> skipped) {
@@ -600,7 +594,7 @@ public final class PlanValidator {
         }
         ServiceProfiles client = fabric == null ? null : safeGet(() -> fabric.serviceProfiles());
         if (client == null) {
-            // Offline / bare stub — no usable Service Profile catalog surface. Call the skip out rather
+            // Offline / bare stub - no usable Service Profile catalog surface. Call the skip out rather
             // than validating silently to nothing.
             skipped.add("Catalog validation skipped: no Service Profile catalog surface available "
                     + "(offline or not connected)");
@@ -617,7 +611,7 @@ public final class PlanValidator {
             Lookup lookup = cache.computeIfAbsent(uuid, u -> lookupProfile(client, u));
             switch (lookup.status) {
                 case UNAVAILABLE:
-                    // The catalog could not be reached for this uuid — SKIPPED with a reason, never silent.
+                    // The catalog could not be reached for this uuid - SKIPPED with a reason, never silent.
                     skipped.add("Catalog check skipped for connection '" + conn.getName()
                             + "': service profile '" + uuid + "' could not be retrieved from the catalog "
                             + "(unreachable)");
@@ -649,7 +643,7 @@ public final class PlanValidator {
         if (match == null) {
             errors.add("Connection '" + conn.getName() + "': provider '" + conn.getZSideProviderLabel()
                     + "' (profile " + conn.getZSideServiceProfileUuid() + ") is not offered in metro "
-                    + aMetro + " — new-market gap");
+                    + aMetro + " - new-market gap");
         } else {
             String region = conn.getZSideSellerRegion();
             if (region != null && match.getSellerRegions() != null
@@ -698,7 +692,7 @@ public final class PlanValidator {
         }
         CloudRouters client = fabric == null ? null : safeGet(() -> fabric.cloudRouters());
         if (client == null) {
-            // Offline / bare stub — the Cloud Router package catalog cannot be consulted. Call it out.
+            // Offline / bare stub - the Cloud Router package catalog cannot be consulted. Call it out.
             skipped.add("Package-ceiling checks skipped: no Cloud Router API surface available "
                     + "(offline or not connected)");
             return;
@@ -780,15 +774,13 @@ public final class PlanValidator {
             CloudRouterPackageCode code = CloudRouterPackageCode.valueOf(gateway.name());
             pkg = client.routerPackageByCode(code);
         } catch (RuntimeException e) {
-            pkg = null; // unknown bridge or transport error — best-effort skip
+            pkg = null; // unknown bridge or transport error - best-effort skip
         }
         cache.put(gateway, pkg);
         return pkg;
     }
 
-    // ══════════════════════════════════════════════
-    //  Layer 2 — router dry-run
-    // ══════════════════════════════════════════════
+    //  Layer 2 - router dry-run
 
     private static void routerDryRun(FabricGateway fabric, List<PlannedCloudRouter> routers,
                                      List<String> errors, List<String> skipped) {
@@ -798,14 +790,14 @@ public final class PlanValidator {
         CloudRouters client = fabric == null ? null : safeGet(() -> fabric.cloudRouters());
         if (client == null) {
             // Best-effort: no usable cloud-router surface (bare stub / offline). SKIPPED with a reason,
-            // never a silent return — a fully offline run must still call out that this layer ran nowhere.
+            // never a silent return - a fully offline run must still call out that this layer ran nowhere.
             skipped.add("Live router dry-run skipped: no Cloud Router API surface available "
                     + "(offline or not connected)");
             return;
         }
         for (PlannedCloudRouter r : routers) {
             // Layer 1 already flags a missing metro / package / notification; do not send a doomed dry-run
-            // for it — a router with no notification would 400 live on the mandatory $.notifications field
+            // for it - a router with no notification would 400 live on the mandatory $.notifications field
             // (EQ-3040013), so the friendly Layer-1 error stands in for it rather than a raw API rejection.
             if (r.getMetroId() == null || r.getPackageCode() == null
                     || r.getPackageCode() == GatewayPackageCode.UNKNOWN
@@ -815,26 +807,24 @@ public final class PlanValidator {
             try {
                 // The body comes from the SAME shared builder the execution-time Phase-1 create uses
                 // (RouterBodies), so what this dry-run validates is byte-for-byte what execute() will
-                // send — the only difference is the dryRun() terminator.
+                // send - the only difference is the dryRun() terminator.
                 RouterBodies.routerBody(client, r).dryRun().create();
             } catch (Exception e) {
                 LiveFailure failure = classifyLiveFailure(e);
                 if (failure.isInfeasible()) {
                     // Infeasibility (not entitled / throttled / server-side / transport): the dry-run
-                    // could not be attempted. SKIPPED with a reason — never an error that would
+                    // could not be attempted. SKIPPED with a reason - never an error that would
                     // invalidate an otherwise-sound plan.
                     skipped.add("Router dry-run skipped for '" + r.getName() + "': " + failure.reason());
                 } else {
-                    // A genuine API rejection of a well-formed request — the plan is wrong.
+                    // A genuine API rejection of a well-formed request - the plan is wrong.
                     errors.add("Router dry-run validation warning for '" + r.getName() + "': " + e.getMessage());
                 }
             }
         }
     }
 
-    // ══════════════════════════════════════════════
-    //  Layer 3 — connection endpoint dry-run dispatch
-    // ══════════════════════════════════════════════
+    //  Layer 3 - connection endpoint dry-run dispatch
 
     private static void connectionDispatch(
             FabricGateway fabric, List<PlannedConnection> connections,
@@ -852,7 +842,7 @@ public final class PlanValidator {
 
             if (!conn.hasPreExistingEndpoint()) {
                 // Lens 3a: the A-side Cloud Router does not exist yet, so the live endpoint dry-run is
-                // genuinely DEFERRED to provisioning — recorded honestly rather than sent as a doomed
+                // genuinely DEFERRED to provisioning - recorded honestly rather than sent as a doomed
                 // dry-run. This is the ONLY connection shape that is deferred.
                 deferred.add(deferredNote(conn, requirement));
                 continue;
@@ -860,7 +850,7 @@ public final class PlanValidator {
 
             // Lens 3b: the A-side endpoint already exists, so a full, real dry-run is possible in
             // principle at PLAN time. If it cannot actually be attempted now, that is a SKIP with a
-            // truthful reason — never a defer carrying the false "Cloud Router does not exist yet" note.
+            // truthful reason - never a defer carrying the false "Cloud Router does not exist yet" note.
             if (client == null) {
                 skipped.add("Live dry-run skipped for connection '" + conn.getName()
                         + "': no Connections API surface available (offline or not connected)");
@@ -880,11 +870,11 @@ public final class PlanValidator {
             } catch (Exception e) {
                 LiveFailure failure = classifyLiveFailure(e);
                 if (failure.isInfeasible()) {
-                    // Not entitled / throttled / server-side / transport — the dry-run could not run.
+                    // Not entitled / throttled / server-side / transport - the dry-run could not run.
                     skipped.add("Live dry-run skipped for connection '" + conn.getName() + "': "
                             + failure.reason());
                 } else {
-                    // A genuine API rejection of a well-formed request — the plan is wrong.
+                    // A genuine API rejection of a well-formed request - the plan is wrong.
                     errors.add("Live dry-run for connection '" + conn.getName() + "' failed: " + e.getMessage());
                 }
             }
@@ -919,7 +909,7 @@ public final class PlanValidator {
                 .append("' exists");
         String needs = requirementNeeds(requirement);
         if (!needs.isEmpty()) {
-            sb.append(" — you will need to supply ").append(needs);
+            sb.append(" - you will need to supply ").append(needs);
         }
         return sb.toString();
     }
@@ -940,15 +930,13 @@ public final class PlanValidator {
         return needs.toString();
     }
 
-    // ══════════════════════════════════════════════
     //  Live-failure classification (shared)
-    // ══════════════════════════════════════════════
 
     /** Whether a live-layer failure is a genuine rejection (a plan defect) or an infeasibility (a skip). */
     public enum LiveFailureKind {
-        /** A genuine API rejection of a well-formed request — the plan is wrong; record an ERROR. */
+        /** A genuine API rejection of a well-formed request - the plan is wrong; record an ERROR. */
         REJECTION,
-        /** Not entitled / not authed / throttled / server-side / transport — record a SKIPPED(reason). */
+        /** Not entitled / not authed / throttled / server-side / transport - record a SKIPPED(reason). */
         INFEASIBLE
     }
 
@@ -990,19 +978,19 @@ public final class PlanValidator {
 
     /**
      * Classifies a failure thrown from a live validation step (a router or connection dry-run) as either
-     * a genuine <em>rejection</em> of a well-formed request — a real plan defect that must become an
-     * ERROR — or an <em>infeasibility</em> that must become a SKIPPED(reason) and never invalidate an
+     * a genuine <em>rejection</em> of a well-formed request - a real plan defect that must become an
+     * ERROR - or an <em>infeasibility</em> that must become a SKIPPED(reason) and never invalidate an
      * otherwise-sound plan.
      *
      * <ul>
      *   <li><b>Infeasibility (SKIPPED):</b> {@link EquinixAuthenticationException} (401, not authed),
-     *       {@link EquinixAuthorizationException} (403, not entitled — the brand-new-customer case),
+     *       {@link EquinixAuthorizationException} (403, not entitled - the brand-new-customer case),
      *       {@link EquinixRateLimitException} (429, throttled), {@link EquinixServerException} (5xx,
      *       server-side), and any transport/timeout/connect error (a non-service {@code RuntimeException}
      *       or SDK client error). A base {@link EquinixServiceException} with no status is also treated
      *       as infeasible rather than risk invalidating a sound plan on an ambiguous error.</li>
      *   <li><b>Rejection (ERROR):</b> an {@link EquinixServiceException} carrying a 4xx status that is a
-     *       validation rejection (e.g. HTTP 400/409) — the API rejected a well-formed request because the
+     *       validation rejection (e.g. HTTP 400/409) - the API rejected a well-formed request because the
      *       request itself is wrong.</li>
      * </ul>
      *
@@ -1013,7 +1001,7 @@ public final class PlanValidator {
         if (e == null) {
             return infeasible("the live validation could not be attempted (no detail)");
         }
-        // Typed infeasibility subclasses first — these must never be read as a rejection even though
+        // Typed infeasibility subclasses first - these must never be read as a rejection even though
         // 401/403/429 are themselves 4xx statuses.
         if (e instanceof EquinixAuthorizationException) {
             return infeasible("the credential is not entitled to this operation (HTTP 403)");
@@ -1034,13 +1022,13 @@ public final class PlanValidator {
                 return infeasible("the Equinix API returned a server error (HTTP " + status + ")");
             }
             if (status != null && status >= 400) {
-                // A 4xx that is not 401/403/429 — a genuine validation rejection of a well-formed request.
+                // A 4xx that is not 401/403/429 - a genuine validation rejection of a well-formed request.
                 return rejection();
             }
             // No status to confirm a validation rejection: prefer a skip over invalidating a sound plan.
             return infeasible("the Equinix API could not complete the request (service error)");
         }
-        // Anything else — a transport/timeout/connect error, a circuit-open, or an SDK client error.
+        // Anything else - a transport/timeout/connect error, a circuit-open, or an SDK client error.
         return infeasible("Equinix API unreachable (" + transportReason(e) + ")");
     }
 
@@ -1058,8 +1046,8 @@ public final class PlanValidator {
     }
 
     /**
-     * A short cause label for a transport-layer failure — {@code "timeout"}, {@code "connection failed"},
-     * or the raw message — walking the cause chain so a wrapped {@code SocketTimeoutException} is still
+     * A short cause label for a transport-layer failure - {@code "timeout"}, {@code "connection failed"},
+     * or the raw message - walking the cause chain so a wrapped {@code SocketTimeoutException} is still
      * recognised.
      */
     private static String transportReason(Throwable e) {
@@ -1077,9 +1065,7 @@ public final class PlanValidator {
         return message != null && !message.isBlank() ? message : e.getClass().getSimpleName();
     }
 
-    // ══════════════════════════════════════════════
     //  Helpers
-    // ══════════════════════════════════════════════
 
     private static <T> List<T> nz(List<T> list) {
         return list == null ? Collections.emptyList() : list;
@@ -1148,7 +1134,7 @@ public final class PlanValidator {
 
     /**
      * Resolves a service profile by uuid, distinguishing a genuine 404 (a definitively unknown
-     * profile — a hard error) from any other failure or a missing stub (unreachable — skipped).
+     * profile - a hard error) from any other failure or a missing stub (unreachable - skipped).
      */
     private static Lookup lookupProfile(ServiceProfiles client, String uuid) {
         try {

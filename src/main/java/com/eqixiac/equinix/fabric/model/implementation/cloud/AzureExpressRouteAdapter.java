@@ -24,47 +24,36 @@ import lombok.Getter;
 /**
  * Adapter for bridging Microsoft Azure ExpressRoute SDK objects with Equinix Fabric connections.
  *
- * <p>Azure ExpressRoute provides private, dedicated connections between Azure data centers
- * and on-premises infrastructure. When creating an Equinix Fabric connection to Azure, you need:</p>
+ * <p>When creating an Equinix Fabric connection to Azure ExpressRoute you need:</p>
  * <ul>
- *   <li><strong>Authentication Key</strong>: The ExpressRoute Service Key (a GUID provided by Azure)</li>
- *   <li><strong>Seller Region</strong>: The Azure region or peering location (e.g., {@code "Silicon Valley"},
- *       {@code "Washington DC"})</li>
- *   <li><strong>Service Profile</strong>: The Equinix Fabric service profile UUID for Azure ExpressRoute</li>
+ *   <li><strong>Authentication Key</strong>: the ExpressRoute Service Key (a GUID provided by Azure)</li>
+ *   <li><strong>Service Profile</strong>: the Equinix Fabric service profile UUID for Azure ExpressRoute</li>
  *   <li><strong>Peering Type</strong>: {@link PeeringType#PRIVATE} or {@link PeeringType#MICROSOFT}</li>
+ *   <li><strong>Metro</strong>: the Equinix metro of the ExpressRoute peering location (for example
+ *       {@code "SV"} for Silicon Valley), sent as {@code zSide.accessPoint.location.metroCode}</li>
  * </ul>
  *
- * <h3>Usage with Azure SDK Object</h3>
- * <pre>{@code
- * // From Azure SDK
- * ExpressRouteCircuit circuit = azureClient.getExpressRouteCircuit("myResourceGroup", "myCircuit");
+ * <p>No {@code sellerRegion} is sent: none of the Fabric v4 4.34.0 Azure examples
+ * ({@code Colo2Sp-Azure-Primary}, {@code Vd2Sp-Azure}, {@code Fcr2Sp-Azure}, {@code Metal2Sp-Azure})
+ * carries one; the peering location is expressed by the metro. {@link #getSellerRegion()} returns
+ * {@code null}.</p>
  *
- * AzureExpressRouteAdapter<ExpressRouteCircuit> adapter = new AzureExpressRouteAdapter<>(
- *     circuit,
- *     circuit.serviceKey(),                // ExpressRoute Service Key (GUID)
- *     circuit.peeringLocation(),           // e.g., "Silicon Valley"
- *     "equinix-azure-profile-uuid",        // Equinix service profile for Azure
- *     PeeringType.PRIVATE                  // Private or Microsoft peering
+ * <pre>{@code
+ * AzureExpressRouteAdapter<?> adapter = AzureExpressRouteAdapter.of(
+ *     "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",  // ExpressRoute Service Key
+ *     "equinix-azure-profile-uuid",              // Equinix service profile
+ *     PeeringType.PRIVATE,                       // Peering type
+ *     "SV"                                       // Equinix metro of the peering location
  * );
  *
  * Connection conn = fabric.connections()
  *     .define(ConnectionType.EVPL_VC)
  *     .name("Azure-ExpressRoute")
  *     .bandwidth(100)
- *     .aSideAccessPointPort(portUuid, LinkProtocol.dot1q().vlanTag(1500).create())
+ *     .aSideAccessPointPort(portUuid, LinkProtocol.qinq().vlanSTag(1500).vlanCTag(10).create())
  *     .zSideCloudProvider(adapter)
  *     .notification("ops@example.com")
  *     .create();
- * }</pre>
- *
- * <h3>Manual Construction (No Azure SDK)</h3>
- * <pre>{@code
- * AzureExpressRouteAdapter<?> adapter = AzureExpressRouteAdapter.of(
- *     "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",  // ExpressRoute Service Key
- *     "Silicon Valley",                          // Peering location
- *     "equinix-azure-profile-uuid",              // Equinix service profile
- *     PeeringType.PRIVATE                        // Peering type
- * );
  * }</pre>
  *
  * @param <T> the type of the Azure SDK object being adapted
@@ -76,41 +65,50 @@ public class AzureExpressRouteAdapter<T> implements CloudProviderConnectionAdapt
 
     private final T source;
     private final String authenticationKey;
-    private final String sellerRegion;
     private final String serviceProfileUuid;
     private final PeeringType preferredPeeringType;
+    private final String metroCode;
 
     /**
      * Creates an adapter wrapping an Azure ExpressRoute SDK object.
      *
-     * @param source                the Azure SDK object (e.g., {@code ExpressRouteCircuit})
+     * @param source                 the Azure SDK object (e.g., {@code ExpressRouteCircuit})
      * @param expressRouteServiceKey the ExpressRoute Service Key (GUID)
-     * @param peeringLocation       the Azure peering location (e.g., {@code "Silicon Valley"})
-     * @param serviceProfileUuid    the Equinix Fabric service profile UUID for Azure
-     * @param peeringType           the peering type (PRIVATE or MICROSOFT)
+     * @param serviceProfileUuid     the Equinix Fabric service profile UUID for Azure
+     * @param peeringType            the peering type (PRIVATE or MICROSOFT)
+     * @param metroCode              the Equinix metro of the peering location, e.g. {@code "SV"}; required
      */
-    public AzureExpressRouteAdapter(T source, String expressRouteServiceKey, String peeringLocation,
-                                    String serviceProfileUuid, PeeringType peeringType) {
+    public AzureExpressRouteAdapter(T source, String expressRouteServiceKey, String serviceProfileUuid,
+                                    PeeringType peeringType, String metroCode) {
         this.source = source;
         this.authenticationKey = expressRouteServiceKey;
-        this.sellerRegion = peeringLocation;
         this.serviceProfileUuid = serviceProfileUuid;
         this.preferredPeeringType = peeringType;
+        this.metroCode = AdapterArguments.requireMetro(metroCode);
     }
 
     /**
-     * Creates an adapter without an Azure SDK object, using manually specified parameters.
+     * Creates an adapter without an Azure SDK object.
      *
      * @param expressRouteServiceKey the ExpressRoute Service Key (GUID)
-     * @param peeringLocation       the Azure peering location
-     * @param serviceProfileUuid    the Equinix Fabric service profile UUID for Azure
-     * @param peeringType           the peering type
+     * @param serviceProfileUuid     the Equinix Fabric service profile UUID for Azure
+     * @param peeringType            the peering type
+     * @param metroCode              the Equinix metro of the peering location; required
      * @return a new adapter configured for Azure ExpressRoute
      */
-    public static AzureExpressRouteAdapter<Void> of(String expressRouteServiceKey, String peeringLocation,
-                                                     String serviceProfileUuid, PeeringType peeringType) {
-        return new AzureExpressRouteAdapter<>(null, expressRouteServiceKey, peeringLocation,
-                serviceProfileUuid, peeringType);
+    public static AzureExpressRouteAdapter<Void> of(String expressRouteServiceKey, String serviceProfileUuid,
+                                                     PeeringType peeringType, String metroCode) {
+        return new AzureExpressRouteAdapter<>(null, expressRouteServiceKey, serviceProfileUuid, peeringType, metroCode);
+    }
+
+    /**
+     * Azure connections send no {@code sellerRegion} (see the class description).
+     *
+     * @return {@code null}
+     */
+    @Override
+    public String getSellerRegion() {
+        return null;
     }
 
     @Override
@@ -131,5 +129,10 @@ public class AzureExpressRouteAdapter<T> implements CloudProviderConnectionAdapt
     @Override
     public PeeringType getPreferredPeeringType() {
         return preferredPeeringType;
+    }
+
+    @Override
+    public String describe() {
+        return getProviderType().getDisplayName() + " in metro " + metroCode;
     }
 }

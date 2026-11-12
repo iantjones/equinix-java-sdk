@@ -49,7 +49,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * WireMock request-contract tests for the IAM access-model discovery reads — effective permissions
+ * WireMock request-contract tests for the IAM access-model discovery reads - effective permissions
  * ({@code iam.effectivePermissions()} / {@link com.eqixiac.equinix.iam.client.IAMEffectivePermissions})
  * and resource types ({@code iam.resourceTypes()} /
  * {@link com.eqixiac.equinix.iam.client.IAMResourceTypes}).

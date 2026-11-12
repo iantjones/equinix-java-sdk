@@ -17,7 +17,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
- * Tests {@link SpeedOfLightLatency} — the fibre speed-of-light latency-from-distance calculator.
+ * Tests {@link SpeedOfLightLatency} - the fibre speed-of-light latency-from-distance calculator.
  */
 class SpeedOfLightLatencyTest {
 

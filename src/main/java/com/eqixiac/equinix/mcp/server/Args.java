@@ -25,7 +25,7 @@ import java.util.Optional;
 
 /**
  * Argument-extraction helpers for {@link ToolHandler}s. Failures throw
- * {@link IllegalArgumentException} with a message written for the calling LLM — the adapter
+ * {@link IllegalArgumentException} with a message written for the calling LLM - the adapter
  * turns it into a tool error result the model can correct from.
  */
 final class Args {

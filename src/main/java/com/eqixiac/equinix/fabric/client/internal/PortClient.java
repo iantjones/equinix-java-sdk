@@ -57,7 +57,7 @@ public interface PortClient<T> extends PageablePost<T> {
     /**
      * Validate-only variant of {@link #create(PortCreatorJson)}
      * ({@code POST /fabric/v4/ports?dryRun=true}; spec: "option to verify that API calls will
-     * succeed"). No port is ordered — the 200 response is the validated port order echoed back
+     * succeed"). No port is ordered - the 200 response is the validated port order echoed back
      * (no uuid/name/state), versus the real create's 202.
      *
      * @param body the typed create request to validate
@@ -76,7 +76,7 @@ public interface PortClient<T> extends PageablePost<T> {
     /**
      * Validate-only variant of {@link #delete(String)}
      * ({@code DELETE /fabric/v4/ports/{uuid}?dryRun=true}; spec: "option to verify that API calls
-     * will succeed"). Nothing is deleted — the 200 response is the existing port entity (with
+     * will succeed"). Nothing is deleted - the 200 response is the existing port entity (with
      * uuid/name) that WOULD be deleted, versus the real delete's 202.
      *
      * @param uuid the unique identifier of the port
@@ -97,7 +97,7 @@ public interface PortClient<T> extends PageablePost<T> {
     /**
      * Validate-only variant of {@link #update(String, List)}
      * ({@code PATCH /fabric/v4/ports/{uuid}?dryRun=true}; spec: "option to verify that API calls
-     * will succeed"). Nothing is changed — and unlike the real update's bare {@code Port}, the
+     * will succeed"). Nothing is changed - and unlike the real update's bare {@code Port}, the
      * dry-run 200 body is an {@code AllPortsResponse} paginated envelope
      * ({@code {pagination, data:[Port]}}); implementations deserialize that envelope and return
      * its {@code data[0]}, the simulated updated port.

@@ -29,6 +29,8 @@ public class CloudRouterWrapper extends ResourceImpl<CloudRouter> implements Clo
 
     @Delegate(excludes = CloudRouterMutability.class)
     private CloudRouterJson jsonObject;
+
+    private boolean deleted;
     @Getter
     private final Pageable<CloudRouter> serviceClient;
 
@@ -42,8 +44,17 @@ public class CloudRouterWrapper extends ResourceImpl<CloudRouter> implements Clo
     }
 
     public Boolean delete() {
-        this.jsonObject = ((CloudRouterClientImpl)this.serviceClient).delete(this.getUuid());
+        CloudRouterJson response = ((CloudRouterClientImpl)this.serviceClient).delete(this.getUuid());
+        if (response != null) {
+            this.jsonObject = response;
+        }
+        this.deleted = true;
         return true;
+    }
+
+    @Override
+    public boolean isDeleted() {
+        return this.deleted;
     }
 
     public void refresh() {

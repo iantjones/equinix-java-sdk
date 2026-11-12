@@ -27,6 +27,11 @@ import java.util.List;
  * Client interface for managing IBX SmartView streaming subscriptions. Provides methods
  * to list, retrieve, and create streaming subscriptions that enable real-time delivery
  * of environmental and power data from monitored IBX assets.
+ *
+ * <p><b>Entitlement.</b> Streaming subscriptions deliver IBX SmartView <i>API+</i> near-real-time
+ * data (the spec's term for {@code /smartview/v2/streaming/subscriptionData}). API+ is a paid
+ * IBX SmartView entitlement on the account; without it these calls are rejected (typically HTTP
+ * 403), even when the read-only SmartView APIs work for the same account.</p>
  */
 public interface StreamingSubscriptions {
 

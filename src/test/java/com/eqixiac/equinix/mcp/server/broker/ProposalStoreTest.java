@@ -25,15 +25,17 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@DisplayName("ProposalStore — the confirm-token state machine (mint/consume/expire/replay)")
+@DisplayName("ProposalStore - the confirm-token state machine (mint/consume/expire/replay)")
 class ProposalStoreTest {
 
     private static final String SPEC = "{\"name\":\"X\"}";
     private static final String SHA = SpecHash.sha256Hex(SPEC);
+    private static final String REQUEST_SHA = SpecHash.sha256Hex("connection_create\n{}");
 
     /** A mutable test clock. */
     private static final class SteppingClock extends Clock {
@@ -60,10 +62,10 @@ class ProposalStoreTest {
     }
 
     @Test
-    @DisplayName("mint → consume returns the exact pending change, exactly once")
+    @DisplayName("mint -> consume returns the exact pending change, exactly once")
     void mintAndConsumeOnce() {
         ProposalStore store = new ProposalStore();
-        PendingChange minted = store.mint(ChangeType.CONNECTION_CREATE, SPEC, SHA);
+        PendingChange minted = mint(store, ChangeType.CONNECTION_CREATE, null);
 
         assertTrue(minted.token().startsWith("chg-"), minted.token());
         assertEquals(1, store.size());
@@ -77,10 +79,10 @@ class ProposalStoreTest {
     }
 
     @Test
-    @DisplayName("a second consume of the same token is REPLAYED — consumed on attempt, forever")
+    @DisplayName("a second consume of the same token is REPLAYED - consumed on attempt, forever")
     void replayDetected() {
         ProposalStore store = new ProposalStore();
-        PendingChange minted = store.mint(ChangeType.NETWORK_CREATE, SPEC, SHA);
+        PendingChange minted = mint(store, ChangeType.NETWORK_CREATE, null);
 
         assertEquals(ProposalStore.Outcome.CONSUMED, store.consume(minted.token()).outcome());
         ProposalStore.Consumption replay = store.consume(minted.token());
@@ -93,7 +95,7 @@ class ProposalStoreTest {
     void expiry() {
         SteppingClock clock = new SteppingClock();
         ProposalStore store = new ProposalStore(clock, Duration.ofMinutes(10), 20);
-        PendingChange minted = store.mint(ChangeType.SERVICE_TOKEN_CREATE, SPEC, SHA);
+        PendingChange minted = mint(store, ChangeType.SERVICE_TOKEN_CREATE, null);
 
         clock.advance(Duration.ofMinutes(9));
         assertEquals(1, store.size(), "still live just before the TTL");
@@ -116,20 +118,57 @@ class ProposalStoreTest {
     }
 
     @Test
-    @DisplayName("capacity eviction drops the oldest pending proposal")
+    @DisplayName("capacity eviction drops the oldest proposal, reports it to the minter, and a confirm says EVICTED")
     void capacityEviction() {
         SteppingClock clock = new SteppingClock();
         ProposalStore store = new ProposalStore(clock, Duration.ofMinutes(10), 2);
 
-        PendingChange first = store.mint(ChangeType.CONNECTION_CREATE, SPEC, SHA);
-        PendingChange second = store.mint(ChangeType.CONNECTION_CREATE, SPEC, SHA);
-        PendingChange third = store.mint(ChangeType.CONNECTION_CREATE, SPEC, SHA);
+        PendingChange first = mint(store, ChangeType.CONNECTION_CREATE, null);
+        PendingChange second = mint(store, ChangeType.CONNECTION_CREATE, null);
+        ProposalStore.Minted third = store.mint(ChangeType.CONNECTION_CREATE, SPEC, SHA, REQUEST_SHA,
+                store.now(), null);
 
+        assertEquals(1, third.evicted().size(), "the minter is told what was evicted");
+        assertEquals(first.token(), third.evicted().get(0).token());
         assertEquals(2, store.size());
-        assertEquals(ProposalStore.Outcome.UNKNOWN, store.consume(first.token()).outcome(),
-                "the evicted proposal is gone entirely");
+        assertEquals(ProposalStore.Outcome.EVICTED, store.consume(first.token()).outcome(),
+                "an evicted token says evicted, not unknown");
         assertEquals(ProposalStore.Outcome.CONSUMED, store.consume(second.token()).outcome());
-        assertEquals(ProposalStore.Outcome.CONSUMED, store.consume(third.token()).outcome());
+        assertEquals(ProposalStore.Outcome.CONSUMED, store.consume(third.change().token()).outcome());
+
+        // The eviction tombstone is remembered for one TTL window, then forgotten.
+        clock.advance(Duration.ofMinutes(11));
+        assertEquals(ProposalStore.Outcome.UNKNOWN, store.consume(first.token()).outcome());
+    }
+
+    @Test
+    @DisplayName("isExpired re-reads the clock, so a proposal consumed live can be found expired later")
+    void isExpiredAfterConsumption() {
+        SteppingClock clock = new SteppingClock();
+        ProposalStore store = new ProposalStore(clock, Duration.ofMinutes(10), 20);
+        PendingChange minted = mint(store, ChangeType.NETWORK_CREATE, null);
+        PendingChange consumed = store.consume(minted.token()).change();
+        assertFalse(store.isExpired(consumed));
+        clock.advance(Duration.ofMinutes(10));
+        assertTrue(store.isExpired(consumed), "expiry is inclusive of the TTL instant");
+    }
+
+    @Test
+    @DisplayName("the request hash and compile instant are stored with the proposal")
+    void requestBindingStored() {
+        SteppingClock clock = new SteppingClock();
+        ProposalStore store = new ProposalStore(clock, Duration.ofMinutes(10), 20);
+        Instant compiledAt = store.now();
+        clock.advance(Duration.ofSeconds(3));
+        PendingChange minted = store.mint(ChangeType.CONNECTION_CREATE, SPEC, SHA, REQUEST_SHA, compiledAt, null)
+                .change();
+        assertEquals(REQUEST_SHA, minted.requestSha256());
+        assertEquals(compiledAt, minted.compiledAt());
+        assertEquals(compiledAt.plusSeconds(3), minted.mintedAt());
+    }
+
+    private static PendingChange mint(ProposalStore store, ChangeType type, String priceSummary) {
+        return store.mint(type, SPEC, SHA, REQUEST_SHA, store.now(), priceSummary).change();
     }
 
     @Test
@@ -137,14 +176,14 @@ class ProposalStoreTest {
     void mintInstantPriceSummaryAndAge() {
         SteppingClock clock = new SteppingClock();
         ProposalStore store = new ProposalStore(clock, Duration.ofMinutes(10), 20);
-        PendingChange priced = store.mint(ChangeType.CONNECTION_CREATE, SPEC, SHA, "USD 250.00 monthly recurring");
-        PendingChange unpriced = store.mint(ChangeType.NETWORK_CREATE, SPEC, SHA);
+        PendingChange priced = mint(store, ChangeType.CONNECTION_CREATE, "USD 250.00 monthly recurring");
+        PendingChange unpriced = mint(store, ChangeType.NETWORK_CREATE, null);
 
         assertEquals(Instant.parse("2026-07-20T12:00:00Z"), priced.mintedAt());
         assertEquals(priced.mintedAt().plus(Duration.ofMinutes(10)), priced.expiresAt(),
                 "expiry is one TTL after the mint instant");
         assertEquals("USD 250.00 monthly recurring", priced.priceSummary());
-        assertNull(unpriced.priceSummary(), "the three-argument mint records no price summary");
+        assertNull(unpriced.priceSummary(), "a mint without a price summary records none");
 
         assertEquals(Duration.ZERO, store.ageOf(priced));
         clock.advance(Duration.ofSeconds(42));
@@ -159,8 +198,8 @@ class ProposalStoreTest {
     @DisplayName("tokens are unique and unguessable-shaped; configuration is reported")
     void tokensAndConfiguration() {
         ProposalStore store = new ProposalStore();
-        PendingChange a = store.mint(ChangeType.CONNECTION_CREATE, SPEC, SHA);
-        PendingChange b = store.mint(ChangeType.CONNECTION_CREATE, SPEC, SHA);
+        PendingChange a = mint(store, ChangeType.CONNECTION_CREATE, null);
+        PendingChange b = mint(store, ChangeType.CONNECTION_CREATE, null);
         assertNotEquals(a.token(), b.token(), "each mint yields a fresh token");
         assertTrue(a.token().matches("^chg-\\d+-[0-9a-f]{24}$"), a.token());
         assertEquals(ProposalStore.DEFAULT_TTL, store.ttl());

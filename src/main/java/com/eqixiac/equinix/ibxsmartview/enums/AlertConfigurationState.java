@@ -22,7 +22,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 /**
  * Lifecycle state of a power alert configuration (spec schema {@code AlertConfigurationReadModel},
  * property {@code state}). {@link #UNKNOWN} is a read-side fallback for values added after this SDK
- * release — never send it.
+ * release - never send it.
  */
 public enum AlertConfigurationState implements APIParam {
     ACTIVE,

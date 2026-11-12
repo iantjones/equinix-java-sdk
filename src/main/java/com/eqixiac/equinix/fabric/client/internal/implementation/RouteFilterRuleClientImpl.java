@@ -64,7 +64,8 @@ public class RouteFilterRuleClientImpl extends ResourceClientBase<RouteFilterRul
 
     public RouteFilterRuleJson update(String routeFilterId, String uuid, List<PatchOperation> operations) {
         // PATCH /routeFilters/{routeFilterId}/routeFilterRules/{uuid} with an op/path/value array sent
-        // as application/json (not json-patch+json), so updateOne (default content-type) is correct here.
+        // as application/json. The spec lists both types; live (2026-11-12, own sdk-probe rule) both
+        // answered 202, and PUT (replace) answered 202 too.
         return updateOne("UpdateRouteFilterRule", Map.of("routeFilterId", routeFilterId, "uuid", uuid), operations);
     }
 
@@ -90,7 +91,7 @@ public class RouteFilterRuleClientImpl extends ResourceClientBase<RouteFilterRul
     }
 
     public Page<RouteFilterRuleJson> search(String routeFilterId, FilterPropertyList filter, SortPropertyList sort) {
-        // POST /routeFilters/{routeFilterId}/routeFilterRules/search — searchPage cannot carry path
+        // POST /routeFilters/{routeFilterId}/routeFilterRules/search - searchPage cannot carry path
         // params, so build the paginated-post request manually (mirrors RouteFilter.search otherwise).
         EquinixRequest<RouteFilterRule> request = buildRequestWithPathParams("SearchRouteFilterRules", RequestType.PAGINATED_POST,
                 Map.of("routeFilterId", routeFilterId), RouteFilterRuleJson.class);

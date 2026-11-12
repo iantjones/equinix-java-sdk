@@ -21,7 +21,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
 /**
- * Geographic zone of a Fabric metro (fabricv4 {@code GeoZone}) — e.g. {@code EU} with a note on
+ * Geographic zone of a Fabric metro (fabricv4 {@code GeoZone}) - e.g. {@code EU} with a note on
  * member-state coverage.
  *
  * @author ianjones

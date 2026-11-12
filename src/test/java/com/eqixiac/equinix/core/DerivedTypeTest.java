@@ -15,7 +15,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Validates that response types <em>derived</em> from a JSON class via
- * {@link RequestAssembler#deriveResponseType} deserialize real API fixtures correctly — the basis for
+ * {@link RequestAssembler#deriveResponseType} deserialize real API fixtures correctly - the basis for
  * removing the 209 hand-declared {@code TypeReference} fields across the JSON models.
  */
 class DerivedTypeTest {

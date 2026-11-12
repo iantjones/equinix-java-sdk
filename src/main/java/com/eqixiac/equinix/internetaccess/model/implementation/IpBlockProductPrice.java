@@ -17,9 +17,12 @@
 package com.eqixiac.equinix.internetaccess.model.implementation;
 
 import com.eqixiac.equinix.internetaccess.enums.IpBlockType;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
+
+import java.util.List;
 
 /**
  * IP block product breakdown of an Equinix Internet Access (EIA) v1 price entry. Present for
@@ -51,7 +54,21 @@ public class IpBlockProductPrice {
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class CustomerIpBlock {
 
+        /**
+         * The prefix lengths priced. The spec types {@code prefixLength} as an integer, but the live
+         * price search returned an array on 2026-11-12 (path
+         * {@code service.routingProtocol.ipv4.customerRoute.ipBlock.prefixLength}); both shapes are read.
+         */
         @JsonProperty("prefixLength")
-        private Integer prefixLength;
+        @JsonFormat(with = JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
+        private List<Integer> prefixLengths;
+
+        /**
+         * @return the first (or only) prefix length, or {@code null} when none was returned
+         */
+        @com.fasterxml.jackson.annotation.JsonIgnore
+        public Integer getPrefixLength() {
+            return prefixLengths == null || prefixLengths.isEmpty() ? null : prefixLengths.get(0);
+        }
     }
 }

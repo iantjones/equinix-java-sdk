@@ -60,7 +60,7 @@ import static org.mockito.Mockito.when;
  * false-positive guard ("&lt;NSP&gt; Direct Connect" is NOT evidence of AWS), and the honesty
  * path (an unreadable profile catalog is reported as NOT analyzed, never as {@code false}).</p>
  */
-@DisplayName("Peering intelligence — Fabric service-profile availability")
+@DisplayName("Peering intelligence - Fabric service-profile availability")
 class PeeringFabricAvailabilityTest {
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
@@ -118,7 +118,7 @@ class PeeringFabricAvailabilityTest {
 
         // No caller label at all: the only evidence is the PeeringDB name "Amazon.com, Inc.",
         // whose "amazon" token resolves CloudProviderType.AWS, which then matches the PRODUCT
-        // name — the exact corporate-vs-product pitfall the optimizer fix (d38ab48) addressed.
+        // name - the exact corporate-vs-product pitfall the optimizer fix (d38ab48) addressed.
         Map<Long, String> unlabelled = new LinkedHashMap<>();
         unlabelled.put(AWS, null);
 
@@ -140,7 +140,7 @@ class PeeringFabricAvailabilityTest {
                 profile("uuid-generic", "Global Cloud Exchange Services", "DC"),
                 profile("uuid-telecom", "Vodafone Telecom Interconnect", "DC"));
 
-        // Target "Contoso Telecom": the only distinctive token is "contoso" — sharing the
+        // Target "Contoso Telecom": the only distinctive token is "contoso" - sharing the
         // generic "telecom"/"direct"/"cloud" vocabulary with a profile is NOT a match.
         PeeringIntelligenceResult result = new PeeringIntelligenceEngine(
                 fabric, new AwsStub(AWS, "Contoso Telecom International"),
@@ -173,7 +173,7 @@ class PeeringFabricAvailabilityTest {
     // ---- Honesty when the catalog is unreadable ----
 
     @Test
-    @DisplayName("an unreadable profile catalog is surfaced as NOT analyzed — never silently false")
+    @DisplayName("an unreadable profile catalog is surfaced as NOT analyzed - never silently false")
     void unreadableCatalogIsNotAnalyzed() {
         FabricGateway fabric = fabricDcSvDa();
         when(fabric.serviceProfiles()).thenThrow(new RuntimeException("Fabric service-profile API 503"));

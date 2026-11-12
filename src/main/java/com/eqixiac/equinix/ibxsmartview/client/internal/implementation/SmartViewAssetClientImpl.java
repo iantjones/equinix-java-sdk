@@ -39,6 +39,7 @@ public class SmartViewAssetClientImpl extends ClientBase implements SmartViewAss
     }
 
     public AssetsListJson list(String accountNo, String ibx, String classification, List<String> cages) {
+        requireParams(accountNo, ibx, classification);
         Map<String, List<String>> qParams = new LinkedHashMap<>();
         qParams.put("accountNo", List.of(accountNo));
         qParams.put("ibx", List.of(ibx));
@@ -50,6 +51,8 @@ public class SmartViewAssetClientImpl extends ClientBase implements SmartViewAss
     }
 
     public AssetDetailsGetResponseJson getAssetDetails(String accountNo, String ibx, String classification, String assetId) {
+        requireParams(accountNo, ibx, classification);
+        SmartViewArguments.require("asset", "assetId", assetId);
         Map<String, List<String>> qParams = Map.of(
                 "accountNo", List.of(accountNo),
                 "ibx", List.of(ibx),
@@ -64,6 +67,7 @@ public class SmartViewAssetClientImpl extends ClientBase implements SmartViewAss
     }
 
     public AssetsJson search(String accountNo, String ibx, String searchString) {
+        SmartViewArguments.require("asset", "accountNo", accountNo, "ibx", ibx, "searchString", searchString);
         Map<String, List<String>> qParams = Map.of(
                 "accountNo", List.of(accountNo),
                 "ibx", List.of(ibx),
@@ -73,6 +77,8 @@ public class SmartViewAssetClientImpl extends ClientBase implements SmartViewAss
     }
 
     public HierarchyNodeForAssetAPIJson getAffectedAssets(String accountNo, String ibx, String assetId, String classification) {
+        SmartViewArguments.require("asset", "accountNo", accountNo, "ibx", ibx, "assetId", assetId,
+                "classification", classification);
         Map<String, List<String>> qParams = Map.of(
                 "accountNo", List.of(accountNo),
                 "ibx", List.of(ibx),
@@ -83,15 +89,23 @@ public class SmartViewAssetClientImpl extends ClientBase implements SmartViewAss
     }
 
     public TagPointDataJson getCurrentTagPoint(String accountNo, String ibx, String tagId) {
+        SmartViewArguments.require("asset", "accountNo", accountNo, "ibx", ibx, "tagId", tagId);
+        // The spec names this query parameter "tagid", but the live service only reads "tagId":
+        // "tagid" answers HTTP 400 code 3001 "tagId: Missing field value" (observed 2026-11-12).
         Map<String, List<String>> qParams = Map.of(
                 "accountNo", List.of(accountNo),
                 "ibx", List.of(ibx),
-                "tagid", List.of(tagId)
+                "tagId", List.of(tagId)
         );
         return getAs("GetCurrentTagPoint", Map.of(), qParams, TagPointDataJson.class);
     }
 
     public TagPointDataJson getMultipleCurrentTagPoints(CurrentTagPointRequest requestBody) {
         return postAs("PostCurrentTagPoints", requestBody, TagPointDataJson.class);
+    }
+
+    /** The SmartView asset API rejects a request without these (HTTP 400 "accountNo is a mandatory parameter"). */
+    private static void requireParams(String accountNo, String ibx, String classification) {
+        SmartViewArguments.require("asset", "accountNo", accountNo, "ibx", ibx, "classification", classification);
     }
 }

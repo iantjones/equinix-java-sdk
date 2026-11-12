@@ -47,7 +47,7 @@ public class BGPPeeringWrapper extends ResourceImpl<BGPPeering> implements BGPPe
     }
 
     public Boolean save(BGPPeeringUpdaterJson updaterJson) {
-        this.json = ((BGPPeeringClientImpl)this.serviceClient).update(this.getUuid(), updaterJson);
+        this.json = WrapperState.keep(this.json, ((BGPPeeringClientImpl)this.serviceClient).update(this.getUuid(), updaterJson));
         return true;
     }
 
@@ -56,7 +56,7 @@ public class BGPPeeringWrapper extends ResourceImpl<BGPPeering> implements BGPPe
     }
 
     public Boolean refresh() {
-        this.json = ((BGPPeeringClientImpl)this.serviceClient).refresh(this.getUuid());
+        this.json = WrapperState.keep(this.json, ((BGPPeeringClientImpl)this.serviceClient).refresh(this.getUuid()));
         return true;
     }
 }

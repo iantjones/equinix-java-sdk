@@ -41,7 +41,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * WireMock-backed tests for the Equinix Internet Access (EIA) v1 ConnectionServices read surface —
+ * WireMock-backed tests for the Equinix Internet Access (EIA) v1 ConnectionServices read surface - 
  * the {@code ConnectionServicesV1} group in {@code apiParams_InternetAccess.json}. The single
  * {@code list(ibx)} product-availability lookup routes through the shared uriFormat
  * {@code internetAccess/v{version}/{rootUri}} with {@code defaultVersion: 1} and

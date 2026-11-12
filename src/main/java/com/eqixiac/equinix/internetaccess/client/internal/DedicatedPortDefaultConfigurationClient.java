@@ -23,7 +23,7 @@ import com.eqixiac.equinix.internetaccess.model.json.DedicatedPortDefaultConfigu
 
 /**
  * Internal client for the Equinix Internet Access (EIA) v1 dedicated-port default-configuration
- * lookup: {@code GET /internetAccess/v1/dedicatedPortDefaultConfigurations} — the default
+ * lookup: {@code GET /internetAccess/v1/dedicatedPortDefaultConfigurations} - the default
  * dedicated-port configurations for a given IBX.
  */
 public interface DedicatedPortDefaultConfigurationClient extends Pageable<DedicatedPortDefaultConfiguration> {

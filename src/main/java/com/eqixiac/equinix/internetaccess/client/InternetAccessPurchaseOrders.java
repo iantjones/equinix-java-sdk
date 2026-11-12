@@ -21,7 +21,7 @@ import com.eqixiac.equinix.internetaccess.enums.PurchaseOrderCategory;
 import com.eqixiac.equinix.internetaccess.model.PurchaseOrder;
 
 /**
- * Client interface for the Equinix Internet Access (EIA) v1 purchase-order lookups — the list
+ * Client interface for the Equinix Internet Access (EIA) v1 purchase-order lookups - the list
  * ({@code GET /internetAccess/v1/accounts/{accountNumber}/purchaseOrders}) and the single get
  * ({@code GET /internetAccess/v1/accounts/{accountNumber}/purchaseOrders/{number}}).
  */

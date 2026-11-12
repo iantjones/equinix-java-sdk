@@ -1,0 +1,17 @@
+{
+  "filter": {
+    "and": [
+      {
+        "or": [
+          {
+            "property": "/uuid",
+            "operator": "=",
+            "values": [
+              "20f3ef8e-d670-4236-86fa-bb0038adcfc3"
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

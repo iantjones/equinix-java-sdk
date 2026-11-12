@@ -33,6 +33,7 @@ import com.eqixiac.equinix.networkedge.model.json.creators.DeviceACLRequest;
 import com.eqixiac.equinix.networkedge.model.json.creators.DeviceOperator;
 import com.eqixiac.equinix.networkedge.model.json.creators.DeviceRMARequest;
 
+import java.time.Instant;
 import java.util.List;
 
 /**
@@ -110,13 +111,20 @@ public interface Devices {
     /**
      * Returns interface throughput statistics for an interface of the specified device.
      *
+     * <p>Maps to {@code GET /ne/v1/devices/{uuid}/interfaces/{interfaceId}/stats}. The bounds are
+     * sent as {@code YYYY-MM-DDThh:mm:ssZ} in UTC, truncated to whole seconds. Live (2026-11-11) the
+     * service rejects fractional seconds ({@code ...:28.282Z}) and the spec's example form
+     * ({@code 2023-11-10 19:06:06 UTC}) with HTTP 400 {@code EQ-4000702} "Start date is not valid",
+     * and rejects a request without the bounds, although the spec marks them optional.</p>
+     *
      * @param uuid the unique identifier of the device.
      * @param interfaceId the interface id.
-     * @param startDateTime the start of the stats window (ISO-8601), or {@code null}.
-     * @param endDateTime the end of the stats window (ISO-8601), or {@code null}.
+     * @param startDateTime the start of the stats window; required
+     * @param endDateTime the end of the stats window; required
      * @return {@link com.eqixiac.equinix.networkedge.model.implementation.InterfaceStats}
+     * @throws IllegalArgumentException if a bound is {@code null} or the window is reversed
      */
-    InterfaceStats getInterfaceStatistics(String uuid, String interfaceId, String startDateTime, String endDateTime);
+    InterfaceStats getInterfaceStatistics(String uuid, String interfaceId, Instant startDateTime, Instant endDateTime);
 
     /**
      * Lists the images available to download for the specified device type.

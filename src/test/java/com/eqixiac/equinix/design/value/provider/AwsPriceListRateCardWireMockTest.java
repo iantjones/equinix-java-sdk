@@ -131,7 +131,7 @@ class AwsPriceListRateCardWireMockTest extends WireMockTestBase {
                 "the outage yields no rate");
         assertTrue(card.egress(CloudProviderType.AWS, "us-east-1", EgressPath.PRIVATE, Term.MONTH_12).isEmpty());
 
-        // The endpoint recovers. The SAME adapter instance must fetch again — a transient failure
+        // The endpoint recovers. The SAME adapter instance must fetch again - a transient failure
         // must not have been memoized as a permanent "no offer" for the adapter's lifetime.
         wireMock.stubFor(get(urlPathEqualTo(DT_PATH))
                 .willReturn(okJson(loadFixture("/json/provider/aws_datatransfer.json"))));

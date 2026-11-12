@@ -53,4 +53,13 @@ public interface PublicKeys {
      * @return {@link com.eqixiac.equinix.networkedge.model.json.creators.PublicKeyOperator.PublicKeyBuilder}
      */
     PublicKeyOperator.PublicKeyBuilder define(String keyName, String keyValue);
+
+    /**
+     * Deletes a public key ({@code DELETE /ne/v1/publicKeys/{uuid}}). The endpoint is not in the
+     * published network-edgev1 spec; it answers {@code 204} live (observed 2026-11-11).
+     *
+     * @param uuid the key id
+     * @return {@code true} when the deletion was accepted
+     */
+    Boolean delete(String uuid);
 }

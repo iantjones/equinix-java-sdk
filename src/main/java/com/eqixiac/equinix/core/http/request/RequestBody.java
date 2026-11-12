@@ -26,14 +26,14 @@ import java.util.Objects;
  * carrier in one of three shapes:
  *
  * <ul>
- *   <li>{@link #json(Object)} — a Java payload object serialized to JSON;</li>
- *   <li>{@link #form(Map)} — {@code application/x-www-form-urlencoded} form fields;</li>
- *   <li>{@link #bytes(byte[], String)} — a pre-encoded raw body (e.g. a hand-built
+ *   <li>{@link #json(Object)} - a Java payload object serialized to JSON;</li>
+ *   <li>{@link #form(Map)} - {@code application/x-www-form-urlencoded} form fields;</li>
+ *   <li>{@link #bytes(byte[], String)} - a pre-encoded raw body (e.g. a hand-built
  *       {@code multipart/form-data} payload).</li>
  * </ul>
  *
- * <p>The wire entity is built from this carrier by {@link RequestFactory} at dispatch time — once
- * per attempt — so a JSON payload that is mutated between dispatches (the POST-search paging
+ * <p>The wire entity is built from this carrier by {@link RequestFactory} at dispatch time - once
+ * per attempt - so a JSON payload that is mutated between dispatches (the POST-search paging
  * pipeline advances the body's pagination offset) is re-serialized automatically. No transport
  * (Apache HttpClient) type appears in this class's API.</p>
  *

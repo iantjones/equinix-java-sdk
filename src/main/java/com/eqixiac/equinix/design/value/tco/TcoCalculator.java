@@ -2,6 +2,9 @@ package com.eqixiac.equinix.design.value.tco;
 
 import com.eqixiac.equinix.FabricGateway;
 import com.eqixiac.equinix.core.enums.MetroCode;
+import com.eqixiac.equinix.design.spec.DesignSpec;
+import com.eqixiac.equinix.design.spi.MetroPortfolio;
+import com.eqixiac.equinix.design.value.SpecInputs;
 import com.eqixiac.equinix.fabric.enums.ConnectionType;
 import com.eqixiac.equinix.fabric.model.implementation.cloud.CloudProviderType;
 import com.eqixiac.equinix.design.value.ratecard.MulticloudLinkQuote;
@@ -17,9 +20,9 @@ import java.util.Set;
 
 /**
  * Fluent calculator that compares the total cost of ownership of a workload across
- * the {@link DeploymentArchetype}s — public cloud over the internet, on-prem,
+ * the {@link DeploymentArchetype}s - public cloud over the internet, on-prem,
  * Equinix-interconnected, and (for a cloud-to-cloud comparison) the providers' native
- * multicloud link — and reports which is cheapest over the commitment
+ * multicloud link - and reports which is cheapest over the commitment
  * term (monthly recurring × term months + one-time setup) and by how much.
  *
  * <h3>Example</h3>
@@ -89,6 +92,42 @@ public final class TcoCalculator {
     }
 
     /**
+     * A builder preset from a {@link DesignSpec} the way the optimiser's {@code RateCardCostModel} prices it
+     * (see {@link SpecInputs}): the cloud's provider, region and monthly egress; bandwidth from the
+     * workloads reaching it (rounded up to the Fabric tier); the chosen portfolio's metro; the spec's term
+     * (on demand when unset); and the router-originated build the Deployment Wizard uses: an {@code IP_VC}
+     * from a STANDARD Fabric Cloud Router, no cross-connect and no cabinet. The comparison carries the
+     * spec fingerprint and the assumptions made. Any lever can still be overridden before
+     * {@link Builder#compare()}.
+     *
+     * @param fabric  the Fabric client for live pricing (may be {@code null} with a supplied rate card)
+     * @param spec    the design spec
+     * @param cloudId the cloud to compare for, or {@code null} for the first cloud with a provider
+     * @param chosen  the portfolio a run chose, or {@code null}
+     * @return the preset builder
+     */
+    public static Builder forSpec(FabricGateway fabric, DesignSpec spec, String cloudId, MetroPortfolio chosen) {
+        SpecInputs in = SpecInputs.derive(spec, cloudId, chosen);
+        Builder b = new Builder(fabric)
+                .egress(in.egressGb(), DataUnit.GIGABYTE)
+                .fromCloud(in.provider())
+                .inRegion(in.region())
+                .bandwidthMbps(in.bandwidthMbps())
+                .connectionType(ConnectionType.IP_VC)
+                .includeCloudRouter("STANDARD")
+                .crossConnects(0)
+                .cabinets(0)
+                .term(in.term());
+        if (in.metro() != null) {
+            b.viaMetro(in.metro());
+        }
+        b.currency(spec.commercial().currencyOrDefault()).exchangeRates(spec.commercial().exchangeRates());
+        b.specFingerprint = in.fingerprint();
+        b.specAssumptions = in.assumptions();
+        return b;
+    }
+
+    /**
      * Fluent configuration for a TCO comparison, terminated by {@link #compare()}.
      * Setters validate eagerly (fail-fast {@link IllegalArgumentException}s), so a
      * mistake surfaces at the call site rather than as a wrong number later.
@@ -115,13 +154,19 @@ public final class TcoCalculator {
      * resolved to). The bundled midpoints are published in the reference data's own
      * currency (USD), so when the comparison currency is known to differ, an on-prem
      * archetype still relying on <em>any</em> midpoint is reported unpriced (with the
-     * reason) rather than relabelled — supply all four overrides in the comparison
+     * reason) rather than relabelled - supply all four overrides in the comparison
      * currency to price it.</p>
      */
     public static final class Builder {
 
         private final FabricGateway fabric;
+        private String specFingerprint;
+        private java.util.List<String> specAssumptions = java.util.List.of();
 
+        private String currency = "USD";
+        private com.eqixiac.equinix.design.spec.CommercialTerms.ExchangeRates exchangeRates;
+        private com.eqixiac.equinix.design.spi.CurrencyConverter currencyConverter;
+        private com.eqixiac.equinix.design.spi.CurrencyConverter defaultRates;
         private double egressAmount;
         private DataUnit egressUnit = DataUnit.GIGABYTE;
         private CloudProviderType provider;
@@ -191,7 +236,7 @@ public final class TcoCalculator {
         }
 
         /**
-         * Sets the cloud provider the egress leaves — the provider whose internet and
+         * Sets the cloud provider the egress leaves - the provider whose internet and
          * private egress rates are looked up.
          *
          * @param provider the cloud provider
@@ -300,7 +345,7 @@ public final class TcoCalculator {
         }
 
         /**
-         * Sets the monthly volume flowing from the peer cloud back to {@code fromCloud} — the
+         * Sets the monthly volume flowing from the peer cloud back to {@code fromCloud} - the
          * traffic the peer cloud bills as egress. When not set, a cloud-to-cloud comparison
          * assumes it equals the forward volume set with {@link #egress(double, DataUnit)} and
          * states that assumption in {@code TcoComparison.getTrafficNote()}.
@@ -377,7 +422,7 @@ public final class TcoCalculator {
          * Adds a Fabric Cloud Router of the given package to the Equinix archetype
          * (none is included by default). If the rate card cannot price the package, the
          * archetype is reported as <em>not fully priced</em> with a note naming the
-         * missing router — its partial figures stay visible but it is excluded from the
+         * missing router - its partial figures stay visible but it is excluded from the
          * recommendation rather than silently under-priced.
          *
          * @param packageCode the router package code (e.g. {@code "STANDARD"})
@@ -407,6 +452,53 @@ public final class TcoCalculator {
                 throw new IllegalArgumentException("term must not be null");
             }
             this.term = term;
+            return this;
+        }
+
+        /**
+         * Sets the currency every figure is compared in (default USD). Figures quoted in another currency are
+         * converted: rates pinned with {@link #exchangeRates}, then {@link #currencyConverter}, then live ECB
+         * reference rates (one call), then the SDK's bundled table. Only a currency no source covers is unpriced.
+         * @param currency ISO 4217 code
+         * @return this builder for method chaining
+         */
+        public Builder currency(String currency) {
+            if (currency == null || currency.isBlank()) {
+                throw new IllegalArgumentException("currency must not be blank");
+            }
+            java.util.Currency.getInstance(currency);
+            this.currency = currency;
+            return this;
+        }
+
+        /**
+         * Pins exchange rates to {@link #currency(String)}; they take precedence over every other source.
+         * @param rates the rates, or {@code null} for none
+         * @return this builder for method chaining
+         */
+        public Builder exchangeRates(com.eqixiac.equinix.design.spec.CommercialTerms.ExchangeRates rates) {
+            this.exchangeRates = rates;
+            return this;
+        }
+
+        /**
+         * Supplies a converter (for example a live FX feed) ranked below pinned rates and above the defaults.
+         * @param converter the converter, or {@code null} for none
+         * @return this builder for method chaining
+         */
+        public Builder currencyConverter(com.eqixiac.equinix.design.spi.CurrencyConverter converter) {
+            this.currencyConverter = converter;
+            return this;
+        }
+
+        /**
+         * Replaces the default rate sources (live ECB rates, then the bundled table), for example with
+         * {@code CurrencyConverters.bundledOnly()} for an offline run.
+         * @param defaults the fallback converter, or {@code null} for the defaults
+         * @return this builder for method chaining
+         */
+        public Builder defaultRates(com.eqixiac.equinix.design.spi.CurrencyConverter defaults) {
+            this.defaultRates = defaults;
             return this;
         }
 
@@ -456,8 +548,8 @@ public final class TcoCalculator {
 
         /**
          * Sets the number of colocation cabinets for the Equinix-interconnect archetype
-         * (default 1). The per-cabinet {@code ColocationItem.CABINET} quote — when the rate card
-         * prices one — is multiplied by this count.
+         * (default 1). The per-cabinet {@code ColocationItem.CABINET} quote - when the rate card
+         * prices one - is multiplied by this count.
          */
         public Builder cabinets(int cabinets) {
             if (cabinets < 0) {
@@ -485,7 +577,7 @@ public final class TcoCalculator {
          * Sets the power draw in kW (default 5.0). Note the <em>dual use</em>: it scales
          * both the on-prem power/space line (per-kW midpoint × kW) <strong>and</strong> the
          * Equinix archetype's colocation power line when the rate card prices
-         * {@code ColocationItem.POWER_PER_KW} — tuning it for one side changes the other.
+         * {@code ColocationItem.POWER_PER_KW} - tuning it for one side changes the other.
          *
          * @param powerKw the power draw in kW
          * @return this builder for method chaining
@@ -531,8 +623,8 @@ public final class TcoCalculator {
         }
 
         /**
-         * Adds an arbitrary named monthly cost — e.g. compute, storage, or software the rate cards
-         * do not price — folded into <em>every</em> priced archetype's breakdown and total. Because
+         * Adds an arbitrary named monthly cost - e.g. compute, storage, or software the rate cards
+         * do not price - folded into <em>every</em> priced archetype's breakdown and total. Because
          * it is applied uniformly, it makes the absolute TCO figures realistic without changing
          * which archetype is cheapest (the savings comparison is unaffected). Call multiple times
          * for multiple line items.
@@ -601,7 +693,13 @@ public final class TcoCalculator {
 
         // Package-private accessors for the engine.
 
+        String getCurrency() { return currency; }
+        com.eqixiac.equinix.design.spec.CommercialTerms.ExchangeRates getExchangeRates() { return exchangeRates; }
+        com.eqixiac.equinix.design.spi.CurrencyConverter getCurrencyConverter() { return currencyConverter; }
+        com.eqixiac.equinix.design.spi.CurrencyConverter getDefaultRates() { return defaultRates; }
         FabricGateway getFabric() { return fabric; }
+        String getSpecFingerprint() { return specFingerprint; }
+        java.util.List<String> getSpecAssumptions() { return specAssumptions; }
         double getEgressAmount() { return egressAmount; }
         DataUnit getEgressUnit() { return egressUnit; }
         CloudProviderType getProvider() { return provider; }

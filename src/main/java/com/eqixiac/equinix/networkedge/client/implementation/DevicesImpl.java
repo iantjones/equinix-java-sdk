@@ -97,7 +97,7 @@ public class DevicesImpl implements Devices {
         return serviceClient.listUpgradeHistory(uuid);
     }
 
-    public InterfaceStats getInterfaceStatistics(String uuid, String interfaceId, String startDateTime, String endDateTime) {
+    public InterfaceStats getInterfaceStatistics(String uuid, String interfaceId, java.time.Instant startDateTime, java.time.Instant endDateTime) {
         return serviceClient.getInterfaceStatistics(uuid, interfaceId, startDateTime, endDateTime);
     }
 

@@ -28,6 +28,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import com.github.tomakehurst.wiremock.verification.LoggedRequest;
+
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
@@ -55,7 +58,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * {@code dryRun=true}-matching stub second, so WireMock's most-recent-match-wins routing sends
  * dry-run requests to the dry-run stub and everything else to the real stub.</p>
  */
-@DisplayName("Safe Mutation Broker — wire proofs (dryRun=true on propose, none on confirm)")
+@DisplayName("Safe Mutation Broker - wire proofs (dryRun=true on propose, none on confirm)")
 class BrokerWireMockTest extends WireMockTestBase {
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
@@ -74,7 +77,7 @@ class BrokerWireMockTest extends WireMockTestBase {
                "a_side": {"port_uuid": "c791f8cb-5cc9-cc90-8ce0-306a5c00a4ee",
                           "link_protocol": {"type": "dot1q", "vlan_tag": 1001}},
                "z_side": {"service_profile_uuid": "20d32a80-0d61-4333-bc03-4b2d446794a0",
-                          "link_protocol": {"type": "dot1q", "vlan_tag": 1002}}}}""";
+                          "link_protocol": {"type": "dot1q", "vlan_tag": 1002}, "metro_code": "SV"}}}""";
 
     private static final String NETWORK_PROPOSAL = """
             {"change_type": "network_create",
@@ -120,7 +123,10 @@ class BrokerWireMockTest extends WireMockTestBase {
         resetStubs();
         store = new ProposalStore();
         tools = BrokerToolFactory.tools(store);
-        context = ServerContext.builder().fabric(fabric).environment(Map.of()).build();
+        // These tests exercise execution, replay and integrity with no client exchange bound; the
+        // human-prompt gate itself is covered by BrokerHumanConfirmWireMockTest.
+        context = ServerContext.builder().fabric(fabric)
+                .environment(Map.of(ServerContext.ENV_ALLOW_UNCONFIRMED_MUTATIONS, "true")).build();
     }
 
     private ObjectNode call(String name, String argsJson) throws Exception {
@@ -144,7 +150,27 @@ class BrokerWireMockTest extends WireMockTestBase {
                         .withBody(dryRunBody)));
     }
 
-    // ── connection_create ───────────────────────────────────────────────────
+    // connection_create
+
+    @Test
+    @DisplayName("a service-profile z_side without metro_code is rejected before any request (Fabric needs location.metroCode)")
+    void serviceProfileZSideNeedsMetro() {
+        String noMetro = CONNECTION_PROPOSAL.replace(", \"metro_code\": \"SV\"", "");
+        IllegalArgumentException e = assertThrows(IllegalArgumentException.class,
+                () -> call("fabric_propose_change", noMetro));
+        assertTrue(e.getMessage().contains("metro_code"), e.getMessage());
+        wireMock.verify(0, postRequestedFor(urlPathEqualTo(CONNECTIONS)));
+    }
+
+    @Test
+    @DisplayName("the service-profile z_side metro_code reaches zSide.accessPoint.location.metroCode")
+    void serviceProfileZSideSendsMetro() throws Exception {
+        stubCreateAndDryRun(CONNECTIONS, "/json/fabric/connection_response.json",
+                loadFixture("/json/fabric/connection_response.json"));
+        call("fabric_propose_change", CONNECTION_PROPOSAL);
+        wireMock.verify(postRequestedFor(urlPathEqualTo(CONNECTIONS))
+                .withRequestBody(matchingJsonPath("$.zSide.accessPoint.location.metroCode", equalTo("SV"))));
+    }
 
     @Test
     @DisplayName("propose sends dryRun=true to POST /connections with the exact spec, and nothing else")
@@ -162,7 +188,7 @@ class BrokerWireMockTest extends WireMockTestBase {
         assertTrue(payload.get("spec_sha256").asText().matches("^[0-9a-f]{64}$"));
         assertEquals(1, store.size(), "a passed dry run mints exactly one pending proposal");
 
-        // Regression lock: the propose phase MUST carry dryRun=true on the wire — without it,
+        // Regression lock: the propose phase MUST carry dryRun=true on the wire - without it,
         // "propose" would BE the mutation.
         wireMock.verify(1, postRequestedFor(urlPathEqualTo(CONNECTIONS)));
         wireMock.verify(postRequestedFor(urlPathEqualTo(CONNECTIONS))
@@ -244,11 +270,11 @@ class BrokerWireMockTest extends WireMockTestBase {
 
         assertNotEquals(first.get("confirm_token").asText(), second.get("confirm_token").asText());
         assertNotEquals(first.get("spec_sha256").asText(), second.get("spec_sha256").asText(),
-                "any spec drift is a different binding — the old token cannot execute the new spec");
+                "any spec drift is a different binding - the old token cannot execute the new spec");
         assertEquals(2, store.size());
     }
 
-    // ── network_create ──────────────────────────────────────────────────────
+    // network_create
 
     @Test
     @DisplayName("network propose/confirm: dry run first (echo, no uuid), then the real create")
@@ -267,7 +293,7 @@ class BrokerWireMockTest extends WireMockTestBase {
         assertEquals("network", payload.get("validation").get("resource").asText());
         assertEquals("Broker-EVPLAN", payload.get("validation").get("name").asText());
         assertFalse(payload.get("validation").has("uuid"),
-                "the dry-run echo carries no uuid — nothing exists yet");
+                "the dry-run echo carries no uuid - nothing exists yet");
         assertFalse(payload.get("price_context").get("priced").asBoolean());
         assertTrue(payload.get("price_context").get("note").asText().contains("unpriced"),
                 "network creates are honestly unpriced: " + payload.get("price_context"));
@@ -286,7 +312,7 @@ class BrokerWireMockTest extends WireMockTestBase {
                 .withRequestBody(matchingJsonPath("$.scope", equalTo("GLOBAL"))));
     }
 
-    // ── service_token_create ────────────────────────────────────────────────
+    // service_token_create
 
     @Test
     @DisplayName("service-token propose/confirm: dryRun=true validation, then the real create")
@@ -304,7 +330,6 @@ class BrokerWireMockTest extends WireMockTestBase {
                 .withQueryParam("dryRun", equalTo("true"))
                 .withRequestBody(matchingJsonPath("$.type", equalTo("VC_TOKEN")))
                 .withRequestBody(matchingJsonPath("$.name", equalTo("Broker-Token")))
-                .withRequestBody(matchingJsonPath("$.connection.issuerSide", equalTo("A_Side")))
                 .withRequestBody(matchingJsonPath(
                         "$.connection.aSide.accessPointSelectors[0].port.uuid",
                         equalTo("c791f8cb-5cc9-4a9f-8b8a-1f2e3d4c5b6a"))));
@@ -315,5 +340,121 @@ class BrokerWireMockTest extends WireMockTestBase {
         assertEquals("ab7f685-41b0-1b07-6de0-3a7c54b08b8f", confirmed.get("result").get("uuid").asText());
         wireMock.verify(1, postRequestedFor(urlPathEqualTo(SERVICE_TOKENS))
                 .withQueryParam("dryRun", absent()));
+    }
+
+    // binding: the token is bound to the compiled request
+
+    private static com.fasterxml.jackson.databind.JsonNode loggedBody(String url, boolean dryRun) throws Exception {
+        List<LoggedRequest> requests = wireMock.findAll(postRequestedFor(urlPathEqualTo(url))
+                .withQueryParam("dryRun", dryRun ? equalTo("true") : absent()));
+        assertEquals(1, requests.size(), (dryRun ? "dry-run" : "real") + " requests to " + url);
+        return MAPPER.readTree(requests.get(0).getBodyAsString());
+    }
+
+    @Test
+    @DisplayName("the token binds the compiled request: propose shows it, the dry run and the real create send it")
+    void compiledRequestIsWhatIsSent() throws Exception {
+        stubCreateAndDryRun(CONNECTIONS, "/json/fabric/connection_response.json",
+                loadFixture("/json/fabric/connection_response.json"));
+
+        ObjectNode proposed = call("fabric_propose_change", CONNECTION_PROPOSAL);
+        assertTrue(proposed.get("request_sha256").asText().matches("^[0-9a-f]{64}$"), proposed.toString());
+        assertEquals(proposed.get("compiled_request"), loggedBody(CONNECTIONS, true),
+                "the compiled request shown to the agent is the body the dry run sent");
+        String expectedSha = SpecHash.sha256Hex("connection_create\n"
+                + SpecHash.canonicalize(loggedBody(CONNECTIONS, true), MAPPER));
+        assertEquals(expectedSha, proposed.get("request_sha256").asText(),
+                "request_sha256 is the hash of the change type and the canonical body on the wire");
+
+        ObjectNode confirmed = confirm(proposed.get("confirm_token").asText());
+        assertEquals("executed", confirmed.get("phase").asText());
+        assertTrue(confirmed.get("confirm_checks").get("request_matches_binding").asBoolean());
+        assertEquals(loggedBody(CONNECTIONS, true), loggedBody(CONNECTIONS, false),
+                "the real create sends exactly the body the dry run validated");
+    }
+
+    @Test
+    @DisplayName("a stored spec that no longer compiles to the bound request executes nothing")
+    void bindingDriftStopsTheCreate() throws Exception {
+        stubCreateAndDryRun(CONNECTIONS, "/json/fabric/connection_response.json",
+                loadFixture("/json/fabric/connection_response.json"));
+        String canonical = SpecHash.canonicalize(MAPPER.readTree(CONNECTION_PROPOSAL).get("spec"), MAPPER);
+        // The proposal's bound request hash differs from what the stored spec compiles to: drift
+        // between proposal and execution (an SDK mapping change, a tampered store).
+        PendingChange drifted = store.mint(ChangeType.CONNECTION_CREATE, canonical, SpecHash.sha256Hex(canonical),
+                SpecHash.sha256Hex("connection_create\n{\"name\":\"something else\"}"), store.now(), null)
+                .change();
+
+        IllegalStateException e = assertThrows(IllegalStateException.class, () -> confirm(drifted.token()));
+        assertTrue(e.getMessage().contains("integrity check failed"), e.getMessage());
+        assertTrue(e.getMessage().contains("Nothing was executed"), e.getMessage());
+        assertTrue(e.getMessage().contains("request_matches_binding=false"), e.getMessage());
+        wireMock.verify(0, postRequestedFor(urlPathEqualTo(CONNECTIONS)));
+    }
+
+    @Test
+    @DisplayName("expiry_days is computed from the proposal's instant, so a later confirm sends the validated body")
+    void serviceTokenExpiryStableAcrossPhases() throws Exception {
+        MutableClock clock = new MutableClock(Instant.parse("2026-11-12T09:30:15.123Z"));
+        store = new ProposalStore(clock, ProposalStore.DEFAULT_TTL, ProposalStore.DEFAULT_CAPACITY);
+        tools = BrokerToolFactory.tools(store);
+        stubCreateAndDryRun(SERVICE_TOKENS, "/json/fabric/service_token_response.json",
+                loadFixture("/json/fabric/service_token_response.json"));
+
+        String token = call("fabric_propose_change", SERVICE_TOKEN_PROPOSAL).get("confirm_token").asText();
+        clock.advance(java.time.Duration.ofMinutes(7));
+        ObjectNode confirmed = confirm(token);
+
+        assertEquals("executed", confirmed.get("phase").asText(), confirmed.toString());
+        com.fasterxml.jackson.databind.JsonNode dryRun = loggedBody(SERVICE_TOKENS, true);
+        assertEquals(dryRun, loggedBody(SERVICE_TOKENS, false));
+        assertTrue(dryRun.get("expirationDateTime").asText().startsWith("2026-12-12T09:30:15"),
+                "30 days after the proposal instant, whole seconds: " + dryRun);
+    }
+
+    @Test
+    @DisplayName("proposing beyond capacity tells the proposer which proposal was evicted")
+    void evictionIsReportedToTheProposer() throws Exception {
+        store = new ProposalStore(java.time.Clock.systemUTC(), ProposalStore.DEFAULT_TTL, 1);
+        tools = BrokerToolFactory.tools(store);
+        stubCreateAndDryRun(CONNECTIONS, "/json/fabric/connection_response.json",
+                loadFixture("/json/fabric/connection_response.json"));
+
+        String first = call("fabric_propose_change", CONNECTION_PROPOSAL).get("confirm_token").asText();
+        ObjectNode second = call("fabric_propose_change", CONNECTION_PROPOSAL);
+
+        assertEquals(first, second.get("evicted_proposals").get(0).get("confirm_token").asText(), second.toString());
+        assertTrue(second.get("eviction_note").asText().contains("can no longer be confirmed"));
+        IllegalArgumentException e = assertThrows(IllegalArgumentException.class, () -> confirm(first));
+        assertTrue(e.getMessage().contains("was evicted"), e.getMessage());
+        wireMock.verify(0, postRequestedFor(urlPathEqualTo(CONNECTIONS)).withQueryParam("dryRun", absent()));
+    }
+
+    /** A settable clock. */
+    private static final class MutableClock extends java.time.Clock {
+        private Instant now;
+
+        MutableClock(Instant start) {
+            this.now = start;
+        }
+
+        @Override
+        public java.time.ZoneId getZone() {
+            return java.time.ZoneOffset.UTC;
+        }
+
+        @Override
+        public java.time.Clock withZone(java.time.ZoneId zone) {
+            return this;
+        }
+
+        @Override
+        public Instant instant() {
+            return now;
+        }
+
+        void advance(java.time.Duration by) {
+            now = now.plus(by);
+        }
     }
 }

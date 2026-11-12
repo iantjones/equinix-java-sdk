@@ -26,8 +26,8 @@ import java.util.Map;
  * annotations, owning {@link Toolset}, and the {@link ToolHandler} that executes it.
  *
  * <p>This is the server's registration seam. The built-in catalog is expressed as
- * {@code ToolRegistration}s, and additional tools — notably the Safe Mutation Broker's
- * dry-run-first two-phase mutation tools — plug in through the very same type via
+ * {@code ToolRegistration}s, and additional tools - notably the Safe Mutation Broker's
+ * dry-run-first two-phase mutation tools - plug in through the very same type via
  * {@code EquinixMcpServer.builder().additionalTools(...)}. Nothing about the built-in tools
  * is special: the server converts every registration identically.</p>
  *
@@ -35,11 +35,14 @@ import java.util.Map;
  * <ul>
  *   <li>{@code name} is domain-prefixed {@code snake_case} ({@code design_estimate_tco});</li>
  *   <li>{@code inputSchema} / {@code outputSchema} are plain JSON-Schema maps (2020-12
- *       dialect). Schema {@code description}s are written <em>for the calling LLM</em> —
+ *       dialect). Schema {@code description}s are written <em>for the calling LLM</em> - 
  *       they are prompts, not documentation footnotes;</li>
- *   <li>annotations are honest: {@code readOnly} for tools with no side effects,
- *       {@code openWorld} where the handler reaches beyond Equinix's APIs (e.g. live
- *       cloud-provider pricing endpoints, PeeringDB).</li>
+ *   <li>annotations are honest: {@code readOnly} for tools that change no state anywhere
+ *       (a {@code dryRun=true} validation request changes none), {@code openWorld} for tools that
+ *       send requests to live remote services - the Equinix APIs, cloud-provider pricing APIs,
+ *       PeeringDB - and {@code false} only for tools that work on this process's own data (the
+ *       plan store, bundled catalogs). Tools that create billable resources say so in their
+ *       title and description.</li>
  * </ul>
  */
 @Value
@@ -52,7 +55,7 @@ public class ToolRegistration {
     /** Short human-readable title shown by MCP hosts. */
     String title;
 
-    /** The tool description sent to the model — written as a prompt for an LLM. */
+    /** The tool description sent to the model - written as a prompt for an LLM. */
     String description;
 
     /** JSON Schema (2020-12) for the tool arguments. Required. */
@@ -65,13 +68,17 @@ public class ToolRegistration {
      */
     Map<String, Object> outputSchema;
 
-    /** {@code true} when the tool performs no mutation anywhere. All 14 built-in tools are read-only. */
+    /** {@code true} when the tool changes no state anywhere. Every built-in tool outside {@code mutate} is read-only. */
     @Builder.Default
     boolean readOnly = true;
 
-    /** {@code true} when the handler calls services outside Equinix (live cloud pricing, PeeringDB). */
+    /**
+     * {@code true} (the default, as in the MCP specification) when the handler sends requests to live
+     * remote services: the Equinix APIs, cloud-provider pricing APIs or PeeringDB. Set {@code false}
+     * only for a tool that works solely on this process's own data.
+     */
     @Builder.Default
-    boolean openWorld = false;
+    boolean openWorld = true;
 
     /** {@code true} when repeating the call with the same arguments has no additional effect. */
     @Builder.Default
@@ -82,7 +89,7 @@ public class ToolRegistration {
      * the hint is derived as {@code !readOnly}, which is right for the read-only catalog. The
      * Safe Mutation Broker's tools set this to {@code false} explicitly: they are not
      * read-only (the pair exists to mutate), but every change type is a purely additive
-     * create — nothing this server exposes can delete or overwrite existing resources.
+     * create - nothing this server exposes can delete or overwrite existing resources.
      */
     Boolean destructive;
 

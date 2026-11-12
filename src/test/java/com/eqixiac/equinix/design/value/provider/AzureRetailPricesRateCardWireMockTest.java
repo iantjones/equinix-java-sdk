@@ -133,7 +133,7 @@ class AzureRetailPricesRateCardWireMockTest extends WireMockTestBase {
         assertTrue(card.egress(CloudProviderType.AZURE, "eastus", EgressPath.INTERNET, Term.MONTH_12).isEmpty(),
                 "the outage yields no rate");
 
-        // The API recovers. The SAME adapter must retry — a fetch FAILURE must never be stored
+        // The API recovers. The SAME adapter must retry - a fetch FAILURE must never be stored
         // in the result cache as if the SKU authoritatively did not exist.
         wireMock.stubFor(get(urlPathEqualTo(PATH)).withQueryParam("$filter", containing("Bandwidth"))
                 .willReturn(okJson(loadFixture("/json/provider/azure_bandwidth.json"))));
@@ -158,7 +158,7 @@ class AzureRetailPricesRateCardWireMockTest extends WireMockTestBase {
     }
 
     @Test
-    @DisplayName("PRIVATE (ExpressRoute) lookups share one cache entry across regions — the query ignores region, so must the key")
+    @DisplayName("PRIVATE (ExpressRoute) lookups share one cache entry across regions - the query ignores region, so must the key")
     void privateLookupsShareOneCacheEntryAcrossRegions() {
         wireMock.stubFor(get(urlPathEqualTo(PATH)).withQueryParam("$filter", containing("ExpressRoute"))
                 .willReturn(okJson(loadFixture("/json/provider/azure_expressroute.json"))));

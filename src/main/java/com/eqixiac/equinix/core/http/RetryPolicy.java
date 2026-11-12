@@ -28,7 +28,7 @@ import java.util.concurrent.ThreadLocalRandom;
  * using exponential backoff with full jitter and honoring a {@code Retry-After} header when present.
  *
  * <p>To avoid duplicate side effects, retries of 5xx responses and {@code IOException}s are by
- * default applied <em>only to idempotent methods</em> — everything except {@code POST} and
+ * default applied <em>only to idempotent methods</em> - everything except {@code POST} and
  * {@code PATCH} (RFC&nbsp;5789: PATCH is not idempotent in general, and the SDK sends RFC&nbsp;6902
  * documents whose {@code add} operations would apply twice). A transient failure that occurs after
  * the server has already processed a {@code POST} create or a {@code PATCH} would otherwise re-send
@@ -37,7 +37,7 @@ import java.util.concurrent.ThreadLocalRandom;
  * search).</p>
  *
  * <p>A 429 response is exempt from the idempotency gate: it means the server explicitly did
- * <em>not</em> process the request, so re-sending is always safe — 429s are retried for every
+ * <em>not</em> process the request, so re-sending is always safe - 429s are retried for every
  * method (honoring {@code Retry-After}) as long as 429 is in the retryable status set.</p>
  *
  * <p>Retries are bounded by {@link #getMaxRetries()} attempts beyond the initial request. Pass
@@ -74,7 +74,7 @@ public final class RetryPolicy {
     }
 
     /**
-     * Full constructor. Also reachable fluently via {@code builder()} — preferable when
+     * Full constructor. Also reachable fluently via {@code builder()} - preferable when
      * configuring by hand, since the positional form lines up two {@code long} delays and three
      * {@code boolean} flags that are easy to transpose silently:
      * {@code RetryPolicy.builder().maxRetries(5).baseDelayMillis(200).retryableStatusCodes(Set.of(429)).build()}.
@@ -87,7 +87,7 @@ public final class RetryPolicy {
      * @param retryableStatusCodes HTTP status codes that trigger a retry
      * @param retryOnIoException whether transient {@link java.io.IOException}s are retried
      * @param honorRetryAfter whether a {@code Retry-After} response header overrides the computed backoff
-     * @param retryNonIdempotentMethods whether non-idempotent methods (POST, PATCH) are also retried —
+     * @param retryNonIdempotentMethods whether non-idempotent methods (POST, PATCH) are also retried - 
      *                                  leave {@code false} unless your endpoints dedupe retried requests
      */
     @Builder
@@ -108,9 +108,9 @@ public final class RetryPolicy {
     /**
      * Whether a request with the given HTTP method is eligible for retry of a failure that may have
      * had server-side effects (a 5xx response or a transport {@code IOException}). POST and PATCH
-     * are treated as non-idempotent (per RFC 5789 a PATCH — such as the SDK's RFC 6902 {@code add}
-     * operations — may not be safely re-applied) and are not retried unless
-     * {@code retryNonIdempotentMethods} is set. This gate does <em>not</em> apply to 429 responses —
+     * are treated as non-idempotent (per RFC 5789 a PATCH - such as the SDK's RFC 6902 {@code add}
+     * operations - may not be safely re-applied) and are not retried unless
+     * {@code retryNonIdempotentMethods} is set. This gate does <em>not</em> apply to 429 responses - 
      * see {@link #isRetryable(int, HttpMethod)}.
      *
      * @param method the request method (may be {@code null}, treated as retryable)
@@ -123,7 +123,7 @@ public final class RetryPolicy {
     /**
      * Whether a response with the given status code should be retried for a request with the given
      * method. A 429 (Too Many Requests) means the server explicitly did <em>not</em> process the
-     * request, so re-sending it can never duplicate a side effect — 429 is retryable for every
+     * request, so re-sending it can never duplicate a side effect - 429 is retryable for every
      * method (including POST and PATCH), provided 429 is in the retryable status set. All other
      * retryable statuses (the 5xx family) remain gated on {@link #isRetryableMethod(HttpMethod)}.
      *

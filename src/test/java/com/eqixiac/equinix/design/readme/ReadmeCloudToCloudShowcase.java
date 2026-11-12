@@ -46,7 +46,7 @@ import java.math.BigDecimal;
 import java.util.List;
 
 /**
- * Compile-time mirror of the README Java examples that cover cloud-to-cloud planning: the section
+ * Compile-time mirror of the Java examples in docs/design/cloud-to-cloud.md that cover cloud-to-cloud planning: the section
  * "Design: Cloud-to-Cloud" and the Deployment Wizard subsection "Cloud-to-Cloud Flows: Native
  * Multicloud Links (Beta)". Each method body is the README example verbatim. Change both together.
  *

@@ -18,49 +18,45 @@ package com.eqixiac.equinix.fabric.client;
 
 import com.eqixiac.equinix.core.http.response.PaginatedFilteredList;
 import com.eqixiac.equinix.fabric.model.CloudEvent;
+import com.eqixiac.equinix.fabric.model.implementation.filter.CloudEventQuery;
 import com.eqixiac.equinix.fabric.model.implementation.filter.FilterPropertyList;
 import com.eqixiac.equinix.fabric.model.implementation.sort.SortPropertyList;
 
-import java.util.List;
-
 /**
- * Client interface for accessing Equinix Fabric cloud events. Cloud events provide
- * notifications about changes and activities across Fabric resources.
+ * Client interface for Equinix Fabric cloud events ({@code POST /fabric/v4/cloudevents/search},
+ * {@code GET /fabric/v4/cloudevents/{id}}) and live events ({@code POST /fabric/v4/liveEvents/search},
+ * the last operational event per subject, used for project-level active alerts).
  *
- * <p>Cloud events are queried via a POST-based search ({@code POST /fabric/v4/cloudevents/search});
- * there is no bare collection listing in the Fabric API.</p>
+ * <p>The per-asset {@code GET /{asset}/{id}/cloudevents} endpoint is deprecated in spec 4.34.0 and
+ * is no longer called; use {@link CloudEventQuery#forAsset(String, String)}.</p>
  */
 public interface CloudEvents {
 
     /**
-     * Searches for cloud events using default (empty) filter criteria.
+     * Searches cloud events with a filter built by a {@link CloudEventQuery}.
      *
-     * @return a paginated, filtered list of cloud events
-     */
-    PaginatedFilteredList<CloudEvent> search();
-
-    /**
-     * Searches for cloud events matching the specified filter criteria.
-     *
-     * @param filter the filter criteria to apply
+     * @param query the query (scoped by subject, project or organization)
      * @return a paginated, filtered list of matching cloud events
      */
-    PaginatedFilteredList<CloudEvent> search(FilterPropertyList filter);
+    PaginatedFilteredList<CloudEvent> search(CloudEventQuery query);
 
     /**
-     * Searches for cloud events with the specified sort order.
+     * Searches cloud events with a {@link CloudEventQuery} and a sort order.
      *
-     * @param sort the sort criteria to apply
-     * @return a paginated, filtered list of cloud events
-     */
-    PaginatedFilteredList<CloudEvent> search(SortPropertyList sort);
-
-    /**
-     * Searches for cloud events matching the specified filter and sort criteria.
-     *
-     * @param filter the filter criteria to apply
-     * @param sort the sort criteria to apply
+     * @param query the query
+     * @param sort the sort criteria, or {@code null}
      * @return a paginated, filtered list of matching cloud events
+     */
+    PaginatedFilteredList<CloudEvent> search(CloudEventQuery query, SortPropertyList sort);
+
+    /**
+     * Searches cloud events with a hand-built filter.
+     *
+     * @param filter the filter; it must contain {@code /subject}, {@code /equinixproject} or
+     *        {@code /equinixorganization}
+     * @param sort the sort criteria, or {@code null}
+     * @return a paginated, filtered list of matching cloud events
+     * @throws IllegalArgumentException when the filter has no scope expression
      */
     PaginatedFilteredList<CloudEvent> search(FilterPropertyList filter, SortPropertyList sort);
 
@@ -73,11 +69,15 @@ public interface CloudEvents {
     CloudEvent getByUuid(String uuid);
 
     /**
-     * Retrieves the cloud events recorded for a specific asset.
+     * Returns the last operational event of each given subject
+     * ({@code POST /fabric/v4/liveEvents/search}), for example the current port-status alert.
      *
-     * @param asset the asset type (for example {@code connections}, {@code routers})
-     * @param assetId the unique identifier of the asset
-     * @return the list of cloud events for the asset
+     * <p>Live behaviour (observed 2026-11-11): exact subjects such as
+     * {@code /fabric/v4/ports/{uuid}} work with {@code IN}; an empty filter answers HTTP 500 and a
+     * wildcard subject is rejected, so at least one exact subject is required.</p>
+     *
+     * @param subjects the exact subject paths (at least one)
+     * @return a paginated, filtered list of the live events
      */
-    List<CloudEvent> getByAssetId(String asset, String assetId);
+    PaginatedFilteredList<CloudEvent> searchLiveEvents(String... subjects);
 }

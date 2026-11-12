@@ -13,8 +13,8 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * A {@link RateCard} whose prices are supplied by the caller — e.g. negotiated
- * contract rates — instead of published list pricing or built-in heuristics. It is
+ * A {@link RateCard} whose prices are supplied by the caller - e.g. negotiated
+ * contract rates - instead of published list pricing or built-in heuristics. It is
  * constructed fluently,
  * mirroring how workloads, sites, and constraints are declared elsewhere in the
  * design API:
@@ -33,7 +33,7 @@ import java.util.Optional;
  * }</pre>
  *
  * <h3>Granularity &amp; resolution order</h3>
- * <p>Rates may be declared at several levels of specificity — with or without a metro,
+ * <p>Rates may be declared at several levels of specificity - with or without a metro,
  * a term, and (for connections) a concrete type. A lookup for a given
  * {@code (type, bandwidth, metro, term)} resolves to the <em>most specific</em>
  * declared entry, trying in order:</p>
@@ -41,14 +41,14 @@ import java.util.Optional;
  *   <li>exact metro <em>and</em> term;</li>
  *   <li>exact metro, any term;</li>
  *   <li>any metro, exact term;</li>
- *   <li>any metro, any term (the metro/term-agnostic {@code connectionRate(type, bandwidth, …)} entry);</li>
+ *   <li>any metro, any term (the metro/term-agnostic {@code connectionRate(type, bandwidth, ...)} entry);</li>
  *   <li>a type-agnostic entry (declared with a {@code null} type, meaning "any connection type"),
  *       probed at the same four levels of metro/term specificity;</li>
  *   <li>the declared default, otherwise {@link Optional#empty()} so a layered card can defer.</li>
  * </ol>
  * <p>Cloud-router rates resolve the same way over {@code (packageCode, metro, term)},
  * and colocation rates over {@code (item, metro, term)}. Egress rates are keyed by
- * provider + path only — the {@code region} and {@code term} lookup parameters are
+ * provider + path only - the {@code region} and {@code term} lookup parameters are
  * ignored on this card. Declaring the same key twice is
  * <em>last-declaration-wins</em>: the later call silently replaces the earlier rate.
  * Every quote this card returns is tagged {@link PriceSource#CUSTOM}.</p>
@@ -227,12 +227,49 @@ public final class CustomRateCard implements RateCard {
                 + request.getBandwidthMbps() + " Mbps (path tier " + request.getPathTier() + ")";
     }
 
+    /**
+     * The ISO 4217 code every amount on this card is in.
+     *
+     * @return the card's currency code
+     */
+    public String currencyCode() {
+        return currency.getCurrencyCode();
+    }
+
+    @Override
+    public PriceLookup<PriceQuote> connectionLookup(ConnectionType type, int bandwidthMbps, MetroCode metro,
+                                                    Term term) {
+        return PriceLookup.of(connection(type, bandwidthMbps, metro, term), cardName(),
+                "no custom connection rate declared for " + (type == null ? "any type" : type) + " at "
+                        + bandwidthMbps + " Mbps (metro " + metro + ", term " + term + ") and no default rate");
+    }
+
+    @Override
+    public PriceLookup<PriceQuote> cloudRouterLookup(String packageCode, MetroCode metro, Term term) {
+        return PriceLookup.of(cloudRouter(packageCode, metro, term), cardName(),
+                "no custom Cloud Router rate declared for " + packageCode + " (metro " + metro + ", term " + term
+                        + ") and no default rate");
+    }
+
+    @Override
+    public PriceLookup<EgressRate> egressLookup(CloudProviderType provider, String region, EgressPath path,
+                                                Term term) {
+        return PriceLookup.of(egress(provider, region, path, term), cardName(),
+                "no custom " + path + " egress rate declared for " + provider);
+    }
+
+    @Override
+    public PriceLookup<PriceQuote> colocationLookup(ColocationItem item, MetroCode metro, Term term) {
+        return PriceLookup.of(colocation(item, metro, term), cardName(),
+                "no custom colocation rate declared for " + item + " (metro " + metro + ", term " + term + ")");
+    }
+
     @Override
     public PriceSource source() {
         return PriceSource.CUSTOM;
     }
 
-    // ── Keys ──
+    // Keys
 
     private static String connKey(ConnectionType type, int bandwidthMbps, MetroCode metro, Term term) {
         return (type == null ? "ANY" : type.name()) + "|" + bandwidthMbps
@@ -249,7 +286,7 @@ public final class CustomRateCard implements RateCard {
         if (type != null) {
             // A rate declared with a null ConnectionType is stored under the ANY type key; probe
             // those variants too so the type-agnostic entry is reachable from a concrete-type
-            // lookup — after the concrete-type candidates (a typed entry is more specific and
+            // lookup - after the concrete-type candidates (a typed entry is more specific and
             // wins) but before the declared default.
             keys.add(connKey(null, bandwidthMbps, metro, term));
             keys.add(connKey(null, bandwidthMbps, metro, null));
@@ -297,11 +334,11 @@ public final class CustomRateCard implements RateCard {
         return keys;
     }
 
-    // ── Builder ──
+    // Builder
 
     /**
      * Fluent builder for a {@link CustomRateCard}. All declared amounts share one
-     * currency — default USD; whatever {@link #currency(String)} value is in force at
+     * currency - default USD; whatever {@link #currency(String)} value is in force at
      * {@link #build()} time stamps <em>every</em> entry, regardless of declaration
      * order. Shorthand overloads without a metro/term declare "any metro, any term"
      * entries and overloads without a setup amount declare a zero NRC; at lookup time
@@ -322,15 +359,32 @@ public final class CustomRateCard implements RateCard {
         private BigDecimal defaultRouterSetup = BigDecimal.ZERO;
 
         /**
-         * Sets the currency every declared amount is expressed in (default USD). The value in
-         * force at {@link #build()} time applies to all entries.
+         * Sets the currency every declared amount is expressed in (default USD). It must be set
+         * before the first rate is declared: one card holds one currency, and changing it after
+         * rates exist would silently relabel them.
          *
          * @param currency the currency of all declared amounts
          * @return this builder for method chaining
+         * @throws IllegalArgumentException if {@code currency} is null
+         * @throws IllegalStateException    if a rate was already declared in another currency
          */
         public Builder currency(Currency currency) {
+            if (currency == null) {
+                throw new IllegalArgumentException("currency must not be null");
+            }
+            if (!currency.equals(this.currency) && hasEntries()) {
+                throw new IllegalStateException("currency(" + currency + ") after rates were declared in "
+                        + this.currency + ": set the currency first; a CustomRateCard holds one currency and never "
+                        + "relabels declared amounts");
+            }
             this.currency = currency;
             return this;
+        }
+
+        private boolean hasEntries() {
+            return !connectionEntries.isEmpty() || !routerEntries.isEmpty() || !egressEntries.isEmpty()
+                    || !colocationEntries.isEmpty() || !multicloudEntries.isEmpty()
+                    || defaultConnectionMonthly != null || defaultRouterMonthly != null;
         }
 
         /**
@@ -339,10 +393,13 @@ public final class CustomRateCard implements RateCard {
          * @param currencyCode the ISO 4217 currency code
          * @return this builder for method chaining
          * @throws IllegalArgumentException if the code is not a supported ISO 4217 code
+         * @throws IllegalStateException    if a rate was already declared in another currency
          */
         public Builder currency(String currencyCode) {
-            this.currency = Currency.getInstance(currencyCode);
-            return this;
+            if (currencyCode == null) {
+                throw new IllegalArgumentException("currency code must not be null");
+            }
+            return currency(Currency.getInstance(currencyCode));
         }
 
         /**
@@ -455,7 +512,7 @@ public final class CustomRateCard implements RateCard {
          * Declares a per-GB data-egress rate for a cloud provider over a given path.
          * Provide both {@link EgressPath#INTERNET} and {@link EgressPath#PRIVATE} rates
          * for a provider to drive the egress savings calculation. Egress entries have no
-         * region or term axis on this card — a declared rate answers every
+         * region or term axis on this card - a declared rate answers every
          * {@code egress(provider, region, path, term)} lookup for its provider + path,
          * whatever region and term are requested.
          *
@@ -471,7 +528,7 @@ public final class CustomRateCard implements RateCard {
 
         /**
          * Declares a metro/term-agnostic monthly rate for an Equinix colocation primitive
-         * (per the unit named on {@link ColocationItem} — per cabinet, per kW, or per cross-connect).
+         * (per the unit named on {@link ColocationItem} - per cabinet, per kW, or per cross-connect).
          */
         public Builder colocationRate(ColocationItem item, BigDecimal monthly) {
             return colocationRate(item, null, null, monthly, BigDecimal.ZERO);

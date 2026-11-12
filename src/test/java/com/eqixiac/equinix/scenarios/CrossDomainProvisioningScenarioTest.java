@@ -10,6 +10,7 @@ import com.eqixiac.equinix.fabric.model.Connection;
 import com.eqixiac.equinix.fabric.model.ServiceToken;
 import com.eqixiac.equinix.fabric.model.implementation.LinkProtocol;
 import com.eqixiac.equinix.networkedge.model.Device;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -19,21 +20,21 @@ import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Offline (WireMock) cross-domain provisioning scenarios — the wiring a real user performs when
+ * Offline (WireMock) cross-domain provisioning scenarios - the wiring a real user performs when
  * an identifier obtained from one resource/domain is redeemed against another:
  *
  * <ul>
- *   <li><b>NetworkEdge → Fabric</b>: read a virtual device from the NE API, then use its UUID as
+ *   <li><b>NetworkEdge -> Fabric</b>: read a virtual device from the NE API, then use its UUID as
  *       the A-side {@code VD} access point of a Fabric connection. The NE-sourced UUID must land
  *       verbatim in the Fabric {@code POST /connections} body.</li>
- *   <li><b>Fabric ServiceToken → Connection redemption</b>: fetch a service token, then redeem it
+ *   <li><b>Fabric ServiceToken -> Connection redemption</b>: fetch a service token, then redeem it
  *       as the Z-side of a new connection ({@code zSide.serviceToken.uuid}).</li>
  * </ul>
  *
  * <p>Unlike {@link CrossDomainBGPScenarioTest} (live, environment-dependent), these run entirely
  * against WireMock so the cross-domain seam is asserted at the wire level on every build.</p>
  */
-@DisplayName("Cross-domain provisioning — identifiers minted in one API redeemed in another")
+@DisplayName("Cross-domain provisioning - identifiers minted in one API redeemed in another")
 class CrossDomainProvisioningScenarioTest extends WireMockTestBase {
 
     private static final String NE_DEVICE_UUID = "ed7891f4-7a67-11e9-9bea-1681be663d3e";
@@ -45,7 +46,7 @@ class CrossDomainProvisioningScenarioTest extends WireMockTestBase {
     }
 
     private static EquinixConfig quietConfig() {
-        // No eager metro load — keeps the wire down to exactly the calls under test.
+        // No eager metro load - keeps the wire down to exactly the calls under test.
         return EquinixConfig.builder().autoLoadMetros(false).build();
     }
 
@@ -61,12 +62,12 @@ class CrossDomainProvisioningScenarioTest extends WireMockTestBase {
             redirectToWireMock(eq.fabric());
             eq.authenticate();
 
-            // Step 1 — NetworkEdge: look up the virtual device.
+            // Step 1 - NetworkEdge: look up the virtual device.
             Device device = eq.networkEdge().devices().getByUuid(NE_DEVICE_UUID);
             assertNotNull(device);
             assertEquals(NE_DEVICE_UUID, device.getUuid(), "NE device UUID read from the NE API");
 
-            // Step 2 — Fabric: provision a connection from that device (VD access point).
+            // Step 2 - Fabric: provision a connection from that device (VD access point).
             Connection connection = eq.fabric().connections()
                     .define(ConnectionType.EVPL_VC)
                     .name("NE-Device-To-Cloud")
@@ -75,7 +76,7 @@ class CrossDomainProvisioningScenarioTest extends WireMockTestBase {
                             LinkProtocol.dot1q().vlanTag(1001).create(),
                             InterfaceType.CLOUD, 5)
                     .zSideAccessPointServiceProfile("20d32a80-0d61-4333-bc03-4b2d446794a0",
-                            LinkProtocol.dot1q().vlanTag(1002).create())
+                            LinkProtocol.dot1q().vlanTag(1002).create(), "SV")
                     .notification("ops@example.com")
                     .create();
 
@@ -115,12 +116,12 @@ class CrossDomainProvisioningScenarioTest extends WireMockTestBase {
             redirectToWireMock(fabric);
             fabric.authenticate();
 
-            // Step 1 — fetch the token issued to us (e.g. by a partner).
+            // Step 1 - fetch the token issued to us (e.g. by a partner).
             ServiceToken token = fabric.serviceTokens().getByUuid(SERVICE_TOKEN_UUID);
             assertNotNull(token);
             assertEquals(SERVICE_TOKEN_UUID, token.getUuid());
 
-            // Step 2 — redeem it: the token object itself is the Z-side of the new connection.
+            // Step 2 - redeem it: the token object itself is the Z-side of the new connection.
             Connection connection = fabric.connections()
                     .define(ConnectionType.EVPL_VC)
                     .name("Token-Redemption")

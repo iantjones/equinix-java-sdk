@@ -107,8 +107,7 @@ public final class RequestAssembler {
         equinixRequest.setFunctionalArea(functionalArea);
         equinixRequest.setRequestParent(requestParent);
         equinixRequest.setServiceEndpoint(serviceEndpoint);
-        equinixRequest.setEndPoint(equinixClient.getEndPoint());
-        equinixRequest.setEquinixCredentialsProvider(equinixClient.getEquinixCredentialsProvider());
+        equinixRequest.setEndPoint(equinixClient.getEndPointFor(functionalArea));
 
         return equinixRequest;
     }
@@ -155,9 +154,10 @@ public final class RequestAssembler {
     /**
      * Resolves the endpoint's URI template and HTTP method from the apiParams catalogue onto the
      * request. Every {@code {$token}} placeholder in the endpoint's {@code requestUri} must resolve
-     * to a non-null request property or path parameter; an unresolved token fails fast with an
-     * {@link EquinixClientException} naming the token and endpoint rather than silently dispatching
-     * a malformed URI.
+     * to a non-null, non-blank request property or path parameter; otherwise an
+     * {@link EquinixClientException} naming the token and endpoint is thrown rather than dispatching
+     * a URI that addresses a different resource. Values are percent-encoded as single path segments
+     * (see {@link #encodePathSegment(String)}).
      *
      * @throws com.eqixiac.equinix.core.exception.EquinixClientException if the endpoint is unknown
      *         or a URI token cannot be resolved
@@ -207,7 +207,16 @@ public final class RequestAssembler {
             formattedResourcePath = formattedResourcePath.replace("{$rootUri}", rootUri);
         }
 
-        if(requestUri != null) {
+        // Assemble the structural template first and normalise it (an empty rootUri or requestUri
+        // leaves a "//" or a trailing "/" in the TEMPLATE). Only then are path-parameter values
+        // substituted, percent-encoded, so a value can never be collapsed away or add a segment.
+        formattedResourcePath = formattedResourcePath.replace("{$requestUri}", requestUri != null ? requestUri : empty);
+        formattedResourcePath = collapseSlashes(formattedResourcePath);
+        if (formattedResourcePath.endsWith("/")) {
+            formattedResourcePath = formattedResourcePath.substring(0, formattedResourcePath.length() - 1);
+        }
+
+        if (requestUri != null) {
             Matcher uriParamMatcher = uriParamPattern.matcher(requestUri);
 
             Map<String, Method> getterMethods = GETTER_CACHE.computeIfAbsent(equinixRequest.getClass(), cls -> {
@@ -224,6 +233,7 @@ public final class RequestAssembler {
             String uriTemplate = requestUri;
             try {
                 while (uriParamMatcher.find()) {
+                    String token = uriParamMatcher.group(1);
                     String propertyName = uriParamMatcher.group(2);
                     Object propertyValue = null;
                     Method getter = getterMethods.get(propertyName);
@@ -234,17 +244,24 @@ public final class RequestAssembler {
                         propertyValue = equinixRequest.getPathParameters().get(propertyName);
                     }
 
-                    // Fail fast on an unresolved URI token. Silently substituting an empty string
-                    // produces a structurally different URI (e.g. /routingProtocols//bgpActions)
-                    // that dispatches and fails server-side far from the actual cause.
+                    // Fail fast on an unresolved or blank URI token. Substituting an empty string
+                    // produces a structurally different URI (e.g. /connections/ collapsing to the
+                    // collection URL, or /routingProtocols//bgpActions) that dispatches and fails
+                    // server-side far from the actual cause, or silently acts on the wrong resource.
                     if (propertyValue == null) {
-                        throw new EquinixClientException("Unresolved URI token '" + uriParamMatcher.group(1)
+                        throw new EquinixClientException("Unresolved URI token '" + token
                                 + "' in request URI template '" + uriTemplate + "' for service endpoint '"
                                 + equinixRequest.getServiceEndpoint() + "' of resource '" + equinixRequest.getRequestParent()
                                 + "'. No request property or path parameter named '" + propertyName + "' was supplied.");
                     }
+                    String value = propertyValue.toString();
+                    if (value.isBlank()) {
+                        throw new EquinixClientException("Path parameter '" + propertyName + "' is blank for service endpoint '"
+                                + equinixRequest.getServiceEndpoint() + "' of resource '" + equinixRequest.getRequestParent()
+                                + "' (URI template '" + uriTemplate + "'). A blank value would address a different resource.");
+                    }
 
-                    requestUri = requestUri.replace(uriParamMatcher.group(1), propertyValue.toString());
+                    formattedResourcePath = formattedResourcePath.replace(token, encodePathSegment(value));
                 }
             }
             catch (EquinixClientException ece) {
@@ -253,19 +270,40 @@ public final class RequestAssembler {
             catch (Exception e) {
                 throw new EquinixClientException(e);
             }
-
-            formattedResourcePath = formattedResourcePath.replace("{$requestUri}", requestUri);
-        }
-        else {
-            formattedResourcePath = formattedResourcePath.replace("{$requestUri}", empty);
         }
 
-        formattedResourcePath = formattedResourcePath.replace("//", "/");
-
-        if(formattedResourcePath.endsWith("/")){
-            formattedResourcePath = formattedResourcePath.substring(0, formattedResourcePath.length()-1);
-        }
         equinixRequest.setResourcePath(formattedResourcePath);
         equinixRequest.setHttpMethod(HttpMethod.valueOf(httpMethod));
+    }
+
+    /** Collapses runs of {@code /} in a URI template (never applied to substituted values). */
+    private static String collapseSlashes(String template) {
+        return template.replaceAll("/{2,}", "/");
+    }
+
+    private static final char[] HEX = "0123456789ABCDEF".toCharArray();
+
+    /**
+     * Percent-encodes a value for use as one RFC&nbsp;3986 path segment. The unreserved characters
+     * ({@code A-Z a-z 0-9 - . _ ~}) and {@code :} and {@code @} (both legal in a segment) are kept
+     * literally, so IAM's {@code project:<uuid>} and ERN values pass through unchanged; every other
+     * character, including {@code /}, space, {@code #}, {@code ?}, {@code %}, {@code &} and
+     * {@code +}, is UTF-8 percent-encoded.
+     *
+     * @param value the raw path-parameter value
+     * @return the encoded segment
+     */
+    public static String encodePathSegment(String value) {
+        StringBuilder encoded = new StringBuilder(value.length());
+        for (byte b : value.getBytes(java.nio.charset.StandardCharsets.UTF_8)) {
+            int c = b & 0xFF;
+            if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9')
+                    || c == '-' || c == '.' || c == '_' || c == '~' || c == ':' || c == '@') {
+                encoded.append((char) c);
+            } else {
+                encoded.append('%').append(HEX[c >> 4]).append(HEX[c & 0x0F]);
+            }
+        }
+        return encoded.toString();
     }
 }

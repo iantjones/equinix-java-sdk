@@ -79,7 +79,7 @@ class FabricIpBlocksWireMockTest extends WireMockTestBase {
     class Update {
 
         @Test
-        @DisplayName("PATCHes a JSON Patch array as application/json-patch+json")
+        @DisplayName("PATCHes the op/path/value array as application/json, the only type spec 4.34.0 declares")
         void savePatchesPrefixLength() {
             stubSingletonGet();
             wireMock.stubFor(patch(urlPathMatching("/fabric/v4/ipBlocks/.*"))
@@ -92,7 +92,8 @@ class FabricIpBlocksWireMockTest extends WireMockTestBase {
 
             assertNotNull(updated);
             wireMock.verify(patchRequestedFor(urlPathEqualTo("/fabric/v4/ipBlocks/31fbdb3f-8def-410d-868b-ef920878affb"))
-                    .withHeader("Content-Type", containing("application/json-patch+json"))
+                    .withHeader("Content-Type", containing("application/json"))
+                    .withHeader("Content-Type", notContaining("json-patch"))
                     .withRequestBody(equalToJson(
                             "[{\"op\":\"replace\",\"path\":\"/prefixLength\",\"value\":27}]", true, true)));
         }

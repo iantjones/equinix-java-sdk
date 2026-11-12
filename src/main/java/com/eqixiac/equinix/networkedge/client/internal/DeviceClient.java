@@ -36,6 +36,7 @@ import com.eqixiac.equinix.networkedge.model.json.creators.DeviceCreatorJson;
 import com.eqixiac.equinix.networkedge.model.json.creators.DeviceRMARequest;
 import com.eqixiac.equinix.networkedge.model.json.creators.DeviceUpdaterJson;
 
+import com.eqixiac.equinix.networkedge.model.json.creators.DeviceDeleteRequest;
 import java.util.List;
 import java.util.Map;
 
@@ -77,7 +78,7 @@ public interface DeviceClient<T> extends Pageable<T> {
      * @param startDateTime the start of the stats window (ISO-8601), or {@code null}.
      * @param endDateTime the end of the stats window (ISO-8601), or {@code null}.
      */
-    InterfaceStats getInterfaceStatistics(String uuid, String interfaceId, String startDateTime, String endDateTime);
+    InterfaceStats getInterfaceStatistics(String uuid, String interfaceId, java.time.Instant startDateTime, java.time.Instant endDateTime);
 
     /**
      *
@@ -126,6 +127,8 @@ public interface DeviceClient<T> extends Pageable<T> {
     DeviceJson update(String uuid, DeviceUpdaterJson deviceUpdaterJson);
 
     Boolean delete(String uuid);
+
+    Boolean delete(String uuid, DeviceDeleteRequest request);
 
     DeviceJson refresh(String uuid);
 }

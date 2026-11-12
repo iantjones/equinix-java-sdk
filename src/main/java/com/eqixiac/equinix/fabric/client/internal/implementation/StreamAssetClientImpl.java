@@ -16,7 +16,12 @@
 
 package com.eqixiac.equinix.fabric.client.internal.implementation;
 
-import com.eqixiac.equinix.core.client.ClientBase;
+import com.eqixiac.equinix.core.client.ResourceClientBase;
+import com.eqixiac.equinix.core.http.response.Page;
+import com.eqixiac.equinix.core.model.FilteredSortedPaginatedPost;
+import com.eqixiac.equinix.fabric.model.implementation.StreamDevicePutRequest;
+import com.eqixiac.equinix.fabric.model.implementation.filter.FilterPropertyList;
+import com.eqixiac.equinix.fabric.model.implementation.sort.SortPropertyList;
 import com.eqixiac.equinix.core.enums.RequestType;
 import com.eqixiac.equinix.fabric.client.implementation.FabricConfigImpl;
 import com.eqixiac.equinix.fabric.client.internal.StreamAssetClient;
@@ -33,10 +38,15 @@ import java.util.Map;
  *
  * @author ianjones
  */
-public class StreamAssetClientImpl extends ClientBase implements StreamAssetClient<StreamAsset> {
+public class StreamAssetClientImpl extends ResourceClientBase<StreamAsset, StreamAssetJson> implements StreamAssetClient<StreamAsset> {
 
     public StreamAssetClientImpl(FabricConfigImpl configClient) {
-        super(configClient, "Fabric", "StreamAssets");
+        super(configClient, "Fabric", "StreamAssets", StreamAssetJson.class);
+    }
+
+    @Override
+    protected StreamAsset wrap(StreamAssetJson json) {
+        return json;
     }
 
     public StreamAssetJson get(String streamId, String asset, String assetId) {
@@ -52,5 +62,21 @@ public class StreamAssetClientImpl extends ClientBase implements StreamAssetClie
         // DELETE returns no body; validate (throws on error) then return the last-known view via GET-less null.
         booleanOp("DeleteStreamAsset", RequestType.SINGLE, Map.of("streamId", streamId, "asset", asset, "assetId", assetId), null, null);
         return null;
+    }
+
+    public Page<StreamAssetJson> search(FilterPropertyList filter, SortPropertyList sort) {
+        return searchPage("SearchStreamAssets", new FilteredSortedPaginatedPost<>(filter, sort));
+    }
+
+    public StreamAssetJson getDevice(String streamId, String deviceId) {
+        return getOne("GetStreamDevice", Map.of("streamId", streamId, "deviceId", deviceId));
+    }
+
+    public StreamAssetJson updateDevice(String streamId, String deviceId, StreamDevicePutRequest request) {
+        return updateOne("UpdateStreamDevice", Map.of("streamId", streamId, "deviceId", deviceId), request);
+    }
+
+    public StreamAssetJson deleteDevice(String streamId, String deviceId) {
+        return deleteOne("DeleteStreamDevice", Map.of("streamId", streamId, "deviceId", deviceId));
     }
 }

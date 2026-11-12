@@ -105,7 +105,7 @@ public class LinkProtocol {
             this.vlanCTag = vlanCTag;
             return this;
         }
-        
+
         public QinQBuilder vlanSTag(Integer vlanSTag) {
             this.vlanSTag = vlanSTag;
             return this;

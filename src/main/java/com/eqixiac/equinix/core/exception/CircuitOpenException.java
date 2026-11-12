@@ -22,7 +22,7 @@ package com.eqixiac.equinix.core.exception;
  * of consecutive service failures (5xx responses or transport {@code IOException}s) and rejects
  * requests until its cooldown elapses, at which point a single probe request is let through.
  *
- * <p>This is a client-side rejection — no HTTP exchange took place — so it extends
+ * <p>This is a client-side rejection - no HTTP exchange took place - so it extends
  * {@link EquinixClientException} rather than {@link EquinixServiceException}. Callers can wait for
  * {@link #getRemainingCooldownMillis()} before retrying.</p>
  *

@@ -48,7 +48,7 @@ public final class PlanValueAssessment {
     }
 
     /**
-     * Declares a cloud provider's monthly egress volume. Repeatable — call once per provider;
+     * Declares a cloud provider's monthly egress volume. Repeatable - call once per provider;
      * each declared provider becomes one row of the assessment.
      *
      * @param provider the cloud provider the egress leaves
@@ -80,7 +80,7 @@ public final class PlanValueAssessment {
 
     /**
      * Sets the rate card the egress rates are resolved from. When omitted, {@code assess()}
-     * defaults to {@code RateCard.standardChain(plan's fabric)} — live Equinix pricing layered
+     * defaults to {@code RateCard.standardChain(plan's fabric)} - live Equinix pricing layered
      * over the bundled reference figures.
      *
      * @param rateCard the rate card to resolve egress rates from
@@ -164,7 +164,7 @@ public final class PlanValueAssessment {
             Optional<EgressRate> priv = rc.egress(input.provider, null, path, term);
             java.util.Currency internetCur = internet.map(EgressRate::getCurrency).orElse(null);
             java.util.Currency privCur = priv.map(EgressRate::getCurrency).orElse(null);
-            // internet − private is a subtraction, so this provider is only priced when both rates
+            // internet - private is a subtraction, so this provider is only priced when both rates
             // resolve AND agree on a currency.
             boolean priced = internet.isPresent() && priv.isPresent()
                     && !CurrencyReconciler.knownDifferent(internetCur, privCur);

@@ -1,0 +1,4051 @@
+tags:
+- name: v1-access-policy
+  x-displayName: Access Policy
+  description: Operations for managing Access Policies
+- name: v1-permission-set
+  x-displayName: Permission Set
+  description: Operations for managing Permission Sets
+- name: v1-role
+  x-displayName: Role
+  description: Operations for viewing Roles available for assignment
+- name: v1-role-assignment
+  x-displayName: Role Assignment
+  description: Operations for manging Role Assignments
+- name: v1-principal-policy
+  x-displayName: Principal Policy
+  description: Operations for managing Principal Policies
+- name: v1-policy-mask
+  x-displayName: Policy Mask
+  description: Operations for managing Policy Masks
+- name: v1-misc
+  x-displayName: Misc
+  description: Operations for viewing Access-related information for a project
+security:
+- bearerAuth: []
+externalDocs:
+  url: https://docs.equinix.com/iam/attribute-based-access-control/access-policies
+  description: Access Service Documentation
+paths:
+  /v1/projects/{projectId}/permissionSets:
+    get:
+      operationId: listPermissionSets
+      summary: List Permission Sets
+      tags:
+      - v1-permission-set
+      description: |-
+        Allows a user to page through all of the permission sets within a project. The project is identifed by the
+           `projectId`. Access to this operation is controlled by the project being accessed.
+
+        The auth token's access policy must allow `action:use/listPermissionSets`.
+      parameters:
+      - name: projectId
+        in: path
+        description: |-
+          Globally unique identifier of a project.
+          Callers may URL encode this value.
+        required: true
+        schema:
+          $ref: '#/components/schemas/ProjectId'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PermissionSetList'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      operationId: createPermissionSet
+      summary: Create Permission Set
+      tags:
+      - v1-permission-set
+      description: |-
+        Allows users to define a permission set object which can then be used as a reusable building block when defining
+           access policies.  The permission set is created in the project identified by the `projectId`. A
+           permission set is conceptually a set of action/resource tuples. The set is computed based on the `permissions`,
+           `intersect`, and `subtract` fields. Each of those fields is a unioned composite and are then combined by taking the
+           `permissions` tuples, intersected with the `intersect` tuples, and then from that the `subtract` tuples are
+           removed. Access to this operation is controlled by the project being accessed.
+
+        The auth token's access policy must allow `action:use/createPermissionSet`.
+      parameters:
+      - name: projectId
+        in: path
+        description: |-
+          Globally unique identifier of a project.
+          Callers may URL encode this value.
+        required: true
+        schema:
+          $ref: '#/components/schemas/ProjectId'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PermissionSet'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePermissionSetBody'
+  /v1/projects/{projectId}/accessPolicies/{accessPolicyId}/grants:
+    get:
+      operationId: listGrants
+      summary: List Grants
+      tags:
+      - v1-access-policy
+      description: |-
+        Allows a user to page through the external grants of an access policy including a managed policy. Access to this
+          operation is controlled by the access policy being accessed.
+
+        The auth token's access policy must allow `action:use/listGrants`.
+      parameters:
+      - name: projectId
+        in: path
+        description: |-
+          Globally unique identifier of a project.
+          Callers may URL encode this value. Use `*` here to indicate that accessPolicyId is an ERN.
+        required: true
+        schema:
+          oneOf:
+          - $ref: '#/components/schemas/ProjectId'
+          - title: '*'
+            description: Indicates the resource is specified as an ERN in other input field.
+            type: string
+            enum:
+            - '*'
+      - name: accessPolicyId
+        in: path
+        description: |2-
+
+          Callers may URL encode this value. When passing an ERN, callers *must* URL encode this value.
+        required: true
+        schema:
+          oneOf:
+          - oneOf:
+            - $ref: '#/components/schemas/AccessPolicyId'
+            - $ref: '#/components/schemas/ManagedPolicyId'
+          - $ref: '#/components/schemas/Ern'
+      - description: Opaque token identifying the page of results to retrieve.
+        name: pageToken
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/PageToken'
+      - description: Maximum number of results to return per page.
+        name: pageSize
+        in: query
+        required: false
+        schema:
+          default: 500
+          $ref: '#/components/schemas/PageSize'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccessPolicyGrantList'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      operationId: addGrant
+      summary: Add Grant
+      tags:
+      - v1-access-policy
+      description: |-
+        Allows a user to add an external grant to an access policy including a managed policy. Access to this operation is
+          controlled by the access policy being accessed.
+
+        The auth token's access policy must allow `action:use/addGrant`.
+      parameters:
+      - name: projectId
+        in: path
+        description: |-
+          Globally unique identifier of a project.
+          Callers may URL encode this value. Use `*` here to indicate that accessPolicyId is an ERN.
+        required: true
+        schema:
+          oneOf:
+          - $ref: '#/components/schemas/ProjectId'
+          - title: '*'
+            description: Indicates the resource is specified as an ERN in other input field.
+            type: string
+            enum:
+            - '*'
+      - name: accessPolicyId
+        in: path
+        description: |2-
+
+          Callers may URL encode this value. When passing an ERN, callers *must* URL encode this value.
+        required: true
+        schema:
+          oneOf:
+          - oneOf:
+            - $ref: '#/components/schemas/AccessPolicyId'
+            - $ref: '#/components/schemas/ManagedPolicyId'
+          - $ref: '#/components/schemas/Ern'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccessPolicyGrant'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddGrantBody'
+  /v1/roleAssignments/{roleAssignmentId}:
+    get:
+      operationId: getRoleAssignment
+      summary: Get Role Assignment
+      tags:
+      - v1-role-assignment
+      description: |-
+        Get a RoleAssignment by its id. For an Access Policy token, the
+          RoleAssignment's assignmentScope must be at or below the project (if
+          given, otherwise the project that owns the Access Policy) For a Role
+          Assignment token, the RoleAssignment must be visible by the user and the
+          project args are unsupported.
+
+        The auth token's access policy must allow `action:use/getRoleAssignment`.
+      parameters:
+      - name: roleAssignmentId
+        in: path
+        description: |-
+          Uniquely identifies an access policy within a project.
+          Callers may URL encode this value.
+        required: true
+        schema:
+          $ref: '#/components/schemas/RoleAssignmentId'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoleAssignment'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      operationId: deleteRoleAssignment
+      summary: Delete Role Assignment
+      tags:
+      - v1-role-assignment
+      description: |-
+        Delete an existing RoleAssignment, thereby removing the permissions granted to the principal by the given Role.
+
+        The auth token's access policy must allow `action:use/deleteRoleAssignment`.
+      parameters:
+      - name: roleAssignmentId
+        in: path
+        description: |-
+          Uniquely identifies an access policy within a project.
+          Callers may URL encode this value.
+        required: true
+        schema:
+          $ref: '#/components/schemas/RoleAssignmentId'
+      responses:
+        '204':
+          description: Success
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/projects/{projectId}/principalPolicies:
+    get:
+      operationId: listPrincipalPolicies
+      summary: List Principal Policies
+      tags:
+      - v1-principal-policy
+      description: |-
+        Allows an admin to list principal policies in a project with pagination. Access to this
+           operation is controlled by the project. Includes disabled policies so admins can re-enable them.
+
+        The auth token's access policy must allow `action:use/listPrincipalPolicies`.
+      parameters:
+      - name: projectId
+        in: path
+        description: |-
+          Globally unique identifier of a project.
+          Callers may URL encode this value.
+        required: true
+        schema:
+          $ref: '#/components/schemas/ProjectId'
+      - description: Opaque token identifying the page of results to retrieve.
+        name: pageToken
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/PageToken'
+      - description: Maximum number of results to return per page.
+        name: pageSize
+        in: query
+        required: false
+        schema:
+          default: 100
+          $ref: '#/components/schemas/PageSize'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PrincipalPolicyList'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/projects/{projectId}/servicePolicySchemas:
+    get:
+      operationId: getServicePolicySchema
+      summary: Get Service Policy Schema
+      tags:
+      - v1-misc
+      description: |-
+        Allows a user to retrieve the Cedar schema for the given service, in JSON representation. The Cedar schema describes
+          the attributes and resource types that can be referenced in access policy conditions for each action of the
+          service. Access is controlled based on the project identified by `projectId`.
+
+        The auth token's access policy must allow `action:use/getServicePolicySchema`.
+      parameters:
+      - name: projectId
+        in: path
+        description: |-
+          Globally unique identifier of a project.
+          Callers may URL encode this value.
+        required: true
+        schema:
+          $ref: '#/components/schemas/ProjectId'
+      - description: Fully qualified, universally unique id of a service.
+        name: serviceId
+        in: query
+        required: true
+        schema:
+          $ref: '#/components/schemas/ServiceId'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServicePolicySchema'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/projects/{projectId}/actions:
+    get:
+      operationId: listActions
+      summary: List Actions
+      tags:
+      - v1-misc
+      description: |-
+        Allows a user to page through the actions defined for a given `serviceId`. This allows users to discover what actions
+          are available to be used when defining access policies.  Access to this is operation is controlled by
+          the project specified by `projectId`.  The results are filtered
+          according to the service mask of that same project. The results will include actions from all of the
+          aspects which are accessible based on the service mask. When the service mask does not allow any access to the
+          service an exception is thrown.
+
+        The auth token's access policy must allow `action:use/listActions`.
+      parameters:
+      - name: projectId
+        in: path
+        description: |-
+          Globally unique identifier of a project.
+          Callers may URL encode this value.
+        required: true
+        schema:
+          $ref: '#/components/schemas/ProjectId'
+      - description: Fully qualified, universally unique id of a service.
+        name: serviceId
+        in: query
+        required: true
+        schema:
+          $ref: '#/components/schemas/ServiceId'
+      - description: Opaque token identifying the page of results to retrieve.
+        name: pageToken
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/PageToken'
+      - description: Maximum number of results to return per page.
+        name: pageSize
+        in: query
+        required: false
+        schema:
+          default: 100
+          $ref: '#/components/schemas/PageSize'
+      - description: Equinix Resource Name of a project. Mutually exclusive with projectId.
+        name: projectErn
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/Ern'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionList'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/projects/{projectId}/policyMasks/{policyMaskId}/disable:
+    post:
+      operationId: disablePolicyMask
+      summary: Disable Policy Mask
+      tags:
+      - v1-policy-mask
+      description: |-
+        Allows a user to disable a project-scoped policy mask. A disabled mask is treated as absent
+           during policy mask resolution. Access is controlled by the mask.
+
+        The auth token's access policy must allow `action:use/disablePolicyMask`.
+      parameters:
+      - name: projectId
+        in: path
+        description: |-
+          Globally unique identifier of a project.
+          Callers may URL encode this value. Use `*` here to indicate that policyMaskId is an ERN.
+        required: true
+        schema:
+          oneOf:
+          - $ref: '#/components/schemas/ProjectId'
+          - title: '*'
+            description: Indicates the resource is specified as an ERN in other input field.
+            type: string
+            enum:
+            - '*'
+      - name: policyMaskId
+        in: path
+        description: |-
+          Uniquely identifies a policy mask globally or within a governing project.
+          Callers may URL encode this value. When passing an ERN, callers *must* URL encode this value.
+        required: true
+        schema:
+          oneOf:
+          - $ref: '#/components/schemas/PolicyMaskId'
+          - $ref: '#/components/schemas/Ern'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PolicyMask'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LastRevBody'
+  /v1/projects/{projectId}/principalPolicies/{userPrincipal}/disable:
+    post:
+      operationId: disablePrincipalPolicy
+      summary: Disable Principal Policy
+      tags:
+      - v1-principal-policy
+      description: |-
+        Disables a principal policy in a project by user principal. Disabling a principal policy means
+           it will not be available for use by the principal and will appear as if it does not exist via
+           access-use APIs. Access to this operation is controlled at the project level.
+
+        The auth token's access policy must allow `action:use/disablePrincipalPolicy`.
+      parameters:
+      - name: projectId
+        in: path
+        description: |-
+          Globally unique identifier of a project.
+          Callers may URL encode this value.
+        required: true
+        schema:
+          $ref: '#/components/schemas/ProjectId'
+      - name: userPrincipal
+        in: path
+        description: |-
+          Globally unique string identifier for a principal formatted like "principal:...".
+          Callers may URL encode this value.
+        required: true
+        schema:
+          $ref: '#/components/schemas/Principal'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PrincipalPolicy'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LastRevBody'
+  /v1/projects/{projectId}/accessPolicies:
+    get:
+      operationId: listAccessPolicies
+      summary: List Access Policies
+      tags:
+      - v1-access-policy
+      description: |-
+        Allows a user to page through all of the access policies within a project. The project is identified by
+           `projectId`. Access to this operation is controlled by the project being accessed.
+
+        The auth token's access policy must allow `action:use/listAccessPolicies`.
+      parameters:
+      - name: projectId
+        in: path
+        description: |-
+          Globally unique identifier of a project.
+          Callers may URL encode this value.
+        required: true
+        schema:
+          $ref: '#/components/schemas/ProjectId'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccessPolicyList'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      operationId: createAccessPolicy
+      summary: Create Access Policy
+      tags:
+      - v1-access-policy
+      description: |-
+        Allows a user to create a new access policy. The access policy is created in the project identified by the
+           `projectId`. An access policy contains that same data as a permission set but also includes the `grants`
+           field for indicating what principals can use the access policy. Access to this operation is controlled by the project
+           being accessed.
+
+        The auth token's access policy must allow `action:use/createAccessPolicy`.
+      parameters:
+      - name: projectId
+        in: path
+        description: |-
+          Globally unique identifier of a project.
+          Callers may URL encode this value.
+        required: true
+        schema:
+          $ref: '#/components/schemas/ProjectId'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccessPolicy'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAccessPolicyBody'
+  /v1/projects/{projectId}/principalPolicies/{userPrincipal}/enable:
+    post:
+      operationId: enablePrincipalPolicy
+      summary: Enable Principal Policy
+      tags:
+      - v1-principal-policy
+      description: |-
+        Enables a principal policy in a project by user principal. This reverses the effect of
+           disabling a principal policy. Access to this operation is controlled at the project level.
+
+        The auth token's access policy must allow `action:use/enablePrincipalPolicy`.
+      parameters:
+      - name: projectId
+        in: path
+        description: |-
+          Globally unique identifier of a project.
+          Callers may URL encode this value.
+        required: true
+        schema:
+          $ref: '#/components/schemas/ProjectId'
+      - name: userPrincipal
+        in: path
+        description: |-
+          Globally unique string identifier for a principal formatted like "principal:...".
+          Callers may URL encode this value.
+        required: true
+        schema:
+          $ref: '#/components/schemas/Principal'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PrincipalPolicy'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LastRevBody'
+  /v1/roleAssignments:
+    get:
+      operationId: listRoleAssignments
+      summary: List Role Assignments
+      tags:
+      - v1-role-assignment
+      description: |-
+        Get a page of all the RoleAssignments for the given assignment scope.
+
+        The auth token's access policy must allow `action:use/listRoleAssignments`.
+      parameters:
+      - description: Opaque token identifying the page of results to retrieve.
+        name: pageToken
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/PageToken'
+      - description: Maximum number of results to return per page.
+        name: pageSize
+        in: query
+        required: false
+        schema:
+          default: 100
+          $ref: '#/components/schemas/PageSize'
+      - description: Id of the object this assignment scope refers to
+        name: assignmentScopeId
+        in: query
+        required: true
+        schema:
+          description: Id of the object this assignment scope refers to
+          type: string
+          example: 07218c48-343d-43e2-9831-a2080445cd22
+      - description: Type of object that defines the scope of a role assignment (e.g. PROJECT, ORGANIZATION).
+        name: assignmentScopeType
+        in: query
+        required: true
+        schema:
+          description: Type of object that defines the scope of a role assignment (e.g. PROJECT, ORGANIZATION).
+          type: string
+          example: PROJECT
+          examples:
+          - PDS_ORG
+          - ORGANIZATION
+          - PROJECT
+          - BILLING_ACCOUNT
+          - SUBSCRIPTION_KEY
+          - PORT
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoleAssignmentList'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      operationId: createRoleAssignment
+      summary: Create Role Assignment
+      tags:
+      - v1-role-assignment
+      description: |-
+        Create a new RoleAssignment, thereby granting the principal the permissions defined by the given Role.
+
+        The auth token's access policy must allow `action:use/createRoleAssignment`.
+      parameters: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoleAssignment'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRoleAssignmentInput'
+  /v1/projects/{projectId}/policyMasks/{policyMaskId}/enable:
+    post:
+      operationId: enablePolicyMask
+      summary: Enable Policy Mask
+      tags:
+      - v1-policy-mask
+      description: |-
+        Allows a user to re-enable a disabled project-scoped policy mask.
+           Access is controlled by the mask.
+
+        The auth token's access policy must allow `action:use/enablePolicyMask`.
+      parameters:
+      - name: projectId
+        in: path
+        description: |-
+          Globally unique identifier of a project.
+          Callers may URL encode this value. Use `*` here to indicate that policyMaskId is an ERN.
+        required: true
+        schema:
+          oneOf:
+          - $ref: '#/components/schemas/ProjectId'
+          - title: '*'
+            description: Indicates the resource is specified as an ERN in other input field.
+            type: string
+            enum:
+            - '*'
+      - name: policyMaskId
+        in: path
+        description: |-
+          Uniquely identifies a policy mask globally or within a governing project.
+          Callers may URL encode this value. When passing an ERN, callers *must* URL encode this value.
+        required: true
+        schema:
+          oneOf:
+          - $ref: '#/components/schemas/PolicyMaskId'
+          - $ref: '#/components/schemas/Ern'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PolicyMask'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LastRevBody'
+  /v1/projects/{projectId}/policyMasks:
+    get:
+      operationId: listPolicyMasks
+      summary: List Policy Masks
+      tags:
+      - v1-policy-mask
+      description: |-
+        Allows a user to list project-scoped policy masks with pagination.
+           Authorization is checked against the project.
+
+        The auth token's access policy must allow `action:use/listPolicyMasks`.
+      parameters:
+      - name: projectId
+        in: path
+        description: |-
+          Globally unique identifier of a project.
+          Callers may URL encode this value.
+        required: true
+        schema:
+          $ref: '#/components/schemas/ProjectId'
+      - description: Opaque token identifying the page of results to retrieve.
+        name: pageToken
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/PageToken'
+      - description: Maximum number of results to return per page.
+        name: pageSize
+        in: query
+        required: false
+        schema:
+          default: 100
+          $ref: '#/components/schemas/PageSize'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PolicyMaskList'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      operationId: createPolicyMask
+      summary: Create Policy Mask
+      tags:
+      - v1-policy-mask
+      description: |-
+        Allows a project admin to create a project-scoped policy mask. The mask controls which
+           managed policies and managed permission sets are available within this project.
+           Access is controlled by the project.
+
+        The auth token's access policy must allow `action:use/createPolicyMask`.
+      parameters:
+      - name: projectId
+        in: path
+        description: |-
+          Globally unique identifier of a project.
+          Callers may URL encode this value.
+        required: true
+        schema:
+          $ref: '#/components/schemas/ProjectId'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PolicyMask'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePolicyMaskBody'
+  /v1/projects/{projectId}/roles:
+    get:
+      operationId: listRolesByProjectId
+      summary: list roles useable by project
+      tags:
+      - v1-role
+      description: |-
+        Get a page of all the Roles visible. All System and Product roles are visibile,
+          but visibility of Custom Roles depend on the claims in the token. For an
+          Access Policy token, all Custom Roles usable by the project are visible (if
+          given, otherwise the project that owns the Access Policy). For a Role
+          Assignment token, all Custom Roles usable by the token's Organization are
+          visible and the project args are unsupported.
+
+        The auth token's access policy must allow `action:use/listRoles`.
+      parameters:
+      - name: projectId
+        in: path
+        description: |-
+          Globally unique identifier of a project.
+          Callers may URL encode this value.
+        required: true
+        schema:
+          $ref: '#/components/schemas/ProjectId'
+      - description: Opaque token identifying the page of results to retrieve.
+        name: pageToken
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/PageToken'
+      - description: Maximum number of results to return per page.
+        name: pageSize
+        in: query
+        required: false
+        schema:
+          default: 100
+          $ref: '#/components/schemas/PageSize'
+      - description: Equinix Resource Name of a project. Mutually exclusive with projectId.
+        name: projectErn
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/Ern'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoleList'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/projects/{projectId}/principalPolicies/{userPrincipal}:
+    get:
+      operationId: getPrincipalPolicy
+      summary: Get Principal Policy
+      tags:
+      - v1-principal-policy
+      description: |-
+        Retrieves a principal policy in a project by user principal. Access to this operation
+           is controlled at the project level. Returns nil if the policy is disabled.
+
+        The auth token's access policy must allow `action:use/getPrincipalPolicy`.
+      parameters:
+      - name: projectId
+        in: path
+        description: |-
+          Globally unique identifier of a project.
+          Callers may URL encode this value.
+        required: true
+        schema:
+          $ref: '#/components/schemas/ProjectId'
+      - name: userPrincipal
+        in: path
+        description: |-
+          Globally unique string identifier for a principal formatted like "principal:...".
+          Callers may URL encode this value.
+        required: true
+        schema:
+          $ref: '#/components/schemas/Principal'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PrincipalPolicy'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    patch:
+      operationId: updatePrincipalPolicy
+      summary: Update Principal Policy
+      tags:
+      - v1-principal-policy
+      description: |-
+        Updates a principal policy in a project by user principal. Access to this operation
+           is controlled at the project level. Fails if the policy is disabled.
+
+        The auth token's access policy must allow `action:use/updatePrincipalPolicy`.
+      parameters:
+      - name: projectId
+        in: path
+        description: |-
+          Globally unique identifier of a project.
+          Callers may URL encode this value.
+        required: true
+        schema:
+          $ref: '#/components/schemas/ProjectId'
+      - name: userPrincipal
+        in: path
+        description: |-
+          Globally unique string identifier for a principal formatted like "principal:...".
+          Callers may URL encode this value.
+        required: true
+        schema:
+          $ref: '#/components/schemas/Principal'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PrincipalPolicy'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePrincipalPolicyBody'
+  /v1/projects/{projectId}/permissionSets/{permissionSetId}:
+    get:
+      operationId: getPermissionSet
+      summary: Get Permission Set
+      tags:
+      - v1-permission-set
+      description: |-
+        Allows a user to retrieve the definition of a permission set identified by `permissionSetId`.
+           The permission set is retrieved from the project identified by `projectId`.
+           Access to this operation is controlled by the permission set being accessed.
+
+        The auth token's access policy must allow `action:use/getPermissionSet`.
+      parameters:
+      - name: projectId
+        in: path
+        description: |-
+          Globally unique identifier of a project.
+          Callers may URL encode this value. Use `*` here to indicate that permissionSetId is an ERN.
+        required: true
+        schema:
+          oneOf:
+          - $ref: '#/components/schemas/ProjectId'
+          - title: '*'
+            description: Indicates the resource is specified as an ERN in other input field.
+            type: string
+            enum:
+            - '*'
+      - name: permissionSetId
+        in: path
+        description: |2-
+
+          Callers may URL encode this value. When passing an ERN, callers *must* URL encode this value.
+        required: true
+        schema:
+          oneOf:
+          - oneOf:
+            - $ref: '#/components/schemas/PermissionSetId'
+            - $ref: '#/components/schemas/ManagedPermissionSetId'
+          - $ref: '#/components/schemas/Ern'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PermissionSet'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      operationId: deletePermissionSet
+      summary: Delete Permission Set
+      tags:
+      - v1-permission-set
+      description: |-
+        Allows a user to delete a permission set identified by either the `permissionSetId` or the `permissionSetErn`
+           parameter. The permission set must not be referenced by any other permission sets or access policies in order
+           for it to be deleted. Access to this operation is controlled by the permission set being accessed.
+
+        The auth token's access policy must allow `action:use/deletePermissionSet`.
+      parameters:
+      - name: projectId
+        in: path
+        description: |-
+          Globally unique identifier of a project.
+          Callers may URL encode this value. Use `*` here to indicate that permissionSetId is an ERN.
+        required: true
+        schema:
+          oneOf:
+          - $ref: '#/components/schemas/ProjectId'
+          - title: '*'
+            description: Indicates the resource is specified as an ERN in other input field.
+            type: string
+            enum:
+            - '*'
+      - name: permissionSetId
+        in: path
+        description: |-
+          Uniquely identifies a PermissionSet within a project.
+          Callers may URL encode this value. When passing an ERN, callers *must* URL encode this value.
+        required: true
+        schema:
+          oneOf:
+          - $ref: '#/components/schemas/PermissionSetId'
+          - $ref: '#/components/schemas/Ern'
+      responses:
+        '204':
+          description: Success
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LastRevBody'
+    patch:
+      operationId: updatePermissionSet
+      summary: Update Permission Set
+      tags:
+      - v1-permission-set
+      description: |-
+        Allows a user to update the definition of a permission set identified by the `permissionSetId`.
+           The permission set is updated in the project identified by `projectId`. It is possible that
+           some of the objects referenced by the updated permission set no longer exist or are no longer accessible. Such cases
+           will produce an error unless the `allowBadRefs` parameter is set to "existing". Setting this parameter allows users
+           to update permission sets even if something unrelated to their update has changed since the permission set was
+           created. Using this flag allows urgent permission set changes to be made without requiring the caller to address
+           issues outside of their immediate concrent. Access to this operation is controlled by the permission set being
+           accessed.
+
+        The auth token's access policy must allow `action:use/updatePermissionSet`.
+      parameters:
+      - name: projectId
+        in: path
+        description: |-
+          Globally unique identifier of a project.
+          Callers may URL encode this value. Use `*` here to indicate that permissionSetId is an ERN.
+        required: true
+        schema:
+          oneOf:
+          - $ref: '#/components/schemas/ProjectId'
+          - title: '*'
+            description: Indicates the resource is specified as an ERN in other input field.
+            type: string
+            enum:
+            - '*'
+      - name: permissionSetId
+        in: path
+        description: |-
+          Uniquely identifies a PermissionSet within a project.
+          Callers may URL encode this value. When passing an ERN, callers *must* URL encode this value.
+        required: true
+        schema:
+          oneOf:
+          - $ref: '#/components/schemas/PermissionSetId'
+          - $ref: '#/components/schemas/Ern'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PermissionSet'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePermissionSetBody'
+  /v1/projects/{projectId}/resourceTypeActions:
+    get:
+      operationId: pageResourceTypeActions
+      summary: Page Resource Type Actions
+      tags:
+      - v1-misc
+      description: |-
+        Allows a user to page through the actions which can be invoked for a given `serviceId` and `resourceType`. This
+          allows users to discover what actions apply to what resource types when defining access policies.
+          Access to this is operation is controlled by the project specified by `projectId`. When the service mask that
+          applies to the project does not allow any access to the service an exception is thrown.
+
+        The auth token's access policy must allow `action:use/listResourceTypeActions`.
+      parameters:
+      - name: projectId
+        in: path
+        description: |-
+          Globally unique identifier of a project.
+          Callers may URL encode this value.
+        required: true
+        schema:
+          $ref: '#/components/schemas/ProjectId'
+      - description: Fully qualified, universally unique id of the service owning the resource type.
+        name: serviceId
+        in: query
+        required: true
+        schema:
+          $ref: '#/components/schemas/ServiceId'
+      - description: Service id of the resource type, if different from serviceId.
+        name: resourceTypeServiceId
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/ServiceId'
+      - description: Identifies the resource type within the service.
+        name: resourceType
+        in: query
+        required: true
+        schema:
+          $ref: '#/components/schemas/ResourceTypeId'
+      - description: Id of the last action received; used for cursor-based pagination.
+        name: lastAction
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/ActionId'
+      - description: Maximum number of results to return per page.
+        name: pageSize
+        in: query
+        required: false
+        schema:
+          default: 100
+          $ref: '#/components/schemas/PageSize'
+      - description: Equinix Resource Name of a project. Mutually exclusive with projectId.
+        name: projectErn
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/Ern'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResourceTypeActionPage'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/projects/{projectId}/accessPolicies/{accessPolicyId}/grants/{grantId}:
+    delete:
+      operationId: removeGrant
+      summary: Remove Grant
+      tags:
+      - v1-access-policy
+      description: |-
+        Allows a user to remove an external grant from an access policy including a managed policy. Access to this operation
+          is controlled by the access policy being accessed.
+
+        The auth token's access policy must allow `action:use/removeGrant`.
+      parameters:
+      - name: grantId
+        in: path
+        description: |-
+          Uniquely identifies an access policy grant.
+          Callers may URL encode this value.
+        required: true
+        schema:
+          $ref: '#/components/schemas/GrantId'
+      - name: projectId
+        in: path
+        description: |-
+          Globally unique identifier of a project.
+          Callers may URL encode this value. Use `*` here to indicate that accessPolicyId is an ERN.
+        required: true
+        schema:
+          oneOf:
+          - $ref: '#/components/schemas/ProjectId'
+          - title: '*'
+            description: Indicates the resource is specified as an ERN in other input field.
+            type: string
+            enum:
+            - '*'
+      - name: accessPolicyId
+        in: path
+        description: |2-
+
+          Callers may URL encode this value. When passing an ERN, callers *must* URL encode this value.
+        required: true
+        schema:
+          oneOf:
+          - oneOf:
+            - $ref: '#/components/schemas/AccessPolicyId'
+            - $ref: '#/components/schemas/ManagedPolicyId'
+          - $ref: '#/components/schemas/Ern'
+      responses:
+        '204':
+          description: Success
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/roles:
+    get:
+      operationId: listRoles
+      summary: List Roles
+      tags:
+      - v1-role
+      description: |-
+        Get a page of all the Roles visible. All System and Product roles are visibile,
+          but visibility of Custom Roles depend on the claims in the token. For an
+          Access Policy token, all Custom Roles usable by the project are visible (if
+          given, otherwise the project that owns the Access Policy). For a Role
+          Assignment token, all Custom Roles usable by the token's Organization are
+          visible and the project args are unsupported.
+
+        The auth token's access policy must allow `action:use/listRoles`.
+      parameters:
+      - description: Opaque token identifying the page of results to retrieve.
+        name: pageToken
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/PageToken'
+      - description: Maximum number of results to return per page.
+        name: pageSize
+        in: query
+        required: false
+        schema:
+          default: 100
+          $ref: '#/components/schemas/PageSize'
+      - description: Globally unique identifier of a project. Mutually exclusive with projectErn.
+        name: projectId
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/ProjectId'
+      - description: Equinix Resource Name of a project. Mutually exclusive with projectId.
+        name: projectErn
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/Ern'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoleList'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/projects/{projectId}/accessPolicies/{accessPolicyId}:
+    get:
+      operationId: getAccessPolicy
+      summary: Get Access Policy
+      tags:
+      - v1-access-policy
+      description: |-
+        Allows a user to retrieve the definition of an access policy identified by `accessPolicyId`.
+           The access policy is retrieved from the project identified by `projectId`.
+           Access to this operation is controlled by the access policy being accessed.
+
+        The auth token's access policy must allow `action:use/getAccessPolicy`.
+      parameters:
+      - name: projectId
+        in: path
+        description: |-
+          Globally unique identifier of a project.
+          Callers may URL encode this value. Use `*` here to indicate that accessPolicyId is an ERN.
+        required: true
+        schema:
+          oneOf:
+          - $ref: '#/components/schemas/ProjectId'
+          - title: '*'
+            description: Indicates the resource is specified as an ERN in other input field.
+            type: string
+            enum:
+            - '*'
+      - name: accessPolicyId
+        in: path
+        description: |2-
+
+          Callers may URL encode this value. When passing an ERN, callers *must* URL encode this value.
+        required: true
+        schema:
+          oneOf:
+          - oneOf:
+            - $ref: '#/components/schemas/AccessPolicyId'
+            - $ref: '#/components/schemas/ManagedPolicyId'
+          - $ref: '#/components/schemas/Ern'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccessPolicy'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      operationId: deleteAccessPolicy
+      summary: Delete Access Policy
+      tags:
+      - v1-access-policy
+      description: |-
+        Allows a user to delete an access policy identified by either the `accessPolicyId` or the `accessPolicyErn`
+           parameter. The access policy is deleted from the project identified by the `accessPolicyErn` if provided, else in the
+           project that owns the access policy being used to invoke the operation. The project must be disabled and not have any
+           grants in order for it to be deleted. Access to this operation is controlled by the access policy being accessed.
+
+        The auth token's access policy must allow `action:use/deleteAccessPolicy`.
+      parameters:
+      - name: projectId
+        in: path
+        description: |-
+          Globally unique identifier of a project.
+          Callers may URL encode this value. Use `*` here to indicate that accessPolicyId is an ERN.
+        required: true
+        schema:
+          oneOf:
+          - $ref: '#/components/schemas/ProjectId'
+          - title: '*'
+            description: Indicates the resource is specified as an ERN in other input field.
+            type: string
+            enum:
+            - '*'
+      - name: accessPolicyId
+        in: path
+        description: |-
+          Uniquely identifies an access policy within a project.
+          Callers may URL encode this value. When passing an ERN, callers *must* URL encode this value.
+        required: true
+        schema:
+          oneOf:
+          - $ref: '#/components/schemas/AccessPolicyId'
+          - $ref: '#/components/schemas/Ern'
+      responses:
+        '204':
+          description: Success
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LastRevBody'
+    patch:
+      operationId: updateAccessPolicy
+      summary: Update Access Policy
+      tags:
+      - v1-access-policy
+      description: |-
+        Allows a user to update the definition of an access policy identified by the `accessPolicyId`.
+           The access policy is updated in the project identified by the `projectId`. It is possible that
+           some of the objects referenced by the updated access policy no longer exist or are no longer accessible. Such cases
+           will produce an error unless the `allowBadRefs` parameter is set to "existing". Setting this parameter allows users
+           to update access policies even if something unrelated to their update has changed since the access policy was
+           created. Using this flag allows urgent access policy changes to be made without requiring the caller to address
+           issues outside of their immediate concrent. Access to this operation is controlled by the access policy being
+           accessed.
+
+        The auth token's access policy must allow `action:use/updateAccessPolicy`.
+      parameters:
+      - name: projectId
+        in: path
+        description: |-
+          Globally unique identifier of a project.
+          Callers may URL encode this value. Use `*` here to indicate that accessPolicyId is an ERN.
+        required: true
+        schema:
+          oneOf:
+          - $ref: '#/components/schemas/ProjectId'
+          - title: '*'
+            description: Indicates the resource is specified as an ERN in other input field.
+            type: string
+            enum:
+            - '*'
+      - name: accessPolicyId
+        in: path
+        description: |-
+          Uniquely identifies an access policy within a project.
+          Callers may URL encode this value. When passing an ERN, callers *must* URL encode this value.
+        required: true
+        schema:
+          oneOf:
+          - $ref: '#/components/schemas/AccessPolicyId'
+          - $ref: '#/components/schemas/Ern'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccessPolicy'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateAccessPolicyBody'
+  /v1/projects/{projectId}/accessPolicies/{accessPolicyId}/enable:
+    post:
+      operationId: enableAccessPolicy
+      summary: Enable Access Policy
+      tags:
+      - v1-access-policy
+      description: |-
+        Allows a user to enable an access policy identified by either the `accessPolicyId` or the `accessPolicyErn`
+           parameter. The access policy is updated in the project identified by the `accessPolicyErn` if provided, else in the
+           project that owns the access policy being used to invoke the operation. This reverses the effect of disabling an
+           access policy. Access to this operation is controlled by the access policy being accessed.
+
+        The auth token's access policy must allow `action:use/enableAccessPolicy`.
+      parameters:
+      - name: projectId
+        in: path
+        description: |-
+          Globally unique identifier of a project.
+          Callers may URL encode this value. Use `*` here to indicate that accessPolicyId is an ERN.
+        required: true
+        schema:
+          oneOf:
+          - $ref: '#/components/schemas/ProjectId'
+          - title: '*'
+            description: Indicates the resource is specified as an ERN in other input field.
+            type: string
+            enum:
+            - '*'
+      - name: accessPolicyId
+        in: path
+        description: |-
+          Uniquely identifies an access policy within a project.
+          Callers may URL encode this value. When passing an ERN, callers *must* URL encode this value.
+        required: true
+        schema:
+          oneOf:
+          - $ref: '#/components/schemas/AccessPolicyId'
+          - $ref: '#/components/schemas/Ern'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccessPolicy'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LastRevBody'
+  /v1/projects/{projectId}/resourceTypes:
+    get:
+      operationId: listResourceTypes
+      summary: List Resource Types
+      tags:
+      - v1-misc
+      description: |-
+        Allows a user to page through the resource types defined for a given `serviceId`. This allows users to discover what
+          resource types are available to be used when defining access policies. Access to this is operation is controlled by
+          the project specified by `projectId`. When the service mask that
+          applies to the project does not allow any access to the service an exception is thrown.
+
+        The auth token's access policy must allow `action:use/listResourceTypes`.
+      parameters:
+      - name: projectId
+        in: path
+        description: |-
+          Globally unique identifier of a project.
+          Callers may URL encode this value.
+        required: true
+        schema:
+          $ref: '#/components/schemas/ProjectId'
+      - description: Fully qualified, universally unique id of a service.
+        name: serviceId
+        in: query
+        required: true
+        schema:
+          $ref: '#/components/schemas/ServiceId'
+      - description: Opaque token identifying the page of results to retrieve.
+        name: pageToken
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/PageToken'
+      - description: Maximum number of results to return per page.
+        name: pageSize
+        in: query
+        required: false
+        schema:
+          default: 100
+          $ref: '#/components/schemas/PageSize'
+      - description: Equinix Resource Name of a project. Mutually exclusive with projectId.
+        name: projectErn
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/Ern'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResourceTypeList'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/projects/{projectId}/policyMasks/{policyMaskId}:
+    get:
+      operationId: getPolicyMask
+      summary: Get Policy Mask
+      tags:
+      - v1-policy-mask
+      description: |-
+        Allows a user to retrieve a project-scoped policy mask. Access is controlled by the mask.
+
+        The auth token's access policy must allow `action:use/getPolicyMask`.
+      parameters:
+      - name: projectId
+        in: path
+        description: |-
+          Globally unique identifier of a project.
+          Callers may URL encode this value. Use `*` here to indicate that policyMaskId is an ERN.
+        required: true
+        schema:
+          oneOf:
+          - $ref: '#/components/schemas/ProjectId'
+          - title: '*'
+            description: Indicates the resource is specified as an ERN in other input field.
+            type: string
+            enum:
+            - '*'
+      - name: policyMaskId
+        in: path
+        description: |-
+          Uniquely identifies a policy mask globally or within a governing project.
+          Callers may URL encode this value. When passing an ERN, callers *must* URL encode this value.
+        required: true
+        schema:
+          oneOf:
+          - $ref: '#/components/schemas/PolicyMaskId'
+          - $ref: '#/components/schemas/Ern'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PolicyMask'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      operationId: deletePolicyMask
+      summary: Delete Policy Mask
+      tags:
+      - v1-policy-mask
+      description: |-
+        Allows a user to delete a project-scoped policy mask. The mask must be disabled first.
+           Access is controlled by the mask.
+
+        The auth token's access policy must allow `action:use/deletePolicyMask`.
+      parameters:
+      - name: projectId
+        in: path
+        description: |-
+          Globally unique identifier of a project.
+          Callers may URL encode this value. Use `*` here to indicate that policyMaskId is an ERN.
+        required: true
+        schema:
+          oneOf:
+          - $ref: '#/components/schemas/ProjectId'
+          - title: '*'
+            description: Indicates the resource is specified as an ERN in other input field.
+            type: string
+            enum:
+            - '*'
+      - name: policyMaskId
+        in: path
+        description: |-
+          Uniquely identifies a policy mask globally or within a governing project.
+          Callers may URL encode this value. When passing an ERN, callers *must* URL encode this value.
+        required: true
+        schema:
+          oneOf:
+          - $ref: '#/components/schemas/PolicyMaskId'
+          - $ref: '#/components/schemas/Ern'
+      responses:
+        '204':
+          description: Success
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LastRevBody'
+    patch:
+      operationId: updatePolicyMask
+      summary: Update Policy Mask
+      tags:
+      - v1-policy-mask
+      description: |-
+        Allows a user to update a project-scoped policy mask. Access is controlled by the mask.
+
+        The auth token's access policy must allow `action:use/updatePolicyMask`.
+      parameters:
+      - name: projectId
+        in: path
+        description: |-
+          Globally unique identifier of a project.
+          Callers may URL encode this value. Use `*` here to indicate that policyMaskId is an ERN.
+        required: true
+        schema:
+          oneOf:
+          - $ref: '#/components/schemas/ProjectId'
+          - title: '*'
+            description: Indicates the resource is specified as an ERN in other input field.
+            type: string
+            enum:
+            - '*'
+      - name: policyMaskId
+        in: path
+        description: |-
+          Uniquely identifies a policy mask globally or within a governing project.
+          Callers may URL encode this value. When passing an ERN, callers *must* URL encode this value.
+        required: true
+        schema:
+          oneOf:
+          - $ref: '#/components/schemas/PolicyMaskId'
+          - $ref: '#/components/schemas/Ern'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PolicyMask'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePolicyMaskBody'
+  /v1/projects/{projectId}/accessPolicies/{accessPolicyId}/disable:
+    post:
+      operationId: disableAccessPolicy
+      summary: Disable Access Policy
+      tags:
+      - v1-access-policy
+      description: |-
+        Allows a user to disable an access policy identified by either the `accessPolicyId` or the `accessPolicyErn`
+           parameter. The access policy is updated in the project identified by the `accessPolicyErn` if provided, else in the
+           project that owns the access policy being used to invoke the operation. Disabling an access policy means that it is
+           not available for users to assume via token exchange and current tokens with this access policy as their scope will
+           eventually lose access. Access to this operation is controlled by the access policy being accessed.
+
+        The auth token's access policy must allow `action:use/disableAccessPolicy`.
+      parameters:
+      - name: projectId
+        in: path
+        description: |-
+          Globally unique identifier of a project.
+          Callers may URL encode this value. Use `*` here to indicate that accessPolicyId is an ERN.
+        required: true
+        schema:
+          oneOf:
+          - $ref: '#/components/schemas/ProjectId'
+          - title: '*'
+            description: Indicates the resource is specified as an ERN in other input field.
+            type: string
+            enum:
+            - '*'
+      - name: accessPolicyId
+        in: path
+        description: |-
+          Uniquely identifies an access policy within a project.
+          Callers may URL encode this value. When passing an ERN, callers *must* URL encode this value.
+        required: true
+        schema:
+          oneOf:
+          - $ref: '#/components/schemas/AccessPolicyId'
+          - $ref: '#/components/schemas/Ern'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccessPolicy'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LastRevBody'
+  /v1/projects/{projectId}/effectivePermissions:
+    get:
+      operationId: getEffectivePermissions
+      summary: Get Effective Permissions
+      tags:
+      - v1-misc
+      description: |-
+        Returns a unified representation of the caller's permissions for a given service,
+           based on the supplied access token.
+           A user in possession of a valid access token is always authorized to perform this operation.
+           There is no corresponding action id, because permission to perform the operation does not depend
+           on the role assignments or access policy of the caller.
+
+           Permissions are always returned in the context of a specific project.
+           When a project id is not supplied, permissions are returned for the project containing access
+           policy in the access token's scope. When the access token is not associated with an access policy,
+           a project id must be specified.
+
+        The auth token's access policy must allow `action:use/getEffectivePermissions`.
+      parameters:
+      - name: projectId
+        in: path
+        description: |-
+          Globally unique identifier of a project.
+          Callers may URL encode this value.
+        required: true
+        schema:
+          $ref: '#/components/schemas/ProjectId'
+      - description: Fully qualified, universally unique id of a service.
+        name: serviceId
+        in: query
+        required: true
+        schema:
+          $ref: '#/components/schemas/ServiceId'
+      - description: Equinix Resource Name of a project. Mutually exclusive with projectId.
+        name: projectErn
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/Ern'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EffectivePermissions'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/projects/{projectId}/actionSets:
+    get:
+      operationId: listActionSets
+      summary: List Action Sets
+      tags:
+      - v1-misc
+      description: |-
+        Allows a user to page through the action sets defined for a given `serviceId`. This allows users to discover what
+          action sets are available to be used when defining access policies. Access to this is operation is controlled by
+          the project specified by `projectId`.  The results are filtered according to the service mask of that same project.
+
+        The auth token's access policy must allow `action:use/listActionSets`.
+      parameters:
+      - name: projectId
+        in: path
+        description: |-
+          Globally unique identifier of a project.
+          Callers may URL encode this value.
+        required: true
+        schema:
+          $ref: '#/components/schemas/ProjectId'
+      - description: Fully qualified, universally unique id of a service.
+        name: serviceId
+        in: query
+        required: true
+        schema:
+          $ref: '#/components/schemas/ServiceId'
+      - description: Opaque token identifying the page of results to retrieve.
+        name: pageToken
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/PageToken'
+      - description: Maximum number of results to return per page.
+        name: pageSize
+        in: query
+        required: false
+        schema:
+          default: 100
+          $ref: '#/components/schemas/PageSize'
+      - description: Equinix Resource Name of a project. Mutually exclusive with projectId.
+        name: projectErn
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/Ern'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceActionSetNoErnList'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+x-tagGroups:
+- name: Access V1
+  tags:
+  - v1-access-policy
+  - v1-permission-set
+  - v1-role
+  - v1-role-assignment
+  - v1-principal-policy
+  - v1-policy-mask
+  - v1-misc
+components:
+  schemas:
+    CreatePermissionSetBody:
+      title: PermissionSet
+      description: Request body for creating a permission set.
+      type: object
+      properties:
+        tags:
+          $ref: '#/components/schemas/Tags'
+        description:
+          type: string
+          pattern: ^.{0,500}$
+          example: A description string.
+        permissions:
+          $ref: '#/components/schemas/UserRectSet'
+        intersect:
+          description: |-
+            Entries must appear in both the `intersect` field and the `permissions` to be in the
+                            results from this permission object.
+          allOf:
+          - {}
+          - $ref: '#/components/schemas/UserRectSet'
+        subtract:
+          description: |-
+            Entries in the `subtract` field are not included in the results from this permission
+                           object.
+          type: array
+          items:
+            $ref: '#/components/schemas/InlinePermission'
+          uniqueItems: true
+        permissionSetId:
+          $ref: '#/components/schemas/PermissionSetId'
+        allowBadRefs:
+          description: |-
+            Indicates that the permission set should be created even if it includes
+              invalid references to permission objects.
+          type: string
+          enum:
+          - additional
+          example: additional
+      required:
+      - tags
+      - permissions
+      - permissionSetId
+      additionalProperties: false
+    Principal:
+      description: Globally unique string identifier for a principal formatted like "principal:...".
+      type: string
+      pattern: ^principal:([0-9a-zA-Z](?![^:]*-$)(?![^:]*--)[0-9a-zA-Z-]{0,35}:_?[a-zA-Z]([a-zA-Z0-9-]*[a-zA-Z0-9]+)?:.{1,200}|service:[a-zA-Z][a-zA-Z0-9]{0,49}/[a-zA-Z][a-zA-Z0-9]{0,49})$
+      example: principal:abc-123:idp:example-user
+    ProjectId:
+      description: Globally unique identifier of a project.
+      type: string
+      pattern: ^project:[0-9a-zA-Z](?![^:]*-$)(?![^:]*--)[0-9a-zA-Z-]{0,35}$
+      example: project:abc-123
+    ResourceType:
+      description: A resource type definition registered within a project.
+      type: object
+      properties:
+        tags:
+          $ref: '#/components/schemas/Tags'
+        updatedAt:
+          $ref: '#/components/schemas/UpdatedAt'
+        createdBy:
+          $ref: '#/components/schemas/CreatedBy'
+        createdAt:
+          $ref: '#/components/schemas/CreatedAt'
+        resourceType:
+          $ref: '#/components/schemas/ResourceTypeId'
+        rev:
+          $ref: '#/components/schemas/ResourceRev'
+        approvedAt:
+          $ref: '#/components/schemas/UpdatedAt'
+        ern:
+          $ref: '#/components/schemas/Ern'
+        updatedBy:
+          $ref: '#/components/schemas/UpdatedBy'
+        attributes:
+          description: |-
+            Identify the attributes which are included on this resource
+                                                     type.
+          $ref: '#/components/schemas/AttributeSet'
+        approvedBy:
+          $ref: '#/components/schemas/ApprovedBy'
+      required:
+      - tags
+      - rev
+      - ern
+      - resourceType
+      additionalProperties: false
+    InlinePermission:
+      description: The PermissionSet defined by crossing the named resources with the named actions.
+      type: object
+      properties:
+        resources:
+          oneOf:
+          - title: All
+            type: string
+            enum:
+            - all
+          - title: Resources
+            type: array
+            items:
+              $ref: '#/components/schemas/Ern'
+            uniqueItems: true
+        serviceActions:
+          oneOf:
+          - title: All
+            type: string
+            enum:
+            - all
+          - type: array
+            items:
+              title: ServiceActions
+              type: object
+              properties:
+                serviceId:
+                  $ref: '#/components/schemas/ServiceId'
+                actions:
+                  type: array
+                  items:
+                    anyOf:
+                    - $ref: '#/components/schemas/ActionId'
+                    - $ref: '#/components/schemas/ActionSetId'
+                  uniqueItems: true
+              required:
+              - serviceId
+              - actions
+              additionalProperties: false
+            uniqueItems: true
+        condition:
+          type: string
+          example: context.myAttribute < 5
+        ibxLocationCondition:
+          $ref: '#/components/schemas/IbxLocationCondition'
+      required:
+      - resources
+      - serviceActions
+      additionalProperties: false
+    CreatedAt:
+      description: 'A string timestamp indicating when the resource was created. Formatted like: "2025-02-12T17:24:19.033772087Z"'
+      type: string
+      pattern: ^.*$
+      example: '2024-01-15T12:00:00Z'
+    Group:
+      description: Globally unique string identifier for a group formatted like "group:...".
+      type: string
+      pattern: ^group:[0-9a-zA-Z](?![^:]*-$)(?![^:]*--)[0-9a-zA-Z-]{0,35}:_?[a-zA-Z]([a-zA-Z0-9-]*[a-zA-Z0-9]+)?:.{1,200}$
+      example: group:abc-123:idp:my-group
+    ResourceTypeList:
+      description: A paginated list of resource types.
+      type: object
+      properties:
+        list:
+          type: array
+          items:
+            $ref: '#/components/schemas/ResourceType'
+        nextPageToken:
+          $ref: '#/components/schemas/NextPageToken'
+      required:
+      - list
+      additionalProperties: false
+    IbxId:
+      description: Identifies an IBX data center location (e.g. SV1).
+      type: string
+      pattern: ^[A-Z]{2}[0-9A-Z]{1,5}x?$
+      example: SV1
+    ResourceTypeActionPage:
+      description: A paginated list of resource type actions.
+      type: object
+      properties:
+        list:
+          $ref: '#/components/schemas/ResourceTypeActionList'
+        nextPageToken:
+          $ref: '#/components/schemas/NextPageToken'
+      required:
+      - list
+      additionalProperties: false
+    AssignmentScopeType:
+      description: Type of object that defines the scope of a role assignment (e.g. PROJECT, ORGANIZATION).
+      type: string
+      example: PROJECT
+      examples:
+      - PDS_ORG
+      - ORGANIZATION
+      - PROJECT
+      - BILLING_ACCOUNT
+      - SUBSCRIPTION_KEY
+      - PORT
+    UpdatedAt:
+      description: 'A string timestamp indicating when the resource was last updated. Formatted like: "2025-02-12T17:24:19.033772087Z"'
+      type: string
+      pattern: ^.*$
+      example: '2024-01-15T12:00:00Z'
+    GrantId:
+      description: Uniquely identifies an access policy grant.
+      type: string
+      pattern: ^grant:[A-Z0-9]{13}$
+      example: grant:ABCDEFGHIJ123
+    RoleAssignmentId:
+      description: Uniquely identifies an access policy within a project.
+      type: string
+      pattern: ^roleassignment:[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$
+      example: roleassignment:550e8400-e29b-41d4-a716-446655440000
+    UpdatePermissionSetBody:
+      title: PermissionSet
+      description: Request body for updating a permission set.
+      type: object
+      properties:
+        tags:
+          $ref: '#/components/schemas/Tags'
+        description:
+          type: string
+          pattern: ^.{0,500}$
+          example: A description string.
+        permissions:
+          $ref: '#/components/schemas/UserRectSet'
+        intersect:
+          description: |-
+            Entries must appear in both the `intersect` field and the `permissions` to be in the
+                            results from this permission object.
+          allOf:
+          - {}
+          - $ref: '#/components/schemas/UserRectSet'
+        subtract:
+          description: |-
+            Entries in the `subtract` field are not included in the results from this permission
+                           object.
+          type: array
+          items:
+            $ref: '#/components/schemas/InlinePermission'
+          uniqueItems: true
+        allowBadRefs:
+          description: |-
+            Indicates that the permission set should be updated even if it includes
+             invalid references to permission objects. Setting to "existing" will allow existing invalid references to remain, but
+             will complain if new invalid references are introduced. Setting to "additional" will allow both existing and new
+             invalid references to be accepted without complaint.
+          type: string
+          enum:
+          - existing
+          - additional
+          example: additional
+        lastRev:
+          $ref: '#/components/schemas/LastResourceRev'
+      required:
+      - tags
+      - permissions
+      - lastRev
+      additionalProperties: false
+    PolicyMaskId:
+      description: Uniquely identifies a policy mask globally or within a governing project.
+      type: string
+      pattern: ^policymask:[a-zA-Z](?![^:]*-$)(?![^:]*--)[a-zA-Z0-9-]{0,49}$
+      example: policymask:my-mask
+    UpdatedBy:
+      description: A string indicating the principal who last invoked an operation to update the resource.
+      type: string
+      pattern: ^.*$
+      example: principal:ABCD-EFG-12345:idp:example-user
+    LastResourceRev:
+      description: |-
+        An opaque string that represents the expected revision of a given resource. This is provided when a resource is
+          updated so that if a concurrent update has occurred since the resource was read, then the collision will be detected.
+      type: string
+      minLength: 1
+      maxLength: 256
+      example: abc123
+    PermissionSetList:
+      description: A paginated list of permission sets.
+      type: object
+      properties:
+        list:
+          type: array
+          items:
+            $ref: '#/components/schemas/PermissionSet'
+        nextPageToken:
+          $ref: '#/components/schemas/NextPageToken'
+      required:
+      - list
+      additionalProperties: false
+    AccessPolicy:
+      title: UserAccessPolicyData
+      description: A set of permissions that is granted to principals, groups, or other projects.
+      type: object
+      properties:
+        description:
+          type: string
+          pattern: ^.{0,500}$
+          example: A description string.
+        tags:
+          $ref: '#/components/schemas/Tags'
+        updatedAt:
+          $ref: '#/components/schemas/UpdatedAt'
+        permissions:
+          $ref: '#/components/schemas/UserRectSet'
+        createdBy:
+          $ref: '#/components/schemas/CreatedBy'
+        createdAt:
+          $ref: '#/components/schemas/CreatedAt'
+        rev:
+          $ref: '#/components/schemas/ResourceRev'
+        approvedAt:
+          $ref: '#/components/schemas/UpdatedAt'
+        ern:
+          $ref: '#/components/schemas/Ern'
+        disabledPolicy:
+          enum:
+          - true
+          example: true
+        updatedBy:
+          $ref: '#/components/schemas/UpdatedBy'
+        managed:
+          enum:
+          - true
+          example: true
+        intersect:
+          description: |-
+            Entries must appear in both the `intersect` field and the `permissions` to be in the
+                            results from this permission object.
+          allOf:
+          - {}
+          - $ref: '#/components/schemas/UserRectSet'
+        subtract:
+          description: |-
+            Entries in the `subtract` field are not included in the results from this permission
+                           object.
+          type: array
+          items:
+            $ref: '#/components/schemas/InlinePermission'
+          uniqueItems: true
+        accessPolicyId:
+          oneOf:
+          - $ref: '#/components/schemas/AccessPolicyId'
+          - $ref: '#/components/schemas/ManagedPolicyId'
+        approvedBy:
+          $ref: '#/components/schemas/ApprovedBy'
+      required:
+      - tags
+      - permissions
+      - rev
+      - ern
+      - accessPolicyId
+      additionalProperties: false
+    Ern:
+      description: |-
+        Equinix resource name, a universally unique identifier for a resource across all clouds, regions, and
+          services. Formatted as
+          "ern:&lt;cloudId&gt;:&lt;serviceId&gt;:&lt;regionId&gt;:&lt;projectId&gt;:&lt;resourceType&gt;:&lt;resourceId&gt;".
+      type: string
+      pattern: ^ern:(?<cloud>[^:]{1,50}):(?<service>[^:/]{1,50}/[^:/]{1,50}):(?<region>[^:]{1,50}):(?<project>[^:]{1,36}):(?<resourcetype>[^:]{1,50}):(?<resource>[^:]{1,50})$
+      example: ern:eqix:equinix/sts:global:abc-123:SomeType:res-id
+    ResourceRev:
+      description: |-
+        An opaque string that represents the revision of a given resource. Each time the resource is updated, this value
+          changes.
+      type: string
+      pattern: ^.*$
+      example: abc123
+    PageToken:
+      description: When paging through results, the PageToken is an opaque indicator that identifies a page.
+      type: string
+      minLength: 1
+      maxLength: 4096
+      example: eyJwYWdlIjoyfQ==
+    IbxLocationCondition:
+      description: |-
+        A condition that limits permissible actions according to location, by Metro, IBX, or cage.
+          The values supplied in this condition are OR'd together: matching any one supplied attribute
+          is sufficient to allow the action.
+
+          Each condition is compared with the action's attribute; if the action doesn't
+          provide a value, the condition is compared with the target resource's attribute.
+          If neither source provides the attribute, that condition contributes no restriction.
+
+          Location values that broadly cover more specific ones are not accepted. For example:
+          - If metroCodes contains 'NY', then ibxIds must not contain 'NY5'
+            (since NY already includes all IBXs in New York)
+          - If ibxIds contains 'NY5', then cageIds must not contain 'NY5:ABC123'
+            (since NY5 already includes all cages in that IBX)
+      type: object
+      properties:
+        metroCodes:
+          type: array
+          items:
+            $ref: '#/components/schemas/MetroCode'
+          uniqueItems: true
+          minItems: 1
+          maxItems: 50
+        ibxIds:
+          type: array
+          items:
+            $ref: '#/components/schemas/IbxId'
+          uniqueItems: true
+          minItems: 1
+          maxItems: 50
+        cageIds:
+          type: array
+          items:
+            $ref: '#/components/schemas/CageId'
+          uniqueItems: true
+          minItems: 1
+          maxItems: 50
+      additionalProperties: false
+    Tags:
+      description: Additional user-controlled data about this resource.
+      type: object
+      additionalProperties:
+        type: string
+        pattern: ^.{0,120}$
+        example: my tag value
+      maxProperties: 10
+    UpdateAccessPolicyBody:
+      title: UserAccessPolicyData
+      description: Request body for updating an access policy.
+      type: object
+      properties:
+        tags:
+          $ref: '#/components/schemas/Tags'
+        description:
+          type: string
+          pattern: ^.{0,500}$
+          example: A description string.
+        permissions:
+          $ref: '#/components/schemas/UserRectSet'
+        intersect:
+          description: |-
+            Entries must appear in both the `intersect` field and the `permissions` to be in the
+                            results from this permission object.
+          allOf:
+          - {}
+          - $ref: '#/components/schemas/UserRectSet'
+        subtract:
+          description: |-
+            Entries in the `subtract` field are not included in the results from this permission
+                           object.
+          type: array
+          items:
+            $ref: '#/components/schemas/InlinePermission'
+          uniqueItems: true
+        allowBadRefs:
+          description: |-
+            Indicates that the access policy should be updated even if it includes
+                                            invalid references to permission objects. Setting to "existing" will allow existing
+                                            invalid references to remain, but will complain if new invalid references are
+                                            introduced. Setting to "additional" will allow both existing and new invalid
+                                            references to be accepted without complaint.
+          type: string
+          enum:
+          - existing
+          - additional
+          example: additional
+        lastRev:
+          $ref: '#/components/schemas/LastResourceRev'
+      required:
+      - tags
+      - permissions
+      - lastRev
+      additionalProperties: false
+    CageId:
+      description: Identifies an Equinix colocation cage within an IBX (e.g. SV1:cage-1).
+      type: string
+      pattern: ^[A-Z]{2}[0-9A-Z]{1,5}x?:[a-zA-Z0-9:_.-]{1,50}$
+      example: SV1:cage-1
+    EffectivePermissions:
+      description: The effective permissions granted to a principal within a project for a service.
+      type: object
+      properties:
+        principalId:
+          $ref: '#/components/schemas/Principal'
+        projectId:
+          $ref: '#/components/schemas/ProjectId'
+        serviceId:
+          $ref: '#/components/schemas/ServiceId'
+        accessPolicyIds:
+          type: array
+          items:
+            oneOf:
+            - $ref: '#/components/schemas/AccessPolicyId'
+            - $ref: '#/components/schemas/ManagedPolicyId'
+          uniqueItems: true
+          minItems: 1
+        permissions:
+          type: array
+          items:
+            description: The caller has permission to perform any of the given actions. The resources field, when present, indicates that the actions apply only to the referenced resources (or any *except* the referenced resources). The condition field, when present, indicates that the actions apply only when the condition is true.
+            type: object
+            properties:
+              actions:
+                description: A set of actions the caller is permitted to perform.
+                type: array
+                items:
+                  $ref: '#/components/schemas/ActionId'
+                uniqueItems: true
+              resources:
+                anyOf:
+                - description: A specific set of resources on which the actions may be performed.
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Ern'
+                  uniqueItems: true
+                - description: A specific set of resources in this project, on which this permission block does not apply.
+                  type: object
+                  properties:
+                    except:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/Ern'
+                      uniqueItems: true
+                  required:
+                  - except
+                  additionalProperties: false
+              metroCodes:
+                anyOf:
+                - description: A specific set of metro codes on which the actions may be performed.
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/MetroCode'
+                  uniqueItems: true
+                - description: 'A specific set of metro codes on which the actions may *not* be performed. '
+                  type: object
+                  properties:
+                    except:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/MetroCode'
+                      uniqueItems: true
+                  required:
+                  - except
+                  additionalProperties: false
+              ibxIds:
+                anyOf:
+                - description: A specific set of ibx ids on which the actions may be performed.
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/IbxId'
+                  uniqueItems: true
+                - description: 'A specific set of ibx ids on which the actions may *not* be performed. '
+                  type: object
+                  properties:
+                    except:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/IbxId'
+                      uniqueItems: true
+                  required:
+                  - except
+                  additionalProperties: false
+              cageIds:
+                anyOf:
+                - description: A specific set of cage ids on which the actions may be performed.
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/CageId'
+                  uniqueItems: true
+                - description: 'A specific set of cage ids on which the actions may *not* be performed. '
+                  type: object
+                  properties:
+                    except:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/CageId'
+                      uniqueItems: true
+                  required:
+                  - except
+                  additionalProperties: false
+              condition:
+                description: A Cedar policy language expression that must be true for the actions to be performed.
+                type: string
+                example: context.myAttribute < 5
+            required:
+            - actions
+            additionalProperties: false
+          uniqueItems: true
+      required:
+      - principalId
+      - projectId
+      - serviceId
+      - permissions
+      additionalProperties: false
+    ActionList:
+      description: A paginated list of actions available on a service.
+      type: object
+      properties:
+        list:
+          type: array
+          items:
+            $ref: '#/components/schemas/ListedAction'
+        nextPageToken:
+          $ref: '#/components/schemas/NextPageToken'
+      required:
+      - list
+      additionalProperties: false
+    ResourceTypeId:
+      description: Identifies a resource type within a service, formatted as "resourcetype:<typeName>".
+      type: string
+      pattern: ^resourcetype:[a-zA-Z][a-zA-Z0-9]{0,49}$
+      example: resourcetype:AccessPolicy
+    ApprovedBy:
+      description: A string indicating the principal who invoked an operation to approve the resource.
+      type: string
+      pattern: ^.*$
+      example: principal:ABCD-EFG-12345:idp:example-user
+    ResourceTypeActionList:
+      description: A list of resource type actions.
+      type: array
+      items:
+        $ref: '#/components/schemas/ResourceTypeAction'
+    CreateRoleAssignmentInput:
+      description: Input for creating a role assignment, associating a principal with a role in a given scope.
+      type: object
+      properties:
+        principal:
+          description: The principal to be assigned to a Role.
+          $ref: '#/components/schemas/Principal'
+        roleId:
+          description: Id of the Role to be assigned to the principal.
+          $ref: '#/components/schemas/RoleId'
+        assignmentScope:
+          description: The scope this assignment applies to, usually a specific Project or Organization.
+          type: object
+          properties:
+            id:
+              type: string
+              example: 07218c48-343d-43e2-9831-a2080445cd22
+            type:
+              description: Type of object refered to by assignmentScope id; must be one of the types allowed by the Role
+              $ref: '#/components/schemas/AssignmentScopeType'
+            parent:
+              description: When assignmentScope type is PORT, the owning project.
+              type: object
+              properties:
+                id:
+                  description: Id the project that owns this port
+                  type: string
+                  example: 07218c48-343d-43e2-9831-a2080445cd22
+                type:
+                  type: string
+                  enum:
+                  - PROJECT
+                  example: PROJECT
+              required:
+              - id
+              - type
+              additionalProperties: false
+          required:
+          - id
+          - type
+          additionalProperties: false
+      required:
+      - principal
+      - roleId
+      - assignmentScope
+      additionalProperties: false
+    AccessPolicyId:
+      description: Uniquely identifies an access policy within a project.
+      type: string
+      pattern: ^accesspolicy:[a-zA-Z](?![^:]*-$)(?![^:]*--)[a-zA-Z0-9-]{0,49}$
+      example: accesspolicy:my-policy
+    ActionId:
+      description: Id of an action, unique across all aspects of its service
+      type: string
+      pattern: ^action:(use|srv|ops)/([a-zA-Z][a-zA-Z0-9-]{0,100})$
+      example: action:use/listPermissionSets
+    AccessPolicyGrantList:
+      description: A paginated list of access policy grants.
+      type: object
+      properties:
+        list:
+          type: array
+          items:
+            $ref: '#/components/schemas/AccessPolicyGrant'
+        nextPageToken:
+          $ref: '#/components/schemas/NextPageToken'
+      required:
+      - list
+      additionalProperties: false
+    ServiceAspect:
+      description: Identifies one of the three api aspects, "aspect:use", "aspect:srv", or "aspect:ops".
+      type: string
+      enum:
+      - aspect:use
+      - aspect:srv
+      - aspect:ops
+      example: aspect:use
+    ManagedPermissionSetId:
+      description: Uniquely identifies a managed permission set globally.
+      type: string
+      pattern: ^managedset:[a-zA-Z](?![^:]*-$)(?![^:]*--)[a-zA-Z0-9-]{0,49}$
+      example: managedset:my-set
+    ForeignAccessPolicyRef:
+      description: |-
+        A reference to a foreign access policy ERN, with optional conditions.
+           The :foreign-access-policy value must be an AccessPolicy ERN (not a
+           permission set ERN).
+      type: object
+      properties:
+        foreignAccessPolicy:
+          allOf:
+          - $ref: '#/components/schemas/Ern'
+          - {}
+        condition:
+          type: string
+          example: context.myAttribute < 5
+        ibxLocationCondition:
+          $ref: '#/components/schemas/IbxLocationCondition'
+      required:
+      - foreignAccessPolicy
+      additionalProperties: false
+    ServiceActionSetNoErnList:
+      description: A paginated list of service action sets (without ERNs).
+      type: object
+      properties:
+        list:
+          type: array
+          items:
+            $ref: '#/components/schemas/ServiceActionSetNoErn'
+        nextPageToken:
+          $ref: '#/components/schemas/NextPageToken'
+      required:
+      - list
+      additionalProperties: false
+    ServiceActionSetNoErn:
+      description: A service action set without an ERN, as returned in list operations.
+      type: object
+      properties:
+        description:
+          type: string
+          pattern: ^.{0,500}$
+          example: A description string.
+        tags:
+          $ref: '#/components/schemas/Tags'
+        updatedAt:
+          $ref: '#/components/schemas/UpdatedAt'
+        createdBy:
+          $ref: '#/components/schemas/CreatedBy'
+        actionSetId:
+          $ref: '#/components/schemas/ActionSetId'
+        createdAt:
+          $ref: '#/components/schemas/CreatedAt'
+        rev:
+          $ref: '#/components/schemas/ResourceRev'
+        approvedAt:
+          $ref: '#/components/schemas/UpdatedAt'
+        serviceId:
+          $ref: '#/components/schemas/ServiceId'
+        updatedBy:
+          $ref: '#/components/schemas/UpdatedBy'
+        actionSet:
+          type: array
+          items:
+            $ref: '#/components/schemas/ActionId'
+          uniqueItems: true
+        approvedBy:
+          $ref: '#/components/schemas/ApprovedBy'
+      required:
+      - actionSet
+      - tags
+      - rev
+      - serviceId
+      - actionSetId
+      additionalProperties: false
+    ServiceId:
+      description: |-
+        Fully qualified, universally unique id of a service. Starts with the NamespaceId. Formatted like
+          "service:&lt;namespace&gt;/&lt;service&gt;".
+      type: string
+      pattern: ^service:[a-zA-Z][a-zA-Z0-9]{0,49}/[a-zA-Z][a-zA-Z0-9]{0,49}$
+      example: service:equinix/sts
+    CreatePolicyMaskBody:
+      description: Request body for creating a policy mask.
+      type: object
+      properties:
+        managedPolicies:
+          oneOf:
+          - type: string
+            enum:
+            - none
+          - type: array
+            items:
+              $ref: '#/components/schemas/ManagedPolicyId'
+            uniqueItems: true
+            minItems: 1
+            maxItems: 50
+        managedPermissionSets:
+          oneOf:
+          - type: string
+            enum:
+            - none
+          - type: array
+            items:
+              $ref: '#/components/schemas/ManagedPermissionSetId'
+            uniqueItems: true
+            minItems: 1
+            maxItems: 50
+        subtract:
+          allOf:
+          - type: object
+            properties:
+              managedPolicies:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ManagedPolicyId'
+                uniqueItems: true
+                minItems: 1
+                maxItems: 50
+              managedPermissionSets:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ManagedPermissionSetId'
+                uniqueItems: true
+                minItems: 1
+                maxItems: 50
+            additionalProperties: false
+          - {}
+        tags:
+          $ref: '#/components/schemas/Tags'
+        description:
+          type: string
+          pattern: ^.{0,500}$
+          example: A description string.
+        policyMaskId:
+          $ref: '#/components/schemas/PolicyMaskId'
+      required:
+      - tags
+      - policyMaskId
+      additionalProperties: false
+    LastRevBody:
+      description: Request body for operations that only require a last-known resource revision.
+      type: object
+      properties:
+        lastRev:
+          $ref: '#/components/schemas/LastResourceRev'
+      required:
+      - lastRev
+      additionalProperties: false
+    NextPageToken:
+      description: |-
+        When paging through results, the NextPageToken indicates what page to read next. It is obtained from the previous
+          call.
+      type: string
+      minLength: 1
+      maxLength: 4096
+      example: eyJsYXN0S2V5IjoiYWJjMTIzIn0=
+    UpdatePrincipalPolicyBody:
+      description: Request body for updating a principal policy.
+      type: object
+      properties:
+        permissions:
+          type: array
+          items:
+            $ref: '#/components/schemas/ManagedPermissionSetRef'
+          uniqueItems: true
+        tags:
+          $ref: '#/components/schemas/Tags'
+        description:
+          type: string
+          pattern: ^.{0,500}$
+          example: A description string.
+        allowBadRefs:
+          description: |-
+            Indicates that the principal policy should be
+                                 updated even if it includes invalid references to permission
+                                 objects. Setting to "existing" will allow existing invalid
+                                 references to remain, but will complain if new invalid
+                                 references are introduced. Setting to "additional" will
+                                 allow both existing and new invalid references to be
+                                 accepted without complaint.
+          type: string
+          enum:
+          - existing
+          - additional
+          example: additional
+        lastRev:
+          $ref: '#/components/schemas/LastResourceRev'
+      required:
+      - permissions
+      - tags
+      - lastRev
+      additionalProperties: false
+    CreatedBy:
+      description: A string indicating the principal who invoked an operation to create the resource.
+      type: string
+      pattern: ^.*$
+      example: principal:ABCD-EFG-12345:idp:example-user
+    ResourceTypeAction:
+      description: A named action defined on a resource type within a service.
+      type: object
+      properties:
+        createdBy:
+          $ref: '#/components/schemas/CreatedBy'
+        createdAt:
+          $ref: '#/components/schemas/CreatedAt'
+        resourceType:
+          $ref: '#/components/schemas/ResourceTypeId'
+        resourceTypeErn:
+          $ref: '#/components/schemas/Ern'
+        action:
+          $ref: '#/components/schemas/ActionId'
+        rev:
+          $ref: '#/components/schemas/ResourceRev'
+      required:
+      - resourceTypeErn
+      - action
+      - rev
+      additionalProperties: false
+    Grantee:
+      description: An entity that can be granted an access policy
+      anyOf:
+      - $ref: '#/components/schemas/Principal'
+      - $ref: '#/components/schemas/Group'
+      - $ref: '#/components/schemas/ProjectId'
+    PolicyMask:
+      description: |-
+        A project-scoped policy mask controlling which managed policies and permission sets
+           are available within a project.
+      allOf:
+      - type: object
+        properties:
+          description:
+            type: string
+            pattern: ^.{0,500}$
+            example: A description string.
+          tags:
+            $ref: '#/components/schemas/Tags'
+          managedPermissionSets:
+            oneOf:
+            - type: string
+              enum:
+              - none
+            - type: array
+              items:
+                $ref: '#/components/schemas/ManagedPermissionSetId'
+              uniqueItems: true
+              minItems: 1
+              maxItems: 50
+          updatedAt:
+            $ref: '#/components/schemas/UpdatedAt'
+          createdBy:
+            $ref: '#/components/schemas/CreatedBy'
+          createdAt:
+            $ref: '#/components/schemas/CreatedAt'
+          rev:
+            $ref: '#/components/schemas/ResourceRev'
+          ern:
+            $ref: '#/components/schemas/Ern'
+          disabledPolicy:
+            enum:
+            - true
+            example: true
+          updatedBy:
+            $ref: '#/components/schemas/UpdatedBy'
+          policyMaskId:
+            $ref: '#/components/schemas/PolicyMaskId'
+          managedPolicies:
+            oneOf:
+            - type: string
+              enum:
+              - none
+            - type: array
+              items:
+                $ref: '#/components/schemas/ManagedPolicyId'
+              uniqueItems: true
+              minItems: 1
+              maxItems: 50
+          subtract:
+            allOf:
+            - type: object
+              properties:
+                managedPolicies:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/ManagedPolicyId'
+                  uniqueItems: true
+                  minItems: 1
+                  maxItems: 50
+                managedPermissionSets:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/ManagedPermissionSetId'
+                  uniqueItems: true
+                  minItems: 1
+                  maxItems: 50
+              additionalProperties: false
+            - {}
+        required:
+        - tags
+        - policyMaskId
+        - rev
+        - ern
+        additionalProperties: false
+      - {}
+    AccessPolicyList:
+      description: A paginated list of access policies.
+      type: object
+      properties:
+        list:
+          type: array
+          items:
+            $ref: '#/components/schemas/AccessPolicy'
+        nextPageToken:
+          $ref: '#/components/schemas/NextPageToken'
+      required:
+      - list
+      additionalProperties: false
+    AccessPolicyGrant:
+      description: A grant associating a grantee with an access policy.
+      type: object
+      properties:
+        grantId:
+          $ref: '#/components/schemas/GrantId'
+        accessPolicyId:
+          oneOf:
+          - $ref: '#/components/schemas/AccessPolicyId'
+          - $ref: '#/components/schemas/ManagedPolicyId'
+        accessPolicyErn:
+          $ref: '#/components/schemas/Ern'
+        grantee:
+          $ref: '#/components/schemas/Grantee'
+        createdBy:
+          $ref: '#/components/schemas/CreatedBy'
+        createdAt:
+          $ref: '#/components/schemas/CreatedAt'
+      required:
+      - grantId
+      - accessPolicyId
+      - accessPolicyErn
+      - grantee
+      - createdBy
+      - createdAt
+      additionalProperties: false
+    PrincipalPolicy:
+      title: UserPrincipalPolicyData
+      description: A policy specific to a principal within a governance domain.
+      type: object
+      properties:
+        description:
+          type: string
+          pattern: ^.{0,500}$
+          example: A description string.
+        tags:
+          $ref: '#/components/schemas/Tags'
+        updatedAt:
+          $ref: '#/components/schemas/UpdatedAt'
+        userPrincipal:
+          $ref: '#/components/schemas/Principal'
+        permissions:
+          type: array
+          items:
+            $ref: '#/components/schemas/ManagedPermissionSetRef'
+          uniqueItems: true
+        createdBy:
+          $ref: '#/components/schemas/CreatedBy'
+        createdAt:
+          $ref: '#/components/schemas/CreatedAt'
+        rev:
+          $ref: '#/components/schemas/ResourceRev'
+        approvedAt:
+          $ref: '#/components/schemas/UpdatedAt'
+        disabledPolicy:
+          enum:
+          - true
+          example: true
+        updatedBy:
+          $ref: '#/components/schemas/UpdatedBy'
+        approvedBy:
+          $ref: '#/components/schemas/ApprovedBy'
+      required:
+      - userPrincipal
+      - permissions
+      - tags
+      - rev
+      additionalProperties: false
+    PrincipalPolicyList:
+      description: A paginated list of principal policies.
+      type: object
+      properties:
+        list:
+          type: array
+          items:
+            $ref: '#/components/schemas/PrincipalPolicy'
+        nextPageToken:
+          $ref: '#/components/schemas/NextPageToken'
+      required:
+      - list
+      additionalProperties: false
+    ServicePolicySchema:
+      description: The policy schema for a service, as a map of field names to types.
+      type: object
+      properties:
+        schema:
+          type: object
+          additionalProperties: {}
+      required:
+      - schema
+      additionalProperties: false
+    GeneralPermissionSetRef:
+      description: |-
+        A reference to a permission set, with optional conditions.
+           Accepts a PermissionSetId ("permissionset:..."), ManagedPermissionSetId
+           ("managedset:..."), or a local permission-set ERN with resource-type
+           PermissionSet or ManagedPermissionSet. Foreign permission-set ERNs are
+           not supported; use ForeignAccessPolicyRef instead.
+      type: object
+      properties:
+        permissionSet:
+          anyOf:
+          - $ref: '#/components/schemas/PermissionSetId'
+          - $ref: '#/components/schemas/ManagedPermissionSetId'
+          - allOf:
+            - $ref: '#/components/schemas/Ern'
+            - {}
+        condition:
+          type: string
+          example: context.myAttribute < 5
+        ibxLocationCondition:
+          $ref: '#/components/schemas/IbxLocationCondition'
+      required:
+      - permissionSet
+      additionalProperties: false
+    ActionSetId:
+      description: Uniquely identifies an ActionSet within a Service.
+      type: string
+      pattern: ^actionset:[a-zA-Z](?![^:]*-$)(?![^:]*--)[a-zA-Z0-9-]{0,49}$
+      example: actionset:myactions
+    PageSize:
+      description: |-
+        When paging through results, this is an integer indicating the maximum number of results to return. Note, it is
+          possible for fewer results to be returned even when the end of the result set has not been reached.
+      type: integer
+      minimum: 1
+      maximum: 1000
+      example: 20
+    PolicyMaskList:
+      description: A paginated list of project-scoped policy masks.
+      type: object
+      properties:
+        list:
+          type: array
+          items:
+            $ref: '#/components/schemas/PolicyMask'
+        nextPageToken:
+          $ref: '#/components/schemas/NextPageToken'
+      required:
+      - list
+      additionalProperties: false
+    ListedAction:
+      description: A single action available on a service, including its identifier.
+      type: object
+      properties:
+        serviceAspect:
+          $ref: '#/components/schemas/ServiceAspect'
+        rbacPermission:
+          $ref: '#/components/schemas/RBACPermission'
+        permissionCodes:
+          type: object
+          additionalProperties:
+            type: object
+            properties:
+              requiresAll:
+                description: True indicates that the action is only allowed when the user has been unconditionally granted the permission code at the top-level of the asset hierarchy
+                type: boolean
+                example: true
+            additionalProperties: false
+        attributes:
+          description: Identify the attributes which are included on this action.
+          $ref: '#/components/schemas/AttributeSet'
+        tags:
+          $ref: '#/components/schemas/Tags'
+        actionId:
+          $ref: '#/components/schemas/ActionId'
+      required:
+      - serviceAspect
+      - tags
+      - actionId
+      additionalProperties: false
+    UserRectSet:
+      description: |-
+        A set of permissions, each of which may be an inline permission, a permission set reference,
+          or a foreign access policy reference.
+      type: array
+      items:
+        oneOf:
+        - title: InlinePermission
+          $ref: '#/components/schemas/InlinePermission'
+        - $ref: '#/components/schemas/Ern'
+        - $ref: '#/components/schemas/PermissionSetId'
+        - $ref: '#/components/schemas/ManagedPermissionSetId'
+        - $ref: '#/components/schemas/ForeignAccessPolicyRef'
+        - $ref: '#/components/schemas/GeneralPermissionSetRef'
+      uniqueItems: true
+    CreateAccessPolicyBody:
+      title: UserAccessPolicyData
+      description: Request body for creating an access policy.
+      type: object
+      properties:
+        tags:
+          $ref: '#/components/schemas/Tags'
+        description:
+          type: string
+          pattern: ^.{0,500}$
+          example: A description string.
+        permissions:
+          $ref: '#/components/schemas/UserRectSet'
+        intersect:
+          description: |-
+            Entries must appear in both the `intersect` field and the `permissions` to be in the
+                            results from this permission object.
+          allOf:
+          - {}
+          - $ref: '#/components/schemas/UserRectSet'
+        subtract:
+          description: |-
+            Entries in the `subtract` field are not included in the results from this permission
+                           object.
+          type: array
+          items:
+            $ref: '#/components/schemas/InlinePermission'
+          uniqueItems: true
+        accessPolicyId:
+          $ref: '#/components/schemas/AccessPolicyId'
+        allowBadRefs:
+          description: |-
+            Indicates that the access policy should be created even if it includes
+                                               invalid references to permission objects.
+          type: string
+          enum:
+          - additional
+          example: additional
+      required:
+      - tags
+      - permissions
+      - accessPolicyId
+      additionalProperties: false
+    AttributeSet:
+      description: The set of attributes defined for a resource type.
+      allOf:
+      - type: array
+        items:
+          type: object
+          properties:
+            attributeId:
+              description: Identifies an existing attribute for this service.
+              type: string
+              pattern: ^attribute:[a-zA-Z][a-zA-Z0-9]{0,49}$
+              example: attribute:myAttr
+            attributeOptional:
+              description: |-
+                If `true`, then this attribute is always present, otherwise the attribute may or may not be
+                            present.
+              type: boolean
+              example: true
+          required:
+          - attributeId
+          additionalProperties: false
+        uniqueItems: true
+      - {}
+    MetroCode:
+      description: A two-letter code identifying an Equinix metro area (e.g. SV for Silicon Valley).
+      type: string
+      pattern: ^[A-Z]{2}$
+      example: SV
+    ManagedPermissionSetRef:
+      description: |-
+        A reference to a managed permission set, with optional conditions.
+           This is the only permission entry form allowed in principal policies.
+      type: object
+      properties:
+        permissionSet:
+          $ref: '#/components/schemas/ManagedPermissionSetId'
+        condition:
+          type: string
+          example: context.myAttribute < 5
+        ibxLocationCondition:
+          $ref: '#/components/schemas/IbxLocationCondition'
+      required:
+      - permissionSet
+      additionalProperties: false
+    ErrorResponse:
+      description: Standard error response returned when an API request fails.
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            errorCode:
+              type: string
+              example: not-found
+          required:
+          - errorCode
+      required:
+      - error
+    RBACPermission:
+      description: |-
+        The action mapping to access-mgmt permissions, used when performing
+        authz via role-assignment token scope.
+      type: object
+      properties:
+        permission:
+          type: string
+          example: fabric.port.read
+        permissionResourceType:
+          type: string
+          example: PROJECT
+      required:
+      - permission
+      - permissionResourceType
+      additionalProperties: false
+    AddGrantBody:
+      description: Request body for adding a grant to an access policy.
+      type: object
+      properties:
+        grantee:
+          $ref: '#/components/schemas/Grantee'
+        lastRev:
+          $ref: '#/components/schemas/LastResourceRev'
+      required:
+      - grantee
+      additionalProperties: false
+    ManagedPolicyId:
+      description: Uniquely identifies a managed policy globally.
+      type: string
+      pattern: ^managedpolicy:[a-zA-Z](?![^:]*-$)(?![^:]*--)[a-zA-Z0-9-]{0,49}$
+      example: managedpolicy:my-policy
+    RoleList:
+      description: A paginated list of roles.
+      type: object
+      properties:
+        list:
+          type: array
+          items:
+            $ref: '#/components/schemas/RoleDetails'
+        nextPageToken:
+          $ref: '#/components/schemas/NextPageToken'
+      required:
+      - list
+      additionalProperties: false
+    RoleAssignment:
+      description: An assignment of a Role to a principal.
+      type: object
+      properties:
+        roleAssignmentId:
+          description: Immutable UUID of this RoleAssignment
+          $ref: '#/components/schemas/RoleAssignmentId'
+        projectId:
+          description: Id of the project that owns this assignment
+          $ref: '#/components/schemas/ProjectId'
+        principal:
+          description: The principal assigned to a Role as provided in the `sub` claim of the access JWT
+          anyOf:
+          - $ref: '#/components/schemas/Principal'
+          - $ref: '#/components/schemas/Group'
+        roleId:
+          description: Id of the Role assigned to the principal
+          $ref: '#/components/schemas/RoleId'
+        roleName:
+          description: Name of the Role assigned to the principal
+          type: string
+          example: Network Admin
+        assignmentScope:
+          description: The scope this assignment applies to, usually a specific Project or Organization.
+          type: object
+          properties:
+            id:
+              type: string
+              example: 07218c48-343d-43e2-9831-a2080445cd22
+            type:
+              description: Type of object refered to by assignmentScope id
+              $ref: '#/components/schemas/AssignmentScopeType'
+            name:
+              description: Name of object refered to by assignmentScope id
+              type: string
+              example: My Project
+            parent:
+              description: When assignmentScope type is PORT, this must be the owning project.
+              type: object
+              properties:
+                id:
+                  description: Id the project that owns this port
+                  type: string
+                  example: 07218c48-343d-43e2-9831-a2080445cd22
+                type:
+                  type: string
+                  enum:
+                  - PROJECT
+                  example: PROJECT
+                name:
+                  description: Name of object refered to by assignmentScope id
+                  type: string
+                  example: My Project
+              required:
+              - id
+              - type
+              additionalProperties: false
+          required:
+          - id
+          - type
+          additionalProperties: false
+      required:
+      - roleAssignmentId
+      - projectId
+      - principal
+      - roleId
+      - roleName
+      - assignmentScope
+      additionalProperties: false
+    PermissionSet:
+      title: PermissionSet
+      description: A named, reusable set of permissions within a project.
+      type: object
+      properties:
+        description:
+          type: string
+          pattern: ^.{0,500}$
+          example: A description string.
+        tags:
+          $ref: '#/components/schemas/Tags'
+        updatedAt:
+          $ref: '#/components/schemas/UpdatedAt'
+        permissions:
+          $ref: '#/components/schemas/UserRectSet'
+        createdBy:
+          $ref: '#/components/schemas/CreatedBy'
+        createdAt:
+          $ref: '#/components/schemas/CreatedAt'
+        rev:
+          $ref: '#/components/schemas/ResourceRev'
+        approvedAt:
+          $ref: '#/components/schemas/UpdatedAt'
+        ern:
+          $ref: '#/components/schemas/Ern'
+        updatedBy:
+          $ref: '#/components/schemas/UpdatedBy'
+        managed:
+          enum:
+          - true
+          example: true
+        intersect:
+          description: |-
+            Entries must appear in both the `intersect` field and the `permissions` to be in the
+                            results from this permission object.
+          allOf:
+          - {}
+          - $ref: '#/components/schemas/UserRectSet'
+        subtract:
+          description: |-
+            Entries in the `subtract` field are not included in the results from this permission
+                           object.
+          type: array
+          items:
+            $ref: '#/components/schemas/InlinePermission'
+          uniqueItems: true
+        permissionSetId:
+          oneOf:
+          - $ref: '#/components/schemas/PermissionSetId'
+          - $ref: '#/components/schemas/ManagedPermissionSetId'
+        approvedBy:
+          $ref: '#/components/schemas/ApprovedBy'
+      required:
+      - tags
+      - permissions
+      - rev
+      - ern
+      - permissionSetId
+      additionalProperties: false
+    PermissionSetId:
+      description: Uniquely identifies a PermissionSet within a project.
+      type: string
+      pattern: ^permissionset:[a-zA-Z](?![^:]*-$)(?![^:]*--)[a-zA-Z0-9-]{0,49}$
+      example: permissionset:my-set
+    RoleDetails:
+      description: A named set of Role Actions that can be granted to a principal.
+      type: object
+      properties:
+        roleId:
+          description: Immutable UUID of this Role
+          $ref: '#/components/schemas/RoleId'
+        name:
+          type: string
+          example: Network Admin
+        description:
+          oneOf:
+          - type: string
+          - type: 'null'
+        assignmentScopeTypes:
+          description: This Role may be assigned to a scope of any of these types.
+          type: array
+          items:
+            $ref: '#/components/schemas/AssignmentScopeType'
+          uniqueItems: true
+        permissions:
+          description: List of permissions assigned to this role
+          type: array
+          items:
+            type: object
+            properties:
+              action:
+                description: Fully-qualified name of a Role Action
+                type: string
+                example: iam.role.assignment.read
+              description:
+                type: string
+                example: Allows reading role assignments
+            required:
+            - action
+            - description
+          uniqueItems: true
+      required:
+      - roleId
+      - name
+      - description
+      - assignmentScopeTypes
+      - permissions
+      additionalProperties: false
+    RoleId:
+      description: Uniquely identifies an access policy within a project.
+      type: string
+      pattern: ^role:[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$
+      example: role:550e8400-e29b-41d4-a716-446655440000
+    UpdatePolicyMaskBody:
+      description: Request body for updating a policy mask.
+      type: object
+      properties:
+        managedPolicies:
+          oneOf:
+          - type: string
+            enum:
+            - none
+          - type: array
+            items:
+              $ref: '#/components/schemas/ManagedPolicyId'
+            uniqueItems: true
+            minItems: 1
+            maxItems: 50
+        managedPermissionSets:
+          oneOf:
+          - type: string
+            enum:
+            - none
+          - type: array
+            items:
+              $ref: '#/components/schemas/ManagedPermissionSetId'
+            uniqueItems: true
+            minItems: 1
+            maxItems: 50
+        subtract:
+          allOf:
+          - type: object
+            properties:
+              managedPolicies:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ManagedPolicyId'
+                uniqueItems: true
+                minItems: 1
+                maxItems: 50
+              managedPermissionSets:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ManagedPermissionSetId'
+                uniqueItems: true
+                minItems: 1
+                maxItems: 50
+            additionalProperties: false
+          - {}
+        tags:
+          $ref: '#/components/schemas/Tags'
+        description:
+          type: string
+          pattern: ^.{0,500}$
+          example: A description string.
+        lastRev:
+          $ref: '#/components/schemas/LastResourceRev'
+      required:
+      - tags
+      - lastRev
+      additionalProperties: false
+    RoleAssignmentList:
+      description: A paginated list of role assignments.
+      type: object
+      properties:
+        list:
+          type: array
+          items:
+            $ref: '#/components/schemas/RoleAssignment'
+        nextPageToken:
+          $ref: '#/components/schemas/NextPageToken'
+      required:
+      - list
+      additionalProperties: false
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: A JWT access token. Federated (OIDC) identities may obtain one via the STS token exchange endpoint at https://sts.eqix.equinix.com/v1/token. Customer Portal-based identities may obtain one via https://api.equinix.com/oauth2/v1/token
+    clientCredentials:
+      type: http
+      scheme: basic
+      description: HTTP Basic credentials (client ID and secret) used for service-to-service authentication within the Equinix platform. Not required for external API consumers.
+servers:
+- url: https://access.eqix.equinix.com
+info:
+  title: Access Service
+  summary: Manage access policies and role assignments
+  description: Manage access policies and role assignments
+  version: not specified
+  termsOfService: https://www.equinix.com/about/legal/terms
+  contact:
+    name: Equinix API Support
+    url: https://docs.equinix.com/api-support.htm
+openapi: 3.1.0
+x-eqx-api-linter-skip-rules:
+- 3
+- 14
+- 24

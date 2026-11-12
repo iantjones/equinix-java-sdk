@@ -16,6 +16,9 @@
 
 package com.eqixiac.equinix.fabric.client;
 
+import com.eqixiac.equinix.core.http.response.PaginatedFilteredList;
+import com.eqixiac.equinix.fabric.model.implementation.filter.FilterPropertyList;
+import com.eqixiac.equinix.fabric.model.implementation.sort.SortPropertyList;
 import com.eqixiac.equinix.fabric.model.StreamAsset;
 
 /**
@@ -54,4 +57,44 @@ public interface StreamAssets {
      * @return {@code true} if the detach was accepted
      */
     Boolean detach(String streamId, String asset, String assetId);
+
+    /**
+     * Searches stream assets ({@code POST /fabric/v4/streamAssets/search}), for example by
+     * {@code /uuid}, {@code /streamUuid} or {@code /attachmentStatus}.
+     *
+     * @param filter the filter, or {@code null}
+     * @param sort the sort, or {@code null}
+     * @return a paginated, filtered list of stream assets
+     */
+    PaginatedFilteredList<StreamAsset> search(FilterPropertyList filter, SortPropertyList sort);
+
+    /**
+     * Retrieves a Network Edge device attached to a stream
+     * ({@code GET /fabric/v4/streams/{streamId}/devices/{deviceId}}).
+     *
+     * @param streamId the stream uuid
+     * @param deviceId the Network Edge device uuid
+     * @return the device asset with its streamed interfaces
+     */
+    StreamAsset getDevice(String streamId, String deviceId);
+
+    /**
+     * Streams a Network Edge device ({@code PUT /fabric/v4/streams/{streamId}/devices/{deviceId}}).
+     * The interface ids are the complete desired set: interfaces not listed are detached.
+     *
+     * @param streamId the stream uuid
+     * @param deviceId the Network Edge device uuid
+     * @param interfaceIds the device interface ids to stream (non-empty)
+     * @return the device asset (typically {@code ATTACHING})
+     */
+    StreamAsset attachDevice(String streamId, String deviceId, java.util.List<Integer> interfaceIds);
+
+    /**
+     * Stops streaming a Network Edge device ({@code DELETE /fabric/v4/streams/{streamId}/devices/{deviceId}}).
+     *
+     * @param streamId the stream uuid
+     * @param deviceId the Network Edge device uuid
+     * @return the device asset (typically {@code DETACHING}), or {@code null} on an empty response
+     */
+    StreamAsset detachDevice(String streamId, String deviceId);
 }

@@ -41,18 +41,14 @@ public class TagCreatorJson {
     private final String displayName;
 
     /**
-     * Positional constructor; the argument order is pinned by this signature.
+     * Builder constructor; use {@code builder()}.
      *
      * @param type        the tag type
      * @param name        the tag name
      * @param displayName the tag display name
-     * @deprecated use {@code builder()} — three same-typed {@code String} parameters make
-     *             positional construction transposition-prone; scheduled for removal at the
-     *             next major version
      */
-    @Deprecated
     @Builder
-    public TagCreatorJson(String type, String name, String displayName) {
+    private TagCreatorJson(String type, String name, String displayName) {
         this.type = type;
         this.name = name;
         this.displayName = displayName;

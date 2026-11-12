@@ -64,14 +64,15 @@ public class ServiceTokenClientImpl extends ResourceClientBase<ServiceToken, Ser
     }
 
     public ServiceTokenJson update(String uuid, List<PatchOperation> operations) {
-        // PATCH /serviceTokens/{uuid} with an op/path/value array sent as application/json.
-        return updateOne("UpdateServiceToken", uuid, operations);
+        // PATCH /serviceTokens/{uuid}: spec 4.34.0 declares only application/json-patch+json.
+        // Not verifiable live here (no net-new token is free to create), so the spec is followed.
+        return patchOne("UpdateServiceToken", uuid, operations);
     }
 
     public ServiceTokenJson dryRunUpdate(String uuid, List<PatchOperation> operations) {
-        // Same wire shape as update() (op/path/value array as application/json) plus dryRun=true,
-        // so the dry run validates exactly the request the real update would send.
-        return dryRunUpdate("UpdateServiceToken", uuid, operations);
+        // Same wire shape as update() (json-patch+json) plus dryRun=true, so the dry run validates
+        // exactly the request the real update would send.
+        return dryRunPatch("UpdateServiceToken", uuid, operations);
     }
 
     public ServiceTokenJson createAction(String uuid, ServiceTokenAction type) {

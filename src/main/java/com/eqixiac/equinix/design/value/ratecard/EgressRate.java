@@ -13,7 +13,7 @@ import java.util.Currency;
  * monthly data volume to produce a cost, so it is the unit that drives the
  * internet-vs-private savings calculation.
  *
- * <p>The price is per <em>decimal</em> (SI) gigabyte — 1&nbsp;TB = 1000&nbsp;GB —
+ * <p>The price is per <em>decimal</em> (SI) gigabyte - 1&nbsp;TB = 1000&nbsp;GB - 
  * matching {@code DataUnit} and how the engines express volume. A provider list
  * price quoted per Gi<em>bi</em>byte must be converted before being supplied here
  * (the bundled GCP adapter divides its per-GiB figure by 1.073741824 and records
@@ -29,11 +29,11 @@ public class EgressRate {
     /** The currency the per-GB price is expressed in. */
     Currency currency;
 
-    /** Where this rate came from — see {@link PriceSource} for the trust spectrum. */
+    /** Where this rate came from - see {@link PriceSource} for the trust spectrum. */
     PriceSource source;
 
     /**
-     * Optional human-readable provenance detail — e.g. the source meter/SKU name, the
+     * Optional human-readable provenance detail - e.g. the source meter/SKU name, the
      * pricing tier the figure represents, or an original per-GiB list price before
      * conversion. May be {@code null}.
      */
@@ -57,7 +57,7 @@ public class EgressRate {
 
     /**
      * Returns a copy of this rate with the note replaced (this instance is immutable and
-     * unchanged). The provider adapters use it to record where a figure came from — e.g.
+     * unchanged). The provider adapters use it to record where a figure came from - e.g.
      * the meter name or the original per-GiB price a converted rate was derived from.
      *
      * @param note the provenance note to attach (replaces any existing note)

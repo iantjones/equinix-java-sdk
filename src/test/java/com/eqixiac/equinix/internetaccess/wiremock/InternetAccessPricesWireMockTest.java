@@ -158,7 +158,7 @@ class InternetAccessPricesWireMockTest extends WireMockTestBase {
         @Test
         void loadAllFetchesSecondPageByAdvancingTheQueryOffset() {
             // Regression: the prices search body carries no pagination (per spec), so multi-page
-            // was previously impossible by design — page 2 threw from the paging pipeline.
+            // was previously impossible by design - page 2 threw from the paging pipeline.
             wireMock.stubFor(post(urlPathEqualTo(SEARCH_PATH))
                     .withQueryParam("offset", equalTo("0"))
                     .willReturn(okJson(PAGE_1)));

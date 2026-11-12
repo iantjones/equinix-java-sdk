@@ -17,6 +17,9 @@
 package com.eqixiac.equinix.design.peering;
 
 import com.eqixiac.equinix.FabricGateway;
+import com.eqixiac.equinix.design.spec.DesignSpec;
+import com.eqixiac.equinix.design.spec.PeerIntent;
+import com.eqixiac.equinix.design.spec.SiteIntent;
 import com.eqixiac.equinix.core.enums.MetroCode;
 import com.eqixiac.equinix.core.model.MetroId;
 import com.eqixiac.equinix.design.peering.client.PeeringDbClient;
@@ -26,7 +29,7 @@ import com.eqixiac.equinix.design.peering.model.PeeringRequest;
 import java.util.*;
 
 /**
- * Entry point for Peering Intelligence — an interconnection analysis tool that combines
+ * Entry point for Peering Intelligence - an interconnection analysis tool that combines
  * PeeringDB IX peering data with Equinix Fabric private connectivity data to produce
  * unified presence matrices, resiliency assessments, and peering opportunity discovery.
  *
@@ -36,9 +39,9 @@ import java.util.*;
  *       port capacity, and route server participation at every Equinix location</li>
  *   <li><b>Resiliency Analysis:</b> Blast radius evaluation, correlated failure detection,
  *       geographic diversity scoring, and failover path identification</li>
- *   <li><b>Unified Connectivity:</b> Combined IX + Fabric view per ASN per metro —
+ *   <li><b>Unified Connectivity:</b> Combined IX + Fabric view per ASN per metro - 
  *       every way to reach a network through Equinix</li>
- *   <li><b>Peering Opportunities:</b> Mutual IX presence discovery — IXes where the customer
+ *   <li><b>Peering Opportunities:</b> Mutual IX presence discovery - IXes where the customer
  *       and a target ASN are both connected. PeeringDB records IX <em>membership</em>, not
  *       sessions, so whether the two networks already peer there is not (and cannot be)
  *       checked from this data.</li>
@@ -46,8 +49,8 @@ import java.util.*;
  *
  * <p><b>Fabric availability</b> is cross-referenced live from the Equinix Fabric service-profile
  * catalog: a target is marked Fabric-reachable at a metro when a service profile whose name
- * identifies that network (curated {@code CloudProviderType} matching for known clouds — bridging
- * corporate names like "Amazon.com" to product profiles like "AWS Direct Connect" — otherwise
+ * identifies that network (curated {@code CloudProviderType} matching for known clouds - bridging
+ * corporate names like "Amazon.com" to product profiles like "AWS Direct Connect" - otherwise
  * whole-token, brand-distinctive name matching) publishes that metro. It indicates an available
  * private on-ramp, not an existing connection. The cross-reference is best-effort: when the
  * catalog cannot be read, a warning marks Fabric availability as <em>not analyzed</em> rather
@@ -55,10 +58,10 @@ import java.util.*;
  *
  * <h3>PeeringDB credentials</h3>
  * <p>PeeringDB authentication is an API key (created on
- * <a href="https://docs.peeringdb.com/howto/api_keys/">peeringdb.com</a>) — a separate credential
+ * <a href="https://docs.peeringdb.com/howto/api_keys/">peeringdb.com</a>) - a separate credential
  * from the Equinix OAuth client. The key is resolved in this order:</p>
  * <ol>
- *   <li>an explicit key — {@code fabric.peeringIntelligence("key")} or {@code builder(fabric, "key")}</li>
+ *   <li>an explicit key - {@code fabric.peeringIntelligence("key")} or {@code builder(fabric, "key")}</li>
  *   <li>the {@code EquinixConfig.peeringDbApiKey} option configured on the client/session</li>
  *   <li>the {@value #PEERINGDB_API_KEY_ENV} environment variable</li>
  *   <li>anonymous access (rate-limited by PeeringDB to ~20 requests/minute)</li>
@@ -130,6 +133,58 @@ public class PeeringIntelligence {
     }
 
     /**
+     * Begins a peering analysis of a {@link DesignSpec}: the spec's {@link PeerIntent}s are the target
+     * networks (labelled as the spec labels them), and the metros its sites name plus its
+     * {@code constraints.requiredMetros} are the customer metros (resiliency analysis is enabled when there
+     * is at least one). The result carries the spec's {@code fingerprint()}
+     * ({@code PeeringIntelligenceResult.getSpecFingerprint()}) so it can be chained with the other design
+     * engines. The PeeringDB credential is resolved as for {@link #builder(FabricGateway)}; further builder
+     * calls (another ASN, {@code customerAsn}) refine the analysis.
+     *
+     * @param fabric the Fabric client instance
+     * @param spec   the design; must declare at least one peer
+     * @return a builder primed from the spec
+     * @throws IllegalArgumentException when the spec has errors or declares no peer
+     */
+    public static Builder forSpec(FabricGateway fabric, DesignSpec spec) {
+        return forSpec(fabric, spec, null);
+    }
+
+    /**
+     * As {@link #forSpec(FabricGateway, DesignSpec)}, authenticated to PeeringDB with an explicit key.
+     *
+     * @param fabric          the Fabric client instance
+     * @param spec            the design; must declare at least one peer
+     * @param peeringDbApiKey the PeeringDB API key, or {@code null} for the usual fallbacks
+     * @return a builder primed from the spec
+     * @throws IllegalArgumentException when the spec has errors or declares no peer
+     */
+    public static Builder forSpec(FabricGateway fabric, DesignSpec spec, String peeringDbApiKey) {
+        if (spec == null) {
+            throw new IllegalArgumentException("forSpec needs a spec");
+        }
+        spec.requireValid();
+        if (spec.peers().isEmpty()) {
+            throw new IllegalArgumentException("Spec '" + spec.name() + "' declares no peers: nothing to analyse");
+        }
+        Builder builder = new Builder(fabric, peeringDbApiKey);
+        for (PeerIntent peer : spec.peers()) {
+            builder.targetAsns.put(peer.asn(), peer.label());
+        }
+        for (SiteIntent site : spec.sites()) {
+            if (site.metro() != null) {
+                builder.customerMetros.add(MetroId.of(site.metro()));
+            }
+        }
+        for (String metro : spec.constraints().requiredMetros()) {
+            builder.customerMetros.add(MetroId.of(metro));
+        }
+        builder.includeResiliency = !builder.customerMetros.isEmpty();
+        builder.specFingerprint = spec.fingerprint();
+        return builder;
+    }
+
+    /**
      * Fluent builder for configuring and executing a peering intelligence analysis.
      *
      * <p>The builder collects target ASNs (with optional labels), customer metro locations,
@@ -146,6 +201,7 @@ public class PeeringIntelligence {
         private boolean includeCapacity = true;
         private boolean includePolicies = true;
         private boolean includeResiliency;
+        private String specFingerprint;
 
         /**
          * Test-only override for the PeeringDB base URL. When {@code null} (the default and only
@@ -171,7 +227,7 @@ public class PeeringIntelligence {
          * {@value #PEERINGDB_API_KEY_ENV} fallback. Package-private so it is never part of the
          * public builder surface.
          *
-         * @param envLookup the replacement lookup (name → value, {@code null} when unset)
+         * @param envLookup the replacement lookup (name -> value, {@code null} when unset)
          * @return this builder
          */
         Builder envLookup(java.util.function.Function<String, String> envLookup) {
@@ -218,7 +274,7 @@ public class PeeringIntelligence {
         /**
          * Adds multiple ASNs from a map of ASN to label.
          *
-         * @param asns map of ASN → label
+         * @param asns map of ASN -> label
          * @return this builder
          */
         public Builder addAsns(Map<Long, String> asns) {
@@ -243,7 +299,7 @@ public class PeeringIntelligence {
         }
 
         /**
-         * Sets the customer's metro locations by {@link MetroId} — accepts metros not in the
+         * Sets the customer's metro locations by {@link MetroId} - accepts metros not in the
          * {@link MetroCode} enum (e.g. one added to Fabric after this SDK was built).
          *
          * @param metros the customer's Equinix metro locations
@@ -286,7 +342,7 @@ public class PeeringIntelligence {
          *
          * <p>When provided, the engine queries PeeringDB for the customer's IX
          * presence and identifies Equinix IXes where both the customer and a target
-         * ASN are connected — one opportunity per (target ASN, IX). PeeringDB records
+         * ASN are connected - one opportunity per (target ASN, IX). PeeringDB records
          * IX membership only, so an opportunity means mutual presence; whether the two
          * networks already peer there cannot be determined from this data.</p>
          *
@@ -350,6 +406,19 @@ public class PeeringIntelligence {
             return this;
         }
 
+        /** @return the request this builder describes (package-private: the analysis and tests read it) */
+        PeeringRequest request() {
+            return PeeringRequest.builder()
+                    .targetAsns(new LinkedHashMap<>(targetAsns))
+                    .customerMetros(new LinkedHashSet<>(customerMetros))
+                    .customerAsn(customerAsn)
+                    .includeCapacity(includeCapacity)
+                    .includePolicies(includePolicies)
+                    .includeResiliency(includeResiliency)
+                    .specFingerprint(specFingerprint)
+                    .build();
+        }
+
         /**
          * Executes the peering intelligence analysis.
          *
@@ -366,14 +435,7 @@ public class PeeringIntelligence {
                 throw new IllegalStateException("At least one target ASN must be specified via addAsn().");
             }
 
-            PeeringRequest request = PeeringRequest.builder()
-                    .targetAsns(new LinkedHashMap<>(targetAsns))
-                    .customerMetros(new LinkedHashSet<>(customerMetros))
-                    .customerAsn(customerAsn)
-                    .includeCapacity(includeCapacity)
-                    .includePolicies(includePolicies)
-                    .includeResiliency(includeResiliency)
-                    .build();
+            PeeringRequest request = request();
 
             String resolvedApiKey = peeringDbApiKey != null && !peeringDbApiKey.isBlank()
                     ? peeringDbApiKey

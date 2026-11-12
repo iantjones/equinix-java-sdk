@@ -87,7 +87,7 @@ class FabricPortsWireMockTest extends WireMockTestBase {
         void listsPorts() {
             stubPaginatedGet(wireMock, "/fabric/v4/ports", "/json/fabric/paginated_ports.json");
 
-            PaginatedList<Port> ports = fabric.ports().list();
+            List<Port> ports = fabric.ports().list();
 
             assertNotNull(ports);
             assertEquals(2, ports.size());
@@ -248,7 +248,7 @@ class FabricPortsWireMockTest extends WireMockTestBase {
         @DisplayName("dryRun() sends dryRun=true and deserializes the echoed port order (no uuid/name/state)")
         void createDryRunSendsQueryParamAndDeserializesEcho() {
             // Spec: dry-run create responds 200 (real create is 202) with the validated port
-            // order echoed back — no uuid/name/state (example PortCreateDryRunResponse).
+            // order echoed back - no uuid/name/state (example PortCreateDryRunResponse).
             String dryRunEcho = "{"
                     + "\"type\":\"XF_PORT\","
                     + "\"connectivitySourceType\":\"COLO\","
@@ -275,13 +275,13 @@ class FabricPortsWireMockTest extends WireMockTestBase {
                     .create();
 
             assertNotNull(validated);
-            assertNull(validated.getUuid(), "dry-run echo carries no uuid — nothing was created");
-            assertNull(validated.getState(), "dry-run echo carries no state — nothing was created");
+            assertNull(validated.getUuid(), "dry-run echo carries no uuid - nothing was created");
+            assertNull(validated.getState(), "dry-run echo carries no state - nothing was created");
             assertEquals(PortType.XF_PORT, validated.getType());
             assertEquals(Integer.valueOf(10000), validated.getPhysicalPortsSpeed());
 
             // Regression lock: dryRun=true MUST reach the wire as a query parameter on this exact
-            // endpoint — dropping it would turn the validation into a REAL port order.
+            // endpoint - dropping it would turn the validation into a REAL port order.
             wireMock.verify(postRequestedFor(urlPathEqualTo("/fabric/v4/ports"))
                     .withQueryParam("dryRun", equalTo("true"))
                     .withRequestBody(matchingJsonPath("$.type", equalTo("XF_PORT"))));
@@ -309,7 +309,7 @@ class FabricPortsWireMockTest extends WireMockTestBase {
     class Update {
 
         @Test
-        @DisplayName("PATCHes an op/path/value array as application/json")
+        @DisplayName("PATCHes an op/path/value array as application/json-patch+json (spec 4.34.0)")
         void updatePatchesName() {
             wireMock.stubFor(patch(urlPathMatching("/fabric/v4/ports/.*"))
                     .willReturn(okJson(loadFixture("/json/fabric/port_response.json"))));
@@ -319,9 +319,28 @@ class FabricPortsWireMockTest extends WireMockTestBase {
 
             assertNotNull(updated);
             wireMock.verify(patchRequestedFor(urlPathMatching("/fabric/v4/ports/c791f8cb-5cc9-cc90-8ce0-306a5c00a4ee"))
-                    .withHeader("Content-Type", containing("application/json"))
+                    .withHeader("Content-Type", containing("application/json-patch+json"))
                     .withRequestBody(equalToJson(
                             "[{\"op\":\"replace\",\"path\":\"/name\",\"value\":\"Renamed-Port\"}]")));
+        }
+
+        @Test
+        @DisplayName("typed TPID and LAG updates send the spec example paths")
+        void typedEncapsulationAndLag() {
+            wireMock.stubFor(patch(urlPathMatching("/fabric/v4/ports/.*"))
+                    .willReturn(okJson(loadFixture("/json/fabric/port_response.json"))));
+
+            fabric.ports().update("c791f8cb-5cc9-cc90-8ce0-306a5c00a4ee")
+                    .encapsulation(com.eqixiac.equinix.fabric.enums.EncapsulationType.DOT1Q, "0x8100")
+                    .lagEnabled(true)
+                    .save();
+
+            wireMock.verify(patchRequestedFor(urlPathEqualTo("/fabric/v4/ports/c791f8cb-5cc9-cc90-8ce0-306a5c00a4ee"))
+                    .withRequestBody(equalToJson("[{\"op\":\"replace\",\"path\":\"/encapsulation\","
+                            + "\"value\":{\"type\":\"DOT1Q\",\"tagProtocolId\":\"0x8100\"}},"
+                            + "{\"op\":\"replace\",\"path\":\"/lagEnabled\",\"value\":true}]")));
+            assertThrows(IllegalArgumentException.class, () -> fabric.ports().update("x")
+                    .encapsulation(com.eqixiac.equinix.fabric.enums.EncapsulationType.DOT1Q, "8100"));
         }
 
         @Test
@@ -335,9 +354,9 @@ class FabricPortsWireMockTest extends WireMockTestBase {
         @Test
         @DisplayName("dryRun() sends dryRun=true and unwraps data[0] of the AllPortsResponse envelope")
         void updateDryRunSendsQueryParamAndUnwrapsEnvelope() {
-            // Spec: the dry-run 200 schema is AllPortsResponse — a paginated envelope
+            // Spec: the dry-run 200 schema is AllPortsResponse - a paginated envelope
             // {pagination, data:[Port]} with the simulated updated port in data[0] (example
-            // PortUpdateDryRunResponse) — a different wire shape from the real update's bare Port.
+            // PortUpdateDryRunResponse) - a different wire shape from the real update's bare Port.
             String envelope = "{"
                     + "\"pagination\":{\"offset\":0,\"limit\":1,\"total\":1},"
                     + "\"data\":[" + loadFixture("/json/fabric/port_response.json")
@@ -357,10 +376,10 @@ class FabricPortsWireMockTest extends WireMockTestBase {
                     "save() must unwrap the simulated updated port from the envelope's data[0]");
 
             // Regression lock: dryRun=true MUST reach the wire as a query parameter on this exact
-            // endpoint — dropping it would turn the validation into a REAL port update.
+            // endpoint - dropping it would turn the validation into a REAL port update.
             wireMock.verify(patchRequestedFor(urlPathEqualTo("/fabric/v4/ports/c791f8cb-5cc9-cc90-8ce0-306a5c00a4ee"))
                     .withQueryParam("dryRun", equalTo("true"))
-                    .withHeader("Content-Type", containing("application/json"))
+                    .withHeader("Content-Type", containing("application/json-patch+json"))
                     .withRequestBody(equalToJson(
                             "[{\"op\":\"replace\",\"path\":\"/name\",\"value\":\"Renamed-Port\"}]")));
         }
@@ -400,7 +419,7 @@ class FabricPortsWireMockTest extends WireMockTestBase {
         @DisplayName("delete(uuid, true) sends dryRun=true and returns the port that WOULD be deleted")
         void deleteDryRunSendsQueryParam() {
             // Spec: dry-run delete responds 200 (real delete is 202 'Accepted') with the existing
-            // port entity — uuid/name and all — that would be deleted (example portDryRunDelete);
+            // port entity - uuid/name and all - that would be deleted (example portDryRunDelete);
             // nothing is deleted.
             wireMock.stubFor(delete(urlPathEqualTo("/fabric/v4/ports/c791f8cb-5cc9-cc90-8ce0-306a5c00a4ee"))
                     .willReturn(okJson(loadFixture("/json/fabric/port_response.json"))));
@@ -413,7 +432,7 @@ class FabricPortsWireMockTest extends WireMockTestBase {
             assertEquals(PortState.ACTIVE, wouldDelete.getState());
 
             // Regression lock: dryRun=true MUST reach the wire as a query parameter on this exact
-            // endpoint — dropping it would turn the validation into a REAL port delete.
+            // endpoint - dropping it would turn the validation into a REAL port delete.
             wireMock.verify(deleteRequestedFor(urlPathEqualTo("/fabric/v4/ports/c791f8cb-5cc9-cc90-8ce0-306a5c00a4ee"))
                     .withQueryParam("dryRun", equalTo("true")));
         }
@@ -498,7 +517,7 @@ class FabricPortsWireMockTest extends WireMockTestBase {
             Port port = fabric.ports().getByUuid(PORT_ID);
             assertEquals("testBuyer-SV5-NL-Dot1q-BO-PRI-10G-JN-154", port.getName());
 
-            // refresh() lives on the wrapper only — the Port interface does not declare it
+            // refresh() lives on the wrapper only - the Port interface does not declare it
             // (unlike Connection/CloudRouter/...), so the public path needs a cast.
             Port refreshed = port.refresh();
 
@@ -528,29 +547,16 @@ class FabricPortsWireMockTest extends WireMockTestBase {
                 """;
 
         @Test
-        @DisplayName("loadAll() re-GETs /ports with the offset query param advanced to page 2")
-        void loadAllFetchesSecondPage() {
-            // Page 1: catch-all, registered first (WireMock: the later, more specific stub wins).
+        @DisplayName("list() is one response: GET /ports takes no offset (spec) and returns everything live")
+        void listIsSinglePage() {
             wireMock.stubFor(get(urlPathEqualTo("/fabric/v4/ports"))
                     .willReturn(okJson(PAGE_1)));
-            // Page 2: matched by the advanced offset query parameter.
-            wireMock.stubFor(get(urlPathEqualTo("/fabric/v4/ports"))
-                    .withQueryParam("offset", equalTo("100"))
-                    .willReturn(okJson(PAGE_2)));
 
-            PaginatedList<Port> ports = fabric.ports().list();
+            List<Port> ports = fabric.ports().list();
+
             assertEquals(1, ports.size());
-            assertTrue(ports.hasNextPage());
-
-            ports.loadAll();
-
-            assertEquals(2, ports.size());
             assertEquals("PAGE1_PORT", ports.get(0).getUuid());
-            assertEquals("PAGE2_PORT", ports.get(1).getUuid());
-            assertFalse(ports.hasNextPage());
-
-            wireMock.verify(1, getRequestedFor(urlPathEqualTo("/fabric/v4/ports"))
-                    .withQueryParam("offset", equalTo("100")));
+            wireMock.verify(1, getRequestedFor(urlPathEqualTo("/fabric/v4/ports")));
         }
     }
 }

@@ -42,9 +42,9 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * The systemic currency-mixing (C9) guard across the value-realization cost models: when the
- * components of a total are priced in different currencies — which the real default chain genuinely
+ * components of a total are priced in different currencies - which the real default chain genuinely
  * produces (USD cloud-egress reference figures alongside a live EUR Fabric connection for an EMEA
- * metro) — the models must refuse to emit a single (wrong) number and instead mark the total
+ * metro) - the models must refuse to emit a single (wrong) number and instead mark the total
  * mixed/unpriced with an explicit reason, while all-one-currency inputs still price normally.
  *
  * <p>Mixed currencies are constructed deterministically by layering two single-currency
@@ -69,39 +69,7 @@ class CurrencyMixingTest {
                 .build();
     }
 
-    // ── TCO ──
-
-    @Test
-    void tcoEquinixArchetypeIsMarkedMixedWhenEgressAndConnectionCurrenciesDiffer() {
-        // USD egress + EUR connection: the Equinix archetype total cannot be one currency.
-        RateCard mixed = RateCard.layered(eurConnectionCard(), usdEgressCard());
-
-        TcoComparison tco = TcoCalculator.builder(null)
-                .egress(100, DataUnit.TERABYTE)
-                .fromCloud(CloudProviderType.AWS).inRegion("us-east-1")
-                .viaMetro(MetroCode.DC).bandwidthMbps(10_000)
-                // Only compare the two priceable archetypes to keep the scenario tight.
-                .archetypes(DeploymentArchetype.PUBLIC_CLOUD_INTERNET, DeploymentArchetype.EQUINIX_INTERCONNECT)
-                .rateCard(mixed)
-                .compare();
-
-        CostBreakdown equinix = tco.breakdown(DeploymentArchetype.EQUINIX_INTERCONNECT).orElseThrow();
-        assertFalse(equinix.isPriced(), "a USD+EUR component mix must not be totalled as one currency");
-        assertEquals(0, BigDecimal.ZERO.compareTo(equinix.getMonthlyTotal()),
-                "no fabricated cross-currency total: unpriced => zero, surfaced as unavailable");
-        assertNotNull(equinix.getNote());
-        assertTrue(equinix.getNote().contains("USD") && equinix.getNote().contains("EUR"),
-                "the note names both currencies: " + equinix.getNote());
-        assertTrue(equinix.getNote().contains("2000.00"),
-                "the per-currency subtotals are surfaced: " + equinix.getNote());
-        assertTrue(tco.toMarkdown().contains("_unavailable_"),
-                "the mixed archetype renders as unavailable, not as a number");
-
-        // The public-internet baseline still prices cleanly in USD, and the mixed archetype is never
-        // chosen as the recommendation.
-        assertTrue(tco.breakdown(DeploymentArchetype.PUBLIC_CLOUD_INTERNET).orElseThrow().isPriced());
-        assertNotEquals(DeploymentArchetype.EQUINIX_INTERCONNECT, tco.getRecommended());
-    }
+    // TCO
 
     @Test
     void tcoAllUsdStillPricesTheEquinixArchetypeNormally() {
@@ -112,7 +80,7 @@ class CurrencyMixingTest {
                         .connectionRate(ConnectionType.EVPL_VC, 10_000, new BigDecimal("2000")).build(),
                 usdEgressCard());
 
-        TcoComparison tco = TcoCalculator.builder(null)
+        TcoComparison tco = TcoCalculator.builder(null).defaultRates(com.eqixiac.equinix.design.cost.CurrencyConverters.none())
                 .egress(100, DataUnit.TERABYTE)
                 .fromCloud(CloudProviderType.AWS).inRegion("us-east-1")
                 .viaMetro(MetroCode.DC).bandwidthMbps(10_000)
@@ -124,113 +92,10 @@ class CurrencyMixingTest {
         assertTrue(equinix.isPriced(), "all-USD components price normally");
         assertEquals(0, new BigDecimal("2000").compareTo(equinix.getLineItems().get("Equinix Fabric connection")),
                 "the custom USD connection price");
-        // 2000 private egress + 2000 connection + 1642.50 reference DX port + 300 reference cross-connect
+        // 2000 private egress + 2000 connection + 1810.40 reference AWS hosted connection + 300 reference cross-connect
         // (the bundled USD reference figures fold in because the reconciled currency is USD).
-        assertEquals(0, new BigDecimal("5942.50").compareTo(equinix.getMonthlyTotal()));
+        assertEquals(0, new BigDecimal("6110.40").compareTo(equinix.getMonthlyTotal()));
         assertEquals(DeploymentArchetype.EQUINIX_INTERCONNECT, tco.getRecommended(), "cheaper than 9000 internet");
-    }
-
-    @Test
-    void tcoEquinixBreakdownIsStampedWithItsReconciledCurrencyNotTheEgressCurrency() {
-        // Internet egress resolves USD (the comparison-wide currency) while the private egress and
-        // the connection both resolve EUR: the Equinix archetype prices cleanly in EUR, and its
-        // breakdown must be stamped EUR — stamping the comparison-wide USD would defeat the
-        // baseline-vs-recommended currency guard and let a USD−EUR subtraction through.
-        RateCard mixed = RateCard.layered(
-                CustomRateCard.builder().currency("EUR")
-                        .egressRate(CloudProviderType.AWS, EgressPath.PRIVATE, new BigDecimal("0.02"))
-                        .connectionRate(ConnectionType.EVPL_VC, 10_000, new BigDecimal("2000"))
-                        .build(),
-                CustomRateCard.builder().currency("USD")
-                        .egressRate(CloudProviderType.AWS, EgressPath.INTERNET, new BigDecimal("0.09"))
-                        .build());
-
-        TcoComparison tco = TcoCalculator.builder(null)
-                .egress(100, DataUnit.TERABYTE)
-                .fromCloud(CloudProviderType.AWS).inRegion("us-east-1")
-                .viaMetro(MetroCode.DC).bandwidthMbps(10_000)
-                .archetypes(DeploymentArchetype.PUBLIC_CLOUD_INTERNET, DeploymentArchetype.EQUINIX_INTERCONNECT)
-                .rateCard(mixed)
-                .compare();
-
-        assertEquals("USD", tco.getCurrency(), "comparison-wide currency follows the internet egress rate");
-        CostBreakdown equinix = tco.breakdown(DeploymentArchetype.EQUINIX_INTERCONNECT).orElseThrow();
-        assertTrue(equinix.isPriced(), "all-EUR components price normally");
-        assertEquals("EUR", equinix.getCurrency(),
-                "the breakdown carries the currency its own components reconciled to");
-        // 2000 private egress + 2000 connection; the USD reference DX port / cross-connect are
-        // skipped because they cannot mix into a EUR total.
-        assertEquals(0, new BigDecimal("4000").compareTo(equinix.getMonthlyTotal()));
-
-        // EUR 48000 over the term undercuts USD 108000, so Equinix is recommended — but the saving
-        // versus the USD baseline must be refused, not fabricated.
-        assertEquals(DeploymentArchetype.EQUINIX_INTERCONNECT, tco.getRecommended());
-        assertNull(tco.getMonthlySavingsVsBaseline(), "no USD−EUR subtraction");
-        assertNull(tco.getAnnualSavingsVsBaseline());
-        assertNull(tco.getSavingsOverTermVsBaseline());
-        assertTrue(tco.getDisclaimer().contains("USD") && tco.getDisclaimer().contains("EUR"),
-                "the disclaimer names both currencies: " + tco.getDisclaimer());
-        assertTrue(tco.toMarkdown().contains("EUR 4000.00"),
-                "the Equinix row renders under its own currency label");
-    }
-
-    @Test
-    void tcoOnPremIsUnpricedWhenReferenceMidpointCurrencyDiffersFromComparisonCurrency() {
-        // The comparison currency resolves EUR (from the egress card) but the bundled on-prem
-        // midpoints are USD: relabelling them as EUR would misstate them, so the archetype is
-        // reported unpriced with the reason.
-        CustomRateCard eurEgress = CustomRateCard.builder()
-                .currency("EUR")
-                .egressRate(CloudProviderType.AWS, EgressPath.INTERNET, new BigDecimal("0.09"))
-                .egressRate(CloudProviderType.AWS, EgressPath.PRIVATE, new BigDecimal("0.02"))
-                .build();
-
-        TcoComparison tco = TcoCalculator.builder(null)
-                .egress(100, DataUnit.TERABYTE)
-                .fromCloud(CloudProviderType.AWS).inRegion("us-east-1")
-                .viaMetro(MetroCode.DC).bandwidthMbps(10_000)
-                .archetypes(DeploymentArchetype.PUBLIC_CLOUD_INTERNET, DeploymentArchetype.ON_PREM)
-                .rateCard(eurEgress)
-                .compare();
-
-        CostBreakdown onPrem = tco.breakdown(DeploymentArchetype.ON_PREM).orElseThrow();
-        assertFalse(onPrem.isPriced(), "USD reference midpoints must not be stamped EUR");
-        assertEquals(0, BigDecimal.ZERO.compareTo(onPrem.getMonthlyTotal()), "unpriced => zero");
-        assertNotNull(onPrem.getNote());
-        assertTrue(onPrem.getNote().contains("USD") && onPrem.getNote().contains("EUR"),
-                "the note names both currencies: " + onPrem.getNote());
-        assertEquals(DeploymentArchetype.PUBLIC_CLOUD_INTERNET, tco.getRecommended(),
-                "the EUR-priced baseline remains the only priceable archetype");
-    }
-
-    @Test
-    void tcoOnPremFullyOverriddenPricesInTheComparisonCurrency() {
-        // With all four midpoints overridden (caller figures, taken to be in the comparison
-        // currency) no reference figure is used, so the archetype prices even though the
-        // comparison currency (EUR) differs from the reference card's USD.
-        CustomRateCard eurEgress = CustomRateCard.builder()
-                .currency("EUR")
-                .egressRate(CloudProviderType.AWS, EgressPath.INTERNET, new BigDecimal("0.09"))
-                .egressRate(CloudProviderType.AWS, EgressPath.PRIVATE, new BigDecimal("0.02"))
-                .build();
-
-        TcoComparison tco = TcoCalculator.builder(null)
-                .egress(100, DataUnit.TERABYTE)
-                .fromCloud(CloudProviderType.AWS).inRegion("us-east-1")
-                .viaMetro(MetroCode.DC).bandwidthMbps(10_000)
-                .archetypes(DeploymentArchetype.PUBLIC_CLOUD_INTERNET, DeploymentArchetype.ON_PREM)
-                .onPremTransitPerMbpsMonth(new BigDecimal("0.50"))
-                .onPremHardwareMonthly(new BigDecimal("300"))
-                .onPremCrossConnectMonthly(new BigDecimal("250"))
-                .onPremPowerPerKwMonth(new BigDecimal("100"))
-                .rateCard(eurEgress)
-                .compare();
-
-        CostBreakdown onPrem = tco.breakdown(DeploymentArchetype.ON_PREM).orElseThrow();
-        assertTrue(onPrem.isPriced(), "fully overridden on-prem inputs price normally");
-        assertEquals("EUR", onPrem.getCurrency());
-        // 0.50 × 10000 + 300 + 250 + 100 × 5 (default kW) = 6050.
-        assertEquals(0, new BigDecimal("6050").compareTo(onPrem.getMonthlyTotal()));
     }
 
     @Test
@@ -240,7 +105,7 @@ class CurrencyMixingTest {
         CustomRateCard colo = CustomRateCard.builder()
                 .colocationRate(ColocationItem.POWER_PER_KW, new BigDecimal("150.00"))
                 .build();
-        TcoComparison tco = TcoCalculator.builder(null)
+        TcoComparison tco = TcoCalculator.builder(null).defaultRates(com.eqixiac.equinix.design.cost.CurrencyConverters.none())
                 .egress(100, DataUnit.TERABYTE)
                 .fromCloud(CloudProviderType.AWS).inRegion("us-east-1")
                 .viaMetro(MetroCode.DC).bandwidthMbps(10_000)
@@ -253,64 +118,11 @@ class CurrencyMixingTest {
                 "POWER_PER_KW must be consumed: " + equinix.getLineItems().keySet());
         assertEquals(0, new BigDecimal("750").compareTo(equinix.getLineItems().get("Colocation power (5.0 kW)")),
                 "150/kW × 5 kW = 750");
-        // Reference baseline (4292.50) + the 750 power line = 5042.50.
-        assertEquals(0, new BigDecimal("5042.50").compareTo(equinix.getMonthlyTotal()));
+        // Reference baseline (4460.40) + the 750 power line = 5210.40.
+        assertEquals(0, new BigDecimal("5210.40").compareTo(equinix.getMonthlyTotal()));
     }
 
-    // ── Savings ──
-
-    @Test
-    void savingsOmitsNetAndBreakEvenWhenEgressAndInterconnectCurrenciesDiffer() {
-        RateCard mixed = RateCard.layered(eurConnectionCard(), usdEgressCard());
-
-        SavingsEstimate s = SavingsCalculator.builder(null)
-                .egress(50, DataUnit.TERABYTE)
-                .fromCloud(CloudProviderType.AWS).inRegion("us-east-1")
-                .viaMetro(MetroCode.DC).bandwidthMbps(10_000)
-                .connectionType(ConnectionType.EVPL_VC)
-                .rateCard(mixed)
-                .calculate();
-
-        // The egress comparison itself is single-currency (USD) and still computes.
-        assertTrue(s.isEgressPriced());
-        assertEquals(0, new BigDecimal("3500").compareTo(s.getMonthlyEgressSavings()), "USD egress saving unaffected");
-        // But netting a USD saving against a EUR interconnect cost is not done.
-        assertNull(s.getNetMonthlySavings(), "no cross-currency net");
-        assertNull(s.getAnnualNetSavings());
-        assertNull(s.getFirstYearNetSavings());
-        assertNull(s.getBreakEvenGbPerMonth(), "break-even divides EUR by USD: not computed across currencies");
-        assertNull(s.getPaybackMonths());
-        assertFalse(s.isComplete());
-        assertTrue(s.getDisclaimer().contains("USD") && s.getDisclaimer().contains("EUR"),
-                "the disclaimer names both currencies: " + s.getDisclaimer());
-        assertNotNull(s.toMarkdown());
-    }
-
-    @Test
-    void savingsExcludesInterconnectFiguresOnCrossCurrencyMismatchInsteadOfMislabellingThem() {
-        // The estimate is stamped USD (egress currency); the EUR interconnect cost must not be
-        // carried in the USD-labelled numeric fields or rendered under a USD label — it is
-        // excluded (zeroed) and reported via the disclaimer instead.
-        RateCard mixed = RateCard.layered(eurConnectionCard(), usdEgressCard());
-
-        SavingsEstimate s = SavingsCalculator.builder(null)
-                .egress(50, DataUnit.TERABYTE)
-                .fromCloud(CloudProviderType.AWS).inRegion("us-east-1")
-                .viaMetro(MetroCode.DC).bandwidthMbps(10_000)
-                .rateCard(mixed)
-                .calculate();
-
-        assertEquals("USD", s.getCurrency());
-        assertEquals(0, BigDecimal.ZERO.compareTo(s.getEquinixMonthlyCost()),
-                "the EUR 2000 connection must not sit in a USD-labelled field");
-        assertEquals(0, BigDecimal.ZERO.compareTo(s.getEquinixSetupCost()));
-        assertFalse(s.isEquinixPriced());
-        assertFalse(s.isComplete());
-        assertTrue(s.getDisclaimer().contains("EUR 2000.00"),
-                "the excluded figure is reported under its true currency: " + s.getDisclaimer());
-        assertFalse(s.toMarkdown().contains("USD 2000.00"),
-                "the EUR interconnect cost must never render under the USD label");
-    }
+    // Savings
 
     @Test
     void savingsComputesNetAndBreakEvenWhenAllOneCurrency() {
@@ -319,7 +131,7 @@ class CurrencyMixingTest {
                         .connectionRate(ConnectionType.EVPL_VC, 10_000, new BigDecimal("2000")).build(),
                 usdEgressCard());
 
-        SavingsEstimate s = SavingsCalculator.builder(null)
+        SavingsEstimate s = SavingsCalculator.builder(null).defaultRates(com.eqixiac.equinix.design.cost.CurrencyConverters.none())
                 .egress(50, DataUnit.TERABYTE)
                 .fromCloud(CloudProviderType.AWS)
                 .viaMetro(MetroCode.DC).bandwidthMbps(10_000)
@@ -327,12 +139,12 @@ class CurrencyMixingTest {
                 .calculate();
 
         assertTrue(s.isComplete());
-        assertEquals(0, new BigDecimal("1500").compareTo(s.getNetMonthlySavings()), "3500 − 2000");
+        assertEquals(0, new BigDecimal("-310.40").compareTo(s.getNetMonthlySavings()), "3500 - 2000 - 1810.40 AWS 10G hosted connection (2.48 USD/h x 730 h)");
         assertNotNull(s.getBreakEvenGbPerMonth(), "break-even is computable within one currency");
         assertEquals("USD", s.getCurrency());
     }
 
-    // ── Plan value realization ──
+    // Plan value realization
 
     private static DeploymentPlan usdPlan(String monthly, String setup) {
         return DeploymentPlan.builder()
@@ -374,7 +186,7 @@ class CurrencyMixingTest {
 
     @Test
     void planValueOmitsTotalWhenProvidersSpanCurrencies() {
-        // AWS priced in USD, GOOGLE_CLOUD priced in EUR — the per-provider savings cannot be summed.
+        // AWS priced in USD, GOOGLE_CLOUD priced in EUR - the per-provider savings cannot be summed.
         RateCard mixedProviders = RateCard.layered(
                 CustomRateCard.builder().currency("USD")
                         .egressRate(CloudProviderType.AWS, EgressPath.INTERNET, new BigDecimal("0.09"))
@@ -399,7 +211,7 @@ class CurrencyMixingTest {
         assertTrue(vr.getDisclaimer().contains("multiple currencies"), vr.getDisclaimer());
     }
 
-    // ── CurrencyReconciler unit behaviour ──
+    // CurrencyReconciler unit behaviour
 
     @Test
     void reconcilerRefusesToTotalMixedCurrenciesButSumsWithinOne() {

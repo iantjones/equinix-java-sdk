@@ -28,7 +28,7 @@ import java.time.Instant;
  * session-start instant used to judge expiry.
  *
  * <h3>Concurrency contract</h3>
- * <p>An {@code OAuthToken} instance is immutable once populated by deserialization —
+ * <p>An {@code OAuthToken} instance is immutable once populated by deserialization - 
  * there are no setters, so the documented contract is enforced rather than merely
  * promised. The SDK publishes a freshly authenticated instance to multiple threads
  * (see {@code EquinixClient#getOAuthToken()} / {@code setOAuthToken}); the fields that
@@ -68,13 +68,24 @@ public class OAuthToken {
     private volatile Instant sessionStart = Instant.now();
 
     /**
+     * Set only for a token supplied by a {@link com.eqixiac.equinix.core.auth.BearerTokenProvider}:
+     * its expiry is then this instant (or unknown, when {@code null} and {@link #externallySupplied}).
+     */
+    @JsonIgnore
+    private volatile Instant expiresAt;
+
+    /** {@code true} for a token from a bearer-token provider rather than the OAuth2 token endpoint. */
+    @JsonIgnore
+    private volatile boolean externallySupplied;
+
+    /**
      * For Jackson: field-bound deserialization of the token endpoint response.
      */
     public OAuthToken() {
     }
 
     /**
-     * Constructs a fully populated token — intended for tests and for advanced callers that
+     * Constructs a fully populated token - intended for tests and for advanced callers that
      * inject a token obtained out-of-band via {@code EquinixClient#setOAuthToken}.
      *
      * @param sessionToken the bearer access token
@@ -90,18 +101,47 @@ public class OAuthToken {
     }
 
     /**
-     * Whether this token is still usable: it has a bearer value and its validity window
-     * (less the safety margin) has not elapsed on the {@link Instant} timeline.
+     * Wraps a token from a {@link com.eqixiac.equinix.core.auth.BearerTokenProvider}.
+     *
+     * @param token the supplied token
+     * @return a token whose validity is the supplied expiry (or unbounded when unknown)
+     */
+    public static OAuthToken fromBearerToken(com.eqixiac.equinix.core.auth.BearerToken token) {
+        OAuthToken oAuthToken = new OAuthToken(token.value(), "Bearer", null, Instant.now());
+        oAuthToken.expiresAt = token.expiresAt();
+        oAuthToken.externallySupplied = true;
+        return oAuthToken;
+    }
+
+    /**
+     * Whether this token is still usable now; see {@link #validSession(Instant)}.
      *
      * @return {@code true} if the token can still sign requests
      */
     public boolean validSession() {
+        return validSession(Instant.now());
+    }
+
+    /**
+     * Whether this token is still usable at {@code now}: it has a bearer value and its validity
+     * window (less a 30 second safety margin) has not elapsed. A provider-supplied token without a
+     * known expiry is valid until the service rejects it.
+     *
+     * @param now the instant to judge validity at (the SDK passes its clock's reading)
+     * @return {@code true} if the token can still sign requests
+     */
+    public boolean validSession(Instant now) {
+        if (getSessionToken() == null) {
+            return false;
+        }
+        if (externallySupplied) {
+            Instant expiry = expiresAt;
+            return expiry == null || now.isBefore(expiry.minusSeconds(EXPIRY_SAFETY_MARGIN_SECONDS));
+        }
         Long timeoutSeconds = parseTimeoutSeconds(getTokenTimeout());
-        return getSessionToken() != null
-                && getSessionStart() != null
+        return getSessionStart() != null
                 && timeoutSeconds != null
-                && Instant.now().isBefore(
-                        getSessionStart().plusSeconds(timeoutSeconds - EXPIRY_SAFETY_MARGIN_SECONDS));
+                && now.isBefore(getSessionStart().plusSeconds(timeoutSeconds - EXPIRY_SAFETY_MARGIN_SECONDS));
     }
 
     /**

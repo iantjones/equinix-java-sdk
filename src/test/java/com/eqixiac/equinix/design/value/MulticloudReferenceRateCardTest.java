@@ -72,7 +72,7 @@ class MulticloudReferenceRateCardTest {
         assertEquals(0, new BigDecimal(expected).compareTo(actual), "expected " + expected + " but was " + actual);
     }
 
-    // ── Published figures ──
+    // Published figures
 
     @Test
     void tenGigabitTierOneMatchesBothPublishedPricePages() {
@@ -145,7 +145,7 @@ class MulticloudReferenceRateCardTest {
         }
     }
 
-    // ── What the pages do not publish is unpriced, never estimated ──
+    // What the pages do not publish is unpriced, never estimated
 
     @Test
     void awsOneGigabitIsUnpricedBecauseAwsPublishesNoSuchRate() {
@@ -237,7 +237,7 @@ class MulticloudReferenceRateCardTest {
         assertMoney("9000.90", reversed.getSideZ().orElseThrow().getMonthlyRecurring());
     }
 
-    // ── AWS free tier: an explicit opt-in ──
+    // AWS free tier: an explicit opt-in
 
     @Test
     void freeTierIsNeverAppliedByDefault() {
@@ -285,7 +285,7 @@ class MulticloudReferenceRateCardTest {
                 azure.getNotes().toString());
     }
 
-    // ── Per-GB rate on the native link ──
+    // Per-GB rate on the native link
 
     @Test
     void nativeLinkPerGbRateIsAVerifiedZeroForAwsAndGoogleAndUnknownElsewhere() {
@@ -317,13 +317,13 @@ class MulticloudReferenceRateCardTest {
                 .orElseThrow().getPricePerGb());
     }
 
-    // ── Bundle metadata and integrity ──
+    // Bundle metadata and integrity
 
     @Test
     void multicloudBundleIsDatedSeparatelyFromTheMainBundle() {
         assertEquals("2026-09", card.multicloudAsOf());
         assertEquals("2026-09-21", card.multicloudRetrieved());
-        assertEquals("2026-06", card.asOf(), "the main bundle keeps its own vintage");
+        assertEquals("2026-11", card.asOf(), "the main bundle keeps its own vintage");
         assertNotNull(card.multicloudDisclaimer());
         assertTrue(card.multicloudDisclaimer().contains("730 hours per month"), card.multicloudDisclaimer());
         assertEquals(List.of(10_000), card.multicloudPublishedSizes(CloudProviderType.AWS).toList());

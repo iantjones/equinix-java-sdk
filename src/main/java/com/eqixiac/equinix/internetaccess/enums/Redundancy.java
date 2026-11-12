@@ -22,8 +22,8 @@ import com.eqixiac.equinix.core.model.APIParam;
  * Redundancy configuration of an Equinix Internet Access (EIA) v1 product configuration.
  *
  * <ul>
- *   <li>{@code SINGLE_PORT} — a single, non-redundant port.</li>
- *   <li>{@code DUAL_PORT} — a redundant, dual-port pair.</li>
+ *   <li>{@code SINGLE_PORT} - a single, non-redundant port.</li>
+ *   <li>{@code DUAL_PORT} - a redundant, dual-port pair.</li>
  * </ul>
  */
 public enum Redundancy implements APIParam {

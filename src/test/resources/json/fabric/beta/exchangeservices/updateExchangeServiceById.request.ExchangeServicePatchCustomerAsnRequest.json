@@ -1,0 +1,7 @@
+[
+  {
+    "op": "replace",
+    "path": "/routingProtocol/customerAsn",
+    "value": 1232
+  }
+]

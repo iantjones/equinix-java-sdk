@@ -25,13 +25,13 @@ import com.eqixiac.equinix.iam.model.json.creators.UpdatePermissionSetRequest;
  * Client interface for project-scoped IAM permission sets
  * ({@code /v1/projects/{projectId}/permissionSets}).
  *
- * <p>Provides the permission set lifecycle — list / create / get / update / delete. A permission
+ * <p>Provides the permission set lifecycle - list / create / get / update / delete. A permission
  * set groups the granular permissions that a role or access policy confers. All operations are
  * scoped to a {@code projectId}.</p>
  *
  * <p><b>ERN addressing.</b> {@code getPermissionSet} additionally accepts the spec's ERN-addressing
  * form, where {@code projectId} is the literal {@code "*"} and {@code permissionSetId} is an Equinix
- * Resource Name (ERN) — or a managed-permission-set id — rather than a local {@code permissionset:}
+ * Resource Name (ERN) - or a managed-permission-set id - rather than a local {@code permissionset:}
  * id. Because an ERN contains reserved characters ({@code :} and {@code /}), the API requires it to
  * be URL-encoded when used as a path segment. This SDK does not provide a dedicated {@code byErn}
  * overload: the shared core path-substitution layer does not percent-encode individual path
@@ -44,7 +44,10 @@ public interface IAMPermissionSets {
     /**
      * Lists the permission sets of a project (first page).
      *
-     * @param projectId the project identifier
+     * @param projectId the IAM project id, {@code project:<id>} (for example {@code project:abc-123}); a bare
+     *                  Resource Manager UUID is rejected, convert it with {@link ProjectIds#of(String)}.
+     *                  Project-scoped endpoints need an STS access-policy token
+     *                  ({@code new IAM(BearerTokenProvider)})
      * @return the first page of permission sets
      */
     PermissionSetList list(String projectId);
@@ -52,7 +55,10 @@ public interface IAMPermissionSets {
     /**
      * Lists the permission sets of a project, controlling pagination.
      *
-     * @param projectId the project identifier
+     * @param projectId the IAM project id, {@code project:<id>} (for example {@code project:abc-123}); a bare
+     *                  Resource Manager UUID is rejected, convert it with {@link ProjectIds#of(String)}.
+     *                  Project-scoped endpoints need an STS access-policy token
+     *                  ({@code new IAM(BearerTokenProvider)})
      * @param pageToken the opaque page token from a prior response, or {@code null} for the first page
      * @param pageSize the maximum number of results per page, or {@code null} for the server default
      * @return the requested page of permission sets
@@ -62,7 +68,10 @@ public interface IAMPermissionSets {
     /**
      * Creates a new permission set in a project.
      *
-     * @param projectId the project identifier
+     * @param projectId the IAM project id, {@code project:<id>} (for example {@code project:abc-123}); a bare
+     *                  Resource Manager UUID is rejected, convert it with {@link ProjectIds#of(String)}.
+     *                  Project-scoped endpoints need an STS access-policy token
+     *                  ({@code new IAM(BearerTokenProvider)})
      * @param request the permission set to create
      * @return the created permission set
      */
@@ -71,7 +80,10 @@ public interface IAMPermissionSets {
     /**
      * Retrieves a single permission set by id.
      *
-     * @param projectId the project identifier
+     * @param projectId the IAM project id, {@code project:<id>} (for example {@code project:abc-123}); a bare
+     *                  Resource Manager UUID is rejected, convert it with {@link ProjectIds#of(String)}.
+     *                  Project-scoped endpoints need an STS access-policy token
+     *                  ({@code new IAM(BearerTokenProvider)})
      * @param permissionSetId the permission set identifier
      * @return the matching permission set
      */
@@ -80,7 +92,10 @@ public interface IAMPermissionSets {
     /**
      * Updates a permission set.
      *
-     * @param projectId the project identifier
+     * @param projectId the IAM project id, {@code project:<id>} (for example {@code project:abc-123}); a bare
+     *                  Resource Manager UUID is rejected, convert it with {@link ProjectIds#of(String)}.
+     *                  Project-scoped endpoints need an STS access-policy token
+     *                  ({@code new IAM(BearerTokenProvider)})
      * @param permissionSetId the permission set identifier
      * @param request the update (the request's {@code lastRev} guards against concurrent updates)
      * @return the updated permission set
@@ -93,7 +108,10 @@ public interface IAMPermissionSets {
      * <p>The spec requires the permission set's last-known revision in the request body for
      * optimistic-concurrency-controlled deletion.</p>
      *
-     * @param projectId the project identifier
+     * @param projectId the IAM project id, {@code project:<id>} (for example {@code project:abc-123}); a bare
+     *                  Resource Manager UUID is rejected, convert it with {@link ProjectIds#of(String)}.
+     *                  Project-scoped endpoints need an STS access-policy token
+     *                  ({@code new IAM(BearerTokenProvider)})
      * @param permissionSetId the permission set identifier
      * @param lastRev the last-known revision of the permission set (required; from {@link PermissionSet#getRev()})
      * @return {@code true} if the deletion request was accepted

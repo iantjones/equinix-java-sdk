@@ -34,7 +34,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Tests that {@link ServerContext#providerRateCard(CloudProviderType)} builds each live pricing
- * adapter once per context and reuses it — the adapters memoize multi-megabyte offer/SKU
+ * adapter once per context and reuses it - the adapters memoize multi-megabyte offer/SKU
  * catalogues internally, so a fresh adapter per tool call would defeat that caching entirely
  * (every {@code design_compare_cloud_egress} invocation would refetch the catalogue).
  */

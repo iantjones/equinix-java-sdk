@@ -29,13 +29,13 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@DisplayName("EquinixMcpServerMain — credential and toolset resolution")
+@DisplayName("EquinixMcpServerMain - credential and toolset resolution")
 class EquinixMcpServerMainTest {
 
     @TempDir
     Path workingDir;
 
-    // ── credentials ─────────────────────────────────────────────────────────
+    // credentials
 
     @Test
     @DisplayName("environment variables win outright when both keys are present")
@@ -57,9 +57,7 @@ class EquinixMcpServerMainTest {
                 "# comment line\n"
                         + "\n"
                         + "EQUINIX_ACCESS_KEY = file-access\n"
-                        + "EQUINIX_SECRET_KEY=file-secret\n"
-                        + "not-a-pair\n"
-                        + "=no-key\n");
+                        + "export EQUINIX_SECRET_KEY=\"file-secret\" # quoted, exported\n");
         Optional<BasicEquinixCredentials> credentials =
                 EquinixMcpServerMain.resolveCredentials(Map.of(), workingDir);
         assertTrue(credentials.isPresent(), ".env.local alone should resolve credentials");
@@ -93,15 +91,52 @@ class EquinixMcpServerMainTest {
     }
 
     @Test
-    @DisplayName("parseDotEnv ignores comments, blanks, and malformed lines")
+    @DisplayName("parseDotEnv ignores comments and blanks; only the first '=' splits")
     void parseDotEnvShape() throws Exception {
         Path envFile = workingDir.resolve(".env.local");
-        Files.writeString(envFile, "# header\nA=1\n  B = two \nC\n=D\n\nE=x=y\n");
+        Files.writeString(envFile, "# header\nA=1\n  B = two \n\nE=x=y\nEMPTY=\n");
         Map<String, String> parsed = EquinixMcpServerMain.parseDotEnv(envFile);
         assertEquals("1", parsed.get("A"));
         assertEquals("two", parsed.get("B"));
         assertEquals("x=y", parsed.get("E"), "only the first '=' splits");
-        assertEquals(3, parsed.size(), "malformed lines are skipped: " + parsed);
+        assertEquals(3, parsed.size(), "empty values are omitted: " + parsed);
+    }
+
+    @Test
+    @DisplayName("parseDotEnv accepts export prefixes, quotes, inline comments and a BOM")
+    void parseDotEnvShellSyntax() throws Exception {
+        Path envFile = workingDir.resolve(".env.local");
+        Files.writeString(envFile, "\uFEFFexport EQUINIX_ACCESS_KEY=\"abc def\"   # quoted\n"
+                + "export\tEQUINIX_SECRET_KEY='s3cr#t\\n'\n"
+                + "PLAIN=value # trailing comment\n"
+                + "HASH=abc#def\n"
+                + "ESCAPED=\"a\\\"b\\\\c\"\n"
+                + "exported=1\n");
+        Map<String, String> parsed = EquinixMcpServerMain.parseDotEnv(envFile);
+        assertEquals("abc def", parsed.get("EQUINIX_ACCESS_KEY"));
+        assertEquals("s3cr#t\\n", parsed.get("EQUINIX_SECRET_KEY"), "single quotes are literal");
+        assertEquals("value", parsed.get("PLAIN"));
+        assertEquals("abc#def", parsed.get("HASH"), "a # not preceded by whitespace is part of the value");
+        assertEquals("a\"b\\c", parsed.get("ESCAPED"));
+        assertEquals("1", parsed.get("exported"), "a key that merely starts with 'export' is a key");
+    }
+
+    @Test
+    @DisplayName("a malformed value fails with the line and key, never the value")
+    void parseDotEnvMalformed() throws Exception {
+        Path envFile = workingDir.resolve(".env.local");
+        for (String[] bad : new String[][] {
+                {"EQUINIX_SECRET_KEY=\"topsecret\n", "line 1: the value of EQUINIX_SECRET_KEY has an unterminated double quote"},
+                {"A=1\nEQUINIX_SECRET_KEY='topsecret\n", "line 2: the value of EQUINIX_SECRET_KEY has an unterminated single quote"},
+                {"EQUINIX_SECRET_KEY=\"topsecret\" extra\n", "EQUINIX_SECRET_KEY has text after its closing quote"},
+                {"topsecret\n", "line 1 is not a KEY=VALUE line"},
+                {"1BAD=topsecret\n", "not a valid variable name"}}) {
+            Files.writeString(envFile, bad[0]);
+            IllegalArgumentException e = org.junit.jupiter.api.Assertions.assertThrows(
+                    IllegalArgumentException.class, () -> EquinixMcpServerMain.parseDotEnv(envFile));
+            assertTrue(e.getMessage().contains(bad[1]), e.getMessage());
+            assertTrue(!e.getMessage().contains("topsecret"), "values never appear in messages: " + e.getMessage());
+        }
     }
 
     @Test
@@ -110,39 +145,39 @@ class EquinixMcpServerMainTest {
         assertTrue(EquinixMcpServerMain.parseDotEnv(workingDir.resolve("nope.env")).isEmpty());
     }
 
-    // ── toolsets ────────────────────────────────────────────────────────────
+    // toolsets
 
     @Test
     @DisplayName("--toolsets argument wins over EQUINIX_MCP_TOOLSETS")
     void toolsetsArgWins() {
         assertEquals("design,ibx", EquinixMcpServerMain.resolveToolsets(
-                new String[] {"--toolsets", "design,ibx"}, Map.of("EQUINIX_MCP_TOOLSETS", "portal")));
+                new String[] {"--toolsets", "design,ibx"}, Map.of("EQUINIX_MCP_TOOLSETS", "ops")));
         assertEquals("ne", EquinixMcpServerMain.resolveToolsets(
-                new String[] {"--toolsets=ne"}, Map.of("EQUINIX_MCP_TOOLSETS", "portal")));
+                new String[] {"--toolsets=ne"}, Map.of("EQUINIX_MCP_TOOLSETS", "ops")));
     }
 
     @Test
     @DisplayName("EQUINIX_MCP_TOOLSETS applies when no argument is given; default is blank")
     void toolsetsEnvAndDefault() {
-        assertEquals("portal", EquinixMcpServerMain.resolveToolsets(
-                new String[0], Map.of("EQUINIX_MCP_TOOLSETS", "portal")));
+        assertEquals("ops", EquinixMcpServerMain.resolveToolsets(
+                new String[0], Map.of("EQUINIX_MCP_TOOLSETS", "ops")));
         assertEquals("", EquinixMcpServerMain.resolveToolsets(new String[0], Map.of()));
     }
 
     @Test
     @DisplayName("Toolset.parse: blank selects the read-only defaults, ids select subsets, unknown ids fail loudly")
     void toolsetParsing() {
-        assertEquals(5, Toolset.parse("").size());
-        assertEquals(5, Toolset.parse(null).size());
+        assertEquals(6, Toolset.parse("").size());
+        assertEquals(6, Toolset.parse(null).size());
         assertEquals(java.util.EnumSet.of(Toolset.DESIGN, Toolset.IBX), Toolset.parse(" design , ibx "));
         org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class,
                 () -> Toolset.parse("design,warp"));
     }
 
-    // ── logging ─────────────────────────────────────────────────────────────
+    // logging
 
     @Test
-    @DisplayName("configureLoggingToStderr pins slf4j-simple to stderr — stdout stays protocol-only")
+    @DisplayName("configureLoggingToStderr pins slf4j-simple to stderr - stdout stays protocol-only")
     void loggingPinnedToStderr() {
         String previousLogFile = System.getProperty("org.slf4j.simpleLogger.logFile");
         String previousLevel = System.getProperty("org.slf4j.simpleLogger.defaultLogLevel");

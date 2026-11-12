@@ -18,19 +18,15 @@ package com.eqixiac.equinix.fabric.client.implementation;
 
 import com.eqixiac.equinix.core.enums.MetroCode;
 import com.eqixiac.equinix.fabric.enums.Direction;
-import com.eqixiac.equinix.fabric.enums.Side;
 import com.eqixiac.equinix.core.http.ResponseHandler;
 import com.eqixiac.equinix.core.http.response.Page;
 import com.eqixiac.equinix.core.http.response.PaginatedFilteredList;
 import com.eqixiac.equinix.fabric.client.Connections;
-import com.eqixiac.equinix.fabric.client.RequestBuilder;
 import com.eqixiac.equinix.fabric.client.internal.ConnectionClient;
 import com.eqixiac.equinix.fabric.client.internal.RouteTableEntryClient;
 import com.eqixiac.equinix.fabric.enums.ConnectionType;
 import com.eqixiac.equinix.fabric.model.Connection;
-import com.eqixiac.equinix.fabric.model.Metric;
 import com.eqixiac.equinix.fabric.model.Pricing;
-import com.eqixiac.equinix.fabric.model.ConnectionStatistic;
 import com.eqixiac.equinix.fabric.model.RouteAggregationAttachment;
 import com.eqixiac.equinix.fabric.model.RouteFilterAttachment;
 import com.eqixiac.equinix.fabric.model.RouteTableEntry;
@@ -40,14 +36,11 @@ import com.eqixiac.equinix.fabric.model.implementation.filter.FilterPropertyList
 import com.eqixiac.equinix.fabric.model.implementation.sort.SortPropertyList;
 import com.eqixiac.equinix.fabric.model.json.ConnectionJson;
 import com.eqixiac.equinix.fabric.model.json.PricingJson;
-import com.eqixiac.equinix.fabric.model.json.ConnectionStatisticJson;
 import com.eqixiac.equinix.fabric.model.json.RouteTableEntryJson;
 import com.eqixiac.equinix.fabric.model.json.creators.ConnectionOperator;
 import com.eqixiac.equinix.fabric.model.wrappers.PricingWrapper;
-import com.eqixiac.equinix.fabric.model.wrappers.ConnectionStatisticWrapper;
 import com.eqixiac.equinix.fabric.model.wrappers.ConnectionWrapper;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 
@@ -92,24 +85,6 @@ public class ConnectionsImpl implements Connections {
 
     public ConnectionOperator.ConnectionBuilder define(ConnectionType connectionType) {
         return new ConnectionOperator(this.serviceClient).create(connectionType);
-    }
-
-    @Deprecated
-    @Override
-    public ConnectionStatistic getStatistics(String uuid, LocalDateTime startDateTime, LocalDateTime endDateTime, Side viewPoint) {
-        ConnectionStatisticJson connectionStatisticJson = this.serviceClient.getStatistics(uuid, startDateTime, endDateTime, viewPoint);
-        return new ConnectionStatisticWrapper(connectionStatisticJson, this.serviceClient);
-    }
-
-    @Deprecated
-    @Override
-    public ConnectionStatistic getStatistics(String uuid, LocalDateTime startDateTime, LocalDateTime endDateTime) {
-        return getStatistics(uuid, startDateTime, endDateTime, Side.A_Side);
-    }
-
-    @Override
-    public List<Metric> getMetrics(String uuid, String name, LocalDateTime fromDateTime, LocalDateTime toDateTime) {
-        return this.serviceClient.getMetrics(uuid, name, fromDateTime, toDateTime);
     }
 
     @Override

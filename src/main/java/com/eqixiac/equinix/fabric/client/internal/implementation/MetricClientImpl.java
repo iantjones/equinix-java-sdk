@@ -31,7 +31,6 @@ import com.eqixiac.equinix.fabric.model.implementation.filter.FilterPropertyList
 import com.eqixiac.equinix.fabric.model.implementation.sort.SortPropertyList;
 import com.eqixiac.equinix.fabric.model.json.MetricJson;
 
-import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -46,6 +45,13 @@ import java.util.Map;
  */
 public class MetricClientImpl extends ResourceClientBase<Metric, MetricJson> implements MetricClient<Metric> {
 
+    /**
+     * The largest page the live metrics search accepts. Observed 2026-11-12: a {@code pagination.limit}
+     * of 10 answers 200, while 20, 21, 25, 50 and 100 answer HTTP 400 EQ-3045002 (field: limit). The
+     * spec states no maximum.
+     */
+    static final int MAX_PAGE_SIZE = 10;
+
     public MetricClientImpl(FabricConfigImpl configClient) {
         super(configClient, "Fabric", "Metrics", MetricJson.class);
     }
@@ -56,7 +62,10 @@ public class MetricClientImpl extends ResourceClientBase<Metric, MetricJson> imp
     }
 
     public Page<MetricJson> search(FilterPropertyList filter, SortPropertyList sort) {
-        return searchPage("SearchMetrics", new FilteredSortedPaginatedPost<>(filter, sort));
+        FilteredSortedPaginatedPost<FilterPropertyList, SortPropertyList> body =
+                new FilteredSortedPaginatedPost<>(filter, sort);
+        body.seekPage(0, MAX_PAGE_SIZE);
+        return searchPage("SearchMetrics", body);
     }
 
     public List<Metric> getMetricsByName(String name, String value) {
@@ -71,27 +80,6 @@ public class MetricClientImpl extends ResourceClientBase<Metric, MetricJson> imp
         EquinixRequest<Metric> request = buildRequestWithQueryParams("GetMetricByName", RequestType.PAGINATED,
                 qParams, MetricJson.class);
         return toMetricList(request);
-    }
-
-    public List<Metric> getMetricsByAssetId(String asset, String assetId, String name, LocalDateTime fromDateTime, LocalDateTime toDateTime) {
-        Map<String, List<String>> qParams = new HashMap<>();
-        if (name != null) {
-            ParameterMapper.addAdditionalValue(qParams, "name", name);
-        }
-        addDateRange(qParams, fromDateTime, toDateTime);
-
-        EquinixRequest<Metric> request = buildRequest("GetMetricByAssetId", RequestType.PAGINATED,
-                Map.of("asset", asset, "assetId", assetId), qParams, MetricJson.class);
-        return toMetricList(request);
-    }
-
-    private static void addDateRange(Map<String, List<String>> qParams, LocalDateTime fromDateTime, LocalDateTime toDateTime) {
-        if (fromDateTime != null) {
-            ParameterMapper.addAdditionalValue(qParams, "fromDateTime", ParameterMapper.dateTimeForQuery(fromDateTime));
-        }
-        if (toDateTime != null) {
-            ParameterMapper.addAdditionalValue(qParams, "toDateTime", ParameterMapper.dateTimeForQuery(toDateTime));
-        }
     }
 
     private List<Metric> toMetricList(EquinixRequest<Metric> request) {

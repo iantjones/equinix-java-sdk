@@ -115,8 +115,8 @@ class IBXSmartViewStreamingSubscriptionsWireMockTest extends WireMockTestBase {
         @Test
         @DisplayName("re-GETs the subscription and updates the wrapper's state in place")
         void refreshesInPlace() {
-            // First GET returns the original state (ACTIVE, updatedBy user-b); the second GET —
-            // triggered by wrapper.refresh() — returns a DIFFERENT payload (FAILED, updatedBy user-c).
+            // First GET returns the original state (ACTIVE, updatedBy user-b); the second GET - 
+            // triggered by wrapper.refresh() - returns a DIFFERENT payload (FAILED, updatedBy user-c).
             wireMock.stubFor(get(urlPathEqualTo(PATH))
                     .inScenario("subscription-refresh")
                     .whenScenarioStateIs(Scenario.STARTED)

@@ -1,0 +1,33 @@
+{
+  "type": "OC",
+  "bandwidth": 100000,
+  "connectionDestinationType": "COLO",
+  "pathType": "UNPROTECTED",
+  "aSide": {
+    "demarcationPoint": {
+      "patchPanelId": "CP:Demarc:1259684",
+      "patchPanelPortA": "9",
+      "patchPanelPortB": "10",
+      "connectorType": "SC"
+    }
+  },
+  "zSide": {
+    "demarcationPoint": {
+      "patchPanelId": "PP:Demarc:1259695",
+      "patchPanelPortA": "20",
+      "patchPanelPortB": "21",
+      "connectorType": "SC"
+    }
+  },
+  "order": {
+    "purchaseOrderNumber": "156576"
+  },
+  "notifications": [
+    {
+      "type": "NOTIFICATION",
+      "emails": [
+        "test@test.com"
+      ]
+    }
+  ]
+}

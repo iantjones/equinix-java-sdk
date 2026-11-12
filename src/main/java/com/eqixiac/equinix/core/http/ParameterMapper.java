@@ -52,7 +52,7 @@ public final class ParameterMapper {
 
     /**
      * Accumulates {@code parameterValue} under {@code parameterName}, creating the value list on
-     * first use and appending (deduplicated) thereafter. The stored list is always mutable — the
+     * first use and appending (deduplicated) thereafter. The stored list is always mutable - the
      * previous implementation seeded new keys with an immutable {@code List.of}, so accumulating a
      * second distinct value for the same key threw {@code UnsupportedOperationException}. A
      * {@code null} value is a no-op (optional parameters are simply omitted).
@@ -143,12 +143,12 @@ public final class ParameterMapper {
      * ({@code yyyy-MM-dd'T'HH:mm:ss'Z'}).
      *
      * <p><strong>UTC contract: {@code LocalDateTime} inputs are UTC wall clock.</strong> This
-     * matches every timestamp the SDK returns — the core deserializer parses
+     * matches every timestamp the SDK returns - the core deserializer parses
      * {@code "...T12:00:00Z"} into a bare {@code LocalDateTime} of 12:00, so any API-sourced
      * value (e.g. {@code changeLog.getCreatedDateTime()}) can be passed straight back here and
      * round-trips unchanged. The digits are formatted <em>verbatim</em> with a literal
      * {@code 'Z'}; no zone conversion is performed. For "now", use
-     * {@code LocalDateTime.now(ZoneOffset.UTC)} — never zone-local {@code LocalDateTime.now()}.</p>
+     * {@code LocalDateTime.now(ZoneOffset.UTC)} - never zone-local {@code LocalDateTime.now()}.</p>
      *
      * @param localDateTime the date-time, as UTC wall clock
      * @return the wire representation, the input digits with a literal {@code 'Z'} appended

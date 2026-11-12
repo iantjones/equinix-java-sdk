@@ -43,7 +43,7 @@ final class DeploymentWizardEngine {
 
         if (metros == null || metros.isEmpty()) {
             validationErrors.add("No metro recommendations available from optimization result");
-            return DeploymentPlan.builder()
+            return identity(config, DeploymentPlan.builder()
                     .sourceOptimization(result)
                     .cloudRouters(Collections.emptyList())
                     .providerConnections(Collections.emptyList())
@@ -52,11 +52,11 @@ final class DeploymentWizardEngine {
                     .valid(false)
                     .validationErrors(validationErrors)
                     .fabric(config.getFabric())
-                    .build();
+                    .build());
         }
 
         // The /30 peering-subnet allocator is PLAN-SCOPED (never static): concurrent generatePlan
-        // calls — the embedded MCP server plans on server threads — each get their own sequence, so
+        // calls - the embedded MCP server plans on server threads - each get their own sequence, so
         // one plan's allocation can never corrupt another's. Note the documented cross-plan caveat on
         // DeploymentWizard.Builder#subnetBase: sequential plans deliberately restart from the same
         // base, so plans executed into the same project should be given distinct bases.
@@ -68,8 +68,8 @@ final class DeploymentWizardEngine {
         PlanNames names = new PlanNames();
         String prefix = PlanNames.validatePrefix(config.getRouterNamePrefix());
 
-        // Allocate the canonical Cloud Router name per metro first, so every reference to it — the
-        // router itself, each provider connection's A-side, and each backbone link's A/Z-side — resolves
+        // Allocate the canonical Cloud Router name per metro first, so every reference to it - the
+        // router itself, each provider connection's A-side, and each backbone link's A/Z-side - resolves
         // to the exact same unique, capped name.
         Map<MetroId, String> routerNames = new LinkedHashMap<>();
         for (MetroRecommendation metro : metros) {
@@ -108,17 +108,17 @@ final class DeploymentWizardEngine {
         // One rate-card instance serves both steps: a live EquinixRateCard caches its catalogue
         // fetch per instance, so resolving it twice would fetch twice and could price the same
         // connection from two different fetch outcomes.
-        RateCard rateCard = resolveRateCard(config);
+        RateCard rateCard = PlanPricer.resolveRateCard(config);
         List<PlannedMulticloudInterconnect> multicloudLinks = MulticloudLinkPlanner.price(
                 config, rateCard, cloudToCloud.links, cloudRouters, providerConnections, backboneLinks,
                 result.getRequest());
-        PlanPricing pricing = estimatePricing(config, rateCard, cloudRouters, providerConnections, backboneLinks,
+        PlanPricing pricing = PlanPricer.estimatePricing(config, rateCard, cloudRouters, providerConnections, backboneLinks,
                 multicloudLinks);
 
         // Phase 6: Layered plan-time validation.
-        //   Layer 1 — structural + catalog checks (no provisioning, no live connection dry-run).
-        //   Layer 2 — live router dry-run (self-contained FCRs, POST /routers?dryRun=true).
-        //   Layer 3 — connection endpoint dry-run: DEFERRED for a to-be-created FCR (recorded, not sent
+        //   Layer 1 - structural + catalog checks (no provisioning, no live connection dry-run).
+        //   Layer 2 - live router dry-run (self-contained FCRs, POST /routers?dryRun=true).
+        //   Layer 3 - connection endpoint dry-run: DEFERRED for a to-be-created FCR (recorded, not sent
         //             as a doomed endpoint-less dry-run), or a REAL dry-run for a pre-existing endpoint.
         // The connection-authorization each connection will need before provisioning is enumerated
         // separately so a structurally-fine plan is never reported as a validation error.
@@ -135,7 +135,7 @@ final class DeploymentWizardEngine {
                 config.getFabric());
         validationErrors.addAll(validation.errors);
 
-        return DeploymentPlan.builder()
+        return identity(config, DeploymentPlan.builder()
                 .sourceOptimization(result)
                 .cloudRouters(cloudRouters)
                 .providerConnections(providerConnections)
@@ -144,6 +144,7 @@ final class DeploymentWizardEngine {
                 // null, not an empty list, when there is no link: a plan without native links is
                 // field-for-field the plan the wizard produced before the list existed.
                 .multicloudLinks(multicloudLinks.isEmpty() ? null : multicloudLinks)
+                .interconnects(interconnects(config))
                 .pricing(pricing)
                 .valid(validationErrors.isEmpty())
                 .validationErrors(validationErrors)
@@ -151,12 +152,56 @@ final class DeploymentWizardEngine {
                 .skippedValidations(validation.skipped)
                 .requiredInputs(validation.requiredInputs)
                 .fabric(config.getFabric())
+                .build());
+    }
+
+    /**
+     * Stamps the plan's identity: deployment name (explicit, else the design spec's name, else the
+     * prefix), name prefix, project, spec fingerprint and the optimization timestamp.
+     */
+    private static DeploymentPlan identity(DeploymentWizard.Builder config, DeploymentPlan plan) {
+        String prefix = PlanNames.validatePrefix(config.getRouterNamePrefix());
+        String deployment = config.getDeploymentName() != null ? config.getDeploymentName() : prefix;
+        OptimizationResult result = config.getOptimizationResult();
+        return plan.toBuilder()
+                .deploymentName(deployment)
+                .namePrefix(prefix)
+                .projectId(config.getProjectId())
+                // An explicit fingerprint wins; otherwise the plan inherits the fingerprint of the
+                // DesignSpec the optimization ran on, so a plan always names the design it came from.
+                .specFingerprint(config.getSpecFingerprint() != null ? config.getSpecFingerprint()
+                        : (result != null ? result.getSpecFingerprint() : null))
+                .sourceComputedAt(result != null ? result.getComputedAt() : null)
                 .build();
     }
 
-    // ══════════════════════════════════════════════
+    /** The configured Interconnects, each given a logical key when it has none; {@code null} when none. */
+    private static List<PlannedInterconnect> interconnects(DeploymentWizard.Builder config) {
+        if (config.getInterconnects().isEmpty()) {
+            return null;
+        }
+        List<PlannedInterconnect> out = new ArrayList<>();
+        Set<String> keys = new HashSet<>();
+        for (PlannedInterconnect ic : config.getInterconnects()) {
+            String base = ic.getKey() != null ? ic.getKey()
+                    : "interconnect/" + (ic.getMetro() != null ? ic.getMetro().code() : "any") + "/"
+                    + (ic.getName() != null ? ic.getName() : "ic");
+            out.add(ic.toBuilder().key(uniqueKey(keys, base)).build());
+        }
+        return out;
+    }
+
+    /** {@code base}, or {@code base#2}, {@code base#3}, ... when already taken. */
+    static String uniqueKey(Set<String> used, String base) {
+        String key = base;
+        int n = 2;
+        while (!used.add(key)) {
+            key = base + "#" + n++;
+        }
+        return key;
+    }
+
     //  Phase 1: Cloud Routers
-    // ══════════════════════════════════════════════
 
     private static List<PlannedCloudRouter> planCloudRouters(
             DeploymentWizard.Builder config, List<MetroRecommendation> metros,
@@ -166,6 +211,7 @@ final class DeploymentWizardEngine {
 
         return metros.stream()
                 .map(metro -> PlannedCloudRouter.builder()
+                        .key("router/" + metro.getMetroId().code())
                         .metroId(metro.getMetroId())
                         .name(routerNames.get(metro.getMetroId()))
                         .packageCode(config.getRouterPackage())
@@ -177,7 +223,7 @@ final class DeploymentWizardEngine {
     }
 
     /**
-     * The FULL configured notification list, stamped verbatim onto every planned resource — the old
+     * The FULL configured notification list, stamped verbatim onto every planned resource - the old
      * code took only {@code get(0)}, silently dropping every additional recipient the caller
      * supplied. {@code null} when none was configured (Layer-1 validation flags that).
      */
@@ -186,9 +232,7 @@ final class DeploymentWizardEngine {
         return emails == null || emails.isEmpty() ? null : List.copyOf(emails);
     }
 
-    // ══════════════════════════════════════════════
     //  Phase 2: Provider Connections
-    // ══════════════════════════════════════════════
 
     private static List<PlannedConnection> planProviderConnections(
             DeploymentWizard.Builder config, List<MetroRecommendation> metros, OptimizationResult result,
@@ -196,6 +240,7 @@ final class DeploymentWizardEngine {
 
         List<PlannedConnection> connections = new ArrayList<>();
         List<String> notificationEmails = notificationEmails(config);
+        Set<String> keys = new HashSet<>();
 
         for (MetroRecommendation metro : metros) {
             if (metro.getAvailableProviders() == null) continue;
@@ -213,14 +258,14 @@ final class DeploymentWizardEngine {
                 if (bandwidth.getTotalMbps() <= 0) continue;
 
                 // Compose the connection name from the Cloud Router's own (already unique, capped) name
-                // plus a COMPACT provider token — "aws", not "amazon-web-services" — then cap and dedupe
+                // plus a COMPACT provider token - "aws", not "amazon-web-services" - then cap and dedupe
                 // it so it clears Fabric's < 24-character limit (EQ-3142539) even for long prefixes.
                 String connName = names.unique(routerName + "-to-" + PlanNames.providerToken(provider.getProviderLabel()));
 
                 // Bandwidth-aware profile selection. The optimizer's single winner was chosen with no
                 // knowledge of this bandwidth, so a hosted profile (capped at, say, 500 Mbps) can be the
                 // default for a metro sized at 3000 Mbps. When the provider carries candidate profiles,
-                // pick one whose tiers cover the bandwidth — ROUNDING UP to the smallest satisfying tier
+                // pick one whose tiers cover the bandwidth - ROUNDING UP to the smallest satisfying tier
                 // (3000 -> 5000) rather than erroring on a non-exact requirement. The connection is
                 // stamped at that covering tier (so the Layer-1 tier check and pricing agree), the choice
                 // and any round-up are recorded on the connection's ProfileSelection (never a silent
@@ -248,20 +293,23 @@ final class DeploymentWizardEngine {
                         // Surface the round-up on the sizing rationale too, so a reader of the bandwidth
                         // breakdown sees the requirement AND the billed tier, not just the billed tier.
                         stampedAllocation = bandwidth.toBuilder()
-                                .reasoning(bandwidth.getReasoning() + " | Rounded up " + requestedMbps + "→"
+                                .reasoning(bandwidth.getReasoning() + " | Rounded up " + requestedMbps + "->"
                                         + stampedBandwidth + " Mbps to the nearest service-profile tier (+"
                                         + selection.roundedUpByMbps() + " Mbps billable)")
                                 .build();
                     }
                 } else {
                     // Legacy / hand-built entry with no capability data: keep the pre-selected default and
-                    // the raw requirement — there is no tier list to round against.
+                    // the raw requirement - there is no tier list to round against.
                     serviceProfileUuid = provider.getServiceProfileUuid();
                     sellerRegion = firstOrNull(provider.getSellerRegions());
                     stampedBandwidth = requestedMbps;
                 }
 
                 connections.add(PlannedConnection.builder()
+                        .key(uniqueKey(keys, "connection/" + metro.getMetroId().code() + "/"
+                                + PlanNames.providerToken(provider.getProviderLabel())))
+                        .projectId(config.getProjectId())
                         .name(connName)
                         .connectionType(config.getProviderConnectionType())
                         .purpose(ConnectionPurpose.PROVIDER)
@@ -287,7 +335,7 @@ final class DeploymentWizardEngine {
 
     /**
      * Selects, among a provider's candidate service profiles for a metro, the one to build a connection
-     * of the requested speed on — <em>rounding up</em> to the smallest tier that satisfies the
+     * of the requested speed on - <em>rounding up</em> to the smallest tier that satisfies the
      * requirement when no exact tier exists (3000&nbsp;Mbps against {@code [1000, 5000, 10000]} selects
      * 5000, never an error), and stamping the connection at that covering tier.
      *
@@ -374,7 +422,7 @@ final class DeploymentWizardEngine {
 
     /**
      * A precise, actionable error for a connection whose bandwidth exceeds every available profile even
-     * after rounding up — the genuine over-capacity case (never the merely-non-exact case, which now
+     * after rounding up - the genuine over-capacity case (never the merely-non-exact case, which now
      * rounds up). It names the provider, metro and requested bandwidth, states the largest bandwidth any
      * candidate can actually carry, and suggests reducing the speed or splitting across connections.
      */
@@ -401,7 +449,7 @@ final class DeploymentWizardEngine {
         }
         return "Connection '" + connName + "' to provider '" + provider.getProviderLabel() + "' at metro "
                 + metro + ": bandwidth " + mbps + " Mbps exceeds every available service profile even after "
-                + "rounding up to the nearest tier — " + ceilingClause + ". " + suggestion + ". Candidate "
+                + "rounding up to the nearest tier - " + ceilingClause + ". " + suggestion + ". Candidate "
                 + "profiles: " + describeProfileOptions(options) + ".";
     }
 
@@ -457,7 +505,7 @@ final class DeploymentWizardEngine {
                         .build();
             }
             // No key matched. The Builder#customBandwidthMap contract promises fallback to the
-            // normal per-workload aggregation for an unmatched (metro, provider) — NOT a fabricated
+            // normal per-workload aggregation for an unmatched (metro, provider) - NOT a fabricated
             // flat default (the old 1000 Mbps invention, which mis-sized and mis-priced every
             // unmapped connection). Fall through to the standard sizing below, recording the keys
             // that were tried so the reasoning states plainly why the map did not supply the value.
@@ -518,7 +566,7 @@ final class DeploymentWizardEngine {
         String reasoning;
         if (unmatchedCustomKeys != null) {
             reasoning = "Custom strategy: no bandwidth-map key matched " + unmatchedCustomKeys
-                    + ", so the documented fallback applied — sized by the normal per-workload "
+                    + ", so the documented fallback applied - sized by the normal per-workload "
                     + "aggregation at " + metro.getMetroId();
         }
         else if (strategy == BandwidthStrategy.AGGREGATED) {
@@ -552,9 +600,7 @@ final class DeploymentWizardEngine {
         return (int) Math.max(declared, Math.ceil(floor));
     }
 
-    // ══════════════════════════════════════════════
     //  Phase 3: Backbone Links
-    // ══════════════════════════════════════════════
 
     private static List<PlannedBackboneLink> planBackboneLinks(
             DeploymentWizard.Builder config, List<MetroRecommendation> metros,
@@ -582,6 +628,8 @@ final class DeploymentWizardEngine {
             String linkName = names.unique(aSideRouterName + "-to-" + metroZ);
 
             PlannedConnection connection = PlannedConnection.builder()
+                    .key("backbone/" + metroA.code() + "-" + metroZ.code())
+                    .projectId(config.getProjectId())
                     .name(linkName)
                     .connectionType(config.getBackboneConnectionType())
                     .purpose(ConnectionPurpose.BACKBONE)
@@ -627,7 +675,7 @@ final class DeploymentWizardEngine {
             case RING:
                 if (n == 2) {
                     // A 2-metro "ring" degenerates to the single A-B link (as FULL_MESH yields).
-                    // The naive modulo walk would emit BOTH (0,1) and (1,0) — two distinctly-named,
+                    // The naive modulo walk would emit BOTH (0,1) and (1,0) - two distinctly-named,
                     // doubly-billed connections between the same pair of routers.
                     pairs.add(new int[]{0, 1});
                     break;
@@ -641,9 +689,7 @@ final class DeploymentWizardEngine {
         return pairs;
     }
 
-    // ══════════════════════════════════════════════
     //  Phase 4: Routing Protocols
-    // ══════════════════════════════════════════════
 
     private static List<PlannedRoutingProtocol> planRoutingProtocols(
             DeploymentWizard.Builder config,
@@ -655,19 +701,20 @@ final class DeploymentWizardEngine {
 
         // Protocols for provider connections
         for (PlannedConnection conn : providerConnections) {
-            protocols.addAll(createProtocolPair(config, conn.getName(), names, subnets));
+            protocols.addAll(createProtocolPair(config, conn.getName(), conn.getKey(), names, subnets));
         }
 
         // Protocols for backbone links
         for (PlannedBackboneLink link : backboneLinks) {
-            protocols.addAll(createProtocolPair(config, link.getConnection().getName(), names, subnets));
+            protocols.addAll(createProtocolPair(config, link.getConnection().getName(), link.getConnection().getKey(),
+                    names, subnets));
         }
 
         return protocols;
     }
 
     private static List<PlannedRoutingProtocol> createProtocolPair(
-            DeploymentWizard.Builder config, String connectionName, PlanNames names,
+            DeploymentWizard.Builder config, String connectionName, String connectionKey, PlanNames names,
             SubnetAllocator subnets) {
 
         List<PlannedRoutingProtocol> pair = new ArrayList<>(2);
@@ -676,11 +723,12 @@ final class DeploymentWizardEngine {
         // The protocol's own name must also clear Fabric's < 24-character limit, so it is composed
         // through the same generator (which truncates the connection stem and, if that collides,
         // appends a hash) rather than by raw string concatenation. connectionName stays the exact
-        // parent-connection name — it is the foreign key execute() resolves the parent by.
+        // parent-connection name - it is the foreign key execute() resolves the parent by.
 
         // DIRECT protocol (IP assignment)
         pair.add(PlannedRoutingProtocol.builder()
                 .type(RoutingProtocolType.DIRECT)
+                .key(connectionKey + "/rp/DIRECT")
                 .name(names.uniqueWithSuffix(connectionName, "DIRECT"))
                 .connectionName(connectionName)
                 .equinixIfaceIpv4(subnet + ".1/30")
@@ -691,6 +739,7 @@ final class DeploymentWizardEngine {
         // BGP protocol (dynamic routing)
         pair.add(PlannedRoutingProtocol.builder()
                 .type(RoutingProtocolType.BGP)
+                .key(connectionKey + "/rp/BGP")
                 .name(names.uniqueWithSuffix(connectionName, "BGP"))
                 .connectionName(connectionName)
                 .customerPeerIpv4(subnet + ".2/30")
@@ -706,12 +755,12 @@ final class DeploymentWizardEngine {
     /**
      * Plan-scoped allocator for the /30 peering subnets stamped onto each connection's DIRECT+BGP
      * pair. One instance is built per {@code generatePlan} call (like {@link PlanNames}), so
-     * concurrent plans — the embedded MCP server plans on server threads — never interleave into
+     * concurrent plans - the embedded MCP server plans on server threads - never interleave into
      * each other's sequence, and a plan's addressing is deterministic for its configuration.
      *
      * <p>Each connection consumes one third-octet step of the configured base (default
      * {@code 10.100.0.0}): the first pair peers on {@code 10.100.0.1/30}÷{@code .2/30}, the next on
-     * {@code 10.100.1.x}, carrying into the second octet past 256 connections — the exact sequence
+     * {@code 10.100.1.x}, carrying into the second octet past 256 connections - the exact sequence
      * the old static counter produced. Sequential plans deliberately restart from the same base;
      * see the cross-plan caveat on {@code DeploymentWizard.Builder#subnetBase}.</p>
      */
@@ -734,299 +783,4 @@ final class DeploymentWizardEngine {
             return ((network >>> 24) & 0xFF) + "." + ((network >>> 16) & 0xFF) + "." + ((network >>> 8) & 0xFF);
         }
     }
-
-    // ══════════════════════════════════════════════
-    //  Phase 5: Pricing
-    // ══════════════════════════════════════════════
-
-    // Package-private (not private) so DeploymentWizard — in this package — can reprice an existing
-    // plan after its connections change (e.g. an MCP profile choice altered a billable tier). The
-    // logic is unchanged; only the visibility is widened for that one same-package caller.
-    static PlanPricing estimatePricing(
-            DeploymentWizard.Builder config,
-            List<PlannedCloudRouter> routers,
-            List<PlannedConnection> providerConnections,
-            List<PlannedBackboneLink> backboneLinks) {
-        return estimatePricing(config, routers, providerConnections, backboneLinks, Collections.emptyList());
-    }
-
-    /**
-     * As the four-argument overload, and additionally reports the already-priced native multicloud
-     * links in the {@code native*} fields of {@link PlanPricing}. No native-link amount enters the
-     * plan-wide or per-category reconcilers: the Equinix totals are the same with or without links.
-     */
-    static PlanPricing estimatePricing(
-            DeploymentWizard.Builder config,
-            List<PlannedCloudRouter> routers,
-            List<PlannedConnection> providerConnections,
-            List<PlannedBackboneLink> backboneLinks,
-            List<PlannedMulticloudInterconnect> pricedMulticloudLinks) {
-        return estimatePricing(config, resolveRateCard(config), routers, providerConnections, backboneLinks,
-                pricedMulticloudLinks);
-    }
-
-    /**
-     * As the five-argument overload, pricing with the given resolved rate card instead of
-     * resolving one from {@code config}. The caller that also prices native links passes the same
-     * instance to {@code MulticloudLinkPlanner.price}, so one live card (and its cached
-     * catalogue fetch) serves the whole plan.
-     *
-     * @param rateCard the resolved card, or {@code null} for the built-in heuristic only
-     */
-    static PlanPricing estimatePricing(
-            DeploymentWizard.Builder config,
-            RateCard rateCard,
-            List<PlannedCloudRouter> routers,
-            List<PlannedConnection> providerConnections,
-            List<PlannedBackboneLink> backboneLinks,
-            List<PlannedMulticloudInterconnect> pricedMulticloudLinks) {
-
-        Term term = config.getTerm();
-
-        Map<String, BigDecimal> perConnectionCost = new LinkedHashMap<>();
-        Set<PriceSource> sources = new HashSet<>();
-        // Every priced line flows through one plan-wide reconciler PLUS its category's reconciler. A
-        // plan can legitimately span metros in different currencies (live Fabric pricing quotes EUR in
-        // Frankfurt, USD in Ashburn, ...), and summing those into one monthly total — at the plan
-        // level OR within a category — would be a fabricated cross-currency figure.
-        CurrencyReconciler recon = CurrencyReconciler.create();
-        CurrencyReconciler routerRecon = CurrencyReconciler.create();
-        CurrencyReconciler providerRecon = CurrencyReconciler.create();
-        CurrencyReconciler backboneRecon = CurrencyReconciler.create();
-
-        // Cloud Routers
-        for (PlannedCloudRouter router : routers) {
-            PriceQuote quote = priceRouter(rateCard, router, term);
-            recon.add(quote.getCurrency(), quote.getMonthlyRecurring(), quote.getNonRecurring());
-            routerRecon.add(quote.getCurrency(), quote.getMonthlyRecurring(), quote.getNonRecurring());
-            sources.add(quote.getSource());
-        }
-
-        // Provider connections
-        for (PlannedConnection conn : providerConnections) {
-            PriceQuote quote = priceConnection(rateCard, conn.getConnectionType(),
-                    conn.getBandwidthMbps(), conn.getASideMetro(), term);
-            perConnectionCost.put(conn.getName(), quote.getMonthlyRecurring());
-            recon.add(quote.getCurrency(), quote.getMonthlyRecurring(), quote.getNonRecurring());
-            providerRecon.add(quote.getCurrency(), quote.getMonthlyRecurring(), quote.getNonRecurring());
-            sources.add(quote.getSource());
-        }
-
-        // Backbone links
-        for (PlannedBackboneLink link : backboneLinks) {
-            ConnectionType type = link.getConnection() != null ? link.getConnection().getConnectionType() : null;
-            PriceQuote quote = priceConnection(rateCard, type, link.getBandwidthMbps(), link.getMetroA(), term);
-            perConnectionCost.put(link.getName(), quote.getMonthlyRecurring());
-            recon.add(quote.getCurrency(), quote.getMonthlyRecurring(), quote.getNonRecurring());
-            backboneRecon.add(quote.getCurrency(), quote.getMonthlyRecurring(), quote.getNonRecurring());
-            sources.add(quote.getSource());
-        }
-
-        PriceSource source = dominantSource(sources);
-        boolean authoritative = source == PriceSource.EQUINIX_LIVE || source == PriceSource.CUSTOM;
-        boolean mixed = recon.isMixed();
-
-        String currency = mixed ? null : recon.soleCurrencyOr("USD");
-
-        String disclaimer;
-        if (mixed) {
-            // Mixed currencies: do not fabricate a combined total. Omit the monthly/setup totals and
-            // the single currency, and surface the per-currency subtotals. Each CATEGORY figure gets
-            // the same treatment: kept (with its own currency) only when that category reconciles to
-            // a single currency, otherwise nulled with its per-currency subtotals carrying the truth.
-            disclaimer = "This plan's connections are priced in multiple currencies ("
-                    + recon.describeCurrencies() + "): " + recon.describeMonthlySubtotals() + " per month. A single "
-                    + "plan total cannot be formed without an FX rate, so the monthly and setup totals are omitted "
-                    + "rather than reported as a fabricated cross-currency sum. A per-category figure is shown (in "
-                    + "its own currency) only when that category reconciles to one currency; a category that itself "
-                    + "spans currencies is reported as per-currency subtotals instead of a single figure.";
-        }
-        else {
-            disclaimer = authoritative
-                    ? "Based on live Equinix Fabric pricing. Actual costs may vary based on contract terms, volume "
-                        + "discounts, and promotional offers."
-                    : "Some or all figures are heuristic or reference estimates (live Fabric pricing was unavailable "
-                        + "for part of this plan). Actual costs may vary; contact your Equinix account team for precise quotes.";
-        }
-
-        PlanPricing equinixPricing = PlanPricing.builder()
-                .monthlyTotal(mixed ? null : recon.monthlyTotal().orElse(BigDecimal.ZERO))
-                .setupTotal(mixed ? null : recon.setupTotal().orElse(BigDecimal.ZERO))
-                .currency(currency)
-                .monthlyByCurrency(recon.monthlySubtotals())
-                .routerMonthlyCost(categoryMonthly(routerRecon))
-                .routerCurrency(routerRecon.soleCurrencyOr(currency))
-                .routerMonthlyByCurrency(routerRecon.monthlySubtotals())
-                .providerConnectionMonthlyCost(categoryMonthly(providerRecon))
-                .providerConnectionCurrency(providerRecon.soleCurrencyOr(currency))
-                .providerConnectionMonthlyByCurrency(providerRecon.monthlySubtotals())
-                .backboneMonthlyCost(categoryMonthly(backboneRecon))
-                .backboneCurrency(backboneRecon.soleCurrencyOr(currency))
-                .backboneMonthlyByCurrency(backboneRecon.monthlySubtotals())
-                .perConnectionCost(perConnectionCost)
-                .source(source)
-                .disclaimer(disclaimer)
-                .build();
-        return withMulticloudLinks(equinixPricing, pricedMulticloudLinks);
-    }
-
-    /**
-     * Returns the pricing with the native-link fields filled from links that were already priced.
-     * Returns the argument itself, every native field {@code null}, when there is no link. {@code REPLACEMENT} and
-     * {@code ALTERNATIVE} links are totalled separately, each through its own reconciler; a role's
-     * total is withheld when any link of that role is not fully priced or the role spans
-     * currencies. {@code UNAVAILABLE} entries have no price and are not listed as unpriced links.
-     */
-    private static PlanPricing withMulticloudLinks(PlanPricing equinixPricing,
-                                                   List<PlannedMulticloudInterconnect> links) {
-        if (links == null || links.isEmpty()) {
-            return equinixPricing;
-        }
-        // 'var': the Lombok-generated builder type must not appear in a signature, because the
-        // javadoc tool reads these sources without running Lombok.
-        var pricing = equinixPricing.toBuilder();
-        Map<String, BigDecimal> perLink = new LinkedHashMap<>();
-        List<String> unpriced = new ArrayList<>();
-        CurrencyReconciler replacement = CurrencyReconciler.create();
-        CurrencyReconciler alternative = CurrencyReconciler.create();
-        boolean replacementComplete = true;
-        boolean alternativeComplete = true;
-        int replacements = 0;
-        int alternatives = 0;
-        for (PlannedMulticloudInterconnect link : links) {
-            boolean isReplacement = link.getRole() == MulticloudLinkRole.REPLACEMENT;
-            boolean isAlternative = link.getRole() == MulticloudLinkRole.ALTERNATIVE;
-            if (!isReplacement && !isAlternative) {
-                continue;
-            }
-            if (isReplacement) {
-                replacements++;
-            } else {
-                alternatives++;
-            }
-            MulticloudLinkPricing price = link.getPricing();
-            if (price == null || price.getNativeMonthly() == null) {
-                unpriced.add(link.getName());
-                if (isReplacement) {
-                    replacementComplete = false;
-                } else {
-                    alternativeComplete = false;
-                }
-                continue;
-            }
-            perLink.put(link.getName(), price.getNativeMonthly());
-            (isReplacement ? replacement : alternative)
-                    .add(price.getNativeCurrency(), price.getNativeMonthly(), BigDecimal.ZERO);
-        }
-        pricing.perMulticloudLinkCost(perLink)
-                .unpricedMulticloudLinks(unpriced)
-                .nativeMulticloudDisclaimer("Native multicloud link figures are the two cloud providers' published "
-                        + "hourly list prices converted at " + MulticloudLinkQuote.HOURS_PER_MONTH + " hours per month "
-                        + "(reference data as of " + ReferenceRateCard.standard().multicloudAsOf() + ", retrieved "
-                        + ReferenceRateCard.standard().multicloudRetrieved() + ") unless a configured rate card "
-                        + "supplied them. The cloud providers bill these charges; they are not part of the Equinix "
-                        + "totals. An unpriced link is not a zero cost. Estimates, not quotes.");
-        if (replacements > 0) {
-            boolean ok = replacementComplete && !replacement.isMixed() && !replacement.sawUnknownCurrency();
-            pricing.nativeReplacementMonthlyCost(ok ? replacement.monthlyTotal().orElse(null) : null)
-                    .nativeReplacementCurrency(ok ? replacement.soleCurrency() : null)
-                    .nativeReplacementMonthlyByCurrency(replacement.monthlySubtotals());
-        }
-        if (alternatives > 0) {
-            boolean ok = alternativeComplete && !alternative.isMixed() && !alternative.sawUnknownCurrency();
-            pricing.nativeAlternativeMonthlyCost(ok ? alternative.monthlyTotal().orElse(null) : null)
-                    .nativeAlternativeCurrency(ok ? alternative.soleCurrency() : null)
-                    .nativeAlternativeMonthlyByCurrency(alternative.monthlySubtotals());
-        }
-        return pricing.build();
-    }
-
-    /**
-     * A category's single monthly figure: its reconciled sum when all its line items share a
-     * currency (zero for an empty category), or {@code null} when the category itself is mixed —
-     * a raw cross-currency category sum (EUR&nbsp;280 + USD&nbsp;300 = "580") is a fabricated
-     * number and is never reported.
-     */
-    private static BigDecimal categoryMonthly(CurrencyReconciler categoryRecon) {
-        return categoryRecon.monthlyTotal().orElse(null);
-    }
-
-    private static PriceSource dominantSource(Set<PriceSource> sources) {
-        if (sources.isEmpty()) {
-            return PriceSource.ESTIMATE;
-        }
-        if (sources.size() == 1) {
-            return sources.iterator().next();
-        }
-        return PriceSource.COMPOSITE;
-    }
-
-    /**
-     * Resolves the rate card to price the plan with: the explicitly-configured
-     * card if set, otherwise live Equinix pricing over the wizard's Fabric
-     * gateway. Returns {@code null} only when neither is available (no gateway),
-     * in which case pricing falls back entirely to the built-in heuristic.
-     */
-    static RateCard resolveRateCard(DeploymentWizard.Builder config) {
-        if (config.getRateCard() != null) {
-            return config.getRateCard();
-        }
-        FabricGateway fabric = config.getFabric();
-        return fabric != null ? EquinixRateCard.of(fabric) : null;
-    }
-
-    /**
-     * Resolves a {@link MetroId} to a {@link MetroCode} for the rate-card APIs (which are keyed by
-     * the enum). A metro not listed by the enum maps to {@link MetroCode#UNKNOWN}, so it prices via
-     * the rate card's fallback rather than a metro-specific rate.
-     */
-    private static MetroCode toMetroCode(MetroId metroId) {
-        return metroId == null ? MetroCode.UNKNOWN : metroId.asMetroCode().orElse(MetroCode.UNKNOWN);
-    }
-
-    /**
-     * Prices a single connection via the rate card, falling back to the legacy
-     * tiered heuristic (tagged {@link PriceSource#ESTIMATE}) when the card
-     * cannot resolve a price.
-     */
-    static PriceQuote priceConnection(RateCard rateCard, ConnectionType type,
-                                              int bandwidthMbps, MetroId metro, Term term) {
-        if (rateCard != null) {
-            Optional<PriceQuote> quote = rateCard.connection(type, bandwidthMbps, toMetroCode(metro), term);
-            if (quote.isPresent()) {
-                return quote.get();
-            }
-        }
-        return PriceQuote.of(estimateConnectionCost(bandwidthMbps), BigDecimal.valueOf(500),
-                Currency.getInstance("USD"), PriceSource.ESTIMATE);
-    }
-
-    /**
-     * Prices a single Cloud Router via the rate card, falling back to the legacy
-     * ~$300/month heuristic (tagged {@link PriceSource#ESTIMATE}) when the card
-     * cannot resolve a price.
-     */
-    static PriceQuote priceRouter(RateCard rateCard, PlannedCloudRouter router, Term term) {
-        if (rateCard != null) {
-            String packageCode = router.getPackageCode() != null ? router.getPackageCode().name() : null;
-            Optional<PriceQuote> quote = rateCard.cloudRouter(packageCode, toMetroCode(router.getMetroId()), term);
-            if (quote.isPresent()) {
-                return quote.get();
-            }
-        }
-        return PriceQuote.of(BigDecimal.valueOf(300), BigDecimal.ZERO,
-                Currency.getInstance("USD"), PriceSource.ESTIMATE);
-    }
-
-    private static BigDecimal estimateConnectionCost(int bandwidthMbps) {
-        // Tiered pricing estimate based on bandwidth
-        if (bandwidthMbps <= 50) return BigDecimal.valueOf(150);
-        if (bandwidthMbps <= 200) return BigDecimal.valueOf(300);
-        if (bandwidthMbps <= 500) return BigDecimal.valueOf(600);
-        if (bandwidthMbps <= 1000) return BigDecimal.valueOf(1000);
-        if (bandwidthMbps <= 5000) return BigDecimal.valueOf(3000);
-        if (bandwidthMbps <= 10000) return BigDecimal.valueOf(5000);
-        return BigDecimal.valueOf(8000);
-    }
-
 }

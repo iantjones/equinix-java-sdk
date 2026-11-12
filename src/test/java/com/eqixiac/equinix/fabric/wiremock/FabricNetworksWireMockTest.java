@@ -142,7 +142,7 @@ class FabricNetworksWireMockTest extends WireMockTestBase {
         @Test
         @DisplayName("dryRun() sends dryRun=true on POST /networks and deserializes the echoed request")
         void dryRunCreateSendsDryRunQueryParam() {
-            // Spec (createNetwork): dryRun — "option to verify that API calls will succeed".
+            // Spec (createNetwork): dryRun - "option to verify that API calls will succeed".
             // The dry-run example (CreateNetworkDryRunResponse, filed under the 201 response) is the
             // validated request echoed back: no uuid/href/state. The stub only matches when
             // dryRun=true is on the wire, so a dropped parameter fails the call, not just verify().
@@ -409,7 +409,7 @@ class FabricNetworksWireMockTest extends WireMockTestBase {
             stubPaginatedGet(wireMock, "/fabric/v4/networks/.*/connections",
                     "/json/fabric/paginated_connections.json");
 
-            PaginatedList<Connection> connections = fabric.networks()
+            List<Connection> connections = fabric.networks()
                     .getConnections("c3d4e5f6-a7b8-9012-cdef-234567890abc");
 
             assertNotNull(connections);

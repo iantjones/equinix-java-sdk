@@ -5,13 +5,14 @@ import com.eqixiac.equinix.core.WireMockTestBase;
 import com.eqixiac.equinix.core.exception.*;
 import com.eqixiac.equinix.core.http.response.PaginatedFilteredList;
 import com.eqixiac.equinix.fabric.model.CloudEvent;
+import com.eqixiac.equinix.fabric.model.implementation.filter.CloudEventQuery;
 import com.eqixiac.equinix.fabric.model.implementation.filter.Filter;
 import com.eqixiac.equinix.fabric.model.implementation.filter.FilterPropertyList;
 import com.eqixiac.equinix.fabric.model.implementation.sort.Sort;
 import com.eqixiac.equinix.fabric.model.implementation.sort.SortPropertyList;
 import org.junit.jupiter.api.*;
 
-import java.util.List;
+import java.time.LocalDateTime;
 
 import static com.eqixiac.equinix.core.ResponseStubs.*;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
@@ -41,103 +42,98 @@ class FabricCloudEventsWireMockTest extends WireMockTestBase {
         resetStubs();
     }
 
+    private static final String PORT_SUBJECT = "/fabric/v4/ports/8ac8ecfe-c7cb-4def-9f77-5ce93c19d83d";
+
     @Nested
-    @DisplayName("getByAssetId()")
-    class GetByAssetId {
+    @DisplayName("search(CloudEventQuery)")
+    class Search {
 
         @Test
-        @DisplayName("GETs {asset}/{assetId}/cloudevents and returns the list of cloud events")
-        void returnsCloudEvents() {
-            stubPaginatedGet(wireMock, "/fabric/v4/connections/.*/cloudevents",
-                    "/json/fabric/cloud_events_by_asset_response.json");
+        @DisplayName("forAsset sends the subject IN expression the service requires")
+        void searchForAsset() {
+            stubPaginatedPost(wireMock, "/fabric/v4/cloudevents/search",
+                    "/json/fabric/cloud_events_search_response.json");
 
-            List<CloudEvent> events = fabric.cloudEvents().getByAssetId(
-                    "connections", "095be615-a8ad-4c33-8e9c-c7612fbf6c9f");
+            PaginatedFilteredList<CloudEvent> results = fabric.cloudEvents().search(
+                    CloudEventQuery.forAsset("connections", "095be615-a8ad-4c33-8e9c-c7612fbf6c9f"));
 
-            assertNotNull(events);
-            assertEquals(2, events.size());
-            assertEquals("557400f8-d360-11e9-bb65-2a2ae2dbcce4", events.get(0).getUuid());
-            assertEquals("equinix.fabric.connection.updated", events.get(0).getType());
+            assertEquals(2, results.size());
+            assertEquals("557400f8-d360-11e9-bb65-2a2ae2dbcce4", results.get(0).getUuid());
+            wireMock.verify(postRequestedFor(urlPathEqualTo("/fabric/v4/cloudevents/search"))
+                    .withRequestBody(matchingJsonPath("$.filter.and[0].property", equalTo("/subject")))
+                    .withRequestBody(matchingJsonPath("$.filter.and[0].operator", equalTo("IN")))
+                    .withRequestBody(matchingJsonPath("$.filter.and[0].values[0]",
+                            equalTo("/fabric/v4/connections/095be615-a8ad-4c33-8e9c-c7612fbf6c9f"))));
+        }
 
-            wireMock.verify(getRequestedFor(urlPathMatching(
-                    "/fabric/v4/connections/095be615-a8ad-4c33-8e9c-c7612fbf6c9f/cloudevents")));
+        @Test
+        @DisplayName("forProject with types and a time bound matches the spec example's property set")
+        void searchForProject() {
+            stubPaginatedPost(wireMock, "/fabric/v4/cloudevents/search",
+                    "/json/fabric/cloud_events_search_response.json");
+
+            fabric.cloudEvents().search(CloudEventQuery.forProject("dadd3ab6-c0af-430c-8216-43d44f08c1c5")
+                    .types("equinix.fabric.port.status.*")
+                    .after(LocalDateTime.of(2018, 4, 5, 17, 31)), Sort.sort().desc("/time"));
+
+            wireMock.verify(postRequestedFor(urlPathEqualTo("/fabric/v4/cloudevents/search"))
+                    .withRequestBody(matchingJsonPath("$.filter.and[0].property", equalTo("/equinixproject")))
+                    .withRequestBody(matchingJsonPath("$.filter.and[0].operator", equalTo("=")))
+                    .withRequestBody(matchingJsonPath("$.filter.and[1].property", equalTo("/type")))
+                    .withRequestBody(matchingJsonPath("$.filter.and[2].property", equalTo("/time")))
+                    .withRequestBody(matchingJsonPath("$.filter.and[2].operator", equalTo(">")))
+                    .withRequestBody(matchingJsonPath("$.filter.and[2].values[0]", equalTo("2018-04-05T17:31:00Z")))
+                    .withRequestBody(matchingJsonPath("$.sort[0].property", equalTo("/time"))));
+        }
+
+        @Test
+        @DisplayName("a hand-built filter without subject/project/organization is rejected before any request")
+        void rejectsUnscopedFilter() {
+            FilterPropertyList filter = Filter.filter().and().equals("/type", "equinix.fabric.connection.updated");
+
+            assertThrows(IllegalArgumentException.class, () -> fabric.cloudEvents().search(filter, null));
+            assertThrows(IllegalArgumentException.class, () -> fabric.cloudEvents().search((FilterPropertyList) null, null));
+            wireMock.verify(0, postRequestedFor(urlPathEqualTo("/fabric/v4/cloudevents/search")));
+        }
+
+        @Test
+        @DisplayName("a hand-built filter with /equinixorganization is accepted")
+        void acceptsOrganizationFilter() {
+            stubPaginatedPost(wireMock, "/fabric/v4/cloudevents/search",
+                    "/json/fabric/cloud_events_search_response.json");
+            FilterPropertyList filter = Filter.filter().and().equals("/equinixorganization", "526698000597331");
+
+            assertEquals(2, fabric.cloudEvents().search(filter, null).size());
         }
     }
 
     @Nested
-    @DisplayName("search()")
-    class Search {
+    @DisplayName("searchLiveEvents()")
+    class LiveEvents {
 
         @Test
-        @DisplayName("search() POSTs an empty filter/sort to /cloudevents/search")
-        void searchNoArgs() {
-            stubPaginatedPost(wireMock, "/fabric/v4/cloudevents/search",
-                    "/json/fabric/cloud_events_search_response.json");
+        @DisplayName("POSTs /liveEvents/search with the subject IN filter and reads the spec example")
+        void searchLiveEvents() {
+            stubPaginatedPost(wireMock, "/fabric/v4/liveEvents/search",
+                    "/json/fabric/live_events_search_response.json");
 
-            PaginatedFilteredList<CloudEvent> results = fabric.cloudEvents().search();
+            PaginatedFilteredList<CloudEvent> events = fabric.cloudEvents().searchLiveEvents(PORT_SUBJECT);
 
-            assertNotNull(results);
-            assertEquals(2, results.size());
-            assertEquals("557400f8-d360-11e9-bb65-2a2ae2dbcce4", results.get(0).getUuid());
-            assertEquals("equinix.fabric.connection.updated", results.get(0).getType());
-
-            wireMock.verify(postRequestedFor(urlPathEqualTo("/fabric/v4/cloudevents/search")));
+            assertEquals(1, events.size());
+            assertEquals("6c573287-9914-4202-8b6d-2d15e7da04b8", events.get(0).getUuid());
+            assertEquals("equinix.fabric.port.status.down", events.get(0).getType());
+            wireMock.verify(postRequestedFor(urlPathEqualTo("/fabric/v4/liveEvents/search"))
+                    .withRequestBody(matchingJsonPath("$.filter.and[0].property", equalTo("/subject")))
+                    .withRequestBody(matchingJsonPath("$.filter.and[0].operator", equalTo("IN")))
+                    .withRequestBody(matchingJsonPath("$.filter.and[0].values[0]", equalTo(PORT_SUBJECT))));
         }
 
         @Test
-        @DisplayName("search(filter) POSTs the AND/equals filter in the body")
-        void searchWithFilter() {
-            stubPaginatedPost(wireMock, "/fabric/v4/cloudevents/search",
-                    "/json/fabric/cloud_events_search_response.json");
-
-            FilterPropertyList filter = Filter.filter().and()
-                    .equals("/type", "equinix.fabric.connection.updated");
-
-            PaginatedFilteredList<CloudEvent> results = fabric.cloudEvents().search(filter);
-
-            assertNotNull(results);
-            wireMock.verify(postRequestedFor(urlPathEqualTo("/fabric/v4/cloudevents/search"))
-                    .withRequestBody(matchingJsonPath("$.filter.and[0].property", equalTo("/type")))
-                    .withRequestBody(matchingJsonPath("$.filter.and[0].operator", equalTo("=")))
-                    .withRequestBody(matchingJsonPath("$.filter.and[0].values[0]",
-                            equalTo("equinix.fabric.connection.updated"))));
-        }
-
-        @Test
-        @DisplayName("search(sort) POSTs the sort array in the body")
-        void searchWithSort() {
-            stubPaginatedPost(wireMock, "/fabric/v4/cloudevents/search",
-                    "/json/fabric/cloud_events_search_response.json");
-
-            SortPropertyList sort = Sort.sort().desc("/time");
-
-            PaginatedFilteredList<CloudEvent> results = fabric.cloudEvents().search(sort);
-
-            assertNotNull(results);
-            wireMock.verify(postRequestedFor(urlPathEqualTo("/fabric/v4/cloudevents/search"))
-                    .withRequestBody(matchingJsonPath("$.sort[0].property", equalTo("/time")))
-                    .withRequestBody(matchingJsonPath("$.sort[0].direction", equalTo("DESC"))));
-        }
-
-        @Test
-        @DisplayName("search(filter, sort) POSTs both filter and sort in the body")
-        void searchWithFilterAndSort() {
-            stubPaginatedPost(wireMock, "/fabric/v4/cloudevents/search",
-                    "/json/fabric/cloud_events_search_response.json");
-
-            FilterPropertyList filter = Filter.filter().and()
-                    .equals("/type", "equinix.fabric.connection.created");
-            SortPropertyList sort = Sort.sort().asc("/time");
-
-            PaginatedFilteredList<CloudEvent> results = fabric.cloudEvents().search(filter, sort);
-
-            assertNotNull(results);
-            wireMock.verify(postRequestedFor(urlPathEqualTo("/fabric/v4/cloudevents/search"))
-                    .withRequestBody(matchingJsonPath("$.filter.and[0].property", equalTo("/type")))
-                    .withRequestBody(matchingJsonPath("$.filter.and[0].values[0]",
-                            equalTo("equinix.fabric.connection.created")))
-                    .withRequestBody(matchingJsonPath("$.sort[0].property", equalTo("/time")))
-                    .withRequestBody(matchingJsonPath("$.sort[0].direction", equalTo("ASC"))));
+        @DisplayName("no subject or a wildcard subject is rejected (live: empty filter 500, wildcard 400)")
+        void rejectsInvalidSubjects() {
+            assertThrows(IllegalArgumentException.class, () -> fabric.cloudEvents().searchLiveEvents());
+            assertThrows(IllegalArgumentException.class, () -> fabric.cloudEvents().searchLiveEvents(PORT_SUBJECT + "*"));
+            wireMock.verify(0, postRequestedFor(urlPathEqualTo("/fabric/v4/liveEvents/search")));
         }
     }
 
@@ -169,11 +165,11 @@ class FabricCloudEventsWireMockTest extends WireMockTestBase {
         @Test
         @DisplayName("500 throws EquinixServerException")
         void serverError() {
-            stubErrorInline(wireMock, "/fabric/v4/connections/.*/cloudevents",
+            stubErrorInline(wireMock, "/fabric/v4/cloudevents/search",
                     500, "[{\"errorCode\":\"ERR-500\",\"errorMessage\":\"Internal server error\"}]");
 
             assertThrows(EquinixServerException.class,
-                    () -> fabric.cloudEvents().getByAssetId("connections", "test-uuid"));
+                    () -> fabric.cloudEvents().search(CloudEventQuery.forAsset("connections", "test-uuid")));
         }
     }
 
@@ -206,7 +202,7 @@ class FabricCloudEventsWireMockTest extends WireMockTestBase {
                     .withRequestBody(matchingJsonPath("$.pagination.offset", equalTo("100")))
                     .willReturn(okJson(PAGE_2)));
 
-            PaginatedFilteredList<CloudEvent> events = fabric.cloudEvents().search();
+            PaginatedFilteredList<CloudEvent> events = fabric.cloudEvents().search(CloudEventQuery.forProject("p-1"));
             assertEquals(1, events.size());
             assertTrue(events.hasNextPage());
 

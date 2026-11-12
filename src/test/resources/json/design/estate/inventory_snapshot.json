@@ -1,0 +1,59 @@
+{
+  "scope" : { "projectIds" : [ "11111111-1111-1111-1111-111111111111" ], "accountNumbers" : [ ], "resourceIds" : [ ],
+              "entireAccount" : false, "maxResourcesPerType" : 2000 },
+  "asOf" : "2026-11-12T00:00:00Z",
+  "source" : "fixture (synthetic values)",
+  "ports" : [
+    { "id" : "p-dc-1", "name" : "dc-port-1", "metro" : "DC", "state" : "ACTIVE", "speedMbps" : 10000, "usedMbps" : 9600,
+      "availableMbps" : 400, "encapsulation" : "DOT1Q", "lagEnabled" : false, "physicalPortCount" : 1,
+      "redundancyPriority" : "PRIMARY", "deviceName" : "dc-switch-a", "connectionCount" : 4,
+      "projectId" : "11111111-1111-1111-1111-111111111111", "accountNumber" : "100", "createdAt" : "2024-01-01T00:00:00Z",
+      "notificationCount" : 1 },
+    { "id" : "p-dc-2", "name" : "dc-port-2", "metro" : "DC", "state" : "ACTIVE", "speedMbps" : 10000, "usedMbps" : 0,
+      "availableMbps" : 10000, "encapsulation" : "DOT1Q", "lagEnabled" : false, "physicalPortCount" : 1,
+      "redundancyPriority" : "SECONDARY", "deviceName" : "dc-switch-b", "connectionCount" : 0,
+      "projectId" : "11111111-1111-1111-1111-111111111111", "accountNumber" : "100", "createdAt" : "2024-01-01T00:00:00Z",
+      "notificationCount" : 1 }
+  ],
+  "connections" : [
+    { "id" : "c-aws", "name" : "to-aws", "type" : "EVPL_VC", "state" : "ACTIVE", "equinixStatus" : "PROVISIONED",
+      "bandwidthMbps" : 1000, "aSide" : { "type" : "COLO", "metro" : "DC", "portId" : "p-dc-1" },
+      "zSide" : { "type" : "SP", "metro" : "DC", "serviceProfileId" : "sp-aws", "serviceProfileName" : "AWS Direct Connect" },
+      "termMonths" : 1, "redundancyGroup" : "g-aws", "redundancyPriority" : "PRIMARY", "createdAt" : "2025-06-01T00:00:00Z",
+      "projectId" : "11111111-1111-1111-1111-111111111111", "accountNumber" : "100", "purchaseOrder" : "PO-7",
+      "notificationCount" : 1 },
+    { "id" : "c-azure", "name" : "to-azure", "type" : "EVPL_VC", "state" : "ACTIVE", "equinixStatus" : "PROVISIONED",
+      "bandwidthMbps" : 1000, "aSide" : { "type" : "COLO", "metro" : "DC", "portId" : "p-dc-1" },
+      "zSide" : { "type" : "SP", "metro" : "DC", "serviceProfileId" : "sp-azure", "serviceProfileName" : "Azure ExpressRoute" },
+      "termMonths" : 12, "redundancyGroup" : "g-azure", "redundancyPriority" : "PRIMARY", "createdAt" : "2025-06-01T00:00:00Z",
+      "projectId" : "11111111-1111-1111-1111-111111111111", "accountNumber" : "100", "purchaseOrder" : "PO-7",
+      "notificationCount" : 1 },
+    { "id" : "c-google", "name" : "to-google", "type" : "EVPL_VC", "state" : "ACTIVE", "equinixStatus" : "PROVISIONED",
+      "bandwidthMbps" : 500, "aSide" : { "type" : "COLO", "metro" : "DC", "portId" : "p-dc-1" },
+      "zSide" : { "type" : "SP", "metro" : "DC", "serviceProfileId" : "sp-google", "serviceProfileName" : "Google Partner Interconnect" },
+      "termMonths" : 12, "redundancyGroup" : "g-google", "redundancyPriority" : "PRIMARY", "createdAt" : "2025-06-01T00:00:00Z",
+      "projectId" : "11111111-1111-1111-1111-111111111111", "accountNumber" : "100", "purchaseOrder" : "PO-7",
+      "notificationCount" : 1 },
+    { "id" : "c-pending", "name" : "pending", "type" : "EVPL_VC", "state" : "PENDING", "equinixStatus" : "PENDING_APPROVAL",
+      "bandwidthMbps" : 50, "aSide" : { "type" : "COLO", "metro" : "DC", "portId" : "p-dc-1" },
+      "zSide" : { "type" : "SP", "metro" : "DC", "serviceProfileId" : "sp-aws", "serviceProfileName" : "AWS Direct Connect" },
+      "termMonths" : 1, "redundancyGroup" : "g-pending", "redundancyPriority" : "PRIMARY", "createdAt" : "2026-10-01T00:00:00Z",
+      "projectId" : "11111111-1111-1111-1111-111111111111", "accountNumber" : "100", "notificationCount" : 1 }
+  ],
+  "routers" : [
+    { "id" : "r-sv", "name" : "sv-router", "packageCode" : "STANDARD", "metro" : "SV", "state" : "PROVISIONED",
+      "connectionCount" : 0, "createdAt" : "2025-01-01T00:00:00Z", "projectId" : "11111111-1111-1111-1111-111111111111",
+      "accountNumber" : "100", "notificationCount" : 1 }
+  ],
+  "networks" : [ ],
+  "serviceTokens" : [
+    { "id" : "t-old", "name" : "old-token", "type" : "VC_TOKEN", "state" : "EXPIRED", "expiresAt" : "2026-09-01T00:00:00Z",
+      "createdAt" : "2026-08-01T00:00:00Z", "projectId" : "11111111-1111-1111-1111-111111111111" }
+  ],
+  "devices" : [ ],
+  "routerPackageLimits" : { },
+  "coverageGaps" : [
+    { "resourceType" : "networkEdgeDevices", "reason" : "NOT_REQUESTED", "detail" : "no Network Edge client was supplied; devices were not read" }
+  ],
+  "stats" : { "requests" : 6, "totalMillis" : 4200, "perType" : { }, "warnings" : [ ] }
+}

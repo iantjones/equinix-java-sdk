@@ -60,27 +60,31 @@ class SavingsCalculatorTest {
         assertEquals(0, new BigDecimal("50000").compareTo(s.getMonthlyEgressGb()));
         assertEquals(0, new BigDecimal("4500").compareTo(s.getInternetEgressMonthlyCost()), "0.09 × 50000");
         assertEquals(0, new BigDecimal("1000").compareTo(s.getPrivateEgressMonthlyCost()), "0.02 × 50000");
-        assertEquals(0, new BigDecimal("3500").compareTo(s.getMonthlyEgressSavings()), "internet − private");
+        assertEquals(0, new BigDecimal("3500").compareTo(s.getMonthlyEgressSavings()), "internet - private");
         assertEquals(0, new BigDecimal("2000").compareTo(s.getEquinixMonthlyCost()));
-        assertEquals(0, new BigDecimal("1500").compareTo(s.getNetMonthlySavings()), "egress saving − Equinix");
-        assertEquals(0, new BigDecimal("18000").compareTo(s.getAnnualNetSavings()));
-        assertEquals(0, new BigDecimal("17000").compareTo(s.getFirstYearNetSavings()), "annual − setup");
+        // The AWS 10G hosted-connection fee (reference 1810.40/mo = 2.48/h x 730 h) is a real cost of
+        // the private path and is netted out, as TcoEngine does.
+        assertEquals(0, new BigDecimal("1810.40").compareTo(s.getCloudProviderPortMonthlyCost()));
+        assertEquals(0, new BigDecimal("-310.40").compareTo(s.getNetMonthlySavings()),
+                "egress saving - Equinix - AWS hosted connection: 3500 - 2000 - 1810.40");
+        assertEquals(0, new BigDecimal("-3724.80").compareTo(s.getAnnualNetSavings()));
+        assertEquals(0, new BigDecimal("-4724.80").compareTo(s.getFirstYearNetSavings()), "annual - setup");
         assertEquals("USD", s.getCurrency());
     }
 
     @Test
     void computesBreakEvenAndPayback() {
         SavingsEstimate s = SavingsCalculator.builder(null)
-                .egress(50, DataUnit.TERABYTE)
+                .egress(200, DataUnit.TERABYTE)
                 .fromCloud(CloudProviderType.AWS)
                 .viaMetro(MetroCode.DC).bandwidthMbps(10_000)
                 .rateCard(fullCard())
                 .calculate();
 
-        // break-even GB = equinixMonthly / (internetRate − privateRate) = 2000 / 0.07
-        assertEquals(0, new BigDecimal("28571.43").compareTo(s.getBreakEvenGbPerMonth()));
-        // payback months = setup / netMonthly = 1000 / 1500 = 0.7 (1 dp)
-        assertEquals(0, new BigDecimal("0.7").compareTo(s.getPaybackMonths()));
+        // break-even GB = (equinixMonthly + AWS port) / (internetRate - privateRate) = 3810.40 / 0.07
+        assertEquals(0, new BigDecimal("54434.29").compareTo(s.getBreakEvenGbPerMonth()));
+        // net = 0.07 x 200,000 - 3810.40 = 10189.60; payback = setup / net = 1000 / 10189.60 = 0.1
+        assertEquals(0, new BigDecimal("0.1").compareTo(s.getPaybackMonths()));
     }
 
     @Test
@@ -124,25 +128,7 @@ class SavingsCalculatorTest {
 
         assertTrue(s.isComplete());
         assertEquals(0, new BigDecimal("2300").compareTo(s.getEquinixMonthlyCost()), "connection 2000 + router 300");
-        assertEquals(0, new BigDecimal("1200").compareTo(s.getNetMonthlySavings()), "3500 − 2300");
-    }
-
-    @Test
-    void resolvesNonUsdCurrencyFromCard() {
-        CustomRateCard eur = CustomRateCard.builder()
-                .currency("EUR")
-                .egressRate(CloudProviderType.AWS, EgressPath.INTERNET, new BigDecimal("0.09"))
-                .egressRate(CloudProviderType.AWS, EgressPath.PRIVATE, new BigDecimal("0.02"))
-                .connectionRate(ConnectionType.EVPL_VC, 10_000, new BigDecimal("2000"))
-                .build();
-
-        SavingsEstimate s = SavingsCalculator.builder(null)
-                .egress(50, DataUnit.TERABYTE).fromCloud(CloudProviderType.AWS)
-                .viaMetro(MetroCode.DC).bandwidthMbps(10_000).rateCard(eur)
-                .calculate();
-
-        assertEquals("EUR", s.getCurrency(), "currency follows the card, not a hardcoded USD");
-        assertEquals(0, new BigDecimal("3500").compareTo(s.getMonthlyEgressSavings()), "figures unchanged by currency");
+        assertEquals(0, new BigDecimal("-610.40").compareTo(s.getNetMonthlySavings()), "3500 - 2300 - 1810.40 AWS 10G hosted connection (2.48 USD/h x 730 h)");
     }
 
     @Test
@@ -153,10 +139,10 @@ class SavingsCalculatorTest {
                 .viaMetro(MetroCode.DC).bandwidthMbps(10_000).rateCard(fullCard())
                 .calculate();
 
-        // egress saving = 0.07 × 1000 = 70; net = 70 − 2000 = −1930
-        assertEquals(0, new BigDecimal("-1930").compareTo(s.getNetMonthlySavings()));
-        assertEquals(0, new BigDecimal("-23160").compareTo(s.getAnnualNetSavings()), "net×12, not clamped to zero");
-        assertEquals(0, new BigDecimal("-24160").compareTo(s.getFirstYearNetSavings()), "annual − 1000 setup");
+        // egress saving = 0.07 × 1000 = 70; net = 70 - 2000 - 1810.40 (AWS 10G hosted connection) = -3740.40
+        assertEquals(0, new BigDecimal("-3740.40").compareTo(s.getNetMonthlySavings()));
+        assertEquals(0, new BigDecimal("-44884.80").compareTo(s.getAnnualNetSavings()), "net×12, not clamped to zero");
+        assertEquals(0, new BigDecimal("-45884.80").compareTo(s.getFirstYearNetSavings()), "annual - 1000 setup");
         assertNull(s.getPaybackMonths(), "no payback when net is not positive");
         assertNotNull(s.getBreakEvenGbPerMonth(), "break-even still computable: 2000 / 0.07");
     }
@@ -183,7 +169,7 @@ class SavingsCalculatorTest {
                 .calculate();
         assertEquals(0, new BigDecimal("1500").compareTo(longTerm.getEquinixMonthlyCost()),
                 "term(MONTH_36) must resolve the 36-month rate");
-        assertEquals(0, new BigDecimal("2000").compareTo(longTerm.getNetMonthlySavings()), "3500 − 1500");
+        assertEquals(0, new BigDecimal("189.60").compareTo(longTerm.getNetMonthlySavings()), "3500 - 1500 - 1810.40 AWS 10G hosted connection (2.48 USD/h x 730 h)");
 
         SavingsEstimate defaultTerm = SavingsCalculator.builder(null)
                 .egress(50, DataUnit.TERABYTE)
@@ -201,7 +187,7 @@ class SavingsCalculatorTest {
                 () -> SavingsCalculator.builder(null).egress(-5, DataUnit.TERABYTE));
     }
 
-    // ── Requested-but-unpriceable Cloud Router (D8) ──
+    // Requested-but-unpriceable Cloud Router (D8)
 
     @Test
     void unpriceableRouterKeepsPartialFiguresAndNamesTheMissingComponent() {
@@ -216,7 +202,7 @@ class SavingsCalculatorTest {
 
         assertFalse(s.isEquinixPriced());
         assertFalse(s.isComplete());
-        // The connection figures are kept, explicitly labelled partial via the disclaimer —
+        // The connection figures are kept, explicitly labelled partial via the disclaimer - 
         // consistent numbers, honestly flagged.
         assertEquals(0, new BigDecimal("2000").compareTo(s.getEquinixMonthlyCost()));
         assertEquals(0, new BigDecimal("1000").compareTo(s.getEquinixSetupCost()));
@@ -229,34 +215,7 @@ class SavingsCalculatorTest {
         assertTrue(s.toMarkdown().contains("Incomplete"));
     }
 
-    @Test
-    void routerInADifferentCurrencyIsExcludedAndNamed() {
-        // The router resolves from a EUR card while the connection is USD: they cannot be summed,
-        // so the router is excluded, the figures stay connection-only, and the disclaimer says why.
-        com.eqixiac.equinix.design.value.ratecard.RateCard layered =
-                com.eqixiac.equinix.design.value.ratecard.RateCard.layered(
-                        fullCard(),
-                        CustomRateCard.builder().currency("EUR")
-                                .cloudRouterRate("STANDARD", new BigDecimal("300"))
-                                .build());
-
-        SavingsEstimate s = SavingsCalculator.builder(null)
-                .egress(50, DataUnit.TERABYTE)
-                .fromCloud(CloudProviderType.AWS)
-                .viaMetro(MetroCode.DC).bandwidthMbps(10_000)
-                .includeCloudRouter("STANDARD")
-                .rateCard(layered)
-                .calculate();
-
-        assertFalse(s.isEquinixPriced());
-        assertEquals(0, new BigDecimal("2000").compareTo(s.getEquinixMonthlyCost()),
-                "router excluded; connection kept");
-        assertTrue(s.getDisclaimer().contains("Cloud Router"), s.getDisclaimer());
-        assertTrue(s.getDisclaimer().contains("EUR") && s.getDisclaimer().contains("USD"),
-                "the disclaimer names both currencies: " + s.getDisclaimer());
-    }
-
-    // ── Builder validation (D7) ──
+    // Builder validation (D7)
 
     @Test
     void builderFailsFastOnInvalidInputs() {

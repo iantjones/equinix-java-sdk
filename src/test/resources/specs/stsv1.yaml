@@ -1,0 +1,943 @@
+tags:
+- name: v1-pre-auth
+  x-displayName: Pre-auth Operations
+  description: Operations available without an access token
+- name: v1-oidc-provider
+  x-displayName: OIDC Provider
+  description: Operations for managing OIDC Providers
+security:
+- bearerAuth: []
+externalDocs:
+  url: https://docs.equinix.com/iam/oidc/overview
+  description: STS Documentation
+paths:
+  /jwks:
+    get:
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JwksResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      operationId: getJwks
+      description: Returns the JSON Web Key Set used to verify tokens issued by this service.
+      summary: Get JSON Web Key Set
+      security:
+      - {}
+      tags:
+      - v1-pre-auth
+  /.well-known/openid-configuration:
+    get:
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenIdConfiguration'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      operationId: getOpenIdConfiguration
+      description: Returns the OpenID Connect discovery document for this service.
+      summary: Get Well-Known OpenID Configuration
+      security:
+      - {}
+      tags:
+      - v1-pre-auth
+  /v1/projects/{projectId}/oidcProviders/{idpId}:
+    delete:
+      operationId: deleteOidcProvider
+      summary: Delete OIDC Provider
+      tags:
+      - v1-oidc-provider
+      description: |-
+        Allows a user to permanently remove the trust relationship for an OIDC provider in a root project. This operation
+          cannot be reversed. This operation causes the `idpId` of the OIDC provider to be permanently disabled for this root
+          project. Even if `createOidcProvider` is used to register the same OIDC provider again it will be assigned a unique
+          `idpId` within the root project. This operation applies for the project which owns the access policy being
+          used. Access control is fine-grained based on the project which contains the OIDC provider.
+
+        The auth token's access policy must allow `action:use/deleteOidcProvider`.
+      parameters:
+      - name: projectId
+        in: path
+        description: |-
+          Globally unique identifier of a project.
+          Callers may URL encode this value.
+        required: true
+        schema:
+          $ref: '#/components/schemas/ProjectId'
+      - name: idpId
+        in: path
+        description: |-
+          Uniquely identifies a trusted Identity Provider within a root project.
+          Callers may URL encode this value.
+        required: true
+        schema:
+          $ref: '#/components/schemas/IdentityProviderId'
+      responses:
+        '204':
+          description: Success
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    patch:
+      operationId: patchOidcProvider
+      summary: Patch OIDC Provider
+      tags:
+      - v1-oidc-provider
+      description: |-
+        Modify specific property values of an OIDCProvider, leaving the rest with their current values.
+          Optional properties (e.g. groupMembershipClaims) may be unset by assigning them the value `{"$unset": true}`. Access
+          control is fine-grained, based on the project containing the OIDC provider being updated.
+
+        The auth token's access policy must allow `action:use/patchOidcProvider`.
+      parameters:
+      - name: projectId
+        in: path
+        description: |-
+          Globally unique identifier of a project.
+          Callers may URL encode this value.
+        required: true
+        schema:
+          $ref: '#/components/schemas/ProjectId'
+      - name: idpId
+        in: path
+        description: |-
+          Uniquely identifies a trusted Identity Provider within a root project.
+          Callers may URL encode this value.
+        required: true
+        schema:
+          $ref: '#/components/schemas/IdentityProviderId'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OIDCProvider'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchOidcProviderBody'
+  /v1/accessPoliciesGranted:
+    post:
+      operationId: listAccessPoliciesGranted
+      summary: List Access Policies Granted
+      tags:
+      - v1-pre-auth
+      description: Lists the access policies granted to the subject identified by the given token within a project.
+      parameters: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListAccessPoliciesGrantedOutput'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ListPoliciesGrantedInput'
+      security:
+      - {}
+  /v1/token:
+    post:
+      description: An OAuth 2.0 token endpoint supporting RFC 8693 token exchange, used to exchange an OIDC ID token issued by a trusted OIDC provider to a trusted client for an access token that can be used access other Equinix product APIs.
+      security:
+      - {}
+      - clientCredentials: []
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenRequest'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      operationId: generateStsToken
+      summary: generate sts token
+      tags:
+      - v1-pre-auth
+  /v1/projects/{projectId}/oidcProviders/{idpId}/suspend:
+    post:
+      operationId: suspendOidcProvider
+      summary: Suspend OIDC Provider
+      tags:
+      - v1-oidc-provider
+      description: |-
+        Allows a user to indicate that an OIDC provider is no longer trusted in a root project. This operation applies for
+          the project which owns the access policy being used. This operation can be reversed via `resumeOidcProvider`. This
+          operation provides a reversible way to turn off token exchange for identity tokens from an OIDC provider. Access
+          control is fine-grained based on the project which contains the OIDC provider.
+
+        The auth token's access policy must allow `action:use/suspendOidcProvider`.
+      parameters:
+      - name: projectId
+        in: path
+        description: |-
+          Globally unique identifier of a project.
+          Callers may URL encode this value.
+        required: true
+        schema:
+          $ref: '#/components/schemas/ProjectId'
+      - name: idpId
+        in: path
+        description: |-
+          Uniquely identifies a trusted Identity Provider within a root project.
+          Callers may URL encode this value.
+        required: true
+        schema:
+          $ref: '#/components/schemas/IdentityProviderId'
+      responses:
+        '204':
+          description: Success
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/projects/{projectId}/oidcProviders/{idpId}/resume:
+    post:
+      operationId: resumeOidcProvider
+      summary: Resume OIDC Provider
+      tags:
+      - v1-oidc-provider
+      description: |-
+        Allows a user to restore the trust relationship for an OIDC provider in a root project. This operation applies for
+          the project which owns the access policy being used. Access control is fine-grained based on the project which
+          contains the OIDC provider.
+
+        The auth token's access policy must allow `action:use/resumeOidcProvider`.
+      parameters:
+      - name: projectId
+        in: path
+        description: |-
+          Globally unique identifier of a project.
+          Callers may URL encode this value.
+        required: true
+        schema:
+          $ref: '#/components/schemas/ProjectId'
+      - name: idpId
+        in: path
+        description: |-
+          Uniquely identifies a trusted Identity Provider within a root project.
+          Callers may URL encode this value.
+        required: true
+        schema:
+          $ref: '#/components/schemas/IdentityProviderId'
+      responses:
+        '204':
+          description: Success
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/projects/{projectId}/oidcProviders:
+    get:
+      operationId: pageOidcProviders
+      summary: List OIDC Providers
+      tags:
+      - v1-oidc-provider
+      description: |-
+        Allows a user to page through all of the OIDC providers which are defined for a root project.
+          The project is identified by the project id or ern provided.
+          Access control is fine-grained, based on the project whose OIDC providers are being listed.
+
+        The auth token's access policy must allow `action:use/pageOidcProviders`.
+      parameters:
+      - name: projectId
+        in: path
+        description: |-
+          Globally unique identifier of a project.
+          Callers may URL encode this value.
+        required: true
+        schema:
+          $ref: '#/components/schemas/ProjectId'
+      - description: When true, include suspended OIDC providers in the results.
+        name: includeSuspended
+        in: query
+        required: false
+        schema:
+          type: boolean
+          example: false
+      - description: Opaque token identifying the page of results to retrieve.
+        name: pageToken
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/PageToken'
+      - description: Maximum number of results to return per page.
+        name: pageSize
+        in: query
+        required: false
+        schema:
+          default: 100
+          $ref: '#/components/schemas/PageSize'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OIDCProviderPage'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      operationId: createOidcProvider
+      summary: Create OIDC Provider
+      tags:
+      - v1-oidc-provider
+      description: |-
+        Allows a user to register a new OIDC provider for a root project. The OIDC provider is registered in the project
+          which owns the access policy being used. The `idpPrefix` is used to create a unique `idpId` for this usage of the OIDC
+          provider within the root project. The `idpPrefix` cannot be the same as any existing, suspended or non-suspended, OIDC
+          provider records for this root project. This operation creates a trust relationship between the root project and the
+          OIDC provider such that identity tokens from the OIDC provider will be accepted for token exchange. Access control is
+          fine-grained, based on the project in which an OIDC provider is being created.
+
+        The auth token's access policy must allow `action:use/createOidcProvider`.
+      parameters:
+      - name: projectId
+        in: path
+        description: |-
+          Globally unique identifier of a project.
+          Callers may URL encode this value.
+        required: true
+        schema:
+          $ref: '#/components/schemas/ProjectId'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OIDCProvider'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOidcProviderBody'
+x-tagGroups:
+- name: STS V1
+  tags:
+  - v1-pre-auth
+  - v1-oidc-provider
+components:
+  schemas:
+    PatchOidcProviderBody:
+      description: Request body for updating an existing OIDC provider.
+      type: object
+      properties:
+        name:
+          description: A human-friendly name for the identity provider.
+          type: string
+          minLength: 2
+          maxLength: 100
+          example: My OIDC Provider
+        trustedClientIds:
+          description: List of OAuth 2.0 client ids for this provider that are permitted to exchange ID tokens for access tokens. The value of the `aud` claim in an ID token is checked against this list during token exchange.
+          type: array
+          items:
+            type: string
+            minLength: 2
+            maxLength: 100
+            example: my-oauth-client-id
+          minItems: 0
+          maxItems: 10
+        groupMembershipClaim:
+          description: Name of the claim in the ID tokens provided by this OIDC issuer whose value the STS should interpret as containing a user's group memberships, for authorization purposes. The value of the group membership claim in an ID token must be an array of strings, where each string is a unique, non-reassignable identifier for a group. When this property is not set, the STS does not interpret any claim from this provider as a group membership claim.
+          oneOf:
+          - type: object
+            properties:
+              $unset:
+                const: true
+                example: true
+            required:
+            - $unset
+            additionalProperties: false
+          - type: string
+            minLength: 2
+            maxLength: 100
+          example: groups
+        lastRev:
+          $ref: '#/components/schemas/LastResourceRev'
+      required:
+      - lastRev
+      additionalProperties: false
+    IssuerUri:
+      description: An OIDC Issuer URI
+      type: string
+      pattern: ^https://[a-zA-Z0-9-.]+(:[1-9][0-9]{0,4})?((?:[-a-zA-Z0-9$_.+!*'(),/]|%[0-9a-fA-F]{2})+)?$
+      example: https://example.com/oidc
+    ProjectId:
+      description: Globally unique identifier of a project.
+      type: string
+      pattern: ^project:[0-9a-zA-Z](?![^:]*-$)(?![^:]*--)[0-9a-zA-Z-]{0,35}$
+      example: project:abc-123
+    CreatedAt:
+      description: 'A string timestamp indicating when the resource was created. Formatted like: "2025-02-12T17:24:19.033772087Z"'
+      type: string
+      pattern: ^.*$
+      example: '2024-01-15T12:00:00Z'
+    UpdatedAt:
+      description: 'A string timestamp indicating when the resource was last updated. Formatted like: "2025-02-12T17:24:19.033772087Z"'
+      type: string
+      pattern: ^.*$
+      example: '2024-01-15T12:00:00Z'
+    OpenIdConfiguration:
+      description: An OpenID Connect discovery document (RFC 8414).
+      type: object
+      properties:
+        issuer:
+          description: Issuer identifier URI.
+          type: string
+          example: https://sts.eqix.equinix.com
+        jwksUri:
+          description: URI of the JSON Web Key Set.
+          type: string
+          example: https://sts.eqix.equinix.com/jwks
+        tokenEndpoint:
+          description: URI of the token endpoint.
+          type: string
+          example: https://sts.eqix.equinix.com/use/token
+        claimsSupported:
+          description: List of claim names the provider supports.
+          type: array
+          items:
+            type: string
+        responseTypesSupported:
+          description: List of supported response types.
+          type: array
+          items:
+            type: string
+        subjectTypesSupported:
+          description: List of supported subject identifier types.
+          type: array
+          items:
+            type: string
+        idTokenSigningAlgValuesSupported:
+          description: List of JWS signing algorithms supported for the ID token.
+          type: array
+          items:
+            type: string
+      required:
+      - issuer
+      - jwksUri
+      - tokenEndpoint
+      - claimsSupported
+      - responseTypesSupported
+      - subjectTypesSupported
+      - idTokenSigningAlgValuesSupported
+    UpdatedBy:
+      description: A string indicating the principal who last invoked an operation to update the resource.
+      type: string
+      pattern: ^.*$
+      example: principal:ABCD-EFG-12345:idp:example-user
+    LastResourceRev:
+      description: |-
+        An opaque string that represents the expected revision of a given resource. This is provided when a resource is
+          updated so that if a concurrent update has occurred since the resource was read, then the collision will be detected.
+      type: string
+      minLength: 1
+      maxLength: 256
+      example: abc123
+    ResourceRev:
+      description: |-
+        An opaque string that represents the revision of a given resource. Each time the resource is updated, this value
+          changes.
+      type: string
+      pattern: ^.*$
+      example: abc123
+    TokenResponse:
+      description: A successful OAuth 2.0 token response.
+      type: object
+      properties:
+        accessToken:
+          description: The issued access token.
+          type: string
+          example: eyJhbGciOiJFUzI1NiJ9...
+        issuedTokenType:
+          description: The type of the issued token.
+          type: string
+          enum:
+          - urn:ietf:params:oauth:token-type:access_token
+          example: urn:ietf:params:oauth:token-type:access_token
+        tokenType:
+          description: The token type, e.g. Bearer.
+          type: string
+          enum:
+          - Bearer
+          - DPoP
+          example: Bearer
+        expiresIn:
+          description: Lifetime of the token in seconds.
+          type: integer
+          example: 3600
+      required:
+      - accessToken
+      - issuedTokenType
+      - tokenType
+      - expiresIn
+    PageToken:
+      description: When paging through results, the PageToken is an opaque indicator that identifies a page.
+      type: string
+      minLength: 1
+      maxLength: 4096
+      example: eyJwYWdlIjoyfQ==
+    ListPoliciesGrantedInput:
+      description: Input for listing the access policies granted to a subject token within a project.
+      type: object
+      properties:
+        projectId:
+          $ref: '#/components/schemas/ProjectId'
+        subjectToken:
+          description: An ID or access token indicating the subject to list granted access policies for
+          type: string
+          maxLength: 4096
+          example: eyJhbGciOiJSUzI1NiJ9...
+        subjectTokenType:
+          description: Indicates whether the subject token is an ID token or access token
+          type: string
+          enum:
+          - urn:ietf:params:oauth:token-type:id_token
+          example: urn:ietf:params:oauth:token-type:id_token
+        pageSize:
+          default: 100
+          $ref: '#/components/schemas/PageSize'
+        pageToken:
+          $ref: '#/components/schemas/PageToken'
+      required:
+      - projectId
+      - subjectToken
+      - subjectTokenType
+      additionalProperties: false
+    OIDCProvider:
+      description: Represents a trust relationship with an OpenID Connect Identity Provider.
+      type: object
+      properties:
+        jwks:
+          description: 'TEMPORARY: In the future, the STS will retrieve the provider''s JWKS via standard OIDC Discovery mechanisms, and this will not be an input parameter!.'
+          type: object
+          properties:
+            keys:
+              type: array
+              items:
+                type: object
+                properties: {}
+          required:
+          - keys
+          additionalProperties: false
+        idpId:
+          $ref: '#/components/schemas/IdentityProviderId'
+        updatedAt:
+          $ref: '#/components/schemas/UpdatedAt'
+        createdBy:
+          $ref: '#/components/schemas/CreatedBy'
+        issuerLocation:
+          description: The OIDC issuer location URL.
+          type: string
+          minLength: 1
+          maxLength: 2048
+          example: https://example.com/oidc
+        name:
+          description: A human-friendly name for the identity provider.
+          type: string
+          minLength: 2
+          maxLength: 100
+          example: My OIDC Provider
+        createdAt:
+          $ref: '#/components/schemas/CreatedAt'
+        issuerUri:
+          description: The value of the `iss` claim as returned by this provider. Must be unique within the root project.
+          $ref: '#/components/schemas/IssuerUri'
+        rev:
+          $ref: '#/components/schemas/ResourceRev'
+        updatedBy:
+          $ref: '#/components/schemas/UpdatedBy'
+        status:
+          $ref: '#/components/schemas/ProviderStatus'
+        groupMembershipClaim:
+          description: Name of the claim in the ID tokens provided by this OIDC issuer whose value the STS should interpret as containing a user's group memberships, for authorization purposes. The value of the group membership claim in an ID token must be an array of strings, where each string is a unique, non-reassignable identifier for a group. When this property is not set, the STS does not interpret any claim from this provider as a group membership claim.
+          type: string
+          minLength: 2
+          maxLength: 100
+          example: groups
+        trustedClientIds:
+          description: List of OAuth 2.0 client ids for this provider that are permitted to exchange ID tokens for access tokens. The value of the `aud` claim in an ID token is checked against this list during token exchange.
+          type: array
+          items:
+            type: string
+            minLength: 2
+            maxLength: 100
+            example: my-oauth-client-id
+          minItems: 0
+          maxItems: 10
+        jwksRetrievedAt:
+          description: 'Timestamp string formatted like: "2025-02-13T17:10:00.864707507Z".'
+          type: string
+          example: '2025-02-13T17:10:00.864707507Z'
+      required:
+      - name
+      - trustedClientIds
+      - idpId
+      - issuerUri
+      - issuerLocation
+      - jwks
+      - status
+      - jwksRetrievedAt
+      - createdBy
+      - createdAt
+      - rev
+      additionalProperties: false
+    AccessPolicyId:
+      description: Uniquely identifies an access policy within a project.
+      type: string
+      pattern: ^accesspolicy:[a-zA-Z](?![^:]*-$)(?![^:]*--)[a-zA-Z0-9-]{0,49}$
+      example: accesspolicy:my-policy
+    IdentityProviderId:
+      description: Uniquely identifies a trusted Identity Provider within a root project.
+      type: string
+      pattern: ^idp:[a-zA-Z](?![^:]*-$)(?![^:]*--)[a-zA-Z0-9-]{0,49}$
+      example: idp:my-idp
+    NextPageToken:
+      description: |-
+        When paging through results, the NextPageToken indicates what page to read next. It is obtained from the previous
+          call.
+      type: string
+      minLength: 1
+      maxLength: 4096
+      example: eyJsYXN0S2V5IjoiYWJjMTIzIn0=
+    OIDCProviderList:
+      description: A list of OIDC providers.
+      type: array
+      items:
+        $ref: '#/components/schemas/OIDCProvider'
+    CreatedBy:
+      description: A string indicating the principal who invoked an operation to create the resource.
+      type: string
+      pattern: ^.*$
+      example: principal:ABCD-EFG-12345:idp:example-user
+    PageSize:
+      description: |-
+        When paging through results, this is an integer indicating the maximum number of results to return. Note, it is
+          possible for fewer results to be returned even when the end of the result set has not been reached.
+      type: integer
+      minimum: 1
+      maximum: 1000
+      example: 20
+    TokenRequest:
+      description: An OAuth 2.0 token exchange request body (RFC 8693).
+      type: object
+      properties:
+        grantType:
+          description: The OAuth 2.0 grant type.
+          type: string
+          enum:
+          - client_credentials
+          - urn:ietf:params:oauth:grant-type:token-exchange
+          example: urn:ietf:params:oauth:grant-type:token-exchange
+        scope:
+          description: Requested scope for the access token.
+          type: string
+          example: accesspolicy:abc-123:idp:example-policy
+        subjectToken:
+          description: The ID token to exchange.
+          type: string
+          example: eyJhbGciOiJSUzI1NiJ9...
+        subjectTokenType:
+          description: The type of the subject token.
+          type: string
+          enum:
+          - urn:ietf:params:oauth:token-type:id_token
+          example: urn:ietf:params:oauth:token-type:id_token
+      required:
+      - grantType
+    ProviderStatus:
+      description: |-
+        * "ENABLED": the provider is trusted, and token exchange is enabled
+          * "SUSPENDED": token exchange for ID tokens from this provider is currently disabled
+      type: string
+      enum:
+      - ENABLED
+      - SUSPENDED
+      example: ENABLED
+    TokenErrorResponse:
+      description: An OAuth 2.0 error response.
+      type: object
+      properties:
+        error:
+          description: A short error code.
+          type: string
+          example: invalid_request
+        errorDescription:
+          description: A human-readable error description.
+          type: string
+          example: subject_token is required
+      required:
+      - error
+    ErrorResponse:
+      description: Standard error response returned when an API request fails.
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            errorCode:
+              type: string
+              example: not-found
+          required:
+          - errorCode
+      required:
+      - error
+    ListAccessPoliciesGrantedOutput:
+      description: Paginated list of access policy IDs granted to a subject within a project.
+      type: object
+      properties:
+        list:
+          type: array
+          items:
+            type: object
+            properties:
+              accessPolicyId:
+                $ref: '#/components/schemas/AccessPolicyId'
+            required:
+            - accessPolicyId
+            additionalProperties: false
+        nextPageToken:
+          $ref: '#/components/schemas/NextPageToken'
+      required:
+      - list
+      additionalProperties: false
+    OIDCProviderPage:
+      description: A paginated list of OIDC providers.
+      type: object
+      properties:
+        list:
+          $ref: '#/components/schemas/OIDCProviderList'
+        nextPageToken:
+          $ref: '#/components/schemas/NextPageToken'
+      required:
+      - list
+      additionalProperties: false
+    CreateOidcProviderBody:
+      description: Request body for registering a new OIDC provider.
+      type: object
+      properties:
+        name:
+          description: A human-friendly name for the identity provider.
+          type: string
+          minLength: 2
+          maxLength: 100
+          example: My OIDC Provider
+        trustedClientIds:
+          description: List of OAuth 2.0 client ids for this provider that are permitted to exchange ID tokens for access tokens. The value of the `aud` claim in an ID token is checked against this list during token exchange.
+          type: array
+          items:
+            type: string
+            minLength: 2
+            maxLength: 100
+            example: my-oauth-client-id
+          minItems: 0
+          maxItems: 10
+        groupMembershipClaim:
+          description: Name of the claim in the ID tokens provided by this OIDC issuer whose value the STS should interpret as containing a user's group memberships, for authorization purposes. The value of the group membership claim in an ID token must be an array of strings, where each string is a unique, non-reassignable identifier for a group. When this property is not set, the STS does not interpret any claim from this provider as a group membership claim.
+          type: string
+          minLength: 2
+          maxLength: 100
+          example: groups
+        issuerLocation:
+          description: The OIDC issuer location URL.
+          type: string
+          minLength: 1
+          maxLength: 2048
+          example: https://example.com/oidc
+        idpPrefix:
+          type: string
+          pattern: ^[a-zA-Z](?![^:]*-$)(?![^:]*--)[a-zA-Z0-9-]{0,33}$
+          example: my-idp
+      required:
+      - name
+      - trustedClientIds
+      - issuerLocation
+      - idpPrefix
+      additionalProperties: false
+    JwksResponse:
+      description: A JSON Web Key Set (RFC 7517) containing the public keys used to verify tokens issued by this service.
+      type: object
+      properties:
+        keys:
+          description: Array of JSON Web Keys.
+          type: array
+          items:
+            type: object
+            properties: {}
+      required:
+      - keys
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: A JWT access token. Federated (OIDC) identities may obtain one via the STS token exchange endpoint at https://sts.eqix.equinix.com/v1/token. Customer Portal-based identities may obtain one via https://api.equinix.com/oauth2/v1/token
+    clientCredentials:
+      type: http
+      scheme: basic
+      description: HTTP Basic credentials (client ID and secret) used for service-to-service authentication within the Equinix platform. Not required for external API consumers.
+    openIdConnect:
+      type: openIdConnect
+      openIdConnectUrl: https://sts.eqix.equinix.com/.well-known/openid-configuration
+servers:
+- url: https://sts.eqix.equinix.com
+info:
+  title: Security Token Service
+  summary: Exchange ID tokens for STS access tokens according to managed trust relationships.
+  description: Exchange ID tokens for STS access tokens according to managed trust relationships.
+  version: not specified
+  termsOfService: https://www.equinix.com/about/legal/terms
+  contact:
+    name: Equinix API Support
+    url: https://docs.equinix.com/api-support.htm
+openapi: 3.1.0
+x-eqx-api-linter-skip-rules:
+- 3
+- 14
+- 24

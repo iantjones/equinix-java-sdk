@@ -30,7 +30,7 @@ import java.util.List;
  *
  * @author ianjones
  */
-public interface Connection {
+public interface Connection extends DeletableResource {
 
     String getUuid();
 

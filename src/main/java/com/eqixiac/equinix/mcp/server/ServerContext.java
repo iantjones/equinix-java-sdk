@@ -16,7 +16,7 @@
 
 package com.eqixiac.equinix.mcp.server;
 
-import com.eqixiac.equinix.CustomerPortal;
+import com.eqixiac.equinix.Operations;
 import com.eqixiac.equinix.Design;
 import com.eqixiac.equinix.Equinix;
 import com.eqixiac.equinix.FabricGateway;
@@ -41,13 +41,13 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * The shared state a {@link ToolHandler} executes against: the lazily-built SDK facades
- * (Fabric + design engines, Customer Portal, Network Edge, IBX SmartView), the environment,
- * the JSON mapper, and the single-process {@link PlanStore}.
+ * (Fabric + design engines, operations, Network Edge, IBX SmartView), the environment,
+ * the JSON mapper, and the single-process {@link DesignStore} of plans and optimization results.
  *
  * <p>Facades are created on first use, per facade, so a server launched with only the
- * {@code ibx} toolset never constructs a Customer Portal client. All facades vend from one
+ * {@code ibx} toolset never constructs a operations client. All facades vend from one
  * {@link Equinix} session (one OAuth token, one connection pool) when the context was built
- * from a session or credentials; alternatively each facade can be injected directly — that is
+ * from a session or credentials; alternatively each facade can be injected directly - that is
  * how tests supply Mockito-stubbed facades, and how embedders can reuse clients they already
  * hold.</p>
  *
@@ -62,11 +62,31 @@ public final class ServerContext {
     /** Environment variable holding an optional Google Cloud Billing Catalog API key. */
     public static final String ENV_GCP_BILLING_KEY = "GCP_BILLING_API_KEY";
 
-    /** Environment variable overriding the per-lookup hard timeout for live provider pricing, in ms. */
+    /**
+     * Environment variable overriding the live-pricing budget of one tool call, in ms: every live
+     * pricing lookup the call makes (cloud price lists and the Equinix rate card) shares it.
+     */
     public static final String ENV_PRICING_TIMEOUT_MS = "EQUINIX_MCP_PRICING_TIMEOUT_MS";
 
-    /** Default hard timeout for a single live provider-pricing lookup. */
+    /** Default live-pricing budget of one tool call. */
     public static final long DEFAULT_PRICING_TIMEOUT_MS = 12_000L;
+
+    /** Smallest accepted pricing budget; smaller values are raised to it with a warning. */
+    public static final long MIN_PRICING_TIMEOUT_MS = 100L;
+
+    /**
+     * Largest accepted pricing budget (2 minutes); larger values are lowered to it with a warning,
+     * because a tool call that waits longer than that is indistinguishable from a hung one.
+     */
+    public static final long MAX_PRICING_TIMEOUT_MS = 120_000L;
+
+    /**
+     * Environment variable that, when {@code true}, lets {@code fabric_confirm_change} execute when
+     * the MCP client did not declare elicitation support (so no human prompt can be shown). Off by
+     * default: without it the broker refuses to execute rather than create billable resources with
+     * no human in the loop.
+     */
+    public static final String ENV_ALLOW_UNCONFIRMED_MUTATIONS = "EQUINIX_MCP_ALLOW_UNCONFIRMED_MUTATIONS";
 
     /** Environment variable overriding the hard timeout for a single elicitation round-trip, in ms. */
     public static final String ENV_ELICIT_TIMEOUT_MS = "EQUINIX_MCP_ELICIT_TIMEOUT_MS";
@@ -77,32 +97,51 @@ public final class ServerContext {
      */
     public static final long DEFAULT_ELICIT_TIMEOUT_MS = 300_000L;
 
+    /** Smallest accepted elicitation timeout; smaller values are raised to it with a warning. */
+    public static final long MIN_ELICIT_TIMEOUT_MS = 100L;
+
+    /**
+     * Largest accepted elicitation timeout (1 hour); larger values are lowered to it with a warning.
+     * The MCP SDK's request timeout is set just above this value, so it also bounds how long a
+     * stalled client can hold a server-to-client request open.
+     */
+    public static final long MAX_ELICIT_TIMEOUT_MS = 3_600_000L;
+
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ServerContext.class);
+
+    /** Timeout settings already warned about, so a bad value is logged once, not on every call. */
+    private final java.util.Set<String> warnedSettings = ConcurrentHashMap.newKeySet();
+
     private final Equinix session;
     private final Map<String, String> environment;
     private final ObjectMapper objectMapper;
-    private final PlanStore planStore;
+    private final DesignStore designStore;
+    private final java.util.function.Function<com.eqixiac.equinix.design.estate.EstateScope,
+            com.eqixiac.equinix.design.estate.EstateAnalyzer.Builder> estateAnalyzerFactory;
     private final ProviderRateCardFactory providerRateCardFactory;
 
     /**
      * Lazily-built live pricing adapters, one per provider for the context's lifetime. The
      * adapters memoize their (multi-megabyte) offer/SKU catalogues internally, so they must be
-     * reused across tool calls — constructing a fresh adapter per call would refetch the
+     * reused across tool calls - constructing a fresh adapter per call would refetch the
      * catalogue on every invocation and the adapter-lifetime caching would never help.
      */
     private final Map<CloudProviderType, Optional<RateCard>> providerRateCards = new ConcurrentHashMap<>();
 
     /**
-     * The MCP client exchange bound for the duration of the current tool call, or {@code null} when a
-     * handler is invoked outside a served call (e.g. a unit test invoking a handler directly). Held per
-     * thread — the sync server runs each {@code callHandler} on the thread that reads
-     * {@link #currentExchange()}, so a request-scoped {@link ThreadLocal} keeps concurrent calls
-     * isolated without threading a new parameter through the whole {@link ToolHandler} seam.
+     * What is bound for the duration of the current tool call (client exchange, cancellation signal,
+     * pricing budget), or {@code null} when a handler is invoked outside a served call (e.g. a unit
+     * test invoking a handler directly). Held per thread - the sync server runs each
+     * {@code callHandler} on one thread - so concurrent calls stay isolated.
      */
-    private final ThreadLocal<McpSyncServerExchange> currentExchange = new ThreadLocal<>();
+    private final ThreadLocal<CallScope> currentCall = new ThreadLocal<>();
+
+    /** How {@link #confirmWithHuman(String)} asks a person; MCP form elicitation by default. */
+    private final HumanConfirmer humanConfirmer;
 
     private FabricGateway fabric;
     private Design design;
-    private CustomerPortal customerPortal;
+    private Operations operations;
     private NetworkEdge networkEdge;
     private IBXSmartView ibxSmartView;
     private MetroRegistry metroRegistry;
@@ -112,16 +151,19 @@ public final class ServerContext {
         this.session = builder.session;
         this.environment = builder.environment != null ? builder.environment : System.getenv();
         this.objectMapper = builder.objectMapper != null ? builder.objectMapper : defaultMapper();
-        this.planStore = builder.planStore != null ? builder.planStore : new PlanStore();
+        this.designStore = builder.designStore != null ? builder.designStore : new DesignStore();
+        this.estateAnalyzerFactory = builder.estateAnalyzerFactory;
         this.providerRateCardFactory = builder.providerRateCardFactory != null
                 ? builder.providerRateCardFactory : ServerContext::defaultProviderRateCard;
         this.fabric = builder.fabric;
         this.design = builder.design;
-        this.customerPortal = builder.customerPortal;
+        this.operations = builder.operations;
         this.networkEdge = builder.networkEdge;
         this.ibxSmartView = builder.ibxSmartView;
         this.metroRegistry = builder.metroRegistry;
         this.multicloudEnvironments = builder.multicloudEnvironments;
+        this.humanConfirmer = builder.humanConfirmer != null
+                ? builder.humanConfirmer : HumanConfirmer.elicitation();
     }
 
     /**
@@ -152,13 +194,13 @@ public final class ServerContext {
     }
 
     /**
-     * @return the Customer Portal client
+     * @return the operations client
      */
-    public synchronized CustomerPortal customerPortal() {
-        if (customerPortal == null) {
-            customerPortal = requireSession("Customer Portal").customerPortal();
+    public synchronized Operations operations() {
+        if (operations == null) {
+            operations = requireSession("Operations").operations();
         }
-        return customerPortal;
+        return operations;
     }
 
     /**
@@ -228,18 +270,43 @@ public final class ServerContext {
     }
 
     /**
-     * @return the single-process plan store shared by {@code design_plan_deployment} and
-     *         {@code design_export_terraform}
+     * @return the single-process store of deployment plans and optimization results the design tools
+     *         chain through ({@code plan_id}, {@code spec_fingerprint})
      */
-    public PlanStore planStore() {
-        return planStore;
+    public DesignStore designStore() {
+        return designStore;
+    }
+
+    /**
+     * A read-only estate analysis bound to {@code scope}: by default over this context's Fabric client
+     * (which must be a full {@code Fabric}, not a bare gateway) plus Network Edge when a session is
+     * available; a builder-supplied factory replaces it (tests, snapshots).
+     *
+     * @param scope the scope; must name projects, accounts or resources
+     * @return the analysis builder with the scope set
+     * @throws IllegalArgumentException when the scope is unscoped or asks for the entire account
+     */
+    public com.eqixiac.equinix.design.estate.EstateAnalyzer.Builder estateAnalyzer(
+            com.eqixiac.equinix.design.estate.EstateScope scope) {
+        if (scope == null || scope.isUnscoped() || scope.entireAccount()) {
+            throw new IllegalArgumentException("An estate analysis served over MCP must be scoped to named "
+                    + "projects; the whole account is never analysed.");
+        }
+        if (estateAnalyzerFactory != null) {
+            return estateAnalyzerFactory.apply(scope).scope(scope);
+        }
+        com.eqixiac.equinix.design.estate.EstateAnalyzer.Builder builder = design().analyzeEstate().scope(scope);
+        if (session != null) {
+            builder.networkEdge(networkEdge());
+        }
+        return builder;
     }
 
     /**
      * Returns the live pricing adapter for a cloud provider, if one can be constructed
      * (GCP requires {@link #ENV_GCP_BILLING_KEY}). The adapter is built once per provider and
      * reused for the context's lifetime, so its internal offer/SKU catalogue caches actually pay
-     * off across tool calls. The returned card is <em>not</em> yet timeout-guarded —
+     * off across tool calls. The returned card is <em>not</em> yet timeout-guarded - 
      * {@code design_compare_cloud_egress} wraps it per invocation.
      *
      * @param provider the cloud provider
@@ -253,33 +320,107 @@ public final class ServerContext {
     }
 
     /**
-     * @return the hard per-lookup timeout for live provider pricing, from
-     *         {@link #ENV_PRICING_TIMEOUT_MS} or the {@link #DEFAULT_PRICING_TIMEOUT_MS default}
+     * The live-pricing budget of one tool call, from {@link #ENV_PRICING_TIMEOUT_MS}. A value that is
+     * not a positive whole number falls back to {@link #DEFAULT_PRICING_TIMEOUT_MS}; a value outside
+     * [{@link #MIN_PRICING_TIMEOUT_MS}, {@link #MAX_PRICING_TIMEOUT_MS}] is clipped to the nearest
+     * bound. Either case logs one warning naming the variable (the value is a number, not a secret).
+     *
+     * @return the budget in milliseconds
      */
     public long pricingTimeoutMillis() {
-        return env(ENV_PRICING_TIMEOUT_MS).map(v -> {
-            try {
-                return Long.parseLong(v);
-            }
-            catch (NumberFormatException e) {
-                return DEFAULT_PRICING_TIMEOUT_MS;
-            }
-        }).orElse(DEFAULT_PRICING_TIMEOUT_MS);
+        return boundedMillis(ENV_PRICING_TIMEOUT_MS, DEFAULT_PRICING_TIMEOUT_MS,
+                MIN_PRICING_TIMEOUT_MS, MAX_PRICING_TIMEOUT_MS);
     }
 
     /**
-     * @return the hard timeout for a single elicitation round-trip, from {@link #ENV_ELICIT_TIMEOUT_MS}
-     *         or the {@link #DEFAULT_ELICIT_TIMEOUT_MS default}
+     * The hard timeout for one elicitation round trip, from {@link #ENV_ELICIT_TIMEOUT_MS}, with the
+     * same fallback and clipping rules as {@link #pricingTimeoutMillis()} over
+     * [{@link #MIN_ELICIT_TIMEOUT_MS}, {@link #MAX_ELICIT_TIMEOUT_MS}].
+     *
+     * @return the timeout in milliseconds
      */
     public long elicitTimeoutMillis() {
-        return env(ENV_ELICIT_TIMEOUT_MS).map(v -> {
-            try {
-                return Long.parseLong(v);
-            }
-            catch (NumberFormatException e) {
-                return DEFAULT_ELICIT_TIMEOUT_MS;
-            }
-        }).orElse(DEFAULT_ELICIT_TIMEOUT_MS);
+        return boundedMillis(ENV_ELICIT_TIMEOUT_MS, DEFAULT_ELICIT_TIMEOUT_MS,
+                MIN_ELICIT_TIMEOUT_MS, MAX_ELICIT_TIMEOUT_MS);
+    }
+
+    private long boundedMillis(String variable, long fallback, long min, long max) {
+        Optional<String> raw = env(variable);
+        if (raw.isEmpty()) {
+            return fallback;
+        }
+        long parsed;
+        try {
+            parsed = Long.parseLong(raw.get());
+        }
+        catch (NumberFormatException e) {
+            warnOnce(variable, raw.get(), "is not a whole number of milliseconds; using the default "
+                    + fallback + " ms");
+            return fallback;
+        }
+        if (parsed <= 0) {
+            warnOnce(variable, raw.get(), "must be positive; using the default " + fallback + " ms");
+            return fallback;
+        }
+        if (parsed < min) {
+            warnOnce(variable, raw.get(), "is below the minimum; using " + min + " ms");
+            return min;
+        }
+        if (parsed > max) {
+            warnOnce(variable, raw.get(), "is above the maximum; using " + max + " ms");
+            return max;
+        }
+        return parsed;
+    }
+
+    private void warnOnce(String variable, String raw, String what) {
+        if (warnedSettings.add(variable + "=" + raw)) {
+            // Only the variable name and a length are logged: these settings hold numbers, but a
+            // misplaced secret must never reach stderr.
+            logger.warn("{} ({} characters) {}.", variable, raw.length(), what);
+        }
+    }
+
+    /**
+     * The live-pricing budget of the current tool call: started when the call began and shared by
+     * every pricing lookup it makes. Outside a served call (a direct handler invocation) a fresh
+     * budget is returned, so a handler should read this once and reuse it.
+     *
+     * @return the budget
+     */
+    public PricingBudget pricingBudget() {
+        CallScope scope = currentCall.get();
+        return scope != null ? scope.pricingBudget() : new PricingBudget(pricingTimeoutMillis(), null);
+    }
+
+    /**
+     * The Equinix rate-card chain (live Equinix pricing, then the bundled reference figures) with
+     * the live layer under the current call's {@link #pricingBudget()}: the chain extension tools
+     * such as the Safe Mutation Broker price with. A stalled live lookup falls through to the
+     * reference figures when the budget runs out.
+     *
+     * @return the budgeted chain
+     */
+    public RateCard budgetedEquinixRateCard() {
+        return TimeoutRateCard.equinixChain(fabric(), pricingBudget(), new java.util.ArrayList<>());
+    }
+
+    /**
+     * @return the cancellation signal of the current tool call; a never-cancelled signal outside a
+     *         served call
+     */
+    public CancellationSignal currentCancellation() {
+        CallScope scope = currentCall.get();
+        return scope != null ? scope.cancellation() : CancellationSignal.none();
+    }
+
+    /**
+     * @return {@code true} only when {@link #ENV_ALLOW_UNCONFIRMED_MUTATIONS} is set to {@code true}:
+     *         the operator has accepted that, on a client without elicitation, the host's own
+     *         tool-approval prompt is the only human check before a create executes
+     */
+    public boolean allowUnconfirmedMutations() {
+        return env(ENV_ALLOW_UNCONFIRMED_MUTATIONS).map(v -> "true".equalsIgnoreCase(v.trim())).orElse(false);
     }
 
     /**
@@ -291,7 +432,8 @@ public final class ServerContext {
      * @return the current call's exchange, or {@code null}
      */
     public McpSyncServerExchange currentExchange() {
-        return currentExchange.get();
+        CallScope scope = currentCall.get();
+        return scope == null ? null : scope.exchange();
     }
 
     /**
@@ -307,11 +449,15 @@ public final class ServerContext {
      * failure: decline, cancel, timeout and transport errors are statuses on the result. Only
      * {@link HumanConfirmation.Status#ACCEPTED} is an approval.</p>
      *
+     * <p>The prompt is delivered by this context's {@link HumanConfirmer} (MCP form elicitation by
+     * default) and is abandoned when the client cancels the tool call
+     * ({@link HumanConfirmation.Status#CALL_CANCELLED}).</p>
+     *
      * @param message the prompt shown to the user; state what will be executed and what each answer does
      * @return what the client reported
      */
     public HumanConfirmation confirmWithHuman(String message) {
-        return ElicitationSupport.confirm(this, currentExchange(), message);
+        return humanConfirmer.confirm(this, message, currentCancellation());
     }
 
     /**
@@ -327,24 +473,41 @@ public final class ServerContext {
      * @throws Exception whatever {@code body} throws
      */
     <T> T withExchange(McpSyncServerExchange exchange, Callable<T> body) throws Exception {
-        McpSyncServerExchange previous = currentExchange.get();
-        if (exchange == null) {
-            currentExchange.remove();
-        }
-        else {
-            currentExchange.set(exchange);
-        }
+        return withCall(exchange, CancellationSignal.none(), body);
+    }
+
+    /**
+     * Runs {@code body} as one tool call: binds the exchange, the call's cancellation signal and a
+     * freshly started {@link PricingBudget}, and restores the previous binding afterwards.
+     *
+     * @param exchange the exchange to bind (may be {@code null})
+     * @param cancellation the call's cancellation signal
+     * @param body the work to run with the binding in effect
+     * @param <T> the body's result type
+     * @return the body's result
+     * @throws Exception whatever {@code body} throws
+     */
+    <T> T withCall(McpSyncServerExchange exchange, CancellationSignal cancellation, Callable<T> body)
+            throws Exception {
+        CallScope previous = currentCall.get();
+        currentCall.set(new CallScope(exchange, cancellation,
+                new PricingBudget(pricingTimeoutMillis(), cancellation)));
         try {
             return body.call();
         }
         finally {
             if (previous == null) {
-                currentExchange.remove();
+                currentCall.remove();
             }
             else {
-                currentExchange.set(previous);
+                currentCall.set(previous);
             }
         }
+    }
+
+    /** What is bound to the thread for the duration of one tool call. */
+    private record CallScope(McpSyncServerExchange exchange, CancellationSignal cancellation,
+                             PricingBudget pricingBudget) {
     }
 
     private Equinix requireSession(String what) {
@@ -380,7 +543,7 @@ public final class ServerContext {
     /**
      * Creates the live pricing adapter for a provider. Replaceable for tests (canned or
      * failing cards) and for embedders with custom pricing endpoints. Invoked at most once per
-     * provider per context — {@link #providerRateCard(CloudProviderType)} caches the result.
+     * provider per context - {@link #providerRateCard(CloudProviderType)} caches the result.
      */
     @FunctionalInterface
     public interface ProviderRateCardFactory {
@@ -399,15 +562,30 @@ public final class ServerContext {
         private Equinix session;
         private Map<String, String> environment;
         private ObjectMapper objectMapper;
-        private PlanStore planStore;
+        private DesignStore designStore;
+        private java.util.function.Function<com.eqixiac.equinix.design.estate.EstateScope,
+                com.eqixiac.equinix.design.estate.EstateAnalyzer.Builder> estateAnalyzerFactory;
         private ProviderRateCardFactory providerRateCardFactory;
         private FabricGateway fabric;
         private Design design;
-        private CustomerPortal customerPortal;
+        private Operations operations;
         private NetworkEdge networkEdge;
         private IBXSmartView ibxSmartView;
         private MetroRegistry metroRegistry;
         private MulticloudEnvironmentCatalog multicloudEnvironments;
+        private HumanConfirmer humanConfirmer;
+
+        /**
+         * Replaces how {@link ServerContext#confirmWithHuman(String)} asks a person. Default:
+         * {@link HumanConfirmer#elicitation()}, an MCP form elicitation over the bound exchange.
+         *
+         * @param confirmer the confirmer; {@code null} restores the default
+         * @return this builder
+         */
+        public Builder humanConfirmer(HumanConfirmer confirmer) {
+            this.humanConfirmer = confirmer;
+            return this;
+        }
 
         /**
          * Uses an authenticated {@link Equinix} session as the source of every facade not
@@ -444,13 +622,27 @@ public final class ServerContext {
         }
 
         /**
-         * Overrides the plan store (e.g. with a custom TTL or a test clock).
+         * Overrides the design store (e.g. with a custom TTL or a test clock).
          *
-         * @param planStore the store to use
+         * @param designStore the store to use
          * @return this builder
          */
-        public Builder planStore(PlanStore planStore) {
-            this.planStore = planStore;
+        public Builder designStore(DesignStore designStore) {
+            this.designStore = designStore;
+            return this;
+        }
+
+        /**
+         * Replaces how {@code design_analyze_estate} obtains its analysis (for example
+         * {@code scope -> EstateAnalyzer.fromSnapshot(inventory)} in tests). The scope is set on the
+         * returned builder afterwards.
+         *
+         * @param factory the factory
+         * @return this builder
+         */
+        public Builder estateAnalyzerFactory(java.util.function.Function<com.eqixiac.equinix.design.estate.EstateScope,
+                com.eqixiac.equinix.design.estate.EstateAnalyzer.Builder> factory) {
+            this.estateAnalyzerFactory = factory;
             return this;
         }
 
@@ -488,13 +680,13 @@ public final class ServerContext {
         }
 
         /**
-         * Injects the Customer Portal client directly.
+         * Injects the operations client directly.
          *
-         * @param customerPortal the client to use
+         * @param operations the client to use
          * @return this builder
          */
-        public Builder customerPortal(CustomerPortal customerPortal) {
-            this.customerPortal = customerPortal;
+        public Builder operations(Operations operations) {
+            this.operations = operations;
             return this;
         }
 

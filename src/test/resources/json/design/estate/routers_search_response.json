@@ -1,0 +1,21 @@
+{
+  "pagination": { "offset": 0, "limit": 20, "total": 1 },
+  "data": [
+    {
+      "package": { "code": "STANDARD" },
+      "type": "XF_ROUTER",
+      "name": "synthetic-router",
+      "location": { "metroCode": "SV", "region": "AMER", "metroName": "Silicon Valley" },
+      "order": { "billingTier": "Standard" },
+      "project": { "projectId": "aaaaaaaa-0000-4000-8000-000000000001" },
+      "account": { "accountNumber": 100 },
+      "notifications": [ { "type": "ALL", "emails": [ "noc@example.com" ] } ],
+      "href": "https://api.equinix.com/fabric/v4/routers/r0000000-0000-4000-8000-000000000001",
+      "uuid": "r0000000-0000-4000-8000-000000000001",
+      "state": "PROVISIONED",
+      "equinixAsn": 30000,
+      "connectionsCount": 0,
+      "changeLog": { "createdDateTime": "2025-01-01T00:00:00Z" }
+    }
+  ]
+}

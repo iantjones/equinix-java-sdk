@@ -17,6 +17,9 @@
 package com.eqixiac.equinix.fabric.client;
 
 import com.eqixiac.equinix.core.http.response.PaginatedList;
+import com.eqixiac.equinix.core.http.response.PaginatedFilteredList;
+import com.eqixiac.equinix.fabric.model.implementation.filter.FilterPropertyList;
+import com.eqixiac.equinix.fabric.model.implementation.sort.SortPropertyList;
 import com.eqixiac.equinix.fabric.model.StreamSubscription;
 import com.eqixiac.equinix.fabric.model.json.creators.StreamSubscriptionOperator;
 
@@ -51,4 +54,15 @@ public interface StreamSubscriptions {
      * @return a builder for configuring the new stream subscription
      */
     StreamSubscriptionOperator.StreamSubscriptionBuilder define(String streamId);
+
+    /**
+     * Searches stream subscriptions across streams ({@code POST /fabric/v4/streamSubscriptions/search}),
+     * for example by {@code /streamUuid}, {@code /uuid} or {@code /name}.
+     *
+     * @param filter the filter (required by the spec)
+     * @param sort the sort, or {@code null}
+     * @return a paginated, filtered list of stream subscriptions
+     * @throws IllegalArgumentException when {@code filter} is {@code null}
+     */
+    PaginatedFilteredList<StreamSubscription> search(FilterPropertyList filter, SortPropertyList sort);
 }

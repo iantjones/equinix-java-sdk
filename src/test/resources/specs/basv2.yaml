@@ -1,0 +1,315 @@
+openapi: 3.0.3
+x-eqx-api-linter-skip-rules: [ 3, 24 ]
+info:
+  title: Platform Billing Account APIs
+  version: '2.0.0'
+  description: |
+   API Documentation for BAS
+  termsOfService: 'https://www.equinix.com/about/legal/terms'
+  contact:
+   name: Equinix API Support
+   url: https://docs.equinix.com/api-support.htm
+externalDocs:
+  url: https://developer.equinix.com
+  description: Find more information on Equinix Developer Portal
+servers:
+  - description: Equinix API
+    url: https://api.equinix.com
+security:
+  - bearerAuth: []
+tags:
+  - name: Billing Account 
+    description: Billing Account related APIs
+paths:
+  /billing/v2/billingAccounts/search:
+    post:
+      tags:
+        - Billing Account
+      operationId: searchBillingAccount
+      summary: Get customer's billing accounts
+      description: Get customer's billing accounts 
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SearchRequest'
+      responses:
+        '200':
+          description: Search result of billing account
+          content:
+            application/json: 
+              schema:
+                $ref: '#/components/schemas/SearchResponse'
+        '401':
+          description: Unauthorized access
+          content:
+            application/json: 
+              schema:
+                $ref: '#/components/schemas/ErrorList'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json: 
+              schema:
+                $ref: '#/components/schemas/ErrorList'
+            
+  /billing/v2/billingAccounts/accountNumber/{accountNumber}:
+    get:
+      operationId: getBillingAccountByAccountNumber
+      tags:
+        - Billing Account
+      summary: Get billing account detail by account number
+      description: Get billing account detail by account number
+      parameters:
+        - name: accountNumber
+          description: Billing account number
+          in: path
+          required: true
+          example: 12345
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Billing account detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BillingAccount'
+        '401':
+          description: Unauthorized access
+          content:
+            application/json: 
+              schema:
+                $ref: '#/components/schemas/ErrorList'
+        '403':
+          description: Forbidden access
+          content:
+            application/json: 
+              schema:
+                $ref: '#/components/schemas/ErrorList'
+        '404':
+          description: Account not found
+          content:
+            application/json: 
+              schema:
+                $ref: '#/components/schemas/ErrorList'        
+        '500':
+          description: Internal Server Error
+          content:
+            application/json: 
+              schema:
+                $ref: '#/components/schemas/ErrorList'
+          
+  /billing/v2/billingAccounts/{accountId}:
+    get:
+      operationId: getBillingAccountByAccountId
+      tags:
+        - Billing Account
+      summary: Get Billing account detail by account id
+      description: Get billing account detail by account id
+      parameters:
+        - name: accountId
+          description: Billing Account Id
+          in: path
+          required: true
+          example: C-12345
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Billing account detail
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/BillingAccount'
+        '401':
+          description: Unauthorized access
+          content:
+            application/json: 
+              schema:
+                $ref: '#/components/schemas/ErrorList'
+        '403':
+          description: Forbidden access
+          content:
+            application/json: 
+              schema:
+                $ref: '#/components/schemas/ErrorList'
+        '404':
+          description: Account not found
+          content:
+            application/json: 
+              schema:
+                $ref: '#/components/schemas/ErrorList'        
+        '500':
+          description: Internal Server Error
+          content:
+            application/json: 
+              schema:
+                $ref: '#/components/schemas/ErrorList'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      
+            
+  schemas:
+    AccountStatus:
+      description: Billing account status
+      type: string
+      enum: [ACTIVE, PENDING_SIGNATURE, CREDIT_HOLD,IN_PROGRESS, DECLINED]
+      example: "ACTIVE"
+    SearchRequest:
+      properties:
+        ibxCode:
+          type: string
+          description: IBX where billing account can place order.
+          example: SV1
+        metroCode:
+          type: string
+          description: Metro where billing account can place order.
+          example: SV
+        accountStatus:
+          type: array
+          description: List of account status to search.
+          items:
+            $ref: "#/components/schemas/AccountStatus"
+          example: [ACTIVE]
+        projectId:
+          type: string
+          description: Project id where billing account associated with.
+          example: "10d8f2af-07f5-4276-9569-2aa46425713c"
+        limit:
+          type: integer
+          default: 100
+          minimum: 1
+          maximum: 100
+          description: Specifies the page size.
+          example: 100
+        offset:
+          type: integer
+          default: 0
+          minimum: 0
+          description: Specifies where to start a page. It is the starting point of the collection returned from the server.
+          example: 0
+    SearchResponse:
+      properties: 
+        pagination:
+          description: Pagination info
+          properties:
+            offset:
+              type: integer
+              description: It is the starting point of the collection returned fromt the server.
+              example: 0
+            limit:
+              type: integer
+              description: The page size.
+              example: 100
+            total:
+              type: integer
+              description: The total number of results.
+              example: 1
+        data:
+          description: Search result
+          type: array
+          items:
+            $ref: '#/components/schemas/BillingAccount'      
+    BillingAccount:     
+      properties:
+        accountId:
+          type: string
+          description: Billing account ID.
+          example: "C-12345"
+        accountNumber:
+          type: string
+          description: Billing account number.
+          example: "12345"
+        accountName:
+          type: string
+          description: Billing account name.
+          example: "Equinix"
+        currency:
+          type: string
+          description: Billing account currency.
+          example: "USD"
+        billingCountry:
+          type: string
+          description: Billing account country.
+          example: "US"
+        accountStatus:
+          $ref: "#/components/schemas/AccountStatus"
+        isGlobal:
+          type: boolean
+          description: Indicator for billing account type. true = Global billing account, false = Local billing account
+          example: true
+        isPoRequired:
+          type: boolean
+          description: Indicator for pucharse order required.
+          example: false
+        isSignatureRequired:
+          type: boolean
+          description: Indicator for signature required.
+          example: false
+        isReseller:
+          type: boolean
+          description: Indicator for reseller.
+          example: false
+        isSubCustomer:
+          type: boolean
+          description:  Indicator for sub customer.
+          example: false
+        createdDatetime:
+          description: Billing Account created datetime
+          type: string
+          format: date-time
+          example: "2020-05-21T10:30:00+00:00"
+        lastModifiedDatetime:
+          description: Billing account last modified datetime
+          type: string
+          format: date-time
+          example: "2020-05-23T12:30:00+00:00"
+    ErrorList:
+      type: array
+      description: List of error message
+      items:
+        $ref: '#/components/schemas/ErrorModel'
+    ErrorModel:
+      type: object
+      required:
+        - errorCode
+        - errorMessage
+      properties:
+        errorCode:
+          type: string
+          description: Error code
+          example: EQ-1301100
+        errorMessage:
+          type: string
+          description: Error message
+          example: Invalid token
+        correlationId:
+          type: string
+          example: '123456789'
+          description: Correlation id
+        details:
+          type: string
+          description: Error detail
+        timestamp:
+          type: string
+          format: data-time
+          description: Error timestamp
+        help:
+          type: string
+        additionalInfo:
+          type: array
+          items:
+            $ref: '#/components/schemas/ErrorAdditionalInfo'
+    ErrorAdditionalInfo:
+      type: object
+      properties:
+        property:
+          type: string
+          example: id
+        reason:
+          type: string
+          example: missing id

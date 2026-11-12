@@ -60,14 +60,14 @@ import static org.mockito.Mockito.when;
  * GlobalPay failure of 2026-07-24: the optimizer picked an AWS hosted-connection profile (allowed
  * tiers &le;500&nbsp;Mbps) for a connection sized well above it, because profile selection was fixed
  * before any connection bandwidth existed. The wizard must instead choose, among a provider's
- * candidate profiles for a metro, one whose allowed tiers cover the computed bandwidth — a dedicated
- * profile when the speed exceeds the hosted maximum — and, when NONE covers it, record a precise,
+ * candidate profiles for a metro, one whose allowed tiers cover the computed bandwidth - a dedicated
+ * profile when the speed exceeds the hosted maximum - and, when NONE covers it, record a precise,
  * actionable error rather than emit an unbuildable connection.
  *
  * <p>Each provider entry carries realistic multi-profile stubs: an AWS hosted profile
  * ({@code [50..500]}) and an AWS dedicated profile ({@code [1000, 10000]}).</p>
  */
-@DisplayName("DeploymentWizard — bandwidth-aware service-profile selection")
+@DisplayName("DeploymentWizard - bandwidth-aware service-profile selection")
 class DeploymentWizardBandwidthSelectionTest {
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
@@ -76,9 +76,7 @@ class DeploymentWizardBandwidthSelectionTest {
     private static final String HOSTED = "sp-aws-hosted";
     private static final String DEDICATED = "sp-aws-dedicated";
 
-    // ══════════════════════════════════════════════
     //  Selection by bandwidth
-    // ══════════════════════════════════════════════
 
     @Test
     @DisplayName("a low-bandwidth connection selects the hosted profile (its tier covers the speed)")
@@ -109,7 +107,7 @@ class DeploymentWizardBandwidthSelectionTest {
     }
 
     @Test
-    @DisplayName("a non-exact bandwidth ROUNDS UP to the smallest satisfying tier (3000 → 5000), never an error")
+    @DisplayName("a non-exact bandwidth ROUNDS UP to the smallest satisfying tier (3000 -> 5000), never an error")
     void nonExactBandwidthRoundsUpToSmallestCoveringTier() {
         // The owner's explicit fix: 3000 Mbps is on no tier of [1000, 5000, 10000], so it must round UP
         // to 5000 (the smallest tier that satisfies it), not error.
@@ -121,7 +119,7 @@ class DeploymentWizardBandwidthSelectionTest {
         assertTrue(plan.getValidationErrors().isEmpty(),
                 () -> "round-up is not an error: " + plan.getValidationErrors());
 
-        // The round-up is RECORDED, never silent — requested, billed tier, and the delta.
+        // The round-up is RECORDED, never silent - requested, billed tier, and the delta.
         assertNotNull(aws.getProfileSelection(), "the profile selection must be exposed on the connection");
         assertEquals(3000, aws.getProfileSelection().getRequestedMbps());
         assertEquals(5000, aws.getProfileSelection().getSelectedTierMbps());
@@ -142,7 +140,7 @@ class DeploymentWizardBandwidthSelectionTest {
         assertEquals(HOSTED, aws.getZSideServiceProfileUuid(), "200 Mbps is a hosted tier");
         assertEquals(200, aws.getBandwidthMbps());
         assertNotNull(aws.getProfileSelection());
-        assertFalse(aws.getProfileSelection().isRoundedUp(), "200 is an exact hosted tier — no round-up");
+        assertFalse(aws.getProfileSelection().isRoundedUp(), "200 is an exact hosted tier - no round-up");
     }
 
     @Test
@@ -227,16 +225,14 @@ class DeploymentWizardBandwidthSelectionTest {
         assertEquals(3000, aws.getBandwidthMbps(), "no capability data means no bandwidth-aware rejection");
     }
 
-    // ══════════════════════════════════════════════
     //  End-to-end: the Layer-1 tier check now PASSES for a correctly-selected profile
-    // ══════════════════════════════════════════════
 
     @Test
     @DisplayName("the Layer-1 catalog tier check PASSES because the wizard now pins the covering profile")
     void correctlySelectedProfilePassesLayer1TierCheck() throws Exception {
         // A real Service Profile catalog: the dedicated profile lists [1000, 10000]; the hosted one
         // [50..500]. With the fix the wizard pins the dedicated uuid for a 10000 Mbps connection, so
-        // PlanValidator.checkProfile re-fetches THAT profile and finds 10000 among its tiers — no
+        // PlanValidator.checkProfile re-fetches THAT profile and finds 10000 among its tiers - no
         // "not an allowed tier" error. Under the old behaviour the hosted uuid would have been pinned
         // and this same Layer-1 check would have failed exactly as it did live.
         FabricGateway fabric = catalogGateway(
@@ -266,16 +262,14 @@ class DeploymentWizardBandwidthSelectionTest {
         assertTrue(plan.isValid(), () -> "a bandwidth-correct plan is valid: " + plan.getValidationErrors());
     }
 
-    // ══════════════════════════════════════════════
     //  Helpers
-    // ══════════════════════════════════════════════
 
     /** An AWS entry carrying two candidate profiles: hosted ([50..500]) and dedicated ([1000, 10000]). */
     private static ProviderAvailability awsHostedAndDedicated() {
         return ProviderAvailability.builder()
                 .providerLabel("AWS")
                 .available(true)
-                // The default winner (region-preferred) is the hosted profile — exactly the shape that
+                // The default winner (region-preferred) is the hosted profile - exactly the shape that
                 // shipped the live bug: hosted wins the metro, then a too-large connection is pinned to it.
                 .sellerRegions(List.of("us-east-1"))
                 .serviceProfileUuid(HOSTED)

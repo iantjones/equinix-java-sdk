@@ -42,4 +42,8 @@ public class StreamSinkCredential {
 
     @JsonProperty("password")
     private String password;
+
+    /** API token ({@code API_TOKEN} credentials, for example the Dynatrace sink). */
+    @JsonProperty("apiToken")
+    private String apiToken;
 }

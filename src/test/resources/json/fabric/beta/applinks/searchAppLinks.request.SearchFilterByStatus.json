@@ -1,0 +1,30 @@
+{
+  "filter": {
+    "and": [
+      {
+        "property": "/state",
+        "operator": "=",
+        "values": [
+          "PROVISIONED"
+        ]
+      },
+      {
+        "property": "/project/projectId",
+        "operator": "IN",
+        "values": [
+          "71b55fef-fd2e-402f-ae3c-01d5f00bf2d4"
+        ]
+      }
+    ]
+  },
+  "pagination": {
+    "offset": 0,
+    "limit": 20
+  },
+  "sort": [
+    {
+      "direction": "DESC",
+      "property": "/changeLog/createdDateTime"
+    }
+  ]
+}

@@ -132,6 +132,9 @@ public class StreamSubscriptionCreatorJson {
         @JsonProperty("password")
         private String password;
 
+        @JsonProperty("apiToken")
+        private String apiToken;
+
         /**
          * Explicit constructor replacing the Lombok-generated {@code @AllArgsConstructor}:
          * five consecutive {@code String} credential parameters mean a silent transposition
@@ -144,15 +147,17 @@ public class StreamSubscriptionCreatorJson {
          * @param apiKey         the API key
          * @param username       the username
          * @param password       the password
+         * @param apiToken       the API token ({@code API_TOKEN})
          */
         Credential(StreamSubscriptionSinkCredentialType type, String accessToken,
-                   String integrationKey, String apiKey, String username, String password) {
+                   String integrationKey, String apiKey, String username, String password, String apiToken) {
             this.type = type;
             this.accessToken = accessToken;
             this.integrationKey = integrationKey;
             this.apiKey = apiKey;
             this.username = username;
             this.password = password;
+            this.apiToken = apiToken;
         }
     }
 
@@ -171,7 +176,8 @@ public class StreamSubscriptionCreatorJson {
                 streamSubscriptionBuilder.getIntegrationKey(),
                 streamSubscriptionBuilder.getApiKey(),
                 streamSubscriptionBuilder.getUsername(),
-                streamSubscriptionBuilder.getPassword()
+                streamSubscriptionBuilder.getPassword(),
+                streamSubscriptionBuilder.getApiToken()
         );
 
         this.sink = new Sink(

@@ -1,0 +1,30 @@
+{
+  "filter": {
+    "and": [
+      {
+        "property": "/name",
+        "operator": "=",
+        "values": [
+          "270848-SV1-SV2-01"
+        ]
+      },
+      {
+        "property": "/type",
+        "operator": "=",
+        "values": [
+          "OC"
+        ]
+      }
+    ]
+  },
+  "pagination": {
+    "offset": 0,
+    "limit": 20
+  },
+  "sort": [
+    {
+      "direction": "DESC",
+      "property": "/changeLog/updatedDateTime"
+    }
+  ]
+}

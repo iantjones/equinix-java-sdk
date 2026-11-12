@@ -1,10 +1,11 @@
 package com.eqixiac.equinix.design.optimizer.wizard.model;
 
 import lombok.Builder;
+import lombok.extern.jackson.Jacksonized;
 import lombok.Value;
 
 /**
- * An error recorded while executing a deployment plan — a resource that could not be
+ * An error recorded while executing a deployment plan - a resource that could not be
  * provisioned, a pre-flight or waiter observation, or a rollback deletion that failed.
  * Collected on {@link DeploymentOutcome} rather than thrown, so a partial deployment can be
  * inspected and rolled back.
@@ -16,6 +17,7 @@ import lombok.Value;
  */
 @Value
 @Builder
+@Jacksonized
 public class ProvisioningError {
 
     /**
@@ -33,8 +35,8 @@ public class ProvisioningError {
 
     /**
      * Whether the failure is operational rather than a defect in the plan or its inputs.
-     * {@code true} for transient/API-side failures — a create that errored, a resource that
-     * timed out or landed in a terminal state, or a pre-flight dry-run that could not run —
+     * {@code true} for transient/API-side failures - a create that errored, a resource that
+     * timed out or landed in a terminal state, or a pre-flight dry-run that could not run - 
      * where retrying the deployment (or operator intervention) may succeed with the same plan.
      * {@code false} when re-running cannot succeed without fixing the named cause first: a
      * missing customer authorization key, a missing/unknown package code on a hand-built plan,

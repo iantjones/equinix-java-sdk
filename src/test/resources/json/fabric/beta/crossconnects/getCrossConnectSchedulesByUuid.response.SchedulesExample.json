@@ -1,0 +1,35 @@
+{
+  "data": [
+    {
+      "href": "https://api.equinix.com/fabric/v4/crossConnects/46bb1a31-c28f-4197-8b10-06e0e03d0743/schedules/e41f485e-3094-42de-8797-0ef19a51df79",
+      "uuid": "e41f485e-3094-42de-8797-0ef19a51df79",
+      "type": "XC_INSTALL_SCHEDULE",
+      "code": "EXPEDITE",
+      "state": "COMPLETED",
+      "autoConvertToStandard": true,
+      "readinessDateTime": "2026-08-23T07:21:39Z",
+      "requestedDateTime": "2026-08-24T07:21:39Z",
+      "equinixProposedDateTime": "2026-08-25T07:21:39Z",
+      "installationDateTime": "2026-08-25T09:21:39Z",
+      "changeLog": {
+        "createdBy": "testuser",
+        "createdDateTime": "2026-08-22T07:21:39Z",
+        "updatedBy": "124",
+        "updatedDateTime": "2026-08-25T09:21:39Z"
+      }
+    },
+    {
+      "href": "https://api.equinix.com/fabric/v4/crossConnects/46bb1a31-c28f-4197-8b10-06e0e03d0743/schedules/a11f485e-3094-42de-8797-0ef19a51df79",
+      "uuid": "a11f485e-3094-42de-8797-0ef19a51df79",
+      "type": "XC_DEINSTALL_SCHEDULE",
+      "code": "STANDARD",
+      "state": "PENDING",
+      "requestedDateTime": "2026-09-14T17:21:25.586Z",
+      "deinstallationDateTime": "2026-09-16T17:21:25.586Z",
+      "changeLog": {
+        "createdBy": "testuser",
+        "createdDateTime": "2026-09-12T07:21:39Z"
+      }
+    }
+  ]
+}

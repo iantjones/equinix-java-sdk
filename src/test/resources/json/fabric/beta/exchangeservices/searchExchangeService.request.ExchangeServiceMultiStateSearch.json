@@ -1,0 +1,24 @@
+{
+  "filter": {
+    "and": [
+      {
+        "property": "/state",
+        "operator": "IN",
+        "values": [
+          "PROVISIONING",
+          "REPROVISIONING"
+        ]
+      }
+    ]
+  },
+  "pagination": {
+    "limit": 10,
+    "offset": 0
+  },
+  "sort": [
+    {
+      "property": "/changeLog/updatedDateTime",
+      "direction": "DESC"
+    }
+  ]
+}

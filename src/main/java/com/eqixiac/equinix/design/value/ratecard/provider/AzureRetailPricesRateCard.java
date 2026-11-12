@@ -52,8 +52,8 @@ import java.util.concurrent.ConcurrentHashMap;
  * {@link PriceSource#PROVIDER_API}.</p>
  *
  * <p>The adapter is an opt-in, pluggable source: compose it into a precedence chain
- * with {@link RateCard#layered(RateCard...)} (e.g. caller-supplied → Equinix live →
- * provider APIs → bundled reference). It is fault-tolerant — a network error, throttling,
+ * with {@link RateCard#layered(RateCard...)} (e.g. caller-supplied -> Equinix live ->
+ * provider APIs -> bundled reference). It is fault-tolerant - a network error, throttling,
  * or an unrecognised response yields no rate rather than an exception, so a layered card
  * falls back to the next source.</p>
  *
@@ -66,7 +66,7 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * <p>Results are cached per lookup key for the adapter's lifetime, but only <em>authoritative</em>
  * ones: a rate, or a genuinely empty result set from a fully-paginated response. A transport
- * failure (network error, non-200, truncated pagination) is never cached — the next lookup
+ * failure (network error, non-200, truncated pagination) is never cached - the next lookup
  * retries, so a transient outage cannot pin "no rate" forever.</p>
  */
 @Slf4j
@@ -107,7 +107,7 @@ public final class AzureRetailPricesRateCard implements RateCard {
     }
 
     /**
-     * Creates an adapter against a custom Retail Prices endpoint — for an Azure
+     * Creates an adapter against a custom Retail Prices endpoint - for an Azure
      * sovereign/government cloud, a proxy, or testing.
      *
      * @param endpoint the full {@code .../api/retail/prices} URL
@@ -146,7 +146,7 @@ public final class AzureRetailPricesRateCard implements RateCard {
         // rarely fetch twice; putIfAbsent keeps the winner.
         Optional<EgressRate> fetched = fetch(region, path);
         if (fetched == null) {
-            // Transport failure — NOT "no such SKU". Yield no rate but don't cache it, so the
+            // Transport failure - NOT "no such SKU". Yield no rate but don't cache it, so the
             // next lookup retries instead of the failure being memoized for the adapter's lifetime.
             return Optional.empty();
         }
@@ -156,7 +156,7 @@ public final class AzureRetailPricesRateCard implements RateCard {
 
     /**
      * The result-cache key. {@link EgressPath#PRIVATE} (ExpressRoute) lookups deliberately ignore
-     * the region — the meters are zone-based — so every region shares one {@code PRIVATE} entry;
+     * the region - the meters are zone-based - so every region shares one {@code PRIVATE} entry;
      * otherwise each distinct region would trigger an identical full fetch.
      */
     private static String cacheKey(String region, EgressPath path) {
@@ -176,7 +176,7 @@ public final class AzureRetailPricesRateCard implements RateCard {
      *
      * @return the selected rate; {@link Optional#empty()} when the fully-paginated response
      *         authoritatively contains no matching meter (cacheable); or {@code null} when the
-     *         fetch <em>failed</em> — a transport error or truncated pagination — which the caller
+     *         fetch <em>failed</em> - a transport error or truncated pagination - which the caller
      *         must not cache
      */
     private Optional<EgressRate> fetch(String region, EgressPath path) {
@@ -193,7 +193,7 @@ public final class AzureRetailPricesRateCard implements RateCard {
         // The Retail Prices API returns at most 100 items per response and hands back an absolute
         // NextPageLink for the next page (null/absent on the last). Follow it, accumulating Items
         // across every page BEFORE selecting: the headline (internet) and lowest-metered
-        // (ExpressRoute) figures must be computed over the whole result set, not just page one —
+        // (ExpressRoute) figures must be computed over the whole result set, not just page one - 
         // otherwise the "lowest ExpressRoute egress" could miss a cheaper meter on a later page.
         List<JsonNode> items = new ArrayList<>();
         String next = url;
@@ -203,7 +203,7 @@ public final class AzureRetailPricesRateCard implements RateCard {
             if (root.isEmpty()) {
                 // A fetch failure (first page or mid-pagination): an aggregate (headline / lowest)
                 // computed over a partial result set would be a wrong number labelled authoritative,
-                // so fail the whole lookup — null tells the caller "do not cache; retry next call".
+                // so fail the whole lookup - null tells the caller "do not cache; retry next call".
                 return null;
             }
             JsonNode body = root.get();
@@ -274,7 +274,7 @@ public final class AzureRetailPricesRateCard implements RateCard {
 
     /**
      * Private (ExpressRoute) egress: the metered "Data Transfer Out" rate, taking the lowest
-     * positive per-GB rate (the best-case zone) — the savings-relevant figure. Skips the
+     * positive per-GB rate (the best-case zone) - the savings-relevant figure. Skips the
      * "Unlimited Data" flat-fee plans (which carry a $0 per-GB meter).
      */
     private static JsonNode selectPrivate(Iterable<JsonNode> items) {

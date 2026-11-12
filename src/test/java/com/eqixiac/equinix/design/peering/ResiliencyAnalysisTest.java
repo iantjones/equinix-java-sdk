@@ -173,7 +173,7 @@ class ResiliencyAnalysisTest {
             DiversityScore score = DiversityScore.builder()
                     .primaryMetro(MetroId.of("DC"))
                     .backupMetro(MetroId.of("SG"))
-                    .distanceKm(15000)
+                    .distanceKm(15000.0)
                     .sameRegion(false)
                     .rating(DiversityRating.EXCELLENT)
                     .explanation("DC and SG are 15000 km apart")
@@ -191,7 +191,7 @@ class ResiliencyAnalysisTest {
             DiversityScore score = DiversityScore.builder()
                     .primaryMetro(MetroId.of("DC"))
                     .backupMetro(MetroId.of("DA"))
-                    .distanceKm(1900)
+                    .distanceKm(1900.0)
                     .sameRegion(true)
                     .rating(DiversityRating.GOOD)
                     .explanation("DC and DA are 1900 km apart")
@@ -207,7 +207,7 @@ class ResiliencyAnalysisTest {
             DiversityScore score = DiversityScore.builder()
                     .primaryMetro(MetroId.of("DC"))
                     .backupMetro(MetroId.of("NY"))
-                    .distanceKm(50)
+                    .distanceKm(50.0)
                     .sameRegion(true)
                     .rating(DiversityRating.CRITICAL)
                     .explanation("DC and NY are only 50 km apart")
@@ -224,15 +224,15 @@ class ResiliencyAnalysisTest {
                     .primaryMetro(MetroId.of("DC"))
                     .backupMetro(MetroId.of("DA"))
                     .distanceKm(distance)
-                    .estimatedRttMs(com.eqixiac.equinix.design.geo.SpeedOfLightLatency
+                    .rttFloorMs(com.eqixiac.equinix.design.geo.SpeedOfLightLatency
                             .roundTrip().millisForKm(distance))
                     .rating(DiversityRating.GOOD)
                     .build();
 
             // ~18.6 ms round-trip floor at 1900 km (2 x 1900 / (c/n)); strictly positive and
             // greater than the one-way figure.
-            assertTrue(score.getEstimatedRttMs() > 18 && score.getEstimatedRttMs() < 19,
-                    "expected ~18.6 ms RTT floor, was " + score.getEstimatedRttMs());
+            assertTrue(score.getRttFloorMs() > 18 && score.getRttFloorMs() < 19,
+                    "expected ~18.6 ms RTT floor, was " + score.getRttFloorMs());
         }
     }
 
@@ -246,7 +246,7 @@ class ResiliencyAnalysisTest {
             DiversityScore diversity = DiversityScore.builder()
                     .primaryMetro(MetroId.of("DC"))
                     .backupMetro(MetroId.of("DA"))
-                    .distanceKm(1900)
+                    .distanceKm(1900.0)
                     .sameRegion(true)
                     .rating(DiversityRating.GOOD)
                     .explanation("Good diversity")
@@ -290,7 +290,7 @@ class ResiliencyAnalysisTest {
                     .routeServerAvailable(true)
                     .diversity(DiversityScore.builder()
                             .primaryMetro(MetroId.of("DC")).backupMetro(MetroId.of("CH"))
-                            .distanceKm(950).sameRegion(true)
+                            .distanceKm(950.0).sameRegion(true)
                             .rating(DiversityRating.MODERATE)
                             .explanation("Moderate diversity").build())
                     .ixSessions(Collections.emptyList())
@@ -361,10 +361,10 @@ class ResiliencyAnalysisTest {
             DiversityScore dcToDa = DiversityScore.builder()
                     .primaryMetro(MetroId.of("DC"))
                     .backupMetro(MetroId.of("DA"))
-                    .distanceKm(1900)
+                    .distanceKm(1900.0)
                     .sameRegion(true)
                     .rating(DiversityRating.GOOD)
-                    .explanation("DC and DA are 1900 km apart — good diversity within the same continent.")
+                    .explanation("DC and DA are 1900 km apart - good diversity within the same continent.")
                     .build();
 
             // Failover paths

@@ -1,0 +1,18 @@
+{
+  "type": "XC_INFORMATION_UPDATE",
+  "data": {
+    "notes": [
+      {
+        "parentNote": {
+          "uuid": "e41f485e-3094-42de-8797-0ef19a51df79"
+        },
+        "comments": "Please proceed"
+      }
+    ],
+    "attachments": [
+      {
+        "attachmentId": "e41f485e-3094-42de-8797-0ef19a51df79"
+      }
+    ]
+  }
+}

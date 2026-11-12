@@ -45,9 +45,7 @@ final class PlanNames {
     /** Names already handed out by this generator, so later names dedupe around them. */
     private final Set<String> used = new HashSet<>();
 
-    // ══════════════════════════════════════════════
     //  Provider tokens
-    // ══════════════════════════════════════════════
 
     /**
      * Maps a Fabric provider label &mdash; a corporate name ("Amazon Web Services"), a product name
@@ -76,9 +74,7 @@ final class PlanNames {
         return slug.length() > 8 ? slug.substring(0, 8) : slug;
     }
 
-    // ══════════════════════════════════════════════
     //  Prefix
-    // ══════════════════════════════════════════════
 
     /**
      * Validates and normalizes a caller-supplied router-name prefix so the names composed from it
@@ -96,7 +92,7 @@ final class PlanNames {
     static String validatePrefix(String rawPrefix) {
         if (rawPrefix == null || rawPrefix.trim().isEmpty()) {
             throw new IllegalArgumentException(
-                    "Router name prefix must not be blank — it is the stem of every generated resource name.");
+                    "Router name prefix must not be blank - it is the stem of every generated resource name.");
         }
         String cleaned = sanitizeSegment(rawPrefix.trim());
         if (cleaned.isEmpty()) {
@@ -106,9 +102,7 @@ final class PlanNames {
         return cleaned.length() > MAX_PREFIX_LEN ? cleaned.substring(0, MAX_PREFIX_LEN) : cleaned;
     }
 
-    // ══════════════════════════════════════════════
     //  Name allocation
-    // ══════════════════════════════════════════════
 
     /**
      * Allocates a unique, name-safe, length-capped name from the given desired string. The result is
@@ -148,7 +142,7 @@ final class PlanNames {
         }
         int room = MAX_LEN - cleanSuffix.length() - 1; // -1 for the joining dash
         if (room < 1) {
-            // The suffix alone leaves no room for even a one-character head — hash the whole thing.
+            // The suffix alone leaves no room for even a one-character head - hash the whole thing.
             return disambiguate(cleanBase + "-" + cleanSuffix);
         }
         String head = trimDashes(cleanBase.length() > room ? cleanBase.substring(0, room) : cleanBase);
@@ -165,7 +159,7 @@ final class PlanNames {
     /**
      * Resolves a collision by appending a short deterministic hash of the intended name, truncating
      * the head to make room. Iterating the salt guarantees termination: the base-36 tag space
-     * (&gt;1.6M values) dwarfs any plan's resource count, so a free slot is always found — in
+     * (&gt;1.6M values) dwarfs any plan's resource count, so a free slot is always found - in
      * practice on the first iteration.
      */
     private String disambiguate(String desired) {
@@ -189,9 +183,7 @@ final class PlanNames {
         throw new IllegalStateException("could not allocate a unique name for '" + desired + "'");
     }
 
-    // ══════════════════════════════════════════════
     //  Helpers
-    // ══════════════════════════════════════════════
 
     private static String cap(String s) {
         if (s == null) {

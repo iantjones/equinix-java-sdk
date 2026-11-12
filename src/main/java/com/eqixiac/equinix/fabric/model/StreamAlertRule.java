@@ -26,7 +26,7 @@ import com.eqixiac.equinix.fabric.model.json.creators.StreamAlertRuleOperator;
 /**
  * A metric alert rule attached to a Fabric stream.
  */
-public interface StreamAlertRule {
+public interface StreamAlertRule extends DeletableResource {
 
     String getHref();
 

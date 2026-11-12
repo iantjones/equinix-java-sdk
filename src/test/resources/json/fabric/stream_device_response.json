@@ -1,0 +1,25 @@
+{
+  "href": "https://api.equinix.com/fabric/v4/streams/e684aa26-8276-48b7-bb42-a6d9def0a419/devices/8a9b7c6d-1e2f-4a3b-9c4d-5e6f7a8b9c0d",
+  "uuid": "8a9b7c6d-1e2f-4a3b-9c4d-5e6f7a8b9c0d",
+  "type": "VIRTUAL_DEVICE",
+  "metricsEnabled": true,
+  "attachmentStatus": "ATTACHED",
+  "interfaces": [
+    {
+      "href": "https://api.equinix.com/ne/v1/devices/8a9b7c6d-1e2f-4a3b-9c4d-5e6f7a8b9c0d/interfaces/3",
+      "id": 3,
+      "uuid": "1f2e3d4c-5b6a-4978-8a9b-0c1d2e3f4a5b",
+      "type": "DATA",
+      "state": "ASSIGNED",
+      "attachmentStatus": "ATTACHED"
+    },
+    {
+      "href": "https://api.equinix.com/ne/v1/devices/8a9b7c6d-1e2f-4a3b-9c4d-5e6f7a8b9c0d/interfaces/5",
+      "id": 5,
+      "uuid": "4a1b2c3d-5e6f-4a7b-8c9d-0e1f2a3b4c5d",
+      "type": "DATA",
+      "state": "ASSIGNED",
+      "attachmentStatus": "ATTACHED"
+    }
+  ]
+}

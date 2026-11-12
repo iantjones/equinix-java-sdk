@@ -16,7 +16,7 @@
 
 /**
  * Live cloud-provider pricing adapters: {@code RateCard} implementations that source
- * current data-egress list prices from the providers' public pricing APIs —
+ * current data-egress list prices from the providers' public pricing APIs - 
  * {@link com.eqixiac.equinix.design.value.ratecard.provider.AwsPriceListRateCard} (AWS
  * Price List bulk offers),
  * {@link com.eqixiac.equinix.design.value.ratecard.provider.AzureRetailPricesRateCard}
@@ -28,20 +28,20 @@
  * {@link com.eqixiac.equinix.design.value.ratecard.PriceSource#PROVIDER_API}: live and
  * accurate for the provider side, but public list pricing, not negotiated rates.
  *
- * <p>The adapters are opt-in — the default value-model chain does not include them.
+ * <p>The adapters are opt-in - the default value-model chain does not include them.
  * Compose them explicitly, e.g. {@code RateCard.layered(EquinixRateCard.of(fabric),
  * AzureRetailPricesRateCard.create(), ReferenceRateCard.standard())}. They price
  * egress only; connection and Cloud Router lookups return empty (those are
- * Equinix-side costs). Rates are per decimal (SI) gigabyte — GCP's per-GiB list
+ * Equinix-side costs). Rates are per decimal (SI) gigabyte - GCP's per-GiB list
  * prices are converted, with the original recorded in the rate's note.</p>
  *
  * <p>All adapters share one operational contract (via a common HTTP client): hard
  * connect/read timeouts so an unresponsive endpoint degrades to "no rate" within
- * seconds; fault tolerance — any fetch, parse, or pagination failure yields empty
- * rather than throwing, so a layered chain falls back; success-only memoization —
+ * seconds; fault tolerance - any fetch, parse, or pagination failure yields empty
+ * rather than throwing, so a layered chain falls back; success-only memoization - 
  * catalogues are fetched lazily and cached for the adapter's lifetime, but a failed
  * or truncated fetch is never cached, so a transient outage is retried instead of
- * pinning "no rate" forever; and credential redaction — API keys never reach log
+ * pinning "no rate" forever; and credential redaction - API keys never reach log
  * lines.</p>
  *
  * @see com.eqixiac.equinix.design.value.ratecard.RateCard

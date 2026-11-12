@@ -32,6 +32,8 @@ public class ServiceTokenWrapper extends ResourceImpl<ServiceToken> implements S
 
     @Delegate(excludes = ServiceTokenMutability.class)
     private ServiceTokenJson jsonObject;
+
+    private boolean deleted;
     @Getter
     private final Pageable<ServiceToken> serviceClient;
 
@@ -41,8 +43,17 @@ public class ServiceTokenWrapper extends ResourceImpl<ServiceToken> implements S
     }
 
     public Boolean delete() {
-        this.jsonObject = ((ServiceTokenClientImpl)this.serviceClient).delete(this.getUuid());
+        ServiceTokenJson response = ((ServiceTokenClientImpl)this.serviceClient).delete(this.getUuid());
+        if (response != null) {
+            this.jsonObject = response;
+        }
+        this.deleted = true;
         return true;
+    }
+
+    @Override
+    public boolean isDeleted() {
+        return this.deleted;
     }
 
     public void refresh() {

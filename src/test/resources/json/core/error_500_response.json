@@ -1,1 +1,1 @@
-[{"errorCode":"ERR-500","errorMessage":"Internal server error","details":"An unexpected error occurred on the server"}]
+[{"errorCode":"EQ-3000500","errorMessage":"Internal server error","details":"An unexpected error occurred on the server","correlationId":"c0ffee00-0000-4000-8000-000000000500"}]

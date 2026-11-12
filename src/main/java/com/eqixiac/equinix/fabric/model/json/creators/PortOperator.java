@@ -16,6 +16,7 @@
 
 package com.eqixiac.equinix.fabric.model.json.creators;
 
+import com.eqixiac.equinix.fabric.enums.EncapsulationType;
 import com.eqixiac.equinix.core.http.request.PatchOperation;
 import com.eqixiac.equinix.core.http.response.PageablePost;
 import com.eqixiac.equinix.core.model.ResourceImpl;
@@ -24,7 +25,6 @@ import com.eqixiac.equinix.fabric.enums.BmmrType;
 import com.eqixiac.equinix.fabric.enums.ConnectivitySourceType;
 import com.eqixiac.equinix.fabric.enums.PhysicalPortType;
 import com.eqixiac.equinix.fabric.enums.PortServiceCode;
-import com.eqixiac.equinix.fabric.enums.PortServiceType;
 import com.eqixiac.equinix.fabric.enums.PortType;
 import com.eqixiac.equinix.fabric.model.Port;
 import com.eqixiac.equinix.fabric.model.implementation.DemarcationPoint;
@@ -35,7 +35,6 @@ import com.eqixiac.equinix.fabric.model.implementation.PortLoa;
 import com.eqixiac.equinix.fabric.model.implementation.PortNotification;
 import com.eqixiac.equinix.fabric.model.implementation.PortOrder;
 import com.eqixiac.equinix.fabric.model.implementation.PackageRef;
-import com.eqixiac.equinix.fabric.model.implementation.PortSettings;
 import com.eqixiac.equinix.fabric.model.implementation.Redundancy;
 import com.eqixiac.equinix.fabric.model.Project;
 import com.eqixiac.equinix.fabric.model.json.PortJson;
@@ -103,13 +102,10 @@ public class PortOperator extends ResourceImpl<Port> {
         private DemarcationPoint demarcationPoint;
         private Redundancy redundancy;
         private PackageRef portPackage;
-        private PortSettings settings;
         private List<PortNotification> notifications;
         private List<PhysicalPort> physicalPorts;
         private List<PortLoa> loas;
-        private PortServiceType serviceType;
         private PortServiceCode serviceCode;
-        private Integer bandwidth;
         private boolean dryRun;
 
         protected PortBuilder() {
@@ -273,17 +269,6 @@ public class PortOperator extends ResourceImpl<Port> {
         }
 
         /**
-         * Sets the port configuration settings ({@code PortSettings}).
-         *
-         * @param settings the port settings
-         * @return this builder
-         */
-        public PortBuilder withSettings(PortSettings settings) {
-            this.settings = settings;
-            return this;
-        }
-
-        /**
          * Sets the notification preferences ({@code PortNotification} entries).
          *
          * @param notifications the notification preferences
@@ -317,19 +302,6 @@ public class PortOperator extends ResourceImpl<Port> {
         }
 
         /**
-         * Sets the port service type ({@code EPL} or {@code MSP}).
-         *
-         * @param serviceType the service type
-         * @return this builder
-         * @deprecated deprecated in the Fabric v4 spec
-         */
-        @Deprecated
-        public PortBuilder serviceType(PortServiceType serviceType) {
-            this.serviceType = serviceType;
-            return this;
-        }
-
-        /**
          * Sets the service code identifying the service type associated with this port
          * ({@code CX}, {@code IX}, {@code IA} or {@code MC}).
          *
@@ -338,19 +310,6 @@ public class PortOperator extends ResourceImpl<Port> {
          */
         public PortBuilder serviceCode(PortServiceCode serviceCode) {
             this.serviceCode = serviceCode;
-            return this;
-        }
-
-        /**
-         * Sets the port bandwidth in Mbps.
-         *
-         * @param bandwidth the bandwidth in Mbps
-         * @return this builder
-         * @deprecated deprecated in the Fabric v4 spec
-         */
-        @Deprecated
-        public PortBuilder bandwidth(Integer bandwidth) {
-            this.bandwidth = bandwidth;
             return this;
         }
 
@@ -408,6 +367,44 @@ public class PortOperator extends ResourceImpl<Port> {
          */
         public PortUpdater name(String name) {
             operations.add(PatchOperation.replace("/name", name));
+            return this;
+        }
+
+        /**
+         * Replaces the port encapsulation and its tag protocol identifier (TPID), as in the spec's
+         * {@code PortUpdateEncapsulationAndTagprotocolIdRequest} example:
+         * {@code [{"op":"replace","path":"/encapsulation","value":{"type":"DOT1Q","tagProtocolId":"0x8100"}}]}.
+         *
+         * @param type the encapsulation type ({@code DOT1Q}, {@code QINQ} or {@code UNTAGGED})
+         * @param tagProtocolId the TPID as four hex digits with a {@code 0x} prefix, for example
+         *        {@code 0x8100} or {@code 0x88A8}; {@code null} to leave it out
+         * @return this updater
+         */
+        public PortUpdater encapsulation(EncapsulationType type, String tagProtocolId) {
+            if (type == null || type == EncapsulationType.UNKNOWN) {
+                throw new IllegalArgumentException("encapsulation type is required (DOT1Q, QINQ or UNTAGGED)");
+            }
+            if (tagProtocolId != null && !tagProtocolId.matches("0x[0-9A-Fa-f]{4}")) {
+                throw new IllegalArgumentException("tagProtocolId must look like 0x8100: " + tagProtocolId);
+            }
+            java.util.Map<String, Object> value = new java.util.LinkedHashMap<>();
+            value.put("type", type.name());
+            if (tagProtocolId != null) {
+                value.put("tagProtocolId", tagProtocolId);
+            }
+            operations.add(PatchOperation.replace("/encapsulation", value));
+            return this;
+        }
+
+        /**
+         * Enables or disables LAG on the port ({@code /lagEnabled}, spec example
+         * {@code PortUpdateLagEnabledRequest}).
+         *
+         * @param lagEnabled whether LAG is enabled
+         * @return this updater
+         */
+        public PortUpdater lagEnabled(boolean lagEnabled) {
+            operations.add(PatchOperation.replace("/lagEnabled", lagEnabled));
             return this;
         }
 

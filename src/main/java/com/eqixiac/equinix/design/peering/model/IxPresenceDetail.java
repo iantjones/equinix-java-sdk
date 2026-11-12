@@ -56,7 +56,7 @@ public class IxPresenceDetail {
 
     /**
      * Returns a human-readable speed string: whole Gbps without a decimal ({@code "10G"},
-     * {@code "100G"}), fractional Gbps with one decimal ({@code "2.5G"} — not truncated to
+     * {@code "100G"}), fractional Gbps with one decimal ({@code "2.5G"} - not truncated to
      * {@code "2G"} by integer division), and sub-Gbps speeds in Mbps ({@code "500M"}).
      *
      * @return formatted speed string

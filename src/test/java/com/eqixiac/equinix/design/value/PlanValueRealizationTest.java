@@ -54,9 +54,9 @@ class PlanValueRealizationTest {
         // egress saving = (0.09 - 0.02) * 50,000 = 3500
         assertEquals(0, new BigDecimal("3500").compareTo(vr.getTotalMonthlyEgressSavings()));
         assertEquals(0, new BigDecimal("700").compareTo(vr.getPlanMonthlyCost()));
-        assertEquals(0, new BigDecimal("2800").compareTo(vr.getNetMonthlySavings()), "3500 − 700");
+        assertEquals(0, new BigDecimal("2800").compareTo(vr.getNetMonthlySavings()), "3500 - 700");
         assertEquals(0, new BigDecimal("33600").compareTo(vr.getAnnualNetSavings()));
-        assertEquals(0, new BigDecimal("32600").compareTo(vr.getFirstYearNetSavings()), "annual − setup");
+        assertEquals(0, new BigDecimal("32600").compareTo(vr.getFirstYearNetSavings()), "annual - setup");
         assertEquals(1, vr.getPerProvider().size());
         assertTrue(vr.getPerProvider().get(0).isPriced());
         assertNotNull(vr.toMarkdown());
@@ -65,14 +65,14 @@ class PlanValueRealizationTest {
     @Test
     void aggregatesAcrossMultipleProviders() {
         // GCP reference rates are the per-GB conversions of Google's per-GiB list prices
-        // (0.1118 internet / 0.0186 interconnect), so: (0.1118 − 0.0186) × 10,000 = 932.
+        // (0.1118 internet / 0.0186 interconnect), so: (0.1118 - 0.0186) × 10,000 = 932.
         PlanValueRealization vr = planCosting("1000", "0").valueRealization()
                 .egress(CloudProviderType.AWS, 50, DataUnit.TERABYTE)      // saving 3500
                 .egress(CloudProviderType.GOOGLE_CLOUD, 10, DataUnit.TERABYTE) // saving 932
                 .assess();
 
         assertEquals(0, new BigDecimal("4432").compareTo(vr.getTotalMonthlyEgressSavings()), "3500 + 932");
-        assertEquals(0, new BigDecimal("3432").compareTo(vr.getNetMonthlySavings()), "4432 − 1000 plan cost");
+        assertEquals(0, new BigDecimal("3432").compareTo(vr.getNetMonthlySavings()), "4432 - 1000 plan cost");
         assertEquals(2, vr.getPerProvider().size());
     }
 

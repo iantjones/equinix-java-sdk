@@ -73,7 +73,6 @@ public class ConnectionOperator extends ResourceImpl<Connection> {
         private Project project;
         private List<ConnectionSideAdditionalInfo> additionalInfo;
         private MarketplaceSubscriptionRef marketplaceSubscription;
-        private EndCustomer endCustomer;
         private boolean dryRun;
 
         protected ConnectionBuilder(ConnectionType type) {
@@ -181,6 +180,19 @@ public class ConnectionOperator extends ResourceImpl<Connection> {
          * @param networkUuid the network uuid
          * @return this builder for chaining
          */
+        /**
+         * A-side Fabric Interconnect access point ({@code type IC}, {@code interconnect.uuid}).
+         * The spec publishes no create example for it; send with {@link #dryRun()} first.
+         *
+         * @param interconnectUuid the interconnect uuid
+         * @return this builder
+         */
+        public ConnectionBuilder aSideAccessPointInterconnect(String interconnectUuid) {
+            this.aSideAccessPoint = SimpleAccessPoint.define(AccessPointType.IC)
+                    .interconnect(interconnectUuid).create();
+            return this;
+        }
+
         public ConnectionBuilder aSideAccessPointNetwork(String networkUuid) {
             this.aSideAccessPoint = SimpleAccessPoint.define(AccessPointType.NETWORK)
                     .network(networkUuid).create();
@@ -209,22 +221,38 @@ public class ConnectionOperator extends ResourceImpl<Connection> {
             return this;
         }
 
-        public ConnectionBuilder zSideAccessPointService(String serviceProfileUuid, LinkProtocol linkProtocol) {
-            this.zSideAccessPoint = SimpleAccessPoint.define(AccessPointType.SP)
-                    .serviceProfile(serviceProfileUuid)
-                    .linkProtocol(linkProtocol).create();
-            return this;
+        /**
+         * Service-provider z-side from a service profile read model, with {@code location.metroCode}.
+         *
+         * @param serviceProfile the provider's service profile
+         * @param linkProtocol the z-side link protocol, or {@code null}
+         * @param metroCode the metro the provider is reached in, e.g. {@code "SV"}; required
+         * @return this builder
+         */
+        public ConnectionBuilder zSideAccessPoint(ServiceProfile serviceProfile, LinkProtocol linkProtocol, String metroCode) {
+            return zSideAccessPointServiceProfile(serviceProfile.getUuid(), linkProtocol, metroCode);
         }
 
-        public ConnectionBuilder zSideAccessPoint(ServiceProfile serviceProfile, LinkProtocol linkProtocol) {
-            this.zSideAccessPoint = serviceProfile.accessPoint().setLinkProtocol(linkProtocol);
-            return this;
-        }
-
-        public ConnectionBuilder zSideAccessPointServiceProfile(String serviceProfileUuid, LinkProtocol linkProtocol) {
-            this.zSideAccessPoint = SimpleAccessPoint.define(AccessPointType.SP)
+        /**
+         * Service-provider z-side with {@code location.metroCode}, the shape every
+         * service-provider connection example in the Fabric v4 spec uses. The metro is required:
+         * without it Fabric answers HTTP 400 EQ-3142501 "Invalid seller metroCode location"
+         * (live-confirmed 2026-11-11), so the overload without a metro was removed.
+         *
+         * @param serviceProfileUuid the provider's service profile
+         * @param linkProtocol the z-side link protocol, or {@code null}
+         * @param metroCode the metro the provider is reached in, e.g. {@code "SV"}; required
+         * @return this builder
+         */
+        public ConnectionBuilder zSideAccessPointServiceProfile(String serviceProfileUuid, LinkProtocol linkProtocol,
+                                                                String metroCode) {
+            SimpleAccessPoint.AccessPointBuilder ap = SimpleAccessPoint.define(AccessPointType.SP)
                     .serviceProfile(serviceProfileUuid)
-                    .linkProtocol(linkProtocol).create();
+                    .metro(requireMetro(metroCode));
+            if (linkProtocol != null) {
+                ap.linkProtocol(linkProtocol);
+            }
+            this.zSideAccessPoint = ap.create();
             return this;
         }
 
@@ -309,76 +337,74 @@ public class ConnectionOperator extends ResourceImpl<Connection> {
         }
 
         /**
-         * Configures the Z-side access point using a cloud provider adapter.
-         *
-         * <p>This is the primary method for creating connections to cloud providers like
-         * AWS Direct Connect, Azure ExpressRoute, Google Cloud Interconnect, and Oracle FastConnect.
-         * The adapter extracts the service profile UUID, authentication key, seller region,
-         * and optional peering type from the cloud provider SDK object.</p>
-         *
-         * <p>A link protocol must be specified separately (cloud providers typically require DOT1Q).</p>
+         * Configures the Z-side access point from a cloud provider adapter: service profile,
+         * authentication key, seller region (when the provider uses one), peering type and the
+         * adapter's {@link CloudProviderConnectionAdapter#getMetroCode() metro}.
          *
          * <pre>{@code
          * AwsDirectConnectAdapter<?> adapter = AwsDirectConnectAdapter.of(
-         *     "123456789012", "us-east-1", "equinix-aws-profile-uuid");
+         *     "123456789012", "us-east-1", "equinix-aws-profile-uuid", "DC");
          *
          * Connection conn = fabric.connections()
          *     .define(ConnectionType.EVPL_VC)
          *     .name("AWS-Connection")
          *     .bandwidth(100)
          *     .aSideAccessPointPort(portUuid, LinkProtocol.dot1q().vlanTag(1000).create())
-         *     .zSideCloudProvider(adapter, LinkProtocol.dot1q().vlanTag(1000).create())
+         *     .zSideCloudProvider(adapter, null)
          *     .notification("ops@example.com")
          *     .create();
          * }</pre>
          *
-         * @param adapter      the cloud provider adapter containing connection parameters
-         * @param linkProtocol the link protocol (typically DOT1Q with a VLAN tag)
+         * @param adapter      the cloud provider adapter; its {@code getMetroCode()} must not be {@code null}
+         * @param linkProtocol the z-side link protocol, or {@code null} (the spec's cloud examples send none)
          * @return this builder for chaining
+         * @throws IllegalArgumentException when the adapter carries no metro; use
+         *         {@link #zSideCloudProvider(CloudProviderConnectionAdapter, LinkProtocol, String)}
          * @see CloudProviderConnectionAdapter
          */
         public ConnectionBuilder zSideCloudProvider(CloudProviderConnectionAdapter<?> adapter, LinkProtocol linkProtocol) {
-            this.zSideAccessPoint = SimpleAccessPoint.define(AccessPointType.SP)
+            return zSideCloudProvider(adapter, linkProtocol, adapter.getMetroCode());
+        }
+
+        /**
+         * As {@link #zSideCloudProvider(CloudProviderConnectionAdapter, LinkProtocol)} with an explicit
+         * z-side {@code location.metroCode}, which overrides the adapter's.
+         *
+         * @param adapter the cloud provider adapter
+         * @param linkProtocol the link protocol, or {@code null}
+         * @param metroCode the provider metro, e.g. {@code "SV"}; required
+         * @return this builder for chaining
+         */
+        public ConnectionBuilder zSideCloudProvider(CloudProviderConnectionAdapter<?> adapter, LinkProtocol linkProtocol,
+                                                    String metroCode) {
+            SimpleAccessPoint.AccessPointBuilder ap = SimpleAccessPoint.define(AccessPointType.SP)
                     .fromCloudProvider(adapter)
-                    .linkProtocol(linkProtocol)
-                    .create();
+                    .metro(requireMetro(metroCode));
+            if (linkProtocol != null) {
+                ap.linkProtocol(linkProtocol);
+            }
+            this.zSideAccessPoint = ap.create();
             return this;
         }
 
         /**
-         * Configures the Z-side access point using a cloud provider adapter with its preferred link protocol.
+         * Configures the Z-side access point from a cloud provider adapter, using the adapter's
+         * preferred link protocol (if any) and its metro.
          *
-         * <p>Uses the adapter's {@link CloudProviderConnectionAdapter#getPreferredLinkProtocol()} if available.
-         * If the adapter does not specify a preferred link protocol, the access point will be created
-         * without one and the API may reject the request.</p>
-         *
-         * @param adapter the cloud provider adapter containing connection parameters
+         * @param adapter the cloud provider adapter; its {@code getMetroCode()} must not be {@code null}
          * @return this builder for chaining
          * @see #zSideCloudProvider(CloudProviderConnectionAdapter, LinkProtocol)
          */
         public ConnectionBuilder zSideCloudProvider(CloudProviderConnectionAdapter<?> adapter) {
-            SimpleAccessPoint.AccessPointBuilder apBuilder = SimpleAccessPoint.define(AccessPointType.SP)
-                    .fromCloudProvider(adapter);
-            this.zSideAccessPoint = apBuilder.create();
-            return this;
+            return zSideCloudProvider(adapter, null, adapter.getMetroCode());
         }
 
-        /**
-         * Configures the A-side access point using a cloud provider adapter.
-         *
-         * <p>While cloud providers are typically configured on the Z-side, this method is provided
-         * for scenarios where the cloud provider connection serves as the A-side access point.</p>
-         *
-         * @param adapter      the cloud provider adapter containing connection parameters
-         * @param linkProtocol the link protocol
-         * @return this builder for chaining
-         */
-        public ConnectionBuilder aSideCloudProvider(CloudProviderConnectionAdapter<?> adapter, LinkProtocol linkProtocol) {
-            this.aSideAccessPoint = SimpleAccessPoint.define(AccessPointType.SP)
-                    .fromCloudProvider(adapter)
-                    .linkProtocol(linkProtocol)
-                    .create();
-            return this;
+        private static String requireMetro(String metroCode) {
+            if (metroCode == null || metroCode.isBlank()) {
+                throw new IllegalArgumentException("A service-provider access point needs location.metroCode: "
+                        + "Fabric answers HTTP 400 EQ-3142501 without it. Pass the provider metro.");
+            }
+            return metroCode;
         }
 
         public ConnectionBuilder geoScope(GeoScopeType geoScope) {
@@ -406,11 +432,6 @@ public class ConnectionOperator extends ResourceImpl<Connection> {
 
         public ConnectionBuilder marketplaceSubscription(String subscriptionUuid) {
             this.marketplaceSubscription = new MarketplaceSubscriptionRef(subscriptionUuid);
-            return this;
-        }
-
-        public ConnectionBuilder endCustomer(EndCustomer endCustomer) {
-            this.endCustomer = endCustomer;
             return this;
         }
 
@@ -489,8 +510,65 @@ public class ConnectionOperator extends ResourceImpl<Connection> {
          * @return this updater
          */
         public ConnectionUpdater termLength(Integer termLength) {
+            if (termLength == null || termLength < 1) {
+                throw new IllegalArgumentException("termLength must be a positive number of months");
+            }
             operations.add(PatchOperation.replace("/order/termLength", termLength));
             return this;
+        }
+
+        /**
+         * Edits the VLAN tag of an EVPL connection side (Fabric release "EVPL VLAN edit"): replaces
+         * {@code /{aSide|zSide}/accessPoint/linkProtocol/vlanTag}.
+         *
+         * <p>Provenance: the release notes announce the feature, but spec 4.34.0 publishes no example
+         * for it; the path follows the connection's own {@code linkProtocol} shape and is unverified
+         * live (no net-new connection may be created for testing). Run it with {@link #dryRun()}
+         * first.</p>
+         *
+         * @param side the side whose VLAN changes
+         * @param vlanTag the new DOT1Q VLAN tag (2-4092)
+         * @return this updater
+         */
+        public ConnectionUpdater vlanTag(Side side, int vlanTag) {
+            requireVlan(vlanTag, "vlanTag");
+            operations.add(PatchOperation.replace(sidePath(side) + "/accessPoint/linkProtocol/vlanTag", vlanTag));
+            return this;
+        }
+
+        /**
+         * Edits the QinQ VLAN tags of a connection side: replaces
+         * {@code .../linkProtocol/vlanSTag} and {@code .../linkProtocol/vlanCTag}. Same provenance and
+         * dry-run advice as {@link #vlanTag(Side, int)}.
+         *
+         * @param side the side whose VLANs change
+         * @param vlanSTag the new outer (service) tag
+         * @param vlanCTag the new inner (customer) tag
+         * @return this updater
+         */
+        public ConnectionUpdater vlanTags(Side side, int vlanSTag, int vlanCTag) {
+            requireVlan(vlanSTag, "vlanSTag");
+            requireVlan(vlanCTag, "vlanCTag");
+            String base = sidePath(side) + "/accessPoint/linkProtocol/";
+            operations.add(PatchOperation.replace(base + "vlanSTag", vlanSTag));
+            operations.add(PatchOperation.replace(base + "vlanCTag", vlanCTag));
+            return this;
+        }
+
+        private String sidePath(Side side) {
+            if (side == Side.A_Side) {
+                return "/aSide";
+            }
+            if (side == Side.Z_Side) {
+                return "/zSide";
+            }
+            throw new IllegalArgumentException("side must be A_Side or Z_Side");
+        }
+
+        private void requireVlan(int tag, String name) {
+            if (tag < 2 || tag > 4092) {
+                throw new IllegalArgumentException(name + " must be 2..4092: " + tag);
+            }
         }
 
         public ConnectionUpdater patch(PatchOperation operation) {

@@ -39,13 +39,15 @@ import static org.junit.jupiter.api.Assertions.*;
  *
  * <p>The two expected reports were captured from the build of commit {@code 3f8fc655} (the last
  * commit before the native multicloud path was added) by running the same scenario against its
- * classes, and were byte-identical to the output of the changed classes. Scenario: 100 TB per
+ * classes, and were byte-identical to the output of the changed classes. The figures were
+ * updated for the 2026-11 reference bundle (AWS 10G hosted connection 2.48 USD/h x 730 h = 1810.40 in place of
+ * the 10G dedicated port); the layout is unchanged. Scenario: 100 TB per
  * month from AWS us-east-1, metro DC, 10 Gbps, the bundled reference card.</p>
  */
 class SingleCloudOutputUnchangedTest {
 
     private static final String TCO_REPORT = String.join("\n",
-            "## Total Cost of Ownership — Deployment Comparison",
+            "## Total Cost of Ownership: Deployment Comparison",
             "",
             "**Term:** 12 months (archetypes are ranked by total cost over the term, including one-time setup)",
             "",
@@ -53,20 +55,20 @@ class SingleCloudOutputUnchangedTest {
             "|---|---|---|---|---|",
             "| Public cloud over internet | USD 9000.00 | USD 0.00 | USD 108000.00 |  |",
             "| On-premises / self-managed | USD 9025.00 | USD 0.00 | USD 108300.00 |  |",
-            "| Equinix interconnected | USD 4292.50 | USD 0.00 | USD 51510.00 | ✅ recommended |",
+            "| Equinix interconnected | USD 4460.40 | USD 0.00 | USD 53524.80 | recommended |",
             "",
             "**Recommended:** Equinix interconnected",
             "",
-            "- Monthly saving vs. Public cloud over internet: USD 4707.50",
-            "- Annual saving vs. Public cloud over internet: USD 56490.00",
-            "- Saving over the 12-month term vs. Public cloud over internet: USD 56490.00",
+            "- Monthly saving vs. Public cloud over internet: USD 4539.60",
+            "- Annual saving vs. Public cloud over internet: USD 54475.20",
+            "- Saving over the 12-month term vs. Public cloud over internet: USD 54475.20",
             "",
             "_Design-time TCO estimate, not a quote. Equinix Fabric connection costs use live pricing where "
                     + "available; cloud-egress, cloud-provider interconnect-port, cross-connect, and on-prem figures "
                     + "are indicative reference midpoints (the on-prem inputs are coarse and overridable). Compute, "
                     + "storage, software, staffing, and per-provider free-tier egress allowances are out of scope. "
                     + "Actual costs depend on region, volume, tiering, and contract terms. (reference data as of "
-                    + "2026-06)_",
+                    + "2026-11)_",
             "");
 
     private static final String SAVINGS_REPORT = String.join("\n",
@@ -79,18 +81,20 @@ class SingleCloudOutputUnchangedTest {
             "| Egress over public internet | USD 9000.00 |",
             "| Egress over private interconnect | USD 2000.00 |",
             "| **Egress saving** | **USD 7000.00** |",
-            "| Equinix interconnect (recurring) | −USD 350.00 |",
-            "| **Net monthly saving** | **USD 6650.00** |",
+            "| Equinix interconnect (recurring) | -USD 350.00 |",
+            "| AWS interconnect port (reference) | -USD 1810.40 |",
+            "| **Net monthly saving** | **USD 4839.60** |",
             "",
             "- One-time Equinix setup: USD 0.00",
-            "- Annual net saving (steady state): USD 79800.00",
-            "- First-year net saving (incl. setup): USD 79800.00",
-            "- Break-even egress volume: 5000 GB/mo",
+            "- Annual net saving (steady state): USD 58075.20",
+            "- First-year net saving (incl. setup): USD 58075.20",
+            "- Break-even egress volume: 30863 GB/mo",
             "",
             "_Design-time estimate, not a quote. Equinix interconnect costs use live Fabric pricing where "
                     + "available; egress rates are indicative reference or caller-supplied figures. Actual costs "
                     + "depend on region, tiering, volume, and contract terms. Excludes per-provider free-tier egress "
-                    + "allowances and compute/storage costs._",
+                    + "allowances and compute/storage costs. Net savings include the AWS interconnect port fee at "
+                    + "the bundled reference rate._",
             "");
 
     private static TcoComparison tco() {

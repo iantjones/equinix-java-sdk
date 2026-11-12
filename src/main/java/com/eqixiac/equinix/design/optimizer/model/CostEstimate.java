@@ -27,7 +27,7 @@ public class CostEstimate {
     /**
      * The aggregate one-time setup cost across all recommended metros, in {@link #currency}.
      * Like {@link #monthlyTotal}, this is {@code null} when the selected metros are priced in
-     * more than one currency — no cross-currency sum is fabricated; the per-metro rows in
+     * more than one currency - no cross-currency sum is fabricated; the per-metro rows in
      * {@link #perMetro} are then the honest breakdown.
      */
     BigDecimal setupTotal;

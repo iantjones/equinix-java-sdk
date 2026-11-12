@@ -50,37 +50,37 @@ public class PlanValueRealization {
     boolean nativeLinkUnpriced;
 
     /**
-     * The summed monthly egress saving across providers — {@code null} when the per-provider
+     * The summed monthly egress saving across providers - {@code null} when the per-provider
      * figures span currencies (or mismatch the plan's currency), so a cross-currency total is
      * never fabricated; the per-provider rows remain valid each in its own currency.
      */
     BigDecimal totalMonthlyEgressSavings;
 
     /**
-     * Egress saving net of the plan's monthly cost and of {@code nativeLinkMonthlyCost} —
+     * Egress saving net of the plan's monthly cost and of {@code nativeLinkMonthlyCost} - 
      * {@code null} whenever the total is, and whenever {@code nativeLinkUnpriced}.
      */
     BigDecimal netMonthlySavings;
 
-    /** Twelve times the net monthly saving — {@code null} whenever the total is. */
+    /** Twelve times the net monthly saving - {@code null} whenever the total is. */
     BigDecimal annualNetSavings;
 
-    /** The annual net saving minus the plan's setup cost — {@code null} whenever the total is. */
+    /** The annual net saving minus the plan's setup cost - {@code null} whenever the total is. */
     BigDecimal firstYearNetSavings;
 
-    /** One row per declared provider, in declaration order — priced or not. */
+    /** One row per declared provider, in declaration order - priced or not. */
     List<ProviderEgressSaving> perProvider;
 
     /** The currency the aggregates are quoted in (the plan's currency when they are omitted). */
     String currency;
 
-    /** Provenance and honesty notes — including why any aggregate figures were omitted. */
+    /** Provenance and honesty notes - including why any aggregate figures were omitted. */
     String disclaimer;
 
     /**
      * The egress-saving row for one declared cloud provider: the internet-egress cost the
      * declared volume would incur, the private-interconnect cost the plan enables instead, and
-     * the difference. {@code priced} is {@code false} — with the money fields left at ZERO —
+     * the difference. {@code priced} is {@code false} - with the money fields left at ZERO - 
      * when the internet or private rate could not be resolved, or the two rates disagreed on
      * currency (a subtraction across currencies is never fabricated). Rows are per-provider
      * currency-labelled precisely because different clouds/regions can quote different
@@ -120,7 +120,7 @@ public class PlanValueRealization {
         boolean priced;
 
         /**
-         * The currency of this provider's egress figures, which need not match other providers' —
+         * The currency of this provider's egress figures, which need not match other providers' - 
          * different clouds/regions can be priced in different currencies. {@code null} for an
          * unpriced provider. Rendered per-row so a multi-currency breakdown is never mislabelled.
          */
@@ -147,7 +147,7 @@ public class PlanValueRealization {
             // Each provider's figures are labelled in their own currency (falling back to the summary
             // currency when unset), so a mixed-currency breakdown never mislabels a row.
             String rowCurrency = p.getCurrency() != null ? p.getCurrency() : currency;
-            sb.append("| ").append(p.getProvider() == null ? "—" : p.getProvider().name())
+            sb.append("| ").append(p.getProvider() == null ? " - " : p.getProvider().name())
                     .append(p.getPath() == EgressPath.MULTICLOUD_INTERCONNECT ? " (native link)" : "")
                     .append(" | ").append(p.getMonthlyEgressGb().setScale(0, RoundingMode.HALF_UP).toPlainString())
                     .append(" | ").append(p.isPriced() ? money(p.getInternetMonthlyCost(), rowCurrency) : "n/a")
@@ -157,9 +157,9 @@ public class PlanValueRealization {
         }
         sb.append("\n");
         sb.append("- **Total egress saving:** ").append(money(totalMonthlyEgressSavings, currency)).append("/mo\n");
-        sb.append("- Plan interconnect cost: −").append(money(planMonthlyCost, currency)).append("/mo\n");
+        sb.append("- Plan interconnect cost: -").append(money(planMonthlyCost, currency)).append("/mo\n");
         if (nativeLinkMonthlyCost != null) {
-            sb.append("- Native multicloud link fees the plan depends on (billed by the cloud providers): −")
+            sb.append("- Native multicloud link fees the plan depends on (billed by the cloud providers): -")
                     .append(money(nativeLinkMonthlyCost, nativeLinkCurrency != null ? nativeLinkCurrency : currency))
                     .append("/mo\n");
         } else if (nativeLinkUnpriced) {

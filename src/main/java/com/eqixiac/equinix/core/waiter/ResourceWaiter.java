@@ -16,9 +16,12 @@
 
 package com.eqixiac.equinix.core.waiter;
 
+import com.eqixiac.equinix.core.internal.MonotonicClock;
+
+import java.time.Clock;
 import java.time.Duration;
 import java.util.Objects;
-import java.util.concurrent.TimeUnit;
+import java.util.function.LongConsumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
@@ -54,6 +57,8 @@ public final class ResourceWaiter<T> {
     private Predicate<T> failureCondition = t -> false;
     private Duration timeout = Duration.ofMinutes(5);
     private Duration pollInterval = Duration.ofSeconds(5);
+    private Clock clock = MonotonicClock.get();
+    private LongConsumer sleeper = ResourceWaiter::sleep;
 
     private ResourceWaiter(Supplier<T> fetch) {
         this.fetch = Objects.requireNonNull(fetch, "fetch supplier must not be null");
@@ -126,6 +131,27 @@ public final class ResourceWaiter<T> {
     }
 
     /**
+     * The clock the timeout is measured on (default: a monotonic clock). Only differences between
+     * readings are used.
+     *
+     * @param clock the time source (must not be {@code null})
+     * @return this waiter
+     */
+    public ResourceWaiter<T> clock(Clock clock) {
+        this.clock = Objects.requireNonNull(clock, "clock must not be null");
+        return this;
+    }
+
+    /**
+     * Test hook: replaces the poll sleep (default {@link Thread#sleep(long)}), so a test can
+     * advance its own clock instead of waiting.
+     */
+    ResourceWaiter<T> sleeper(LongConsumer sleeper) {
+        this.sleeper = Objects.requireNonNull(sleeper, "sleeper must not be null");
+        return this;
+    }
+
+    /**
      * Polls until the success condition holds (returning the resource), the failure condition holds
      * ({@link WaiterFailedException}), or the timeout elapses ({@link WaiterTimeoutException}).
      * Each sleep is clamped to the remaining timeout budget, so the total wait never exceeds the
@@ -141,7 +167,7 @@ public final class ResourceWaiter<T> {
             throw new IllegalStateException("A success condition is required; call until(...) before await().");
         }
 
-        long deadlineNanos = System.nanoTime() + timeout.toNanos();
+        long deadlineMillis = clock.millis() + timeout.toMillis();
         long pollMillis = Math.max(0L, pollInterval.toMillis());
         int attempts = 0;
 
@@ -156,7 +182,7 @@ public final class ResourceWaiter<T> {
                 throw new WaiterFailedException(
                         "Resource reached a failure state after " + attempts + " attempt(s).", current);
             }
-            long remainingMillis = TimeUnit.NANOSECONDS.toMillis(deadlineNanos - System.nanoTime());
+            long remainingMillis = deadlineMillis - clock.millis();
             if (remainingMillis <= 0L) {
                 throw new WaiterTimeoutException(
                         "Timed out after " + timeout + " (" + attempts + " attempt(s)) waiting for the resource condition.",
@@ -164,7 +190,7 @@ public final class ResourceWaiter<T> {
             }
             // Never sleep past the deadline: the last sleep is clamped to the remaining budget so
             // the configured timeout is an actual upper bound (plus at most one final fetch).
-            sleep(Math.min(pollMillis, remainingMillis));
+            sleeper.accept(Math.min(pollMillis, remainingMillis));
         }
     }
 

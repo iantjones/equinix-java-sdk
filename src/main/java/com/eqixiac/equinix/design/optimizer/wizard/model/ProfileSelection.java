@@ -17,12 +17,13 @@
 package com.eqixiac.equinix.design.optimizer.wizard.model;
 
 import lombok.Builder;
+import lombok.extern.jackson.Jacksonized;
 import lombok.Value;
 
 import java.util.List;
 
 /**
- * How the wizard chose a service profile and a billable bandwidth for one provider connection — the
+ * How the wizard chose a service profile and a billable bandwidth for one provider connection - the
  * bandwidth-aware selection made visible rather than hidden. It records the raw requirement, the tier
  * the connection was stamped at (which may be <em>rounded up</em> from the requirement), and every
  * candidate profile that could carry the bandwidth, so an interactive layer can confirm the round-up
@@ -30,7 +31,7 @@ import java.util.List;
  *
  * <h3>Round-up is surfaced, never silent</h3>
  * <p>When a requirement has no exact service-profile tier the wizard selects the smallest tier that
- * satisfies it (3000&nbsp;&rarr;&nbsp;5000) rather than erroring — but rounding up increases the billed
+ * satisfies it (3000&nbsp;&rarr;&nbsp;5000) rather than erroring - but rounding up increases the billed
  * bandwidth, so it is recorded here ({@code isRoundedUp()}, {@link #roundedUpByMbps()}) and rendered
  * in the plan. A non-interactive caller still gets a valid plan (the smallest covering tier); an
  * interactive caller can confirm the increase before provisioning.</p>
@@ -43,6 +44,7 @@ import java.util.List;
  */
 @Value
 @Builder
+@Jacksonized
 public class ProfileSelection {
 
     /** The raw bandwidth requirement in Mbps that selection started from (before any round-up). */
@@ -55,13 +57,13 @@ public class ProfileSelection {
     String selectedSellerRegion;
 
     /**
-     * The bandwidth the connection was actually stamped (and will be priced/billed) at — the selected
+     * The bandwidth the connection was actually stamped (and will be priced/billed) at - the selected
      * profile's smallest covering tier. Equal to {@link #requestedMbps} when an exact tier or custom
      * bandwidth existed; larger when the requirement was rounded up.
      */
     int selectedTierMbps;
 
-    /** Whether {@link #selectedTierMbps} exceeds {@link #requestedMbps} — i.e. the bandwidth was rounded up. */
+    /** Whether {@link #selectedTierMbps} exceeds {@link #requestedMbps} - i.e. the bandwidth was rounded up. */
     boolean roundedUp;
 
     /**
@@ -76,7 +78,7 @@ public class ProfileSelection {
     String reasoning;
 
     /**
-     * Whether there is more than one covering candidate — a genuine decision point an interactive layer
+     * Whether there is more than one covering candidate - a genuine decision point an interactive layer
      * (the MCP server) can elicit, rather than a forced single choice.
      *
      * @return {@code true} when at least two profiles cover the requested bandwidth

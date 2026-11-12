@@ -55,7 +55,6 @@ import static com.eqixiac.equinix.mcp.server.Args.optString;
 import static com.eqixiac.equinix.mcp.server.Args.requireString;
 import static com.eqixiac.equinix.mcp.server.Schemas.bool;
 import static com.eqixiac.equinix.mcp.server.Schemas.integer;
-import static com.eqixiac.equinix.mcp.server.Schemas.looseObject;
 import static com.eqixiac.equinix.mcp.server.Schemas.number;
 import static com.eqixiac.equinix.mcp.server.Schemas.object;
 import static com.eqixiac.equinix.mcp.server.Schemas.props;
@@ -107,7 +106,7 @@ final class MulticloudDesignTools {
         return names;
     }
 
-    // ── design_compare_cloud_to_cloud ───────────────────────────────────────
+    // design_compare_cloud_to_cloud
 
     static ToolRegistration compareCloudToCloud() {
         Map<String, Object> termMonths = integer("Commitment length in months used ONLY for "
@@ -137,7 +136,7 @@ final class MulticloudDesignTools {
                         + "path is not fully priced, the currencies differ, or no break-even exists. "
                         + "environment reports whether the bundled catalog lists the region pair and at what "
                         + "launch stage; an absent pair means 'not in this dated copy', not 'not offered'. "
-                        + "Live cloud egress rates are fetched under a hard timeout and degrade to reference "
+                        + "Live cloud egress rates share one per-call time budget and degrade to reference "
                         + "rates, naming the provider that failed. Cost only: latency, resiliency and reach "
                         + "to other sites or clouds are not compared. Nothing is provisioned, and this "
                         + "server cannot create a native link.")
@@ -176,10 +175,10 @@ final class MulticloudDesignTools {
                                         + "understated and the break-even overstated; unpriced_components "
                                         + "says so.")),
                         "a", "z", "bandwidth_mbps"))
-                .outputSchema(looseObject("The three paths (fixed, data transfer, monthly and over-term "
-                        + "totals, per-side provenance), break_even_sustained_mbps, unpriced_components, "
+                .outputSchema(DesignPayloads.outputSchema("The three paths (fixed, data transfer, monthly and "
+                        + "over-term totals, per-side provenance), break_even_sustained_mbps, unpriced_components, "
                         + "the catalog environment for the region pair, a recommendation sentence, "
-                        + "live-pricing status per provider, and the limits of the comparison."))
+                        + "live-pricing status per provider, the limits of the comparison, provenance.", "paths"))
                 .toolset(Toolset.DESIGN)
                 .openWorld(true)
                 .handler(MulticloudDesignTools::handleCompareCloudToCloud)
@@ -239,53 +238,57 @@ final class MulticloudDesignTools {
         double eachWayGb = eachWayMbps * MulticloudPathComparison.SECONDS_PER_MONTH
                 / MulticloudPathComparison.MEGABITS_PER_GB;
 
-        // Live egress pricing for each end, each behind the hard timeout. The provider adapters
+        // Live egress pricing for each end, under the call's pricing budget. The provider adapters
         // answer only for their own provider, so layering both ahead of the standard chain lets each
         // side resolve independently and fall through to reference rates on failure.
+        // One live-pricing budget for the whole call, shared by both providers and Equinix.
+        PricingBudget budget = ctx.pricingBudget();
         Map<CloudProviderType, TimeoutRateCard> guards = new LinkedHashMap<>();
         List<RateCard> cards = new ArrayList<>();
         for (CloudEnd end : List.of(a, z)) {
             ctx.providerRateCard(end.provider()).ifPresent(card -> {
-                TimeoutRateCard guarded = new TimeoutRateCard(end.provider().name(), card,
-                        ctx.pricingTimeoutMillis());
+                TimeoutRateCard guarded = new TimeoutRateCard(end.provider().name(), card, budget);
                 guards.put(end.provider(), guarded);
                 cards.add(guarded);
             });
         }
-        cards.add(RateCard.standardChain(ctx.fabric()));
+        List<TimeoutRateCard> equinixGuards = new ArrayList<>();
+        cards.add(TimeoutRateCard.equinixChain(ctx.fabric(), budget, equinixGuards));
         RateCard chain = RateCard.layered(cards.toArray(new RateCard[0]));
 
-        try {
-            SavingsCalculator.Builder builder = ctx.design().savingsCalculator()
-                    .egressGigabytes(eachWayGb)
-                    .fromCloud(a.provider()).inRegion(a.region())
-                    .toCloud(z.provider()).toRegion(z.region())
-                    .bandwidthMbps(bandwidth)
-                    .term(term)
-                    .rateCard(chain);
-            pathTier.ifPresent(builder::pathTier);
-            if (freeTier) {
-                builder.useAwsFreeTier(true);
-            }
-            optString(args, "metro_code").ifPresent(code -> builder.viaMetro(DesignToolFactory.metroCode(code)));
-            Optional<String> routerPackage = optString(args, "cloud_router_package");
-            routerPackage.ifPresent(builder::includeCloudRouter);
-
-            SavingsEstimate estimate = builder.calculate();
-            MulticloudPathComparison comparison = estimate.getMulticloudComparison();
-            if (comparison == null) {
-                throw new IllegalStateException("The savings engine returned no cloud-to-cloud section for "
-                        + a.provider() + " <-> " + z.provider() + ".");
-            }
-            Optional<MulticloudEnvironment> environment = ctx.multicloudEnvironments()
-                    .find(a.provider(), a.region(), z.provider(), z.region());
-
-            return comparePayload(ctx, a, z, bandwidth, sustained, term, routerPackage.isPresent(),
-                    comparison, environment, guards, estimate);
+        SavingsCalculator.Builder builder = ctx.design().savingsCalculator()
+                .egressGigabytes(eachWayGb)
+                .fromCloud(a.provider()).inRegion(a.region())
+                .toCloud(z.provider()).toRegion(z.region())
+                .bandwidthMbps(bandwidth)
+                .term(term)
+                .rateCard(chain);
+        pathTier.ifPresent(builder::pathTier);
+        if (freeTier) {
+            builder.useAwsFreeTier(true);
         }
-        finally {
-            guards.values().forEach(TimeoutRateCard::shutdown);
+        optString(args, "metro_code").ifPresent(code -> builder.viaMetro(DesignToolFactory.metroCode(code)));
+        Optional<String> routerPackage = optString(args, "cloud_router_package");
+        routerPackage.ifPresent(builder::includeCloudRouter);
+
+        SavingsEstimate estimate = builder.calculate();
+        MulticloudPathComparison comparison = estimate.getMulticloudComparison();
+        if (comparison == null) {
+            throw new IllegalStateException("The savings engine returned no cloud-to-cloud section for "
+                    + a.provider() + " <-> " + z.provider() + ".");
         }
+        Optional<MulticloudEnvironment> environment = ctx.multicloudEnvironments()
+                .find(a.provider(), a.region(), z.provider(), z.region());
+
+        ObjectNode payload = comparePayload(ctx, a, z, bandwidth, sustained, term, routerPackage.isPresent(),
+                comparison, environment, guards, estimate, budget);
+        TimeoutRateCard.reportEquinix(payload, equinixGuards, budget);
+        DesignPayloads.provenance(payload, "mixed", payload.path("reference_data_as_of").path("native_multicloud_link")
+                        .asText(null), null,
+                List.of("provider egress: live price APIs under the call's pricing budget, else reference table",
+                        "native link fees: bundled reference data (Beta)",
+                        "Equinix connection and Cloud Router: live Fabric prices, else reference"));
+        return payload;
     }
 
     private static ObjectNode comparePayload(ServerContext ctx, CloudEnd a, CloudEnd z, int bandwidth,
@@ -293,7 +296,7 @@ final class MulticloudDesignTools {
                                              MulticloudPathComparison c,
                                              Optional<MulticloudEnvironment> environment,
                                              Map<CloudProviderType, TimeoutRateCard> guards,
-                                             SavingsEstimate estimate) {
+                                             SavingsEstimate estimate, PricingBudget budget) {
         ObjectMapper mapper = ctx.objectMapper();
         ObjectNode payload = mapper.createObjectNode();
         payload.put("beta", true);
@@ -441,9 +444,10 @@ final class MulticloudDesignTools {
             else if (guarded.degraded()) {
                 entry.put("degraded", true);
                 ArrayNode failures = entry.putArray("failures");
-                guarded.failures().forEach(failures::add);
-                entry.put("note", "Live " + end.provider().name() + " pricing was unavailable within "
-                        + ctx.pricingTimeoutMillis() + " ms; its figures fell back to reference rates.");
+                guarded.failures().forEach(failure -> UntrustedText.add(failures, failure));
+                entry.put("note", "Live " + end.provider().name() + " pricing was unavailable within the "
+                        + "call's " + budget.budgetMillis() + " ms live-pricing budget; its figures fell back "
+                        + "to reference rates.");
             }
             else {
                 entry.put("degraded", false);
@@ -657,7 +661,7 @@ final class MulticloudDesignTools {
         return quote.isMixedCurrency() ? "the two sides are in different currencies" : "a component is unpriced";
     }
 
-    // ── design_list_multicloud_environments ─────────────────────────────────
+    // design_list_multicloud_environments
 
     static ToolRegistration listMulticloudEnvironments() {
         return ToolRegistration.builder()
@@ -680,10 +684,12 @@ final class MulticloudDesignTools {
                         "a", filterEndSchema("Filter: one cloud of the pair, optionally its region."),
                         "z", filterEndSchema("Filter: the other cloud of the pair, optionally its region. "
                                 + "Must differ from a.cloud when both are given."))))
-                .outputSchema(looseObject("environments (id, the two sites, status, "
+                .outputSchema(DesignPayloads.outputSchema("environments (id, the two sites, status, "
                         + "supported_connection_sizes_mbps, sizes_note, sources, as_of, note), count, the "
-                        + "catalog's own as-of date and disclaimer, and the filter that was applied."))
+                        + "catalog's own as-of date and disclaimer, the filter that was applied, provenance.",
+                        "environments"))
                 .toolset(Toolset.DESIGN)
+                .openWorld(false)
                 .handler(MulticloudDesignTools::handleListEnvironments)
                 .build();
     }
@@ -736,6 +742,8 @@ final class MulticloudDesignTools {
         payload.put("staleness_note", "Dated copy of provider documentation, not refreshed at run time. An "
                 + "absent pair means 'not in this copy', not 'not offered'. Each entry's sources and as_of say "
                 + "where and when it was read.");
+        DesignPayloads.provenance(payload, "reference", catalog.asOf(), null,
+                List.of("bundled native multicloud environment catalog (dated copy of provider documentation)"));
         return payload;
     }
 
@@ -768,7 +776,7 @@ final class MulticloudDesignTools {
         }
     }
 
-    // ── design_plan_deployment: native multicloud links ─────────────────────
+    // design_plan_deployment: native multicloud links
 
     /**
      * Adds {@code native_multicloud_links} and {@code native_multicloud_scope} to a plan payload, and
@@ -871,7 +879,7 @@ final class MulticloudDesignTools {
         }
     }
 
-    // ── shared helpers ──────────────────────────────────────────────────────
+    // shared helpers
 
     /** One end of a compared flow: a cloud and its region, both required. */
     record CloudEnd(CloudProviderType provider, String region) {

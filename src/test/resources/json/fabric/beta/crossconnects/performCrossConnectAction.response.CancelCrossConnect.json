@@ -1,0 +1,10 @@
+{
+  "href": "https://api.equinix.com/fabric/v4/crossConnects/46bb1a31-c28f-4197-8b10-06e0e03d0743/actions/63ffa1a1-87b6-4b4d-b984-bad94687edf7",
+  "uuid": "63ffa1a1-87b6-4b4d-b984-bad94687edf7",
+  "type": "XC_CANCEL",
+  "state": "PENDING",
+  "changeLog": {
+    "createdDateTime": "2026-07-24T06:50:46Z",
+    "createdBy": "testuser"
+  }
+}

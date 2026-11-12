@@ -22,7 +22,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 /**
  * Type discriminator of an Equinix Internet Access (EIA) IP block (spec schemas
  * {@code IpBlockType} / {@code IpBlockReadModel}). {@link #UNKNOWN} is a read-side fallback for
- * values added after this SDK release — never send it.
+ * values added after this SDK release - never send it.
  */
 public enum IpBlockType implements APIParam {
     IA_IP_BLOCK,

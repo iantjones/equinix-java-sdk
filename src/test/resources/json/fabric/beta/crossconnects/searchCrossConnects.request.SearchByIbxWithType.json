@@ -1,0 +1,41 @@
+{
+  "filter": {
+    "and": [
+      {
+        "property": "/type",
+        "operator": "=",
+        "values": [
+          "XC"
+        ]
+      },
+      {
+        "or": [
+          {
+            "property": "/aSide/location/ibxCode",
+            "operator": "=",
+            "values": [
+              "SV1"
+            ]
+          },
+          {
+            "property": "/zSide/location/ibxCode",
+            "operator": "=",
+            "values": [
+              "SV1"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "pagination": {
+    "limit": 25,
+    "offset": 0
+  },
+  "sort": [
+    {
+      "property": "/name",
+      "direction": "ASC"
+    }
+  ]
+}

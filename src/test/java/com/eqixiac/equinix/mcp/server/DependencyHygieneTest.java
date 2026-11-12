@@ -44,10 +44,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  *   <li>Both {@code io.modelcontextprotocol.sdk} artifacts ({@code mcp-core},
  *       {@code mcp-json-jackson2}) are declared {@code <optional>true</optional>}. Optional
  *       dependencies stay on this project's own classpath (so the server compiles and the
- *       shaded {@code mcp-server} jar bundles them) but are NOT resolved transitively — an
+ *       shaded {@code mcp-server} jar bundles them) but are NOT resolved transitively - an
  *       application that depends on {@code equinix-sdk-java} gets no MCP SDK, no reactor-core,
  *       no json-schema-validator.</li>
- *   <li>{@code slf4j-simple} — bundled into the shaded server jar as its logging backend — is
+ *   <li>{@code slf4j-simple} - bundled into the shaded server jar as its logging backend - is
  *       likewise {@code <optional>true</optional>}: a library must expose only the slf4j-api
  *       facade, never impose a concrete logging binding on its consumers.</li>
  * </ul>
@@ -62,7 +62,7 @@ class DependencyHygieneTest {
     static void parsePom() throws Exception {
         Path pom = Path.of(System.getProperty("user.dir", "."), "pom.xml");
         assertTrue(Files.isRegularFile(pom),
-                "pom.xml not found at " + pom + " — this test must run from the project basedir "
+                "pom.xml not found at " + pom + " - this test must run from the project basedir "
                         + "(surefire's default working directory).");
 
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();

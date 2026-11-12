@@ -34,7 +34,7 @@ public class Pagination {
 
     /**
      * Creates pagination state for a POST-search body. The parameter order is pinned by this
-     * explicit constructor — {@code offset} first, then {@code limit} — deliberately not
+     * explicit constructor - {@code offset} first, then {@code limit} - deliberately not
      * Lombok-generated, so a field reorder can never silently transpose the two {@code int}
      * arguments at call sites.
      *

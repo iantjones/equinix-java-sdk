@@ -18,13 +18,13 @@ package com.eqixiac.equinix.core.auth;
 
 /**
  * Supplies the {@link EquinixCredentials} used to obtain an OAuth2 access token. The SDK calls
- * {@link #getCredentials()} each time it authenticates — on the first API call and again whenever
- * the current token has expired — so a provider that returns freshly-resolved credentials can
+ * {@link #getCredentials()} each time it authenticates - on the first API call and again whenever
+ * the current token has expired - so a provider that returns freshly-resolved credentials can
  * rotate a Client Secret (or portal password) without the client being rebuilt.
  *
  * <p>{@link EquinixStaticCredentialsProvider} is the default: it returns a fixed credentials
- * instance. Implement this interface to source credentials elsewhere — a secrets manager, an
- * environment lookup, or a rotating store — and pass the provider to the client or session
+ * instance. Implement this interface to source credentials elsewhere - a secrets manager, an
+ * environment lookup, or a rotating store - and pass the provider to the client or session
  * constructors that accept one (e.g. {@code new Equinix(provider)}, {@code new Fabric(provider)}).</p>
  *
  * @author ianjones

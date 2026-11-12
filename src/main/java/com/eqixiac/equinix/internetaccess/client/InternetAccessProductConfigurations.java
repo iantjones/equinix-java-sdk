@@ -31,7 +31,7 @@ import com.eqixiac.equinix.internetaccess.model.VirtualConnectionDefaultConfigur
 
 /**
  * Client interface for the Equinix Internet Access (EIA) v1 product / attribute configuration
- * lookups — the read-only endpoints under {@code /internetAccess/v1} that return the allowed and
+ * lookups - the read-only endpoints under {@code /internetAccess/v1} that return the allowed and
  * default configuration values (routing, bandwidth, connection, port) for ordering an EIA service.
  */
 public interface InternetAccessProductConfigurations {

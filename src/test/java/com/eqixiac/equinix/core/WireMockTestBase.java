@@ -55,7 +55,7 @@ public abstract class WireMockTestBase {
     }
 
     /**
-     * Redirects a domain client (Fabric, CustomerPortal, etc.) to use WireMock.
+     * Redirects a domain client (Fabric, Operations, etc.) to use WireMock.
      */
     protected static void redirectToWireMock(com.eqixiac.equinix.EquinixClient client) {
         client.getEquinixClient().setEndPoint(wireMockUrl());

@@ -22,7 +22,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 /**
  * BGP authentication type of an Equinix Internet Access (EIA) v2 routing protocol (spec schema
  * {@code BgpAuthenticationType}). {@link #UNKNOWN} is a read-side fallback for values added after
- * this SDK release — never send it.
+ * this SDK release - never send it.
  */
 public enum BgpAuthenticationType implements APIParam {
     AUTH_KEY,

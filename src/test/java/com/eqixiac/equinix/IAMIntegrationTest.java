@@ -26,6 +26,7 @@ import com.eqixiac.equinix.iam.model.json.RoleAssignmentList;
 import com.eqixiac.equinix.iam.model.json.RoleList;
 import com.eqixiac.equinix.iam.model.json.ServiceActionSetList;
 import com.eqixiac.equinix.projects.model.Project;
+import com.eqixiac.equinix.core.auth.BearerTokenProvider;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
@@ -55,18 +56,18 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  *
  * <h3>Test inputs</h3>
  * <ul>
- *     <li><b>projectId</b> — {@code -DiamProjectId=project:...} when supplied (used verbatim);
+ *     <li><b>projectId</b> - {@code -DiamProjectId=project:...} when supplied (used verbatim);
  *         otherwise derived from the first project returned by the Projects domain
  *         ({@code getAllProjects}), normalized to the accessv1 typed-id form
  *         ({@code project:} prefix). Project-scoped tests skip when neither yields a project.</li>
- *     <li><b>serviceId</b> — accessv1 offers no endpoint to discover service ids, so the
+ *     <li><b>serviceId</b> - accessv1 offers no endpoint to discover service ids, so the
  *         service-scoped discovery reads require {@code -DiamServiceId=service:...} and skip
  *         when it is not supplied.</li>
  * </ul>
  *
  * <h3>Usage</h3>
  * <pre>
- * mvn test -Pintegration-readonly -DaccessKey=ID -DsecretKey=SECRET \
+ * EQUINIX_ACCESS_KEY=ID EQUINIX_SECRET_KEY=SECRET mvn test -Pintegration-readonly \
  *     [-DiamProjectId=project:abc-123] [-DiamServiceId=service:fabric]
  * </pre>
  */
@@ -78,6 +79,7 @@ class IAMIntegrationTest extends IntegrationTestBase {
     static String projectId;
     static String serviceId;
     static String projectDiscoveryNote;
+    static IAM accessPolicyIam;
 
     @BeforeAll
     static void setUpIam() {
@@ -118,15 +120,32 @@ class IAMIntegrationTest extends IntegrationTestBase {
                         "); supply -DiamProjectId to run them");
     }
 
+    /**
+     * IAM client for the project-scoped endpoints that reject a client-credentials token:
+     * {@code GET /v1/projects/{project}/roles} and {@code principalPolicies} answer "Project arg
+     * only supported when using an access-policy auth token" (observed live 2026-11-11). Uses the
+     * STS-issued access-policy token in the {@code EQUINIX_ACCESS_POLICY_TOKEN} environment
+     * variable; skips the calling test with that reason when it is not set.
+     */
+    static IAM accessPolicyIam() {
+        assumeProjectAvailable();
+        String token = System.getenv("EQUINIX_ACCESS_POLICY_TOKEN");
+        Assumptions.assumeTrue(token != null && !token.isBlank(),
+                "Project-scoped roles/principalPolicies need an STS access-policy token, not a "
+                        + "client-credentials token; set EQUINIX_ACCESS_POLICY_TOKEN to run this test");
+        if (accessPolicyIam == null) {
+            accessPolicyIam = new IAM(BearerTokenProvider.of(token.trim()));
+        }
+        return accessPolicyIam;
+    }
+
     static void assumeServiceConfigured() {
         Assumptions.assumeTrue(serviceId != null && !serviceId.isBlank(),
                 "accessv1 has no service-discovery endpoint; supply -DiamServiceId to run the " +
                         "service-scoped discovery reads");
     }
 
-    // ════════════════════════════════════════════════════════════════════
     //  READONLY TESTS - Safe GET/list operations
-    // ════════════════════════════════════════════════════════════════════
 
     @Nested
     @Tag("integration-readonly")
@@ -152,10 +171,10 @@ class IAMIntegrationTest extends IntegrationTestBase {
         @Test
         @DisplayName("roles_listByProject - List roles scoped to a project (listRolesByProjectId)")
         void roles_listByProject() {
-            assumeProjectAvailable();
+            IAM policyIam = accessPolicyIam();
 
             RoleList roles = requireEntitled("IAM", "listRolesByProjectId", "Role", "GET",
-                    () -> iam.roles().listByProject(projectId));
+                    () -> policyIam.roles().listByProject(projectId));
             assertNotNull(roles);
 
             if (roles.getList() != null && !roles.getList().isEmpty()) {
@@ -329,10 +348,10 @@ class IAMIntegrationTest extends IntegrationTestBase {
         @Test
         @DisplayName("principalPolicies_list - List principal policies of a project (listPrincipalPolicies)")
         void principalPolicies_list() {
-            assumeProjectAvailable();
+            IAM policyIam = accessPolicyIam();
 
             PrincipalPolicyList policies = requireEntitled("IAM", "listPrincipalPolicies", "PrincipalPolicy", "GET",
-                    () -> iam.principalPolicies().list(projectId));
+                    () -> policyIam.principalPolicies().list(projectId));
             assertNotNull(policies);
 
             if (policies.getList() != null && !policies.getList().isEmpty()) {
@@ -347,16 +366,16 @@ class IAMIntegrationTest extends IntegrationTestBase {
         @Test
         @DisplayName("principalPolicies_getByUuid - Get principal policy by user principal (getPrincipalPolicy, if any exist)")
         void principalPolicies_getByUuid() {
-            assumeProjectAvailable();
+            IAM policyIam = accessPolicyIam();
 
             PrincipalPolicyList policies = requireEntitled("IAM", "listPrincipalPolicies", "PrincipalPolicy", "GET",
-                    () -> iam.principalPolicies().list(projectId));
+                    () -> policyIam.principalPolicies().list(projectId));
             Assumptions.assumeTrue(policies.getList() != null && !policies.getList().isEmpty(),
                     "No principal policies found; skipping get test");
 
             String userPrincipal = policies.getList().get(0).getUserPrincipal();
             PrincipalPolicy policy = requireEntitled("IAM", "getPrincipalPolicy", "PrincipalPolicy", "GET",
-                    () -> iam.principalPolicies().getByUuid(projectId, userPrincipal));
+                    () -> policyIam.principalPolicies().getByUuid(projectId, userPrincipal));
             // The spec documents that a disabled policy is returned as an empty (nil) body, so a
             // null result is tolerated; when present, the body must deserialize coherently.
             if (policy != null) {

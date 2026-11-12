@@ -1,0 +1,31 @@
+{
+  "filter": {
+    "and": [
+      {
+        "property": "/name",
+        "operator": "LIKE",
+        "values": [
+          "My-CC-service"
+        ]
+      },
+      {
+        "property": "/state",
+        "operator": "IN",
+        "values": [
+          "PENDING",
+          "PENDING_ACTION"
+        ]
+      }
+    ]
+  },
+  "pagination": {
+    "limit": 25,
+    "offset": 0
+  },
+  "sort": [
+    {
+      "property": "/changeLog/updatedDateTime",
+      "direction": "DESC"
+    }
+  ]
+}

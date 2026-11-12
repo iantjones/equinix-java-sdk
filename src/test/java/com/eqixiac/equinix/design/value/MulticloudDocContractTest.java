@@ -48,7 +48,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * javadoc sentence it enforces. If a promise is changed on purpose, change the javadoc and the
  * quote here in the same commit.
  */
-@DisplayName("design/value multicloud — documented behavioral promises (doc contracts)")
+@DisplayName("design/value multicloud - documented behavioral promises (doc contracts)")
 class MulticloudDocContractTest {
 
     private static final ReferenceRateCard REFERENCE = ReferenceRateCard.standard();
@@ -83,7 +83,7 @@ class MulticloudDocContractTest {
         /**
          * Enforces RateCard.multicloudLink javadoc: "A present result may still have one or both
          * sides unpriced: a side is priced only from a figure the card holds, and is otherwise
-         * left empty with a reason" — and MulticloudLinkQuote's: "A side with no verifiable price
+         * left empty with a reason" - and MulticloudLinkQuote's: "A side with no verifiable price
          * is absent ({@link java.util.Optional#empty()}), never zero".
          */
         @Test
@@ -179,7 +179,7 @@ class MulticloudDocContractTest {
 
         /**
          * Enforces ReferenceRateCard javadoc: "The AWS free tier ... is applied only when the
-         * request sets {@code useAwsFreeTier}; it is never a default." — and
+         * request sets {@code useAwsFreeTier}; it is never a default." - and
          * MulticloudLinkRequest's: "The flag is never inferred".
          */
         @Test
@@ -278,7 +278,7 @@ class MulticloudDocContractTest {
 
         /**
          * Enforces TcoCalculator javadoc: "Without {@code toCloud(...)} the comparison, its
-         * defaults and its output are the single-cloud ones described above." — and
+         * defaults and its output are the single-cloud ones described above." - and
          * CostBreakdown.getProvenance's: "{@code null} for a single-cloud comparison, whose
          * breakdowns are unchanged."
          */
@@ -291,7 +291,7 @@ class MulticloudDocContractTest {
             assertTrue(tco.breakdown(DeploymentArchetype.NATIVE_MULTICLOUD_INTERCONNECT).isEmpty());
             assertNull(tco.getTrafficNote());
             tco.getBreakdowns().forEach(b -> assertNull(b.getProvenance()));
-            assertEquals(0, new BigDecimal("4292.50").compareTo(
+            assertEquals(0, new BigDecimal("4460.40").compareTo(
                     tco.breakdown(DeploymentArchetype.EQUINIX_INTERCONNECT).orElseThrow().getMonthlyTotal()));
         }
     }

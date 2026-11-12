@@ -48,7 +48,7 @@ final class NetworkEdgeToolFactory {
                 .name("ne_list_devices")
                 .title("List Network Edge devices")
                 .description("Lists the account's Network Edge virtual devices (routers, firewalls, "
-                        + "SD-WAN appliances) with uuid, name, device type, metro, and lifecycle status — "
+                        + "SD-WAN appliances) with uuid, name, device type, metro, and lifecycle status - "
                         + "the inventory to reference when reasoning about existing virtual infrastructure.")
                 .inputSchema(object(props(
                         "limit", integer("Maximum devices to return (default " + DEFAULT_DEVICES
@@ -75,8 +75,9 @@ final class NetworkEdgeToolFactory {
             }
             ObjectNode d = items.addObject();
             d.put("uuid", device.getUuid());
-            d.put("name", device.getName());
-            d.put("type", device.getDeviceTypeCode());
+            // Device names are set by users of the account: labelled as untrusted data.
+            UntrustedText.put(d, "name", device.getName());
+            UntrustedText.put(d, "type", device.getDeviceTypeCode());
             d.put("metro", String.valueOf(device.getMetroCode()));
             d.put("status", String.valueOf(device.getStatus()));
             shown++;

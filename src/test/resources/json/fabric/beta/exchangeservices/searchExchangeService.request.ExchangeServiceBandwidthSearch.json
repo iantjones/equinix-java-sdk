@@ -1,0 +1,23 @@
+{
+  "filter": {
+    "and": [
+      {
+        "property": "/bandwidth",
+        "operator": "=",
+        "values": [
+          "500"
+        ]
+      }
+    ]
+  },
+  "pagination": {
+    "limit": 25,
+    "offset": 0
+  },
+  "sort": [
+    {
+      "property": "/changeLog/updatedDateTime",
+      "direction": "DESC"
+    }
+  ]
+}

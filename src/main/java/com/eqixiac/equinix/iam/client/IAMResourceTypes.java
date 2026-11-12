@@ -29,7 +29,7 @@ import com.eqixiac.equinix.iam.model.json.ServiceActionSetList;
  *
  * <p>Most list results are opaque-token paginated: each response carries a {@code nextPageToken};
  * pass it back as the {@code pageToken} argument to fetch the next page. The
- * {@code listResourceTypeActions} operation is an exception — it uses cursor-based pagination keyed
+ * {@code listResourceTypeActions} operation is an exception - it uses cursor-based pagination keyed
  * on {@code lastAction} (the {@code action} of the last item received).</p>
  */
 public interface IAMResourceTypes {
@@ -38,7 +38,10 @@ public interface IAMResourceTypes {
      * Lists the registered resource types for a service within a project, first page
      * (operationId {@code listResourceTypes}).
      *
-     * @param projectId the project identifier (e.g. {@code project:abc-123})
+     * @param projectId the IAM project id, {@code project:<id>} (for example {@code project:abc-123}); a bare
+     *                  Resource Manager UUID is rejected, convert it with {@link ProjectIds#of(String)}.
+     *                  Project-scoped endpoints need an STS access-policy token
+     *                  ({@code new IAM(BearerTokenProvider)})
      * @param serviceId the fully qualified service id to list resource types for (required)
      * @return the first page of resource types
      */
@@ -48,7 +51,10 @@ public interface IAMResourceTypes {
      * Lists the registered resource types for a service within a project, controlling pagination
      * (operationId {@code listResourceTypes}).
      *
-     * @param projectId the project identifier (e.g. {@code project:abc-123})
+     * @param projectId the IAM project id, {@code project:<id>} (for example {@code project:abc-123}); a bare
+     *                  Resource Manager UUID is rejected, convert it with {@link ProjectIds#of(String)}.
+     *                  Project-scoped endpoints need an STS access-policy token
+     *                  ({@code new IAM(BearerTokenProvider)})
      * @param serviceId the fully qualified service id to list resource types for (required)
      * @param pageToken the opaque page token from a prior response, or {@code null} for the first page
      * @param pageSize the maximum number of results per page, or {@code null} for the server default
@@ -62,7 +68,10 @@ public interface IAMResourceTypes {
      * Lists the available actions for a service within a project, first page
      * (operationId {@code listActions}).
      *
-     * @param projectId the project identifier (e.g. {@code project:abc-123})
+     * @param projectId the IAM project id, {@code project:<id>} (for example {@code project:abc-123}); a bare
+     *                  Resource Manager UUID is rejected, convert it with {@link ProjectIds#of(String)}.
+     *                  Project-scoped endpoints need an STS access-policy token
+     *                  ({@code new IAM(BearerTokenProvider)})
      * @param serviceId the fully qualified service id to list actions for (required)
      * @return the first page of actions
      */
@@ -72,7 +81,10 @@ public interface IAMResourceTypes {
      * Lists the available actions for a service within a project, controlling pagination
      * (operationId {@code listActions}).
      *
-     * @param projectId the project identifier (e.g. {@code project:abc-123})
+     * @param projectId the IAM project id, {@code project:<id>} (for example {@code project:abc-123}); a bare
+     *                  Resource Manager UUID is rejected, convert it with {@link ProjectIds#of(String)}.
+     *                  Project-scoped endpoints need an STS access-policy token
+     *                  ({@code new IAM(BearerTokenProvider)})
      * @param serviceId the fully qualified service id to list actions for (required)
      * @param pageToken the opaque page token from a prior response, or {@code null} for the first page
      * @param pageSize the maximum number of results per page, or {@code null} for the server default
@@ -85,7 +97,10 @@ public interface IAMResourceTypes {
      * Lists the action sets for a service within a project, first page
      * (operationId {@code listActionSets}).
      *
-     * @param projectId the project identifier (e.g. {@code project:abc-123})
+     * @param projectId the IAM project id, {@code project:<id>} (for example {@code project:abc-123}); a bare
+     *                  Resource Manager UUID is rejected, convert it with {@link ProjectIds#of(String)}.
+     *                  Project-scoped endpoints need an STS access-policy token
+     *                  ({@code new IAM(BearerTokenProvider)})
      * @param serviceId the service to list action sets for
      * @return the first page of action sets
      */
@@ -95,7 +110,10 @@ public interface IAMResourceTypes {
      * Lists the action sets for a service within a project, controlling pagination
      * (operationId {@code listActionSets}).
      *
-     * @param projectId the project identifier (e.g. {@code project:abc-123})
+     * @param projectId the IAM project id, {@code project:<id>} (for example {@code project:abc-123}); a bare
+     *                  Resource Manager UUID is rejected, convert it with {@link ProjectIds#of(String)}.
+     *                  Project-scoped endpoints need an STS access-policy token
+     *                  ({@code new IAM(BearerTokenProvider)})
      * @param serviceId the service to list action sets for
      * @param pageToken the opaque page token from a prior response, or {@code null} for the first page
      * @param pageSize the maximum number of results per page, or {@code null} for the server default
@@ -109,7 +127,10 @@ public interface IAMResourceTypes {
      * Pages the resource-type-to-action mappings for a service and resource type within a project,
      * first page (operationId {@code pageResourceTypeActions}).
      *
-     * @param projectId the project identifier (e.g. {@code project:abc-123})
+     * @param projectId the IAM project id, {@code project:<id>} (for example {@code project:abc-123}); a bare
+     *                  Resource Manager UUID is rejected, convert it with {@link ProjectIds#of(String)}.
+     *                  Project-scoped endpoints need an STS access-policy token
+     *                  ({@code new IAM(BearerTokenProvider)})
      * @param serviceId the fully qualified service id owning the resource type (required)
      * @param resourceType the resource type within the service (required)
      * @return the first page of resource-type actions
@@ -124,7 +145,10 @@ public interface IAMResourceTypes {
      * {@code action} of the last item received from the previous page as {@code lastAction} to
      * retrieve the next page.</p>
      *
-     * @param projectId the project identifier (e.g. {@code project:abc-123})
+     * @param projectId the IAM project id, {@code project:<id>} (for example {@code project:abc-123}); a bare
+     *                  Resource Manager UUID is rejected, convert it with {@link ProjectIds#of(String)}.
+     *                  Project-scoped endpoints need an STS access-policy token
+     *                  ({@code new IAM(BearerTokenProvider)})
      * @param serviceId the fully qualified service id owning the resource type (required)
      * @param resourceType the resource type within the service (required)
      * @param resourceTypeServiceId the service id of the resource type when different from {@code serviceId}, or {@code null}
@@ -141,7 +165,10 @@ public interface IAMResourceTypes {
      * Gets the policy schema for a service within a project
      * (operationId {@code getServicePolicySchema}).
      *
-     * @param projectId the project identifier (e.g. {@code project:abc-123})
+     * @param projectId the IAM project id, {@code project:<id>} (for example {@code project:abc-123}); a bare
+     *                  Resource Manager UUID is rejected, convert it with {@link ProjectIds#of(String)}.
+     *                  Project-scoped endpoints need an STS access-policy token
+     *                  ({@code new IAM(BearerTokenProvider)})
      * @param serviceId the service to fetch the policy schema for
      * @return the service policy schema
      */

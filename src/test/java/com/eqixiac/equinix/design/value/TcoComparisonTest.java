@@ -40,10 +40,10 @@ import static org.junit.jupiter.api.Assertions.*;
  * Tests the 3-archetype {@link TcoCalculator} using the bundled reference card
  * (null Fabric). Scenario: 100 TB/mo egress from AWS, 10 Gbps, metro DC.
  *
- * <p>Expected (reference 2026-06):
+ * <p>Expected (reference 2026-11):
  * public-internet = 0.09 × 100,000 = 9000; on-prem = transit 7500 + hw 300 +
  * xconn 250 + power 975 = 9025; Equinix = private egress 2000 + VC 350 +
- * DX port 1642.50 + cross-connect 300 = 4292.50.</p>
+ * AWS 10G hosted connection 1810.40 (2.48 USD/h x 730 h) + cross-connect 300 = 4460.40.</p>
  */
 class TcoComparisonTest {
 
@@ -65,7 +65,7 @@ class TcoComparisonTest {
                 tco.breakdown(DeploymentArchetype.PUBLIC_CLOUD_INTERNET).orElseThrow().getMonthlyTotal()));
         assertEquals(0, new BigDecimal("9025").compareTo(
                 tco.breakdown(DeploymentArchetype.ON_PREM).orElseThrow().getMonthlyTotal()));
-        assertEquals(0, new BigDecimal("4292.50").compareTo(
+        assertEquals(0, new BigDecimal("4460.40").compareTo(
                 tco.breakdown(DeploymentArchetype.EQUINIX_INTERCONNECT).orElseThrow().getMonthlyTotal()));
     }
 
@@ -74,9 +74,9 @@ class TcoComparisonTest {
         TcoComparison tco = run();
         assertEquals(DeploymentArchetype.EQUINIX_INTERCONNECT, tco.getRecommended());
         assertEquals(DeploymentArchetype.PUBLIC_CLOUD_INTERNET, tco.getBaseline());
-        // 9000 − 4292.50 = 4707.50/mo; × 12 = 56490
-        assertEquals(0, new BigDecimal("4707.50").compareTo(tco.getMonthlySavingsVsBaseline()));
-        assertEquals(0, new BigDecimal("56490.00").compareTo(tco.getAnnualSavingsVsBaseline()));
+        // 9000 - 4460.40 = 4539.60/mo; x 12 = 54475.20
+        assertEquals(0, new BigDecimal("4539.60").compareTo(tco.getMonthlySavingsVsBaseline()));
+        assertEquals(0, new BigDecimal("54475.20").compareTo(tco.getAnnualSavingsVsBaseline()));
         assertTrue(tco.toMarkdown().contains("recommended"));
     }
 
@@ -104,8 +104,8 @@ class TcoComparisonTest {
                 .includeCloudRouter("STANDARD")
                 .compare();
 
-        // Equinix monthly gains the reference FCR price (1200): 4292.50 + 1200 = 5492.50.
-        assertEquals(0, new BigDecimal("5492.50").compareTo(
+        // Equinix monthly gains the reference FCR price (1200): 4460.40 + 1200 = 5660.40.
+        assertEquals(0, new BigDecimal("5660.40").compareTo(
                 tco.breakdown(DeploymentArchetype.EQUINIX_INTERCONNECT).orElseThrow().getMonthlyTotal()));
         assertEquals(DeploymentArchetype.EQUINIX_INTERCONNECT, tco.getRecommended(), "still cheapest vs 9000 baseline");
     }
@@ -128,7 +128,8 @@ class TcoComparisonTest {
         assertNull(tco.getAnnualSavingsVsBaseline());
         // On-prem prices purely from reference midpoints (provider-independent), so it remains the pick.
         assertEquals(DeploymentArchetype.ON_PREM, tco.getRecommended());
-        assertTrue(tco.toMarkdown().contains("_unavailable_"));
+        assertTrue(tco.toMarkdown().contains("_incomplete_"));
+        assertTrue(tco.getRecommendationNote().contains("complete archetypes only"), tco.getRecommendationNote());
     }
 
     @Test
@@ -140,10 +141,10 @@ class TcoComparisonTest {
                 .additionalLineItem("Compute", new BigDecimal("5000"))
                 .compare();
 
-        // Each priced archetype gains the $5000 line: internet 9000->14000, Equinix 4292.50->9292.50.
+        // Each priced archetype gains the $5000 line: internet 9000->14000, Equinix 4460.40->9460.40.
         assertEquals(0, new BigDecimal("14000").compareTo(
                 tco.breakdown(DeploymentArchetype.PUBLIC_CLOUD_INTERNET).orElseThrow().getMonthlyTotal()));
-        assertEquals(0, new BigDecimal("9292.50").compareTo(
+        assertEquals(0, new BigDecimal("9460.40").compareTo(
                 tco.breakdown(DeploymentArchetype.EQUINIX_INTERCONNECT).orElseThrow().getMonthlyTotal()));
         assertTrue(tco.breakdown(DeploymentArchetype.EQUINIX_INTERCONNECT).orElseThrow()
                 .getLineItems().containsKey("Compute"));
@@ -154,7 +155,7 @@ class TcoComparisonTest {
     @Test
     void colocationCrossConnectFromRateCardOverridesReference() {
         // A caller-supplied cross-connect ($100) layered over the reference card replaces the
-        // reference's $300 cross-connect in the Equinix archetype: 4292.50 - 300 + 100 = 4092.50.
+        // reference's $300 cross-connect in the Equinix archetype: 4460.40 - 300 + 100 = 4260.40.
         CustomRateCard colo = CustomRateCard.builder()
                 .colocationRate(ColocationItem.CROSS_CONNECT, new BigDecimal("100.00"))
                 .build();
@@ -165,7 +166,7 @@ class TcoComparisonTest {
                 .rateCard(RateCard.layered(colo, ReferenceRateCard.standard()))
                 .compare();
 
-        assertEquals(0, new BigDecimal("4092.50").compareTo(
+        assertEquals(0, new BigDecimal("4260.40").compareTo(
                 tco.breakdown(DeploymentArchetype.EQUINIX_INTERCONNECT).orElseThrow().getMonthlyTotal()));
     }
 
@@ -213,7 +214,7 @@ class TcoComparisonTest {
         assertEquals(DeploymentArchetype.EQUINIX_INTERCONNECT, recommended.getArchetype());
         assertSame(tco.breakdown(tco.getRecommended()).orElseThrow(), recommended,
                 "recommendedBreakdown() must resolve to the same breakdown as breakdown(recommended)");
-        assertEquals(0, new BigDecimal("4292.50").compareTo(recommended.getMonthlyTotal()));
+        assertEquals(0, new BigDecimal("4460.40").compareTo(recommended.getMonthlyTotal()));
     }
 
     @Test
@@ -228,7 +229,7 @@ class TcoComparisonTest {
         assertTrue(tco.recommendedBreakdown().isEmpty());
     }
 
-    // ── Cabinet / cross-connect quantity levers (D3) ──
+    // Cabinet / cross-connect quantity levers (D3)
 
     @Test
     void cabinetAndCrossConnectCountsMultiplyColocationQuotes() {
@@ -255,8 +256,8 @@ class TcoComparisonTest {
                         equinix.getLineItems().get("Colocation cabinet (3x @ 500.00/mo)")),
                 "3 cabinets @ 500: " + equinix.getLineItems().keySet());
         // Reference baseline without its 300 cross-connect (replaced by the colo quote):
-        // 2000 egress + 350 VC + 1642.50 DX port = 3992.50; + 200 + 1500 = 5692.50.
-        assertEquals(0, new BigDecimal("5692.50").compareTo(equinix.getMonthlyTotal()));
+        // 2000 egress + 350 VC + 1810.40 hosted connection = 4160.40; + 200 + 1500 = 5860.40.
+        assertEquals(0, new BigDecimal("5860.40").compareTo(equinix.getMonthlyTotal()));
     }
 
     @Test
@@ -272,9 +273,9 @@ class TcoComparisonTest {
         assertEquals(0, new BigDecimal("600").compareTo(
                         equinix.getLineItems().get("Equinix cross-connect (2x @ 300.00/mo)")),
                 "the reference per-unit figure must scale: " + equinix.getLineItems().keySet());
-        assertEquals(0, new BigDecimal("4592.50").compareTo(equinix.getMonthlyTotal()), "4292.50 + one more 300");
+        assertEquals(0, new BigDecimal("4760.40").compareTo(equinix.getMonthlyTotal()), "4460.40 + one more 300");
 
-        // Zero omits cross-connects entirely: 4292.50 − 300 = 3992.50.
+        // Zero omits cross-connects entirely: 4460.40 - 300 = 4160.40.
         TcoComparison none = TcoCalculator.builder(null)
                 .egress(100, DataUnit.TERABYTE)
                 .fromCloud(CloudProviderType.AWS).inRegion("us-east-1")
@@ -282,34 +283,34 @@ class TcoComparisonTest {
                 .crossConnects(0)
                 .compare();
         CostBreakdown noXconn = none.breakdown(DeploymentArchetype.EQUINIX_INTERCONNECT).orElseThrow();
-        assertEquals(0, new BigDecimal("3992.50").compareTo(noXconn.getMonthlyTotal()));
+        assertEquals(0, new BigDecimal("4160.40").compareTo(noXconn.getMonthlyTotal()));
         assertFalse(noXconn.getLineItems().keySet().stream().anyMatch(k -> k.startsWith("Equinix cross-connect")),
                 "crossConnects(0) must omit the line entirely: " + noXconn.getLineItems().keySet());
     }
 
-    // ── Term-total recommendation and savings (D4) ──
+    // Term-total recommendation and savings (D4)
 
     @Test
     void breakdownsCarryTotalOverTermAndComparisonCarriesTermSavings() {
         TcoComparison tco = run(); // default term MONTH_12, no NRC anywhere in the reference figures
         assertEquals(Term.MONTH_12, tco.getTerm());
         CostBreakdown equinix = tco.breakdown(DeploymentArchetype.EQUINIX_INTERCONNECT).orElseThrow();
-        assertEquals(0, new BigDecimal("51510.00").compareTo(equinix.getTotalOverTerm()), "4292.50 × 12");
+        assertEquals(0, new BigDecimal("53524.80").compareTo(equinix.getTotalOverTerm()), "4460.40 x 12");
         // With zero setup everywhere, the term saving equals the annual saving.
-        assertEquals(0, new BigDecimal("56490.00").compareTo(tco.getSavingsOverTermVsBaseline()));
+        assertEquals(0, new BigDecimal("54475.20").compareTo(tco.getSavingsOverTermVsBaseline()));
         assertTrue(tco.toMarkdown().contains("Total over term"));
         assertTrue(tco.toMarkdown().contains("**Term:** 12 months"));
     }
 
     @Test
     void recommendationUsesTotalCostOverTheTermNotJustMrc() {
-        // Equinix MRC (4442.50) undercuts the internet baseline (4500), but a 10000 setup charge
-        // over a 1-month term makes it far more expensive overall — the recommendation must flip.
+        // Equinix MRC (4410.40) undercuts the internet baseline (4500), but a 10000 setup charge
+        // over a 1-month term makes it far more expensive overall - the recommendation must flip.
         CustomRateCard card = CustomRateCard.builder()
                 .currency("USD")
                 .egressRate(CloudProviderType.AWS, EgressPath.INTERNET, new BigDecimal("0.09"))
                 .egressRate(CloudProviderType.AWS, EgressPath.PRIVATE, new BigDecimal("0.02"))
-                .connectionRate(ConnectionType.EVPL_VC, 10_000, new BigDecimal("1500"), new BigDecimal("10000"))
+                .connectionRate(ConnectionType.EVPL_VC, 10_000, new BigDecimal("1300"), new BigDecimal("10000"))
                 .build();
         TcoComparison tco = TcoCalculator.builder(null)
                 .egress(50, DataUnit.TERABYTE)
@@ -321,9 +322,9 @@ class TcoComparisonTest {
                 .compare();
 
         CostBreakdown equinix = tco.breakdown(DeploymentArchetype.EQUINIX_INTERCONNECT).orElseThrow();
-        // 1000 private egress + 1500 VC + 1642.50 reference DX port + 300 reference cross-connect.
-        assertEquals(0, new BigDecimal("4442.50").compareTo(equinix.getMonthlyTotal()));
-        assertEquals(0, new BigDecimal("14442.50").compareTo(equinix.getTotalOverTerm()), "4442.50 × 1 + 10000");
+        // 1000 private egress + 1300 VC + 1810.40 reference AWS hosted connection + 300 reference cross-connect.
+        assertEquals(0, new BigDecimal("4410.40").compareTo(equinix.getMonthlyTotal()));
+        assertEquals(0, new BigDecimal("14410.40").compareTo(equinix.getTotalOverTerm()), "4410.40 x 1 + 10000");
         assertEquals(DeploymentArchetype.PUBLIC_CLOUD_INTERNET, tco.getRecommended(),
                 "an MRC-only comparison would wrongly recommend Equinix here");
         assertEquals(0, BigDecimal.ZERO.compareTo(tco.getSavingsOverTermVsBaseline()),
@@ -331,7 +332,7 @@ class TcoComparisonTest {
         assertTrue(tco.toMarkdown().contains("**Term:** 1 month"));
     }
 
-    // ── Requested-but-unpriceable Cloud Router (D5) ──
+    // Requested-but-unpriceable Cloud Router (D5)
 
     @Test
     void requestedButUnpriceableCloudRouterMarksArchetypePartiallyPriced() {
@@ -360,7 +361,7 @@ class TcoComparisonTest {
                 "a partially priced archetype is never recommended");
     }
 
-    // ── Builder validation (D7) ──
+    // Builder validation (D7)
 
     @Test
     void builderFailsFastOnInvalidInputs() {

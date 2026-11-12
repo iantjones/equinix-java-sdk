@@ -52,7 +52,7 @@ class MulticloudLinkQuoteTest {
                 .bandwidthMbps(10_000).pathTier(1);
     }
 
-    // ── Unit conversion ──
+    // Unit conversion
 
     @Test
     void hoursPerMonthIsTheNamedConstant730() {
@@ -75,7 +75,7 @@ class MulticloudLinkQuoteTest {
         assertEquals(0, BigDecimal.ZERO.compareTo(MulticloudLinkQuote.monthlyFromHourly(BigDecimal.ZERO)));
     }
 
-    // ── Sides and the combined figure ──
+    // Sides and the combined figure
 
     @Test
     void combinedMonthlySumsTwoSidesInOneCurrency() {
@@ -118,7 +118,7 @@ class MulticloudLinkQuoteTest {
         assertTrue(quote.side(null).isEmpty());
     }
 
-    // ── Side merging (the rule LayeredRateCard applies) ──
+    // Side merging (the rule LayeredRateCard applies)
 
     @Test
     void fillUnpricedSidesKeepsPricedSidesAndTakesTheRestFromTheOtherQuote() {
@@ -175,7 +175,7 @@ class MulticloudLinkQuoteTest {
         assertThrows(IllegalArgumentException.class, () -> awsGoogle.fillUnpricedSidesFrom(awsOracle));
     }
 
-    // ── Request ──
+    // Request
 
     @Test
     void requestDefaultsToPathTierOneAndNoFreeTier() {

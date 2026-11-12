@@ -16,13 +16,55 @@
 
 package com.eqixiac.equinix.fabric.client.internal;
 
+import com.eqixiac.equinix.core.http.response.Page;
+import com.eqixiac.equinix.core.http.response.PageablePost;
+import com.eqixiac.equinix.fabric.model.implementation.StreamDevicePutRequest;
 import com.eqixiac.equinix.fabric.model.json.StreamAssetJson;
+import com.eqixiac.equinix.fabric.model.implementation.filter.FilterPropertyList;
+import com.eqixiac.equinix.fabric.model.implementation.sort.SortPropertyList;
 
-public interface StreamAssetClient<T> {
+public interface StreamAssetClient<T> extends PageablePost<T> {
 
     StreamAssetJson get(String streamId, String asset, String assetId);
 
     StreamAssetJson attach(String streamId, String asset, String assetId, Boolean metricsEnabled);
 
     StreamAssetJson detach(String streamId, String asset, String assetId);
+
+    /**
+     * {@code POST /fabric/v4/streamAssets/search}.
+     *
+     * @param filter the filter, or {@code null}
+     * @param sort the sort, or {@code null}
+     * @return the first page
+     */
+    Page<StreamAssetJson> search(FilterPropertyList filter, SortPropertyList sort);
+
+    /**
+     * {@code GET /fabric/v4/streams/{streamId}/devices/{deviceId}}.
+     *
+     * @param streamId the stream uuid
+     * @param deviceId the Network Edge device uuid
+     * @return the device asset
+     */
+    StreamAssetJson getDevice(String streamId, String deviceId);
+
+    /**
+     * {@code PUT /fabric/v4/streams/{streamId}/devices/{deviceId}}.
+     *
+     * @param streamId the stream uuid
+     * @param deviceId the Network Edge device uuid
+     * @param request the desired interfaces
+     * @return the device asset (202)
+     */
+    StreamAssetJson updateDevice(String streamId, String deviceId, StreamDevicePutRequest request);
+
+    /**
+     * {@code DELETE /fabric/v4/streams/{streamId}/devices/{deviceId}}.
+     *
+     * @param streamId the stream uuid
+     * @param deviceId the Network Edge device uuid
+     * @return the device asset (202), or {@code null} on an empty body
+     */
+    StreamAssetJson deleteDevice(String streamId, String deviceId);
 }

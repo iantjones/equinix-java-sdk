@@ -73,9 +73,9 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  *
  * <h3>Usage</h3>
  * <pre>
- * mvn test -Pintegration-readonly -DaccessKey=ID -DsecretKey=SECRET
- * mvn test -Pintegration-dryrun   -DaccessKey=ID -DsecretKey=SECRET -DtestMode=dryrun
- * mvn test -Pintegration-full     -DaccessKey=ID -DsecretKey=SECRET -DtestMode=full -DconfirmDestructive=true \
+ * EQUINIX_ACCESS_KEY=ID EQUINIX_SECRET_KEY=SECRET mvn test -Pintegration-readonly
+ * EQUINIX_ACCESS_KEY=ID EQUINIX_SECRET_KEY=SECRET mvn test -Pintegration-dryrun -DtestMode=dryrun
+ * EQUINIX_ACCESS_KEY=ID EQUINIX_SECRET_KEY=SECRET mvn test -Pintegration-full -DtestMode=full -DconfirmDestructive=true \
  *          -DinternetAccessConnectionUuid=UUID
  * </pre>
  */
@@ -96,7 +96,7 @@ class InternetAccessIntegrationTest extends IntegrationTestBase {
         client = new InternetAccess(testCredentials());
     }
 
-    // ── Live-Discovery Helpers ─────────────────────────────────────────
+    // Live-Discovery Helpers
 
     /**
      * Discovers (and caches) an IBX code where EIA is available, preferring virtual-connection
@@ -141,12 +141,12 @@ class InternetAccessIntegrationTest extends IntegrationTestBase {
     static PaginatedFilteredList<InternetAccessService> searchServices() {
         return requireEntitled("InternetAccess", "getEquinixInternetAccessServices",
                 "InternetAccessService", "POST",
-                () -> client.services().search(new ServiceSearchRequest().equals("/type", "SINGLE", "DUAL")));
+                // /type is not a supported live filter property (HTTP 400 "Unsupported filtering parameters"),
+                // although the spec lists it; /state is (checked 2026-11-11).
+                () -> client.services().search(new ServiceSearchRequest().equals("/state", "ACTIVE")));
     }
 
-    // ════════════════════════════════════════════════════════════════════
     //  READONLY TESTS - Safe GET/list/search operations
-    // ════════════════════════════════════════════════════════════════════
 
     /**
      * Read-only coverage of the EIA product-availability IBX lookups:
@@ -292,9 +292,19 @@ class InternetAccessIntegrationTest extends IntegrationTestBase {
         @DisplayName("prices_search - Search EIA prices (searchPrices)")
         void prices_search() {
             String number = discoverAccountNumber();
+            String ibx = discoverIbx();
+            // The service needs a product description, not just an account (HTTP 400 EQ-7101010
+            // "Criteria cannot be empty" otherwise, live 2026-11-11): this is the spec example
+            // SearchDedicatedManagementAccessMinimalRequest with this account's number and IBX.
             PaginatedFilteredList<Price> prices = requireEntitled("InternetAccess", "searchPrices",
                     "Price", "POST",
-                    () -> client.prices().search(new PriceSearchRequest().equals("/account/accountNumber", number)));
+                    () -> client.prices().search(new PriceSearchRequest()
+                            .equals("/type", "INTERNET_ACCESS_PRODUCT")
+                            .equals("/account/accountNumber", number)
+                            .equals("/service/connection/aSide/accessPoint/location/ibx", ibx)
+                            .equals("/service/useCase", "MANAGEMENT_ACCESS")
+                            .equals("/service/connection/type", "IA_C")
+                            .equals("/service/connection/aSide/accessPoint/type", "COLO")));
             assertNotNull(prices);
             if (!prices.isEmpty()) {
                 Price first = prices.get(0);
@@ -618,9 +628,7 @@ class InternetAccessIntegrationTest extends IntegrationTestBase {
         }
     }
 
-    // ════════════════════════════════════════════════════════════════════
     //  DRYRUN TESTS - v2 dryRun=true validation calls (zero real mutations)
-    // ════════════════════════════════════════════════════════════════════
 
     /**
      * Dry-run coverage of the EIA v2 {@code dryRun} query parameter. Per the
@@ -630,16 +638,16 @@ class InternetAccessIntegrationTest extends IntegrationTestBase {
      * parameter entirely when {@code false}).
      */
     @Nested
-    @Tag("integration-dryrun")
-    @DisplayName("EIA v2 Dry-Run Tests")
-    class DryRunTests {
+    @Tag("integration-dryrun-existing")
+    @DisplayName("EIA v2 Dry-Run Update of an Existing Service")
+    class DryRunExistingTests {
 
         // PARAM-DROP SAFETY DOCTRINE: a live dry-run must be harmless even if a future
         // regression silently dropped the dryRun parameter and the call executed FOR REAL.
         //
         // DELETE /internetAccess/v2/services/{serviceId}?dryRun=true is therefore deliberately
         // NOT live-tested: its payload is nothing but the serviceId of a live customer
-        // service, so a dropped parameter would REALLY delete that service — catastrophic and
+        // service, so a dropped parameter would REALLY delete that service - catastrophic and
         // not reliably recoverable. The InternetAccessServiceLifecycleWireMockTest wire-proof
         // (asserts dryRun=true actually goes on the wire, and covers the body-less v2 202) is
         // the lock for that surface; no live delete dry-run is ever made here.
@@ -684,10 +692,8 @@ class InternetAccessIntegrationTest extends IntegrationTestBase {
         }
     }
 
-    // ════════════════════════════════════════════════════════════════════
     //  FULL CRUD TESTS - Create, read, delete lifecycle with cleanup
     //  (folded in from the legacy InternetAccessTest live suite)
-    // ════════════════════════════════════════════════════════════════════
 
     /**
      * Full CRUD coverage of the v2 service lifecycle, folded in from the legacy
@@ -708,7 +714,7 @@ class InternetAccessIntegrationTest extends IntegrationTestBase {
             Assumptions.assumeTrue(connectionUuid != null && !connectionUuid.isBlank(),
                     "No -DinternetAccessConnectionUuid provided; skipping service create test");
 
-            // ── CREATE ──────────────────────────────────────────────
+            // CREATE
             InternetAccessService created = timedCall("InternetAccess", "create", "InternetAccessService", "POST",
                     () -> client.services().define()
                             .name(testResourceName("eia"))
@@ -726,7 +732,7 @@ class InternetAccessIntegrationTest extends IntegrationTestBase {
             // Register cleanup immediately so the service is deleted even if later assertions fail
             registerCleanup("InternetAccessService", createdUuid, id -> client.services().delete(id));
 
-            // ── GET ─────────────────────────────────────────────────
+            // GET
             InternetAccessService fetched = timedCall("InternetAccess", "getByUuid", "InternetAccessService",
                     "GET", createdUuid, () -> client.services().getByUuid(createdUuid));
             assertNotNull(fetched);

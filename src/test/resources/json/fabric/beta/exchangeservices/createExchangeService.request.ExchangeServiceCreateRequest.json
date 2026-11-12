@@ -1,0 +1,47 @@
+{
+  "type": "IX",
+  "name": "ix_exchange_service",
+  "publicPeeringConnection": {
+    "uuid": "b44c6e6c-2c36-4488-b3f1-47064357b5b4"
+  },
+  "description": "ix_exchange_service",
+  "routingProtocol": {
+    "customerAsn": 5555,
+    "macAddress": "00:11:22:33:44:55",
+    "bgpIpv4": {
+      "domainName": "gw01.sin.example.net",
+      "asSet": "AS-EC-SV",
+      "mlpeEnabled": true,
+      "md5AuthKey": "TESTMD5KEY12345",
+      "prefixes": [
+        "203.0.113.0/24"
+      ]
+    },
+    "bgpIpv6": {
+      "domainName": "gw01.sin.example.net",
+      "asSet": "AS-EC-SV",
+      "mlpeEnabled": true,
+      "md5AuthKey": "TESTMD5KEY123456",
+      "prefixes": [
+        "2001:DB8:123::/48"
+      ]
+    }
+  },
+  "order": {
+    "purchaseOrderNumber": "1-3456576"
+  },
+  "notifications": [
+    {
+      "type": "NOTIFICATION",
+      "registeredUsers": [
+        "jaguarsuser-port-order"
+      ]
+    }
+  ],
+  "project": {
+    "projectId": "e275485c-7072-439f-943a-c923548b2be5"
+  },
+  "account": {
+    "accountNumber": 100179
+  }
+}

@@ -16,6 +16,8 @@
 
 package com.eqixiac.equinix.design.optimizer.wizard.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import com.eqixiac.equinix.core.model.MetroId;
 import com.eqixiac.equinix.core.model.multicloud.BandwidthTier;
 import com.eqixiac.equinix.design.optimizer.enums.MulticloudEnvironmentStatus;
@@ -25,6 +27,7 @@ import com.eqixiac.equinix.design.optimizer.wizard.enums.MulticloudLinkRole;
 import com.eqixiac.equinix.fabric.enums.ConnectionType;
 import com.eqixiac.equinix.fabric.model.implementation.cloud.CloudProviderType;
 import lombok.Builder;
+import lombok.extern.jackson.Jacksonized;
 import lombok.Value;
 
 import java.util.Collections;
@@ -63,6 +66,7 @@ import java.util.OptionalInt;
  */
 @Value
 @Builder(toBuilder = true)
+@Jacksonized
 public class PlannedMulticloudInterconnect {
 
     /**
@@ -150,6 +154,7 @@ public class PlannedMulticloudInterconnect {
      */
     @Value
     @Builder
+    @Jacksonized
     public static class EquinixLeg {
 
         /** The cloud the connection reaches. */
@@ -199,6 +204,7 @@ public class PlannedMulticloudInterconnect {
     /**
      * @return {@code true} when the covering size is larger than the requested bandwidth
      */
+    @JsonIgnore
     public boolean isRoundedUp() {
         return coveringTierMbps != null && coveringTierMbps > requestedMbps;
     }

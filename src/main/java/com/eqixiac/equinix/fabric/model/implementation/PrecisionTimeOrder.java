@@ -25,7 +25,7 @@ import lombok.NoArgsConstructor;
 /**
  * Order details for a Precision Time service (the Fabric v4 {@code precisionTimeOrder} schema).
  *
- * <p>Prefer {@code builder()} over the positional constructor — all three parameters are
+ * <p>Prefer {@code builder()} over the positional constructor - all three parameters are
  * interchangeable order-number {@code String}s.</p>
  *
  * @author ianjones

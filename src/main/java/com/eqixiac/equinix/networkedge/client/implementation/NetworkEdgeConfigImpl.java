@@ -45,7 +45,7 @@ public class NetworkEdgeConfigImpl extends Config {
     private final DeviceTypeClientImpl deviceTypesClient;
 
     private final PublicKeyClientImpl publicKeysClient;
-    
+
     private final DeviceLinkClientImpl deviceLinksClient;
 
     private final ACLTemplateClientImpl aclTemplateClient;

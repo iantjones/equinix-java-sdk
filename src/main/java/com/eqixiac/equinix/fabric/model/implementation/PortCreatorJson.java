@@ -21,7 +21,6 @@ import com.eqixiac.equinix.fabric.enums.BmmrType;
 import com.eqixiac.equinix.fabric.enums.ConnectivitySourceType;
 import com.eqixiac.equinix.fabric.enums.PhysicalPortType;
 import com.eqixiac.equinix.fabric.enums.PortServiceCode;
-import com.eqixiac.equinix.fabric.enums.PortServiceType;
 import com.eqixiac.equinix.fabric.enums.PortType;
 import com.eqixiac.equinix.fabric.model.json.creators.PortOperator;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -39,8 +38,9 @@ import java.util.List;
  * {@code connectivitySourceType}, {@code bmmrType}, {@code project}, {@code account},
  * {@code location}, {@code encapsulation}, {@code order}, {@code lagEnabled},
  * {@code demarcationPointIbx}, {@code tetherIbx}, {@code demarcationPoint}, {@code redundancy},
- * {@code package}, {@code settings}, {@code notifications}, {@code physicalPorts}, {@code loas},
- * plus the deprecated {@code serviceType} and {@code bandwidth} and the {@code serviceCode}.
+ * {@code package}, {@code notifications}, {@code physicalPorts}, {@code loas},
+ * plus the {@code serviceCode}. The spec-deprecated {@code serviceType}, {@code bandwidth} and
+ * {@code settings} ({@code PortSettings}, every property deprecated) are no longer sent.
  *
  * <p>The {@code account} and {@code location} members follow the spec's
  * {@code SimplifiedAccountRequest} ({@code accountNumber}) and {@code SimplifiedLocationRequest}
@@ -105,9 +105,6 @@ public class PortCreatorJson {
     @JsonProperty("package")
     private PackageRef portPackage;
 
-    @JsonProperty("settings")
-    private PortSettings settings;
-
     @JsonProperty("notifications")
     private List<PortNotification> notifications;
 
@@ -117,14 +114,9 @@ public class PortCreatorJson {
     @JsonProperty("loas")
     private List<PortLoa> loas;
 
-    @JsonProperty("serviceType")
-    private PortServiceType serviceType;
-
     @JsonProperty("serviceCode")
     private PortServiceCode serviceCode;
 
-    @JsonProperty("bandwidth")
-    private Integer bandwidth;
 
     /**
      * Constructs the request from a configured {@link PortOperator.PortBuilder}.
@@ -147,13 +139,10 @@ public class PortCreatorJson {
         this.demarcationPoint = builder.getDemarcationPoint();
         this.redundancy = builder.getRedundancy();
         this.portPackage = builder.getPortPackage();
-        this.settings = builder.getSettings();
         this.notifications = builder.getNotifications();
         this.physicalPorts = builder.getPhysicalPorts();
         this.loas = builder.getLoas();
-        this.serviceType = builder.getServiceType();
         this.serviceCode = builder.getServiceCode();
-        this.bandwidth = builder.getBandwidth();
         if (builder.getAccountNumber() != null) {
             this.account = new SimplifiedAccountRequest(builder.getAccountNumber());
         }

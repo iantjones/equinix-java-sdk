@@ -1,5 +1,6 @@
 package com.eqixiac.equinix.core.http;
 
+import com.eqixiac.equinix.core.ManualClock;
 import com.eqixiac.equinix.core.exception.CircuitOpenException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -11,12 +12,15 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Unit tests for the {@link CircuitBreaker} state machine: consecutive-failure counting,
- * open-state rejection, cooldown-gated half-open probing, and probe outcomes.
+ * open-state rejection, cooldown-gated half-open probing, and probe outcomes. Time is driven by a
+ * {@link ManualClock}, so no test depends on wall-clock sleeps.
  */
 class CircuitBreakerTest {
 
     private static final long LONG_COOLDOWN_MS = 60_000;
     private static final long SHORT_COOLDOWN_MS = 50;
+
+    private final ManualClock clock = new ManualClock();
 
     @Test
     @DisplayName("stays closed below the failure threshold")
@@ -60,21 +64,21 @@ class CircuitBreakerTest {
         breaker.acquire();
         breaker.recordFailure();
 
-        // 1 failure, success, 1 failure — never 2 consecutive, so still closed.
+        // 1 failure, success, 1 failure - never 2 consecutive, so still closed.
         assertEquals(CircuitBreaker.State.CLOSED, breaker.getState());
     }
 
     @Test
     @DisplayName("admits a half-open probe after the cooldown; a successful probe closes the circuit")
-    void halfOpenProbeSuccessCloses() throws InterruptedException {
-        CircuitBreaker breaker = new CircuitBreaker(1, SHORT_COOLDOWN_MS);
+    void halfOpenProbeSuccessCloses() {
+        CircuitBreaker breaker = new CircuitBreaker(1, SHORT_COOLDOWN_MS, clock);
 
         breaker.acquire();
         breaker.recordFailure();
         assertEquals(CircuitBreaker.State.OPEN, breaker.getState());
         assertThrows(CircuitOpenException.class, breaker::acquire);
 
-        Thread.sleep(SHORT_COOLDOWN_MS + 30);
+        clock.advanceMillis(SHORT_COOLDOWN_MS);
 
         // Cooldown elapsed: the next acquire is the probe.
         assertDoesNotThrow(breaker::acquire);
@@ -86,12 +90,12 @@ class CircuitBreakerTest {
 
     @Test
     @DisplayName("a failed half-open probe re-opens the circuit for another cooldown")
-    void halfOpenProbeFailureReopens() throws InterruptedException {
-        CircuitBreaker breaker = new CircuitBreaker(1, SHORT_COOLDOWN_MS);
+    void halfOpenProbeFailureReopens() {
+        CircuitBreaker breaker = new CircuitBreaker(1, SHORT_COOLDOWN_MS, clock);
 
         breaker.acquire();
         breaker.recordFailure();
-        Thread.sleep(SHORT_COOLDOWN_MS + 30);
+        clock.advanceMillis(SHORT_COOLDOWN_MS);
 
         breaker.acquire(); // the probe
         breaker.recordFailure();
@@ -102,12 +106,12 @@ class CircuitBreakerTest {
 
     @Test
     @DisplayName("while a probe is pending, other requests are rejected")
-    void pendingProbeRejectsOtherRequests() throws InterruptedException {
-        CircuitBreaker breaker = new CircuitBreaker(1, SHORT_COOLDOWN_MS);
+    void pendingProbeRejectsOtherRequests() {
+        CircuitBreaker breaker = new CircuitBreaker(1, SHORT_COOLDOWN_MS, clock);
 
         breaker.acquire();
         breaker.recordFailure();
-        Thread.sleep(SHORT_COOLDOWN_MS + 30);
+        clock.advanceMillis(SHORT_COOLDOWN_MS);
 
         breaker.acquire(); // probe slot taken, no outcome reported yet
         assertThrows(CircuitOpenException.class, breaker::acquire);
@@ -115,15 +119,15 @@ class CircuitBreakerTest {
 
     @Test
     @DisplayName("a probe that never reports back does not wedge the breaker: its slot expires after a cooldown")
-    void abandonedProbeSlotExpires() throws InterruptedException {
-        CircuitBreaker breaker = new CircuitBreaker(1, SHORT_COOLDOWN_MS);
+    void abandonedProbeSlotExpires() {
+        CircuitBreaker breaker = new CircuitBreaker(1, SHORT_COOLDOWN_MS, clock);
 
         breaker.acquire();
         breaker.recordFailure();
-        Thread.sleep(SHORT_COOLDOWN_MS + 30);
+        clock.advanceMillis(SHORT_COOLDOWN_MS);
         breaker.acquire(); // probe acquired, then "dies" without recording an outcome
 
-        Thread.sleep(SHORT_COOLDOWN_MS + 30);
+        clock.advanceMillis(SHORT_COOLDOWN_MS);
         assertDoesNotThrow(breaker::acquire); // a new probe is admitted
     }
 
@@ -147,20 +151,20 @@ class CircuitBreakerTest {
 
     @Test
     @DisplayName("a straggler failure completing while OPEN does not extend the cooldown")
-    void stragglerFailureWhileOpenDoesNotExtendCooldown() throws InterruptedException {
+    void stragglerFailureWhileOpenDoesNotExtendCooldown() {
         long cooldown = 200;
-        CircuitBreaker breaker = new CircuitBreaker(1, cooldown);
+        CircuitBreaker breaker = new CircuitBreaker(1, cooldown, clock);
 
         breaker.acquire();
         breaker.acquire(); // straggler admitted while still closed
         breaker.recordFailure();
         assertEquals(CircuitBreaker.State.OPEN, breaker.getState());
 
-        Thread.sleep(150);
+        clock.advanceMillis(150);
         breaker.recordFailure(); // straggler reports late, mid-cooldown
-        Thread.sleep(100);
+        clock.advanceMillis(50);
 
-        // 250ms since opening: the original cooldown elapsed, so a probe is admitted —
+        // 200ms since opening: the original cooldown elapsed, so a probe is admitted - 
         // the straggler failure must not have restarted the clock.
         assertDoesNotThrow(breaker::acquire);
         assertEquals(CircuitBreaker.State.HALF_OPEN, breaker.getState());
@@ -168,8 +172,8 @@ class CircuitBreakerTest {
 
     @Test
     @DisplayName("after a straggler success is ignored, recovery still goes through the half-open probe")
-    void recoveryAfterIgnoredStragglerGoesThroughProbe() throws InterruptedException {
-        CircuitBreaker breaker = new CircuitBreaker(1, SHORT_COOLDOWN_MS);
+    void recoveryAfterIgnoredStragglerGoesThroughProbe() {
+        CircuitBreaker breaker = new CircuitBreaker(1, SHORT_COOLDOWN_MS, clock);
 
         breaker.acquire();
         breaker.acquire(); // straggler
@@ -177,7 +181,7 @@ class CircuitBreakerTest {
         breaker.recordSuccess(); // straggler outcome, ignored
         assertEquals(CircuitBreaker.State.OPEN, breaker.getState());
 
-        Thread.sleep(SHORT_COOLDOWN_MS + 30);
+        clock.advanceMillis(SHORT_COOLDOWN_MS);
 
         assertDoesNotThrow(breaker::acquire); // the probe
         assertEquals(CircuitBreaker.State.HALF_OPEN, breaker.getState());
@@ -186,9 +190,39 @@ class CircuitBreakerTest {
     }
 
     @Test
+    @DisplayName("the cooldown boundary is exact: rejected 1 ms before it, probe admitted at it")
+    void cooldownBoundaryIsExact() {
+        CircuitBreaker breaker = new CircuitBreaker(1, SHORT_COOLDOWN_MS, clock);
+
+        breaker.acquire();
+        breaker.recordFailure();
+
+        clock.advanceMillis(SHORT_COOLDOWN_MS - 1);
+        CircuitOpenException rejection = assertThrows(CircuitOpenException.class, breaker::acquire);
+        assertEquals(1, rejection.getRemainingCooldownMillis());
+
+        clock.advanceMillis(1);
+        assertDoesNotThrow(breaker::acquire);
+        assertEquals(CircuitBreaker.State.HALF_OPEN, breaker.getState());
+    }
+
+    @Test
+    @DisplayName("an open circuit stays open while the clock does not move, however much real time passes")
+    void openCircuitIgnoresWallClock() {
+        CircuitBreaker breaker = new CircuitBreaker(1, 1, clock);
+
+        breaker.acquire();
+        breaker.recordFailure();
+
+        // 1 ms cooldown, but the injected clock has not advanced: still rejected.
+        assertThrows(CircuitOpenException.class, breaker::acquire);
+    }
+
+    @Test
     @DisplayName("constructor validates its arguments")
     void constructorValidation() {
         assertThrows(IllegalArgumentException.class, () -> new CircuitBreaker(0, 1000));
         assertThrows(IllegalArgumentException.class, () -> new CircuitBreaker(3, 0));
+        assertThrows(NullPointerException.class, () -> new CircuitBreaker(3, 10, null));
     }
 }

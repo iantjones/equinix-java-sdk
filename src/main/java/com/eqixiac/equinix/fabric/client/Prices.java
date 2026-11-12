@@ -30,7 +30,8 @@ public interface Prices {
      * Lists pricing information matching the specified filter criteria.
      *
      * @param filter the filter criteria to narrow pricing results (e.g., by connection type or metro)
-     * @return a paginated, filtered list of pricing entries
+     * @return the matching pricing entries: one page, because the service accepts no pagination
+     *         on this search ({@code hasNextPage()} is always {@code false})
      */
     PaginatedFilteredList<Pricing> list(FilterPropertyList filter);
 }

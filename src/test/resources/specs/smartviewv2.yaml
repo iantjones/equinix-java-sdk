@@ -1,0 +1,4953 @@
+openapi: 3.0.3
+info:
+  title: Equinix SmartView APIs
+  version: "2.0.0"
+  description: >
+    Equinix Smart View is a comprehensive Data Center Infrastructure Management (DCIM) platform designed to facilitate advanced data collection related to customer deployments. The Smart View APIs provide insights into power, environmental, mechanical, and electrical data, allowing users to access information in near-real-time or from a historical perspective.
+
+
+    Customers leverage Smart View APIs to:
+      1. Monitor their assets in near-real-time through our Subscription API.
+      2. Strategically plan power investments using the Power API.
+      3. Gain a comprehensive understanding of the status of various assets that support their deployments.
+    
+    For more information, please visit the <a href="https://docs.equinix.com/smart-view/">Equinix Smart View Documentation Page</a>.
+  termsOfService: https://www.equinix.com/about/legal/terms
+  contact:
+    name: Equinix API Support
+    url: https://docs.equinix.com/api-support.htm
+  license:
+    name: Equinix Inc
+    url: https://developer.equinix.com/agreement
+servers:
+  - url: https://api.equinix.com
+    description: Equinix Inc
+security:
+  - BearerAuth: []
+tags:
+  - name: SmartView Environment APIs
+    description: Empower yourself with Smart View Environment APIs. These APIs allow you to fetch current and trending environmental data (humidity and temperature) for your assets. You can retrieve data for a single sensor (by IBX code and sensor ID), for all sensors within an IBX (with pagination and sorting), or for a specific level value (IBX, zone, cage, cabinet, sensor). The APIs support both real-time and historical queries, enabling comprehensive monitoring and planning.
+  - name: Streaming Subscription API
+    description: IBX SmartView's subscription API allows users to subscribe to near real-time message feeds for events occurring within an IBX. Users can specify the types of messages to receive for each IBX. Users are able to view all subscriptions within their organization and update any subscription to modify the message feed being received.
+  - name: SmartView Hierarchy APIs
+    description: Empower yourself with Smart View Hierarchy APIs. Use these APIs to obtain location and power hierarchy for invoking other APIs. Given an account number, IBX code, and an asset Id, returns the corresponding location and power hierarchy of related assets. Required query parameters to obtain a valid response from these endpoints are account number and IBX code.
+  - name: SmartView Assets APIs
+    description: Empower yourself with Smart View Assets API. These provide the ability to consumers to list infra asset, fetch infra asset details, get affected customer assets based on asset id. Given an account number, IBX code, cage and asset classification (Electrical, Mechanical), information about the asset in a hierarchical structure comprising of the category, template and asset is returned. Given a category and a template, a list of assets is returned.
+  - name: DCIM Power APIs
+    description: Empower yourself with DCIM Power APIs. Use them to get current and trending information on power consumption by assets. These APIs return the power consumption info for all level values, given a customer account number, IBX and level type of ibx - cage, cabinet or circuit. Trending power data returns the kVA power draw and max allowed (%) for the given asset.
+  - name: DCIM System Alert
+    description: Empower yourself with IBX SmartView System Alert APIs to access information on the alarms, now \nknown as system alerts. Given a multiple criteria, this API retrieves all the system alerts.\nWe recommend customers utilize the POST call, however both calls are supported and functional.
+  - name: Power Events
+    description: Power Events provides a CRUD interface to manage power related alerts and states across your Equinix deployments, enabling customers to programmatically consume and manage power event data for their colocation footprint. It complements SmartView power APIs to support real‑time awareness and automation across IBXs, cages, cabinets, and circuits.
+paths:
+  /environment/v1/current:
+    get:
+      operationId: getCurrentEnvironmentData
+      tags:
+        - SmartView Environment APIs
+      summary: Retrieve current environmental data
+      description: The API returns environment information on temperature and humidity from inputs (ibx, zone, cage, sensor)
+      parameters:
+        - name: accountNo
+          in: query
+          description: Customer Account Number
+          required: true
+          schema:
+            type: string
+        - name: ibx
+          in: query
+          description: IBX Code
+          required: true
+          schema:
+            type: string
+        - name: levelType
+          in: query
+          description: Level Type
+          required: true
+          schema:
+            type: string
+            enum: [IBX, ZONE, CAGE, SENSOR]
+        - name: levelValue
+          in: query
+          description: Level Value is ibxCode, zoneUsID, cageUsID, sensorid for levelType ibx, zone, cage, sensor resp.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Environment Details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvironmentData'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /environment/v1/listCurrent:
+    get:
+      operationId: listCurrentEnvironmentData
+      tags:
+        - SmartView Environment APIs
+      summary: Retrieve a list of environmental data
+      description: The API returns environment info (humidity and temperature) for all the values for input level type IBX, ZONE, CAGE, SENSOR.
+      parameters:
+        - name: accountNo
+          in: query
+          description: Customer Account Number
+          required: true
+          schema:
+            type: string
+        - name: ibx
+          in: query
+          description: IBX Code
+          required: true
+          schema:
+            type: string
+        - name: levelType
+          in: query
+          description: Level Type
+          required: true
+          schema:
+            type: string
+            enum: [IBX, ZONE, CAGE, SENSOR]
+      responses:
+        '200':
+          description: Environment Details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvironmentDataResponse'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /environment/v1/trending:
+    get:
+      operationId: getTrendingEnvironmentData
+      tags:
+        - SmartView Environment APIs
+      summary: Retrieve trending environmental data
+      description: The API returns trending environment information (temperature and humidity) for input ibx, zone, cage, sensor.
+      parameters:
+        - name: accountNo
+          in: query
+          description: Customer Account Number
+          required: true
+          schema:
+            type: string
+        - name: ibx
+          in: query
+          description: IBX Code
+          required: true
+          schema:
+            type: string
+        - name: dataPoint
+          in: query
+          description: Data point
+          required: true
+          schema:
+            type: string
+            enum: [temperature, humidity]
+        - name: levelType
+          in: query
+          description: Level Type
+          required: true
+          schema:
+            type: string
+            enum: [IBX, ZONE, CAGE, SENSOR]
+        - name: levelValue
+          in: query
+          description: Level Value is ibxCode, zone, cage, sensorid for levelType ibx, zone, cage, sensor resp.
+          required: true
+          schema:
+            type: string
+        - name: interval
+          in: query
+          description: Interval
+          required: true
+          schema:
+            type: string
+            enum: [reading, 1h, 1d]
+        - name: fromDate
+          in: query
+          description: Date in long
+          required: true
+          schema:
+            type: string
+            format: date-time
+        - name: toDate
+          in: query
+          description: Date in long
+          required: true
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: Trending Environment Data Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrendingEnvironmentData'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /smartview/v2/environmental/ibxs/{ibx}/sensors/readings:
+    get:
+      tags:
+        - SmartView Environment APIs
+      summary: Retrieve IBX sensors current readings
+      description: Returns current environmental (temperature and humidity) sensor readings for the given IBX code in a paginated way.
+      operationId: getSensorReadings
+      parameters:
+        - name: ibx
+          in: path
+          description: IBX where the sensor is located.
+          required: true
+          schema:
+            type: string
+            example: CH2
+        - name: type
+          in: query
+          description: Type of sensor data to display, e.g. specifying 'HUMIDITY' means only sensor readings with HUMIDITY value will be included
+          required: false
+          schema:
+            type: string
+            example: HUMIDITY
+        - name: zone
+          in: query
+          description: Zone name. Adding this parameter limits the query to sensors in the specified zone
+          required: false
+          schema:
+            type: string
+            example: CH2:1:06:ColoArea:1
+        - name: offset
+          in: query
+          description: Results offset you want to retrieve (0..N)
+          required: false
+          schema:
+            type: integer
+            default: 0
+        - name: limit
+          in: query
+          description: Number of records to retrieve per request.
+          required: false
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SensorReadingsResponse'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '422':
+          description: Unprocessable entity
+  /smartview/v2/environmental/ibxs/{ibx}/sensors/{sensorId}/readings:
+    get:
+      tags:
+        - SmartView Environment APIs
+      summary: Retrieve Single sensor current value(s)
+      description: Returns current environmental sensor readings such as temperature and humidity for the given sensor ID and IBX code.
+      operationId: getSingleSensorReadings
+      parameters:
+        - name: ibx
+          in: path
+          description: IBX where the sensor is located.
+          required: true
+          schema:
+            type: string
+            example: SV2
+        - name: sensorId
+          in: path
+          description: Id of sensor to read.
+          required: true
+          schema:
+            type: string
+            example: CH2.Environmental.MbusColo3Mod5.MOD35.C3TS03
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SensorReading'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '422':
+          description: Unprocessable entity
+  /smartview/v2/streaming/subscriptions:
+    get:
+      tags:
+        - Streaming Subscription API
+      summary: Retrieve all subscriptions
+      description: This endpoint allows users to fetch details for all streaming subscriptions for a given organization.
+      operationId: getAllSubscriptions
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SubscriptionResponse'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not Found
+        '500':
+          description: Internal server error
+    post:
+      tags:
+        - Streaming Subscription API
+      summary: Create subscription endpoint
+      description: The endpoint allows users to define and create a new streaming subscription for a given organization.
+      operationId: createSubscription
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubscriptionRequest'
+      responses:
+        '201':
+          description: Created
+          headers:
+            Location:
+              description: Location of created subscription. For Example - /smartview/v2/streaming/subscriptions/607460b4e4a78360425bca56
+              schema:
+                type: string
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '422':
+          description: Unprocessable entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '500':
+          description: Internal server error
+  /smartview/v2/streaming/subscriptions/{id}:
+    get:
+      tags:
+        - Streaming Subscription API
+      summary: Retrieve subscription by ID
+      description: This endpoint allows users to fetch details for a given streaming subscription for a given organization.
+      operationId: getSubscriptionById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubscriptionResponse'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not Found
+        '500':
+          description: Internal server error
+    put:
+      tags:
+        - Streaming Subscription API
+      summary: Update subscription
+      description: This endpoint allows users to modify and update an existing streaming subscription for a given organization. Request payload replaces current subscription.
+      operationId: updateSubscription
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubscriptionRequest'
+      responses:
+        '204':
+          description: No Content
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not Found
+        '422':
+          description: Unprocessable entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '500':
+          description: Internal server error
+    delete:
+      tags:
+        - Streaming Subscription API
+      summary: Delete subscription
+      description: This endpoint allows users to delete and remove an existing streaming subscription for a given organization.
+      operationId: deleteSubscriptionById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: No Content
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not Found
+        '500':
+          description: Internal server error
+  /smartview/v2/streaming/subscriptionData/{subscriptionId}:
+    get:
+      tags:
+        - Streaming Subscription API
+      summary: Retrieve subscription data via REST
+      description: This endpoint allows users to obtain API+ near real time data via a simple REST endpoint by employing subscription ID alongside other specified criteria, enabling a comprehensive and targeted approach to data retrieval. Subscription data endpoint works for all channels and not just REST channel.
+      operationId: getSubscriptionData
+      parameters:
+        - name: subscriptionId
+          in: path
+          description: Subscription ID
+          required: true
+          schema:
+            type: string
+        - name: ibxs
+          in: query
+          description: Filter, set of IBXs
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+        - name: messageTypes
+          in: query
+          description: Filter, set of message types
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+              enum:
+                - ALARM
+                - ALERT
+                - ENVIRONMENTAL
+                - METERED_POWER
+                - POWER
+                - TAG_POINT
+        - name: streamIds
+          in: query
+          description: Filter, set of stream IDs
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+        - name: offset
+          in: query
+          description: Pagination, offset of the first item
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 0
+        - name: limit
+          in: query
+          description: Pagination, limit of items returned
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 250
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubscriptionData'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not Found
+        '500':
+          description: Internal server error
+  /smartview/v2/streaming/subscriptions/certificate:
+    get:
+      tags:
+        - Streaming Subscription API
+      summary: Get subscription certificate endpoint
+      description: The Certificate endpoint allows users to retrieve certificates based on the specified channelType (AWS_IOT_CORE and WEBHOOK)
+      operationId: getCertificate
+      parameters:
+        - name: channelType
+          in: query
+          required: true
+          schema:
+            type: string
+            enum:
+              - AWS_IOT_CORE
+              - WEBHOOK
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubscriptionCertificateResponse'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not Found
+        '500':
+          description: Internal server error
+
+  /smartview/v1/hierarchy/location:
+    get:
+      tags:
+        - SmartView Hierarchy APIs
+      operationId: getLocationHierarchy
+      summary: Retrieve the Location Hierarchy
+      description: |
+        This endpoint returns the location hierarchy and provides data for invoking other APIs such as Environmental APIs that require location hierarchy information.
+      parameters:
+        - name: accountNo
+          in: query
+          description: Customer Account Number
+          required: true
+          schema:
+            type: string
+        - name: ibx
+          in: query
+          description: IBX Code
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Location Hierarchy Details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LocationResponse'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /smartview/v1/hierarchy/power:
+    get:
+      tags:
+        - SmartView Hierarchy APIs
+      operationId: getPowerHierarchy
+      summary: Retrieve the Power Hierarchy
+      description: |
+        This endpoint returns the power hierarchy and provides data for invoking other APIs such as Power APIs that require power hierarchy information.
+      parameters:
+        - name: accountNo
+          in: query
+          description: Customer Account Number
+          required: true
+          schema:
+            type: string
+        - name: ibx
+          in: query
+          description: IBX Code
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Power Hierarchy Details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PowerResponse'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /smartview/v1/asset/list:
+    get:
+      tags:
+        - SmartView Assets APIs
+      operationId: getAsset
+      summary: Retrieve assets list information
+      description: >
+        This endpoint returns information about asset in a hierarchical structure (category / template / asset) based on the input account number, IBX code, cage and asset classification (Electrical, Mechanical).
+      parameters:
+        - name: accountNo
+          in: query
+          description: customer account number
+          required: true
+          schema:
+            type: string
+        - name: ibx
+          in: query
+          description: ibx code
+          required: true
+          schema:
+            type: string
+        - name: classification
+          in: query
+          description: asset classification (Electrical, Mechanical)
+          required: true
+          schema:
+            type: string
+            enum: [Electrical, Mechanical]
+        - name: cages
+          in: query
+          description: cage unique space id to be used to filter the assets list assumed to be all cage unique space id if no value is sent.
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: Asset Details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssetsList'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /smartview/v1/asset/details:
+    get:
+      tags:
+        - SmartView Assets APIs
+      operationId: getAssetDetails
+      summary: Retrieve details for an asset
+      description: >
+        This endpoint returns information about asset details including tag points lists for a given asset identifier.
+      parameters:
+        - name: accountNo
+          in: query
+          description: customer account number
+          required: true
+          schema:
+            type: string
+        - name: ibx
+          in: query
+          description: ibx code
+          required: true
+          schema:
+            type: string
+        - name: classification
+          in: query
+          description: asset classification (Electrical, Mechanical)
+          required: true
+          schema:
+            type: string
+        - name: assetId
+          in: query
+          description: asset id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Asset Details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssetDetailsGetResponse'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      operationId: postAssetDetails
+      tags:
+        - SmartView Assets APIs
+      summary: Retrieve asset details
+      description: >
+        This endpoint returns information about assets details including the assets tag points list for the given multiple asset identifiers.
+      requestBody:
+        description: request schema
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssetDetailsRequest'
+      responses:
+        '200':
+          description: Asset Details response object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssetDetailsResponse'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /smartview/v1/asset/tagpoint/affected-assets:
+    get:
+      tags:
+        - SmartView Assets APIs
+      operationId: getAffectedAsset
+      summary: Retrieve affected customers assets hierarchy
+      description: >
+        This endpoint returns information regarding the affected assets of customers for a given asset identifier
+      parameters:
+        - name: accountNo
+          in: query
+          description: customer account number
+          required: true
+          schema:
+            type: string
+        - name: ibx
+          in: query
+          description: ibx code
+          required: true
+          schema:
+            type: string
+        - name: assetId
+          in: query
+          description: asset id
+          required: true
+          schema:
+            type: string
+        - name: classification
+          in: query
+          description: asset classification(Electrical, Mechanical)
+          required: true
+          schema:
+            type: string
+            enum: [Electrical, Mechanical]
+      responses:
+        '200':
+          description: Affect Customer Circuits ( Cage > Cabinet > Circuit hierarchy )
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HierarchyNodeForAssetAPI'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /smartview/v1/asset/search:
+    get:
+      tags:
+        - SmartView Assets APIs
+      operationId: searchAsset
+      summary: Search for Assets matching the identifiers
+      description: >
+        This endpoint is used to search for assets using wild card search patterns matching the asset identifier.
+      parameters:
+        - name: accountNo
+          in: query
+          description: Customer Account Number
+          required: true
+          schema:
+            type: string
+        - name: ibx
+          in: query
+          description: IBX Code
+          required: true
+          schema:
+            type: string
+        - name: searchString
+          in: query
+          description: Search String
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Asset Details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Assets'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /smartview/v1/asset/tagpoint/current:
+    get:
+      tags:
+        - SmartView Assets APIs
+      operationId: getCurrentTagPoint
+      summary: Retrieve latest tag point data
+      description: >
+        This endpoint fetches and provides the most recent tag point information for a given tag identifier.
+      parameters:
+        - name: accountNo
+          in: query
+          description: customer account number
+          required: true
+          schema:
+            type: string
+        - name: ibx
+          in: query
+          description: ibx code
+          required: true
+          schema:
+            type: string
+        - name: tagid
+          in: query
+          description: tag id is the unique identifier for the tag point
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: the current tag point data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TagPointData'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      operationId: postCurrentTagPoint
+      tags:
+        - SmartView Assets APIs
+      summary: Retrieve current tag points data
+      description: >
+        This endpoint fetches the latest read values for given tag points using given tag identifiers.
+      requestBody:
+        description: request schema
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CurrentTagPointRequest'
+      responses:
+        '200':
+          description: data for tag points based on input payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TagPointData'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /power/v1/current:
+    get:
+      operationId: getCurrentPowerData
+      tags:
+        - DCIM Power APIs
+      summary: Retrieve current power consumption data
+      description: >
+        This powerData endpoint returns power consumption info (power consumption data with comparison data of current [% Kva] vs yesterday, lastWeek, lastMonth, lastQuarter) for input ibx, cage, cabinet, circuit.
+      parameters:
+        - name: accountNo
+          in: query
+          description: Customer Account Number
+          required: true
+          schema:
+            type: string
+        - name: ibx
+          in: query
+          description: IBX Code
+          required: true
+          schema:
+            type: string
+        - name: levelType
+          in: query
+          description: level type allowed value [ibx|cage|cabinet|circuit]
+          required: true
+          schema:
+            type: string
+            enum: [ibx, cage, cabinet, circuit]
+        - name: levelValue
+          in: query
+          description: level value - ibx code, cage unique space id, cabinet unique space id, serial number for level type ibx, cage, cabinet, circuit respectively.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Valid Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PowerData'
+        default:
+          description: Error response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PowerData_Error'
+    post:
+      operationId: postCurrentPowerData
+      tags:
+        - DCIM Power APIs
+      summary: Retrieve current power consumption data
+      description: >
+        This powerdata endpoint returns power consumption info for all values of input level type ibx, cage, cabinet or circuit.
+      requestBody:
+        description: request payload
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PowerCurrentPostRequest'
+      responses:
+        '200':
+          description: Valid Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PowerDataResponse_IBX'
+        default:
+          description: Error response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PowerData_Error'
+  /power/v1/trending:
+    get:
+      operationId: getTrendingPowerData
+      tags:
+        - DCIM Power APIs
+      summary: Retrieve Trending Power Data.
+      description: >
+        This trending power data for draw kVA to max allowed (%) for input ibx, cage, cabinet, circuit.
+      parameters:
+        - name: accountNo
+          in: query
+          description: Customer Account Number
+          required: true
+          schema:
+            type: string
+        - name: ibx
+          in: query
+          description: IBX Code
+          required: true
+          schema:
+            type: string
+        - name: levelType
+          in: query
+          description: '[ibx|cage|cabinet|circuit]'
+          required: true
+          schema:
+            type: string
+            enum: [ibx, cage, cabinet, circuit]
+        - name: levelValue
+          in: query
+          description: ibx code, cage unique space id, cabinet unique space id and serial number for level type ibx, cage, cabinet and circuit respectively.
+          required: true
+          schema:
+            type: string
+        - name: interval
+          in: query
+          description: '[recording|1h|1d]'
+          required: true
+          schema:
+            type: string
+        - name: fromDate
+          in: query
+          description: timestamp expected to be epoch long (milliseconds).
+          required: true
+          schema:
+            type: string
+        - name: toDate
+          in: query
+          description: timestamp expected to be epoch long (milliseconds).
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Valid Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrendingPowerData'
+        default:
+          description: Error response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PowerData_Error'
+  /smartview/v2/systemAlerts/search:
+    get:
+      tags:
+        - DCIM System Alert
+      summary: System alerts search
+      description: |
+        This endpoint returns all system alerts in a paginated way
+        allows narrowing returned results by submitting additional search filters.
+
+        Allowed search filters.
+      operationId: postAlerts
+      parameters:
+        - name: limit
+          in: query
+          description: Number of records to retrieve per request.
+          required: true
+          schema:
+            type: integer
+          example: 100
+        - name: offset
+          in: query
+          description: Record Number you want start to retrieve from (0..N)
+          required: true
+          schema:
+            type: integer
+          example: 0
+        - name: status
+          in: query
+          description: Alert status - ACTIVE or INACTIVE
+          required: false
+          schema:
+            type: string
+          example: ACTIVE
+        - name: assetClassification
+          in: query
+          description: The class of assets this asset belongs to - Mechanical/Electrical/Environmental
+          required: false
+          schema:
+            type: string
+          example: Mechanical
+        - name: edgeCollectedOn
+          in: query
+          description: Returns the alarms after the passed time
+          required: false
+          schema:
+            type: string
+          example: 2023-11-30T05:08:39.345Z
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedResponseAlertReadModel'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              examples:
+                objectExample:
+                  $ref: '#/components/examples/ApiError400'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              examples:
+                objectExample:
+                  $ref: '#/components/examples/ApiError401'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              examples:
+                objectExample:
+                  $ref: '#/components/examples/ApiError403'
+        '422':
+          description: Unprocessable entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              examples:
+                arrayExample:
+                  $ref: '#/components/examples/ApiError422'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              examples:
+                objectExample:
+                  $ref: '#/components/examples/ApiError500'
+
+    post:
+      tags:
+        - DCIM System Alert
+      summary: System alerts search
+      description: |
+        This endpoint returns all system alerts in a paginated way
+        allows narrowing returned results by submitting additional search filters.
+
+        Allowed search filters:
+        <table>
+          <tr>
+            <th>Property</th>
+            <th>Operator</th>
+            <th>Description</th>
+          </tr>
+          <tr>
+            <td>/status</td>
+            <td>=, IN</td>
+            <td>Alert status, INACTIVE or ACTIVE</td>
+          </tr>
+          <tr>
+            <td>/assetTagUid</td>
+            <td>=, IN</td>
+            <td>Asset tag point unique id, example: PA8A.CB-CRITICAL-DB2:tripped</td>
+          </tr>
+          <tr>
+            <td>/assetTagDisplayName</td>
+            <td>=, IN</td>
+            <td>Active tag reading display value, example: ALARM</td>
+          </tr>
+          <tr>
+            <td>/configuration/thresholdType</td>
+            <td>=, IN</td>
+            <td>Example: DIGITAL</td>
+          </tr>
+          <tr>
+            <td>/configuration/conditionName</td>
+            <td>=, IN</td>
+            <td>Name given to the alarm condition. Example: ALARM</td>
+          </tr>
+          <tr>
+            <td>/asset/ibx</td>
+            <td>=, IN</td>
+            <td>Name of the IBX for which data is being requested, example: PA8A</td>
+          </tr>
+          <tr>
+            <td>/asset/assetUid</td>
+            <td>=, IN, LIKE</td>
+            <td>Asset unique ID, example: PA8A.CB-CRITICAL-DB2:tripped#DIGITAL:ALARM</td>
+          </tr>
+          <tr>
+            <td>/activeProcessing/edgeCollectedOn</td>
+            <td>=, >=, <=</td>
+            <td>When tag reading was collected on source, example: 2022-09-23T13:40:53.449276Z</td>
+          </tr>
+          <tr>
+            <td>/asset/assetUnderMaintenance</td>
+            <td>=, IN</td>
+            <td>Asset was under maintenance during alert processing, example: false</td>
+          </tr>
+          <tr>
+            <td>/asset/assetType</td>
+            <td>=, IN</td>
+            <td>Indicates the template name for the asset, example: Circuit Breaker with Metering</td>
+          </tr>
+          <tr>
+            <td>/asset/assetClassification</td>
+            <td>=, IN</td>
+            <td>The class of assets this asset belongs to. Asset classification is electrical or mechanical, example: Electrical</td>
+          </tr>
+        </table>
+
+        Allowed search request sort options:
+        - /status
+        - /assetTagUid
+        - /assetTagDisplayName
+        - /configuration/thresholdType
+        - /configuration/conditionName
+        - /asset/ibx
+        - /asset/assetUid
+        - /activeProcessing/edgeCollectedOn
+        - /asset/assetUnderMaintenance
+        - /asset/assetType
+        - /asset/assetClassification
+      operationId: getAlerts
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SearchRequest'
+            examples:
+              objectExample:
+                $ref: '#/components/examples/SearchRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedResponseAlertReadModel'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              examples:
+                objectExample:
+                  $ref: '#/components/examples/ApiError400'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              examples:
+                objectExample:
+                  $ref: '#/components/examples/ApiError403'
+        '422':
+          description: Unprocessable entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              examples:
+                arrayExample:
+                  $ref: '#/components/examples/ApiError422'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              examples:
+                objectExample:
+                  $ref: '#/components/examples/ApiError500'
+  /dcim/v3/powerEvents/search:
+    get:
+      operationId: getPowerEvents
+      tags:
+        - Power Events
+      summary: Search power events
+      description: |
+        This endpoint returns all power events in a paginated way.
+        Allows narrowing returned results by submitting additional query filters.
+
+        Results can be filtered by IBX, status, and collection date. Both `limit` and `offset`
+        are required to control pagination.
+      parameters:
+        - name: ibx
+          in: query
+          description: List of IBX codes to filter power events (comma-separated)
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+          style: form
+          explode: false
+          example: [ SV5, NY1 ]
+        - name: status
+          in: query
+          description: List of statuses to filter power events (comma-separated). Possible values - ACTIVE, INACTIVE
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+              enum: [ ACTIVE, INACTIVE ]
+          style: form
+          explode: false
+          example: [ ACTIVE ]
+        - name: edgeCollectedOn
+          in: query
+          description: Date filter to retrieve power events collected after a specific date (ISO 8601 format)
+          required: false
+          schema:
+            type: string
+          example: "2024-01-01T00:00:00.000Z"
+        - name: limit
+          in: query
+          description: Number of records to retrieve per request
+          required: true
+          schema:
+            type: integer
+          example: 100
+        - name: offset
+          in: query
+          description: Record number to start retrieval from (0..N)
+          required: true
+          schema:
+            type: integer
+          example: 0
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PowerEventsPaginatedResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              examples:
+                objectExample:
+                  $ref: '#/components/examples/ApiError400'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              examples:
+                objectExample:
+                  $ref: '#/components/examples/ApiError401'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              examples:
+                objectExample:
+                  $ref: '#/components/examples/ApiError403'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              examples:
+                objectExample:
+                  $ref: '#/components/examples/ApiError500'
+
+  /dcim/v3/powerEvents/configurations:
+    post:
+      operationId: createPowerAlertConfiguration
+      tags:
+        - Power Events
+      summary: Create a power alert configuration
+      description: |
+        Creates a new power alert configuration for the specified account and IBX.
+        The configuration defines the condition (event type and threshold) that triggers
+        an alert and the list of recipients to be notified via email, SMS or API Subscription.
+
+        Assets can be scoped at the CAGE, CABINET, or CIRCUIT level.
+      requestBody:
+        description: Request body for creating a power alert configuration
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAlertConfigurationCommand'
+            examples:
+              objectExample:
+                $ref: '#/components/examples/CreateAlertConfigurationCommandExample'
+      responses:
+        '201':
+          description: Configuration created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateAlertConfigurationCommandResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              examples:
+                objectExample:
+                  $ref: '#/components/examples/ApiError400'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              examples:
+                objectExample:
+                  $ref: '#/components/examples/ApiError401'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              examples:
+                objectExample:
+                  $ref: '#/components/examples/ApiError403'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              examples:
+                objectExample:
+                  $ref: '#/components/examples/ApiError500'
+    put:
+      operationId: updatePowerAlertConfiguration
+      tags:
+        - Power Events
+      summary: Update a power alert configuration
+      description: |
+        Updates an existing power alert configuration identified by its `alertConfigurationUid`.
+        You can update the condition, threshold, recipients, and assets associated with the configuration.
+        You can also change the state of the configuration to ACTIVE, PAUSED, or DELETED.
+      requestBody:
+        description: Request body for updating a power alert configuration
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateAlertConfigurationCommand'
+            examples:
+              objectExample:
+                $ref: '#/components/examples/UpdateAlertConfigurationCommandExample'
+      responses:
+        '204':
+          description: Configuration updated successfully
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              examples:
+                objectExample:
+                  $ref: '#/components/examples/ApiError400'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              examples:
+                objectExample:
+                  $ref: '#/components/examples/ApiError401'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              examples:
+                objectExample:
+                  $ref: '#/components/examples/ApiError403'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              examples:
+                objectExample:
+                  $ref: '#/components/examples/ApiError500'
+
+  /dcim/v3/powerEvents/configurations/search:
+    get:
+      operationId: searchAlertConfigurations
+      tags:
+        - Power Events
+      summary: Search power alert configurations
+      description: |
+        Returns a paginated list of power alert configurations matching the specified filters.
+        Results can be filtered by IBX and state. Both `limit` and `offset` are required to control pagination.
+      parameters:
+        - name: ibx
+          in: query
+          description: List of IBX codes to filter configurations (comma-separated)
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+          style: form
+          explode: false
+          example: [ SV5, NY1 ]
+        - name: state
+          in: query
+          description: List of states to filter configurations (comma-separated). Possible values - ACTIVE, PAUSED, DELETED
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+              enum: [ ACTIVE, PAUSED, DELETED ]
+          style: form
+          explode: false
+          example: [ ACTIVE ]
+        - name: limit
+          in: query
+          description: Number of records to retrieve per request
+          required: true
+          schema:
+            type: integer
+          example: 100
+        - name: offset
+          in: query
+          description: Record number to start retrieval from (0..N)
+          required: true
+          schema:
+            type: integer
+          example: 0
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlertPaginatedResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              examples:
+                objectExample:
+                  $ref: '#/components/examples/ApiError400'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              examples:
+                objectExample:
+                  $ref: '#/components/examples/ApiError401'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              examples:
+                objectExample:
+                  $ref: '#/components/examples/ApiError403'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              examples:
+                objectExample:
+                  $ref: '#/components/examples/ApiError500'
+
+  /dcim/v3/powerEvents/configurations/{alertConfigurationUid}/pause:
+    put:
+      operationId: pauseAlertConfiguration
+      tags:
+        - Power Events
+      summary: Pause a power alert configuration
+      description: |
+        Pauses an active power alert configuration. When paused, the configuration will not
+        trigger any new power event alerts until it is resumed. The configuration remains
+        accessible and can be resumed at any time.
+      parameters:
+        - name: alertConfigurationUid
+          in: path
+          description: Unique identifier (UUID) of the power alert configuration to pause
+          required: true
+          schema:
+            type: string
+          example: "9756a585-c3c1-4648-b2e1-7d8804912098"
+      responses:
+        '200':
+          description: Configuration paused successfully
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              examples:
+                objectExample:
+                  $ref: '#/components/examples/ApiError400'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              examples:
+                objectExample:
+                  $ref: '#/components/examples/ApiError401'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              examples:
+                objectExample:
+                  $ref: '#/components/examples/ApiError403'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              examples:
+                objectExample:
+                  $ref: '#/components/examples/ApiError500'
+
+  /dcim/v3/powerEvents/configurations/{alertConfigurationUid}/resume:
+    put:
+      operationId: resumeAlertConfiguration
+      tags:
+        - Power Events
+      summary: Resume a power alert configuration
+      description: |
+        Resumes a previously paused power alert configuration, returning it to ACTIVE state.
+        Once resumed, the configuration will begin triggering alerts again when its defined
+        conditions are met.
+      parameters:
+        - name: alertConfigurationUid
+          in: path
+          description: Unique identifier (UUID) of the power alert configuration to resume
+          required: true
+          schema:
+            type: string
+          example: "9756a585-c3c1-4648-b2e1-7d8804912098"
+      responses:
+        '200':
+          description: Configuration resumed successfully
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              examples:
+                objectExample:
+                  $ref: '#/components/examples/ApiError400'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              examples:
+                objectExample:
+                  $ref: '#/components/examples/ApiError401'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              examples:
+                objectExample:
+                  $ref: '#/components/examples/ApiError403'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              examples:
+                objectExample:
+                  $ref: '#/components/examples/ApiError500'
+
+  /dcim/v3/powerEvents/configurations/{alertConfigurationUid}:
+    delete:
+      operationId: deleteAlertConfiguration
+      tags:
+        - Power Events
+      summary: Delete a power alert configuration
+      description: |
+        Permanently deletes a power alert configuration identified by its `alertConfigurationUid`.
+        Deleted configurations cannot be recovered. Consider pausing a configuration instead
+        if you want to temporarily stop alerts without losing the configuration.
+      parameters:
+        - name: alertConfigurationUid
+          in: path
+          description: Unique identifier (UUID) of the power alert configuration to delete
+          required: true
+          schema:
+            type: string
+          example: "9756a585-c3c1-4648-b2e1-7d8804912098"
+      responses:
+        '204':
+          description: Configuration deleted successfully
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              examples:
+                objectExample:
+                  $ref: '#/components/examples/ApiError400'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              examples:
+                objectExample:
+                  $ref: '#/components/examples/ApiError401'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              examples:
+                objectExample:
+                  $ref: '#/components/examples/ApiError403'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              examples:
+                objectExample:
+                  $ref: '#/components/examples/ApiError500'
+components:
+  schemas:
+    EnvironmentDataResponse:
+      type: object
+      properties:
+        payLoad:
+          type: object
+          properties:
+            totalCount:
+              type: integer
+              description: total number of data values
+              example: 1
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/EnvironmentDataForArray'
+        status:
+          type: object
+          properties:
+            type:
+              type: string
+              description: '[INFO|ERROR] are the possible values'
+              enum: [INFO]
+            statuscode:
+              type: number
+              example: 1000
+              description: '[1000|3001|3002|3003|3004|3005|4000|5000|6001] are the possible status codes'
+            msg:
+              type: string
+              example: OK
+              description: '[Ok|Invalid Level Type|Invalid Level Value|Invalid Account Details Or User is not Entitled|User Preference is not set as expected in the account|Invalid IBX|Invalid Account number|User is not entitled to the ibx|INVALID_SESSION|INVALID_SESSION_IBX|INTERNAL_ERROR|NO_DATA|UNAUTHORISZED_ACCESS] are the possible messages'
+    EnvironmentData:
+      type: object
+      properties:
+        payLoad:
+          type: object
+          properties:
+            ibx:
+              type: string
+              description: ibx code
+              example: CH1
+            accountNo:
+              type: string
+              description: account number
+              example: "1"
+            zone:
+              type: string
+              description: zone unique space id
+              example: CH1:1:05:ColoArea:2
+            cage:
+              type: string
+              description: cage unique space id
+              example: CH1:05:000550
+            cabinet:
+              type: string
+              description: cabinet unique space id
+              example: CH1:05:000550:0105
+            sensor:
+              type: string
+              description: sensor id
+              example: CH1.Colo.CH1_05_000550_0105
+            temperature:
+              type: string
+              description: current temperature
+              example: "20.0"
+            humidity:
+              type: string
+              description: current humidity
+              example: "43.00"
+            timestamp:
+              type: string
+              description: epoch timestamp when the current reading was read
+              example: "1506665106579"
+            temperatureUom:
+              type: string
+              description: unit of measure for temperature values
+              example: "°C"
+            humidityUom:
+              type: string
+              description: unit of measure for humidity
+              example: "%"
+        status:
+          type: object
+          properties:
+            type:
+              type: string
+              description: '[INFO|ERROR] are the possible values'
+              enum: [INFO]
+            statuscode:
+              type: number
+              example: 1000
+              description: '[1000|3001|3002|3003|3004|3005|4000|5000|6001] are the possible status codes'
+            msg:
+              type: string
+              example: OK
+              description: '[Ok|Invalid Level Type|Invalid Level Value|Invalid Account Details Or User is not Entitled|User Preference is not set as expected in the account|Invalid IBX|Invalid Account number|User is not entitled to the ibx|INVALID_SESSION|INVALID_SESSION_IBX|INTERNAL_ERROR|NO_DATA|UNAUTHORISZED_ACCESS] are the possible messages'
+    EnvironmentDataForArray:
+      type: object
+      properties:
+        ibx:
+          type: string
+          description: ibx code
+          example: CH1
+        accountNo:
+          type: string
+          description: account number
+          example: "1"
+        zone:
+          type: string
+          description: zone unique space id
+          example: CH1:1:05:ColoArea:2
+        cage:
+          type: string
+          description: cage unique space id
+          example: CH1:05:000550
+        cabinet:
+          type: string
+          description: cabinet unique space id
+          example: CH1:05:000550:0105
+        sensor:
+          type: string
+          description: sensor id
+          example: CH1.Colo.CH1_05_000550_0105
+        temperature:
+          type: string
+          description: current temperature
+          example: "20.0"
+        humidity:
+          type: string
+          description: current humidity
+          example: "43.00"
+        timestamp:
+          type: string
+          description: epoch timestamp when the current reading was read
+          example: "1506665106579"
+        temperatureUom:
+          type: string
+          description: unit of measure for temperature values
+          example: "°C"
+        humidityUom:
+          type: string
+          description: unit of measure for humidity
+          example: "%"
+    DataValue:
+      type: object
+      description: This object contains a single reading for the data point.
+      properties:
+        value:
+          type: string
+          description: reading value for the datapoint
+          example: "21.11"
+        modifiers:
+          type: array
+          description: modifiers applicable for the reading value
+          items:
+            type: string
+            example: recorded
+        datetime:
+          type: string
+          format: date-time
+          nullable: true
+          x-equinix-format: epoch-millis
+          x-example: "1483228800000"
+    TrendingEnvironmentData:
+      type: object
+      properties:
+        payLoad:
+          type: object
+          properties:
+            ibx:
+              type: string
+              description: ibx code
+              example: CH1
+            accountNo:
+              type: string
+              description: customer account num
+              example: "1"
+            interval:
+              type: string
+              description: interval
+              example: reading
+            datapoint:
+              type: string
+              description: data point for which the timeseries data is fetched
+              example: temperature
+            uom:
+              type: string
+              description: unit of measure used for the datapoint
+              example: "°C"
+            series:
+              type: array
+              description: Time series data for the data point
+              items:
+                $ref: '#/components/schemas/DataValue'
+    Pagination:
+      type: object
+      description: Represents pagination component of the paginated response
+      required: [limit, offset, total]
+      properties:
+        offset:
+          type: integer
+          format: int64
+          description: The number of elements to skip.
+        limit:
+          type: integer
+          format: int64
+          description: The page size.
+        total:
+          type: integer
+          format: int64
+          description: The total number of elements in the result set.
+        next:
+          type: string
+          description: Represents a relative link to the next page. This can be empty if there is no next page available.
+        previous:
+          type: string
+          description: Represents a relative link to the previous page. This can be empty if there is no previous page available.
+    SensorReading:
+      type: object
+      description: Single environmental sensor reading.
+      required: [ibx, sensorId, zoneId]
+      properties:
+        sensorId:
+          type: string
+          example: SV2.Environmental.Colo4-ZoneHumidity1
+          description: The sensor identifier.
+        zoneId:
+          type: string
+          example: CH2:1:06:ColoArea:1
+          description: The zone where the sensor is placed.
+        ibx:
+          type: string
+          example: SV2
+          description: The ibx identifier where the sensor is placed.
+        humidity:
+          description: Sensor reading - humidity
+          allOf:
+            - $ref: '#/components/schemas/ValueWithUnit'
+        temperature:
+          description: Sensor reading - temperature
+          allOf:
+            - $ref: '#/components/schemas/ValueWithUnit'
+    SensorReadingsResponse:
+      type: object
+      required: [data, pagination]
+      properties:
+        data:
+          type: array
+          description: List of data objects
+          items:
+            $ref: '#/components/schemas/SensorReading'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+    ValueWithUnit:
+      type: object
+      description: Single value with related unit (e.g. percentage for humidity or Celsius degree for temperature).
+      required: [unit, value]
+      properties:
+        value:
+          type: number
+          example: 33.3
+          description: Specific value, to be read together with unit.
+        unit:
+          type: string
+          example: CELSIUS
+          description: Unit for value.
+    ValueWithUnitDoubleHumidityUnit:
+      type: object
+      description: Single value with related unit (e.g. percentage for humidity or Celsius degree for temperature).
+      required: [unit, value]
+      properties:
+        value:
+          type: number
+          format: double
+          example: 33.3
+          description: Specific value, to be read together with unit.
+        unit:
+          type: string
+          example: PERCENT
+          description: Unit for value.
+          enum: [PERCENT]
+    ValueWithUnitDoubleTemperatureUnit:
+      type: object
+      description: Single value with related unit (e.g. percentage for humidity or Celsius degree for temperature).
+      required: [unit, value]
+      properties:
+        value:
+          type: number
+          format: double
+          example: 33.3
+          description: Specific value, to be read together with unit.
+        unit:
+          type: string
+          example: CELSIUS
+          description: Unit for value.
+          enum: [CELSIUS, FAHRENHEIT]
+    Error:
+      type: object
+      properties:
+        payLoad:
+          type: object
+        status:
+          type: object
+          properties:
+            type:
+              type: string
+              description: '[INFO|ERROR] are the possible values'
+              enum: [ERROR]
+            statuscode:
+              type: number
+              example: 4000
+              description: '[1000|3001|3002|3003|3004|3005|4000|5000|6001] are the possible status codes'
+            msg:
+              type: string
+              example: INTERNAL_ERROR
+              description: '[Ok|Invalid Level Type|Invalid Level Value|Invalid DataPoint|Invalid Interval|Invalid FromDate|Invalid ToDate|ToDate interval cannot be greater  than 1 year|Invalid Account Details Or User is not Entitled|User Preference is not set as expected in the account|Invalid IBX|Invalid Account number|User is not entitled to the ibx|INVALID_SESSION|INVALID_SESSION_IBX|INTERNAL_ERROR|NO_DATA|UNAUTHORIZED_ACCESS] are the possible messages'
+    ApiErrorAdditionalInfo:
+      type: object
+      properties:
+        constraintCode:
+          type: string
+          example: IbxesMustExistOnPaidView
+        reason:
+          type: string
+          example: the [PA8] have no access to paid view
+    Asset:
+      type: object
+      description: Asset messages provide the latest readings for environmental, electrical, and mechanical assets within an IBX
+      required: [accountNumber, ibx]
+      properties:
+        accountNumber:
+          type: string
+          example: "135888"
+        ibx:
+          type: array
+          uniqueItems: true
+          items:
+            type: string
+        assetClassification:
+          type: array
+          description: Asset Classification value if specified, otherwise all allowable classifications
+          uniqueItems: true
+          items:
+            type: string
+            enum: [MECHANICAL, ENVIRONMENTAL, ELECTRICAL]
+          maxItems: 2147483647
+          minItems: 1
+        assetId:
+          type: array
+          uniqueItems: true
+          items:
+            type: string
+          maxItems: 2147483647
+          minItems: 1
+    AwsIotCoreChannelConfiguration:
+      type: object
+      description: The configuration for an 'AWS_IOT_CORE' channel
+      required: [url]
+      properties:
+        url:
+          type: string
+          example: https://b4c3mzxe8syvhd-ats.iot.us-west-2.amazonaws.com
+    AzureChannelConfiguration:
+      type: object
+      description: The configuration for an 'AZURE' channel
+      properties:
+        numberOfRetries:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 5
+        numberOfConcurrentCalls:
+          type: integer
+          format: int32
+          minimum: 20
+          maximum: 50
+        batchSize:
+          type: integer
+          format: int32
+          minimum: 5
+          maximum: 20
+    Channel:
+      type: object
+      description: Subscription can be created using one channel.
+      properties:
+        channelType:
+          type: string
+          enum: [AWS_IOT_CORE, WEBHOOK, AZURE]
+        awsIotCoreChannelConfiguration:
+          $ref: '#/components/schemas/AwsIotCoreChannelConfiguration'
+        webhookChannelConfiguration:
+          $ref: '#/components/schemas/WebhookChannelConfiguration'
+        azureChannelConfiguration:
+          $ref: '#/components/schemas/AzureChannelConfiguration'
+    CustomAlert:
+      type: object
+      description: Custom Alert messages are sent when user-defined alert conditions become true. The message contains the data point value that triggered the alert.
+      required: [accountNumber, ibx]
+      properties:
+        accountNumber:
+          type: string
+          example: "135888"
+        ibx:
+          type: array
+          uniqueItems: true
+          items:
+            type: string
+        user:
+          type: string
+    Environmental:
+      type: object
+      description: Environmental messages provide the latest temperature and humidity readings at the IBX and zone levels.
+      required: [accountNumber, ibx]
+      properties:
+        accountNumber:
+          type: string
+          example: "135888"
+        ibx:
+          type: array
+          uniqueItems: true
+          items:
+            type: string
+        level:
+          type: array
+          description: This field is not required. If not provided in the request, subscription will include all environmental messages at the IBX, zone, and cage levels. If granularity is specified, at least one level must be provided.
+          uniqueItems: true
+          items:
+            type: string
+            enum: [ZONE, IBX, CAGE]
+          maxItems: 3
+          minItems: 1
+    MessageType:
+      type: object
+      description: Message type for a given subscription
+      properties:
+        asset:
+          type: array
+          description: List of asset message type to subscribe
+          items:
+            $ref: '#/components/schemas/Asset'
+        environmental:
+          type: array
+          description: List of environmental message type to subscribe
+          items:
+            $ref: '#/components/schemas/Environmental'
+        power:
+          type: array
+          description: List of power message type to subscribe
+          items:
+            $ref: '#/components/schemas/PowerMessage'
+        meteredPower:
+          type: array
+          description: List of metered power message type to subscribe
+          items:
+            $ref: '#/components/schemas/MeteredPower'
+        systemAlert:
+          type: array
+          description: List of system alert message type to subscribe
+          items:
+            $ref: '#/components/schemas/SystemAlert'
+        customAlert:
+          type: array
+          description: List of custom alert message type to subscribe
+          items:
+            $ref: '#/components/schemas/CustomAlert'
+    PowerMessage:
+      type: object
+      description: Power messages provide the latest power usage data at the circuit-level.
+      required: [accountNumber, ibx]
+      properties:
+        accountNumber:
+          type: string
+          example: "135888"
+        ibx:
+          type: array
+          uniqueItems: true
+          items:
+            type: string
+    SubscriptionRequest:
+      type: object
+      description: Subscription Request Payload
+      properties:
+        messageType:
+          $ref: '#/components/schemas/MessageType'
+        channel:
+          $ref: '#/components/schemas/Channel'
+    SubscriptionResponse:
+      type: object
+      description: Subscription Response
+      properties:
+        id:
+          type: string
+        status:
+          type: string
+          enum: [PENDING, ACTIVE, FAILED, DELETE_IN_PROGRESS, DELETED]
+        messageType:
+          $ref: '#/components/schemas/MessageType'
+        channel:
+          $ref: '#/components/schemas/Channel'
+        orgId:
+          type: string
+        createdBy:
+          type: string
+        createdDateTime:
+          type: string
+          format: date-time
+        updatedBy:
+          type: string
+        updatedDateTime:
+          type: string
+          format: date-time
+    SubscriptionCertificateResponse:
+      type: object
+      description: Subscription Certificate Response
+      properties:
+        channelType:
+          type: string
+          enum: [AWS_IOT_CORE, WEBHOOK]
+        certificateBase64:
+          type: string
+          format: byte
+          description: Base64-encoded certificate
+          example: Zm9vYmFy
+        expiryDate:
+          type: string
+          format: date-time
+          description: The date and time when the certificate expires.
+          example: "2024-12-31T23:59:59Z"
+    SystemAlert:
+      type: object
+      description: System Alert messages are sent when Equinix-defined alert conditions become true. The message contains the data point value that triggered the alert as well as the current value.
+      required: [accountNumber, ibx]
+      properties:
+        accountNumber:
+          type: string
+          example: "135888"
+        ibx:
+          type: array
+          uniqueItems: true
+          items:
+            type: string
+    WebhookChannelConfiguration:
+      type: object
+      description: The configuration for a 'WEBHOOK' channel
+      required: [url]
+      properties:
+        sslCertificate:
+          type: string
+          example: ZkFzZLY1IGRpY31kZXI=
+        url:
+          type: string
+          example: https://b4c3mzxe8syvhd-ats.iot.us-west-2.amazonaws.com
+        numberOfRetries:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 5
+        numberOfConcurrentCalls:
+          type: integer
+          format: int32
+          minimum: 20
+          maximum: 50
+        batchSize:
+          type: integer
+          format: int32
+          minimum: 5
+          maximum: 20
+    Alarm:
+      type: object
+      required:
+        - asset
+        - currentValue
+        - definitionId
+        - ibx
+        - status
+        - streamId
+        - tag
+        - threshold
+      properties:
+        streamId:
+          type: string
+          description: unique message id
+          example: IBX.CRAH-EQ1-04:dirtyfilter#ABSOLUTE:HIGH
+        ibx:
+          type: string
+          description: ibx
+          example: IBX
+        region:
+          type: string
+          description: region
+          example: EMEA
+        metro:
+          type: string
+          description: metro
+          example: metro
+        country:
+          type: string
+          description: country
+          example: FR
+        conditionName:
+          type: string
+          description: condition name
+          example: High
+        severity:
+          type: integer
+          description: severity
+          format: int32
+          example: 900
+        type:
+          type: string
+          description: type
+          example: Absolute
+        heartbeat:
+          type: boolean
+          description: heartbeat
+          example: true
+        triggerRule:
+          type: string
+          description: trigger rule
+          example: RULE:123:1
+        definitionId:
+          type: string
+          description: unique message id
+          example: IBX.CRAH-EQ1-04:dirtyfilter#ABSOLUTE:HIGH
+        currentValue:
+          $ref: '#/components/schemas/AlarmCurrentValueDetails'
+        asset:
+          $ref: '#/components/schemas/AlarmAssetDetails'
+        tag:
+          $ref: '#/components/schemas/AlarmTagDetails'
+        status:
+          $ref: '#/components/schemas/AlarmStatusDetails'
+        threshold:
+          $ref: '#/components/schemas/AlarmThresholdDetails'
+        triggeredTime:
+          type: string
+          description: alarm triggered time
+          example: 2023-10-03T13:09:32
+        processedTime:
+          type: string
+          description: alarm processed time
+          example: 2023-10-03T13:09:32
+        normalProcessedTime:
+          type: string
+          description: alarm normal processed time
+          example: 2023-10-03T13:09:32
+        normalTriggeredTime:
+          type: string
+          description: alarm normal triggered time
+          example: 2023-10-03T13:09:32
+        dataQuality:
+          type: string
+          description: data quality - Good | Bad | Uncertain
+          example: Good
+      description: message data
+    AlarmAssetDetails:
+      type: object
+      properties:
+        id:
+          type: string
+          description: asset id
+          example: IBX.CRAH-EQ1-04
+        type:
+          type: string
+          description: asset type
+          example: CRAH
+        classification:
+          type: string
+          description: asset classification
+          example: Mechanical
+      description: asset details
+    AlarmCurrentValueDetails:
+      type: object
+      properties:
+        unit:
+          type: string
+          description: current value unit
+          example: "%"
+        value:
+          type: string
+          description: current value value
+          example: "35.023"
+        type:
+          type: string
+          description: current value type
+          example: Float
+      description: currentValue details
+    AlarmMessageData:
+      type: object
+      required:
+        - data
+        - type
+      properties:
+        type:
+          type: string
+          description: message type
+          example: system-alert
+          default: system-alert
+        data:
+          $ref: '#/components/schemas/Alarm'
+      description: alarm message data
+    AlarmStatusDetails:
+      type: object
+      properties:
+        acknowledged:
+          type: boolean
+          description: status acknowledged
+          example: false
+        acknowledgementTime:
+          type: string
+          description: status acknowledgement time
+          example: 2023-10-03T13:09:32
+        cleared:
+          type: boolean
+          description: status cleared
+          example: false
+        active:
+          type: boolean
+          description: status active
+          example: true
+      description: status details
+    AlarmTagDetails:
+      type: object
+      properties:
+        id:
+          type: string
+          description: tag id
+          example: IBX.CRAH-EQ1-04:dirtyfilter
+        displayName:
+          type: string
+          description: tag display name
+          example: Temperature7
+      description: tag details
+    AlarmThresholdDetails:
+      type: object
+      properties:
+        unit:
+          type: string
+          description: threshold unit
+          example: "%"
+        stateLimit:
+          type: string
+          description: threshold state limit
+          example: "20"
+        message:
+          type: string
+          description: threshold message
+          example: NA
+      description: threshold details
+    Alert:
+      type: object
+      required:
+        - asset
+        - ibx
+        - streamId
+        - tag
+        - threshold
+      properties:
+        streamId:
+          type: string
+          description: unique message id
+          example: IBX.685306-15843739015670.6640131967865078
+        ibx:
+          type: string
+          description: ibx
+          example: IBX
+        region:
+          type: string
+          description: region
+          example: APAC
+        id:
+          type: string
+          description: id
+          example: IBX.685306-15843739015670.6640131967865078
+        type:
+          type: string
+          description: type
+          example: power
+        typeId:
+          type: string
+          description: type id
+          example: drawAmpFalls
+        conditional:
+          type: string
+          description: conditional
+          example: N
+        eventType:
+          type: string
+          description: event type
+          example: Falls below
+        heartbeat:
+          type: boolean
+          description: heartbeat
+          example: true
+        asset:
+          $ref: '#/components/schemas/AlertAssetDetails'
+        tag:
+          $ref: '#/components/schemas/AlertTagDetails'
+        threshold:
+          $ref: '#/components/schemas/AlertThresholdDetails'
+        triggeredTime:
+          type: string
+          description: alert triggered time
+          example: 2023-10-03T13:09:32
+        dataQuality:
+          type: string
+          description: data quality - Good | Bad | Uncertain
+          example: Good
+      description: message data
+    AlertAssetDetails:
+      type: object
+      properties:
+        id:
+          type: string
+          description: asset id
+          example: "1.20849261E7"
+        type:
+          type: string
+          description: asset type
+          example: CIRCUIT
+        classification:
+          type: string
+          description: asset classification
+          example: Electrical
+      description: asset details
+    AlertMessageData:
+      type: object
+      required:
+        - data
+        - type
+      properties:
+        type:
+          type: string
+          description: message type
+          example: custom-alert
+          default: custom-alert
+        data:
+          $ref: '#/components/schemas/Alert'
+      description: alert message data
+    AlertTagDetails:
+      type: object
+      properties:
+        id:
+          type: string
+          description: tag id
+          example: IBX.CIRCUIT-EQ1-04:dirtyfilter
+      description: tag details
+    AlertThresholdDetails:
+      type: object
+      properties:
+        unit:
+          type: string
+          description: threshold unit
+          example: Amp
+        maxValue:
+          type: string
+          description: threshold max value
+          example: "5"
+        minValue:
+          type: string
+          description: threshold min value
+          example: "1"
+        value:
+          type: string
+          description: threshold value
+          example: "10"
+      description: threshold details
+    Environment:
+      type: object
+      required:
+        - asset
+        - ibx
+        - reading
+        - streamId
+        - tag
+      properties:
+        streamId:
+          type: string
+          description: unique message id
+          example: IBX.IBX:humidity
+        ibx:
+          type: string
+          description: ibx
+          example: IBX
+        asset:
+          $ref: '#/components/schemas/EnvironmentAssetDetails'
+        reading:
+          $ref: '#/components/schemas/EnvironmentValueWithUnit'
+        tag:
+          $ref: '#/components/schemas/EnvironmentTagDetails'
+        readingTime:
+          type: string
+          description: message reading time
+          example: 2023-10-03T13:09:32
+        dataQuality:
+          type: string
+          description: data quality - Good | Bad | Uncertain
+          example: Good
+      description: message data
+    EnvironmentAssetDetails:
+      type: object
+      required:
+        - id
+        - level
+      properties:
+        id:
+          type: string
+          description: asset id
+          example: IBX
+        level:
+          type: string
+          description: asset level
+          example: IBX
+      description: asset details
+    EnvironmentMessageData:
+      type: object
+      required:
+        - data
+        - type
+      properties:
+        type:
+          type: string
+          description: message type
+          example: environmental
+          default: environmental
+        data:
+          $ref: '#/components/schemas/Environment'
+      description: environment message data
+    EnvironmentTagDetails:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: string
+          description: tag id
+          example: humidity
+        displayName:
+          type: string
+          description: tag display name
+          example: Humidity
+      description: tag details
+    EnvironmentValueWithUnit:
+      type: object
+      required:
+        - unit
+        - value
+      properties:
+        value:
+          type: string
+          description: Environmental reading value
+          example: "50.045"
+        unit:
+          type: string
+          description: Environmental reading unit
+          example: PERCENT
+      description: reading details
+    MeteredPower:
+      type: object
+      required:
+        - asset
+        - ibx
+        - reading
+        - streamId
+        - tag
+      properties:
+        streamId:
+          type: string
+          description: unique message id
+          example: IBX.CBM-B1-4-1:kilowattHour
+        ibx:
+          type: string
+          description: ibx
+          example: IBX
+        asset:
+          $ref: '#/components/schemas/MeteredPowerAssetDetails'
+        cage:
+          type: string
+          description: cage
+          example: IBX:02:021305
+        cageSerialNo:
+          type: string
+          description: cage serial number
+          example: 021305-20604711
+        accountNumber:
+          type: string
+          description: account number
+          example: "123456"
+        tag:
+          $ref: '#/components/schemas/MeteredPowerTagDetails'
+        reading:
+          $ref: '#/components/schemas/MeteredPowerValueWithUnit'
+        readingTime:
+          type: string
+          description: message reading time
+          example: 2023-10-03T13:09:32
+        dataQuality:
+          type: string
+          description: data quality - Good | Bad | Uncertain
+          example: Good
+      description: message data
+    MeteredPowerAssetDetails:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: string
+          description: asset id
+          example: IBX.CBM-B1-4-1
+        type:
+          type: string
+          description: asset type
+          example: Customer Billing Meter
+      description: asset details
+    MeteredPowerMessageData:
+      type: object
+      required:
+        - data
+        - type
+      properties:
+        type:
+          type: string
+          description: message type
+          example: metered-power
+          default: metered-power
+        data:
+          $ref: '#/components/schemas/MeteredPower'
+      description: metered-power message data
+    MeteredPowerTagDetails:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: string
+          description: tag id
+          example: IBX.CBM-B1-4-1:kilowattHour
+        displayName:
+          type: string
+          description: tag display name
+          example: kilowattHour
+      description: tag details
+    MeteredPowerValueWithUnit:
+      type: object
+      required:
+        - value
+      properties:
+        value:
+          type: string
+          description: reading value
+          example: "412568.125"
+        unit:
+          type: string
+          description: reading unit
+          example: kWh
+      description: reading details
+    Power:
+      type: object
+      required:
+        - asset
+        - ibx
+        - streamId
+      properties:
+        streamId:
+          type: string
+          description: unique message id
+          example: IBX:140838
+        ibx:
+          type: string
+          description: ibx
+          example: IBX
+        asset:
+          $ref: '#/components/schemas/PowerAssetDetails'
+        cage:
+          type: string
+          description: cage
+          example: IBX:02:021305
+        cabinet:
+          type: string
+          description: cabinet
+          example: IBX:01:000Z4Z:0102
+        accountNumber:
+          type: string
+          description: account number
+          example: "123456"
+        description:
+          type: string
+          description: description
+          example: 32-amp 230v Single Phase Primary AC Power
+        oid:
+          type: string
+          description: oid
+          example: 1.3.6.1.2.1.299.36.10.1099
+        circuitType:
+          type: string
+          description: circuit type
+          example: PRIMARY
+        realPower:
+          $ref: '#/components/schemas/PowerRealPowerValueWithUnit'
+        apparentPower:
+          $ref: '#/components/schemas/PowerApparentPowerValueWithUnit'
+        contractualPower:
+          $ref: '#/components/schemas/PowerContractualPowerValueWithUnit'
+        current:
+          $ref: '#/components/schemas/PowerCurrentValueWithUnit'
+        powerFactor:
+          $ref: '#/components/schemas/PowerPowerFactorValueWithUnit'
+        soldCurrent:
+          $ref: '#/components/schemas/PowerSoldCurrentValueWithUnit'
+        soldPower:
+          $ref: '#/components/schemas/PowerSoldPowerValueWithUnit'
+        powerConsumptionToContractual:
+          $ref: '#/components/schemas/PowerPowerConsumptionToContractualValueWithUnit'
+        cabinetRating:
+          $ref: '#/components/schemas/PowerCabinetRatingValueWithUnit'
+        peakLastSevenDays:
+          $ref: '#/components/schemas/PowerPeakLastSevenDaysValueWithUnit'
+        peakLastSevenDaysRatio:
+          $ref: '#/components/schemas/PowerPeakLastSevenDaysRatioValueWithUnit'
+        peakLastSevenDaysContractualPower:
+          $ref: '#/components/schemas/PowerPeakLastSevenDaysContractualPowerValueWithUnit'
+        peakLastSevenDaysTime:
+          type: string
+          description: peak last seven days time
+          example: 2023-10-03T13:09:32
+        lastUpdated:
+          type: string
+          description: last updated time
+          example: 2023-10-03T13:09:32
+        readingTime:
+          type: string
+          description: message reading time
+          example: 2023-10-03T13:09:32
+      description: message data
+    PowerApparentPowerValueWithUnit:
+      type: object
+      required:
+        - unit
+        - value
+      properties:
+        value:
+          type: string
+          description: ApparentPower reading value
+          example: "7.36"
+        unit:
+          type: string
+          description: ApparentPower reading unit
+          example: kVA
+      description: apparentPower details
+    PowerAssetDetails:
+      type: object
+      required:
+        - id
+        - type
+      properties:
+        id:
+          type: string
+          description: asset id
+          example: IBX:140838
+        type:
+          type: string
+          description: asset type
+          example: CIRCUIT
+      description: asset details
+    PowerCabinetRatingValueWithUnit:
+      type: object
+      required:
+        - unit
+        - value
+      properties:
+        value:
+          type: string
+          description: CabinetRating reading value
+          example: "8.125"
+        unit:
+          type: string
+          description: CabinetRating reading unit
+          example: kVA
+      description: cabinetRating details
+    PowerContractualPowerValueWithUnit:
+      type: object
+      required:
+        - unit
+        - value
+      properties:
+        value:
+          type: string
+          description: ContractualPower reading value
+          example: "0.0"
+        unit:
+          type: string
+          description: ContractualPower reading unit
+          example: kVA
+      description: contractualPower details
+    PowerCurrentValueWithUnit:
+      type: object
+      required:
+        - unit
+        - value
+      properties:
+        value:
+          type: string
+          description: Current reading value
+          example: "7.36"
+        unit:
+          type: string
+          description: Current reading unit
+          example: A
+      description: current details
+    PowerMessageData:
+      type: object
+      required:
+        - data
+        - type
+      properties:
+        type:
+          type: string
+          description: message type
+          example: power
+          default: power
+        data:
+          $ref: '#/components/schemas/Power'
+      description: power message data
+    PowerPeakLastSevenDaysContractualPowerValueWithUnit:
+      type: object
+      required:
+        - unit
+        - value
+      properties:
+        value:
+          type: string
+          description: PeakLastSevenDaysContractualPower reading value
+          example: "0.0"
+        unit:
+          type: string
+          description: PeakLastSevenDaysContractualPower reading unit
+          example: kVA
+      description: peakLastSevenDaysContractualPower details
+    PowerPeakLastSevenDaysRatioValueWithUnit:
+      type: object
+      required:
+        - unit
+        - value
+      properties:
+        value:
+          type: string
+          description: PeakLastSevenDaysRatio reading value
+          example: "48.125"
+        unit:
+          type: string
+          description: PeakLastSevenDaysRatio reading unit
+          example: PERCENT
+      description: peakLastSevenDaysRatio details
+    PowerPeakLastSevenDaysValueWithUnit:
+      type: object
+      required:
+        - unit
+        - value
+      properties:
+        value:
+          type: string
+          description: PeakLastSevenDays reading value
+          example: "7.36"
+        unit:
+          type: string
+          description: PeakLastSevenDays reading unit
+          example: kVA
+      description: peakLastSevenDays details
+    PowerPowerConsumptionToContractualValueWithUnit:
+      type: object
+      required:
+        - unit
+        - value
+      properties:
+        value:
+          type: string
+          description: PowerConsumptionToContractual reading value
+          example: "68.125"
+        unit:
+          type: string
+          description: PowerConsumptionToContractual reading unit
+          example: PERCENT
+      description: powerConsumptionToContractual details
+    PowerPowerFactorValueWithUnit:
+      type: object
+      required:
+        - unit
+        - value
+      properties:
+        value:
+          type: string
+          description: PowerFactor reading value
+          example: "0.0"
+        unit:
+          type: string
+          description: PowerFactor reading unit
+          example: pf
+      description: powerFactor details
+    PowerRealPowerValueWithUnit:
+      type: object
+      required:
+        - unit
+        - value
+      properties:
+        value:
+          type: string
+          description: RealPower reading value
+          example: "0.0"
+        unit:
+          type: string
+          description: RealPower reading unit
+          example: kW
+      description: realPower details
+    PowerSoldCurrentValueWithUnit:
+      type: object
+      required:
+        - unit
+        - value
+      properties:
+        value:
+          type: string
+          description: SoldCurrent reading value
+          example: "7.36"
+        unit:
+          type: string
+          description: SoldCurrent reading unit
+          example: A
+      description: soldCurrent details
+    PowerSoldPowerValueWithUnit:
+      type: object
+      required:
+        - unit
+        - value
+      properties:
+        value:
+          type: string
+          description: SoldPower reading value
+          example: "68.125"
+        unit:
+          type: string
+          description: SoldPower reading unit
+          example: kVA
+      description: soldPower details
+    SubscriptionData:
+      type: object
+      properties:
+        alarmMessageData:
+          type: array
+          description: alarm message data
+          items:
+            $ref: '#/components/schemas/AlarmMessageData'
+        alertMessageData:
+          type: array
+          description: alert message data
+          items:
+            $ref: '#/components/schemas/AlertMessageData'
+        environmentMessageData:
+          type: array
+          description: environment message data
+          items:
+            $ref: '#/components/schemas/EnvironmentMessageData'
+        meteredPowerMessageData:
+          type: array
+          description: metered-power message data
+          items:
+            $ref: '#/components/schemas/MeteredPowerMessageData'
+        powerMessageData:
+          type: array
+          description: power message data
+          items:
+            $ref: '#/components/schemas/PowerMessageData'
+        tagPointMessageData:
+          type: array
+          description: tag-point message data
+          items:
+            $ref: '#/components/schemas/TagPointMessageData'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+    TagDetails:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: string
+          description: tag id
+          example: IBX.ATS-M1-04:outputvoltageca
+        displayName:
+          type: string
+          description: tag display name
+          example: Output Voltage CA
+      description: tag details
+    TagPoint:
+      type: object
+      required:
+        - dataQuality
+        - ibx
+        - reading
+        - readingTime
+        - streamId
+        - tag
+      properties:
+        streamId:
+          type: string
+          description: unique message id
+          example: IBX.ATS-M1-04:outputvoltageca
+        ibx:
+          type: string
+          description: ibx
+          example: IBX
+        tag:
+          $ref: '#/components/schemas/TagDetails'
+        reading:
+          $ref: '#/components/schemas/TagPointValueWithUnit'
+        readingTime:
+          type: string
+          description: message reading time
+          example: 2023-10-03T13:09:32
+        dataQuality:
+          type: string
+          description: data quality - Good | Bad | Uncertain
+          example: Good
+      description: message data
+    TagPointMessageData:
+      type: object
+      required:
+        - data
+        - type
+      properties:
+        type:
+          type: string
+          description: message type
+          example: tag-point
+          default: tag-point
+        data:
+          $ref: '#/components/schemas/TagPoint'
+      description: tag-point message data
+    TagPointValueWithUnit:
+      type: object
+      required:
+        - value
+      properties:
+        value:
+          type: string
+          description: reading value
+          example: "50.045"
+        unit:
+          type: string
+          description: reading unit
+          example: V
+      description: reading details
+    LocationResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/HierarchyNode'
+    PowerResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/PowerHierarchyNode'
+    HierarchyNode:
+      type: object
+      properties:
+        levelType:
+          type: string
+          description: levelType indicates which level in the location hierarchy does the node belong to.
+          enum:
+            - ibx
+            - zone
+            - cage
+            - cabinet
+            - sensor
+          example: ibx
+        levelValue:
+          type: string
+          description: ibx code, zone us id, cage us id, cabinet us id, sensor number for levelType ibx, zone, cage, cabinet, sensor resp.
+          example: SV5
+        label:
+          type: string
+          description: ibx code, zone unique space id, cage unique space id, cabinet unique space id, sensor number for levelType ibx, zone, cage, cabinet, sensor resp.
+          example: SV5
+        children:
+          type: array
+          example:
+          # (example content omitted for brevity, keep if needed)
+          items:
+            $ref: '#/components/schemas/HierarchyNode'
+    PowerHierarchyNode:
+      type: object
+      properties:
+        levelType:
+          type: string
+          description: levelType indicates which level in the power hierarchy does the node belong to.
+          enum:
+            - ibx
+            - cage
+            - cabinet
+            - circuit
+          example: "ibx"
+        levelValue:
+          type: string
+          description: ibx code, cage us id, cabinet us id, circuit number for levelType ibx, cage, cabinet, circuit resp.
+          example: "XY1"
+        label:
+          type: string
+          description: ibx code, cage unique space id, cabinet unique space id, circuit label for levelType ibx, cage, cabinet, circuit resp.
+          example: "XY1"
+        children:
+          type: array
+          description: ibx, cage, cabinet nodes can have cage, cabinet and circuit, circuit nodes as children respectively.
+          example:
+          # (example content omitted for brevity, keep if needed)
+          items:
+            $ref: '#/components/schemas/PowerHierarchyNode'
+    GenericRequest:
+      type: object
+      properties:
+        accountNo:
+          type: string
+          description: customer account number
+        ibx:
+          type: string
+          description: ibx code
+        classification:
+          type: string
+          description: asset classification
+    CurrentTagPointRequest:
+      type: object
+      description: request object for tagpoint/current POST request
+      properties:
+        accountNo:
+          type: string
+          description: customer account number
+        tagIds:
+          type: array
+          maxLength: 1000
+          items:
+            type: string
+            description: tag ids
+        ibx:
+          type: string
+          description: ibx code
+    AssetDetailsRequest:
+      allOf:
+        - $ref: '#/components/schemas/GenericRequest'
+        - type: object
+          properties:
+            assetIds:
+              type: array
+              items:
+                type: string
+                description: asset id
+    CurrentTagPointResponse:
+      type: object
+      description: response object for tagpoint/current POST request
+      properties:
+        totalCount:
+          description: total number of current tag point
+    AssetDetailsGetResponse:
+      type: object
+      properties:
+        payLoad:
+          type: object
+          properties:
+            assetId:
+              type: string
+              description: asset id for the Asset
+              example: CH1.Chiller-1
+            assetType:
+              type: string
+              description: Template Name for the asset
+              example: Cooling
+            userPrefTimeZone:
+              type: string
+              description: Time zone for the user
+              example: Asia/Katmandu
+            tags:
+              type: array
+              description: List of tag points for the Asset
+              items:
+                $ref: '#/components/schemas/TagPointDataArray'
+            lastMaintenanceDate:
+              type: string
+              example: "2020-06-11T17:11:19"
+              description: Datetime when the machine had its last maintenance
+              format: date-time
+            manufacturerName:
+              type: string
+              description: Manufacturer name for the Asset
+              example: SMARDT
+            equipmentModelNumber:
+              type: string
+              description: Equipment Model Number
+              example: SACAC110-3EXX-2A1-16A-010
+            equipmentSerialNumber:
+              type: string
+              description: Equipment Serial Number
+              example: FF0010I233Q1276
+            alarmLastTriggeredTime:
+              type: string
+              example: Aug 21,2017 04:38 AM
+              description: Datetime when the latest alarm was triggered on the asset
+            alarmLastProcessedTime:
+              type: string
+              example: Aug 21,2017 05:52 AM
+              description: Datetime when the latest alarm was processed on the asset
+        status:
+          type: object
+          properties:
+            type:
+              type: string
+              description: '[INFO|ERROR] are the possible values'
+              enum: [INFO]
+            statuscode:
+              type: number
+              example: 1000
+              description: '[1000|3001|3002|3003|4000] are the possible status codes'
+            msg:
+              type: string
+              example: OK
+              description: '[Ok|Permission Denied|Invalid Account number|Invalid IBX|Invalid LevelType|Invalid LevelValue|Invalid Interval|Invalid From/To Date|INVALID_SESSION|INVALID_SESSION_IBX|INTERNAL_ERROR] are the possible messages'
+    AssetDetailsResponse:
+      type: object
+      description: response object for asset/details POST request
+      properties:
+        payLoad:
+          type: object
+          properties:
+            totalCount:
+              description: total number of assets that match the request filters
+              type: integer
+              example: 1
+            assetDetails:
+              type: array
+              items:
+                $ref: '#/components/schemas/AssetDetails'
+        status:
+          type: object
+          properties:
+            type:
+              type: string
+              description: '[INFO|ERROR] are the possible values'
+              enum: [INFO]
+            statuscode:
+              type: number
+              example: 1000
+              description: '[1000|3001|3002|3003|4000] are the possible status codes'
+            msg:
+              type: string
+              example: OK
+              description: '[Ok|Permission Denied|Invalid Account number|Invalid IBX|Invalid LevelType|Invalid LevelValue|Invalid Interval|Invalid From/To Date|INVALID_SESSION|INVALID_SESSION_IBX|INTERNAL_ERROR] are the possible messages'
+    AssetDetailResponse:
+      type: object
+      description: response object for asset/details POST request
+      properties:
+        payLoad:
+          type: object
+          properties:
+            assetDetails:
+              type: array
+              items:
+                $ref: '#/components/schemas/AssetDetails'
+        status:
+          type: object
+          properties:
+            type:
+              type: string
+              description: '[INFO|ERROR] are the possible values'
+              enum: [INFO]
+            statuscode:
+              type: number
+              example: 1000
+              description: '[1000|3001|3002|3003|4000] are the possible status codes'
+            msg:
+              type: string
+              example: OK
+              description: '[Ok|Permission Denied|Invalid Account number|Invalid IBX|Invalid LevelType|Invalid LevelValue|Invalid Interval|Invalid From/To Date|INVALID_SESSION|INVALID_SESSION_IBX|INTERNAL_ERROR] are the possible messages'
+    AssetsArray:
+      type: object
+      properties:
+        assetId:
+          type: string
+          example: CH1.ASTS-1-2-A
+          description: The assetid is the circuit number, sensor id, asset id, asset id for type circuit, sensor, electrical and mechanical resp.
+        type:
+          type: string
+          example: ASTS
+        assetLabel:
+          type: string
+          example: CH1.ASTS-1-2-A
+          description: Asset Label is the Circuit display label, Sensor ID, and Asset ID for types circuit, sensor, electrical and mechanical resp.
+        assetClassification:
+          type: string
+          description: Asset classification is electrical or mechanical
+          example: Electrical
+    TagPointDataArray:
+      type: object
+      description: Tag Point is a property of the Asset it is linked to.
+      properties:
+        value:
+          type: string
+          description: Current data value for the tag point
+          example: "4.9"
+        tagId:
+          type: string
+          description: ID for the tagPoint - Unique Identifier for the Tag Point
+          example: CH1.Chiller-1:evapleavingwatertemperature
+        tagDisplayName:
+          type: string
+          description: Generic label for the tag point
+          example: Evaporator Leaving Water Temperature
+        uom:
+          type: string
+          description: Unit of measure for the data value for the tag point
+          example: "°C"
+        alarmStatus:
+          type: string
+          description: Generic label for the tag point
+          example: OK
+        readingTime:
+          type: string
+          example: "20170907060449"
+          description: date time when the tag point value was read from the device.
+    TagPointDataArrayCurrent:
+      type: object
+      description: Tag Point is a property of the Asset it is linked to.
+      properties:
+        value:
+          type: string
+          example: "4.9"
+          description: Current data value for the tag point
+        tagId:
+          type: string
+          example: CH1.Chiller-1:evapleavingwatertemperature
+          description: ID for the tagPoint - Unique Identifier for the Tag Point
+        tagDisplayName:
+          type: string
+          example: Evaporator Leaving Water Temperature
+          description: Generic label for the tag point
+        uom:
+          type: string
+          example: "°C"
+          description: Unit of measure for the data value for the tag point
+        readingTime:
+          type: string
+          example: "20170907125336"
+          description: date time when the tag point value was read from the device.
+    AssetDetails:
+      type: object
+      description: Asset Details includes Tag Points with Data for the asset
+      properties:
+        assetId:
+          type: string
+          description: asset id for the Asset
+          example: CH1.Chiller-1
+        assetType:
+          type: string
+          description: Template Name for the asset
+          example: Cooling
+        userPrefTimeZone:
+          type: string
+          description: Time zone for the user
+          example: Asia/Katmandu
+        tags:
+          type: array
+          description: List of tag points for the Asset
+          items:
+            $ref: '#/components/schemas/TagPointDataArray'
+        lastMaintenanceDate:
+          type: string
+          example: "2020-06-11T17:11:19"
+          description: Datetime when the machine had its last maintenance
+          format: date-time
+        manufacturerName:
+          type: string
+          description: Manufacturer name for the Asset
+          example: SMARDT
+        equipmentModelNumber:
+          type: string
+          description: Equipment Model Number
+          example: SACAC110-3EXX-2A1-16A-010
+        equipmentSerialNumber:
+          type: string
+          description: Equipment Serial Number
+          example: FF0010I233Q1276
+        alarmLastTriggeredTime:
+          type: string
+          example: Aug 21,2017 04:38 AM
+          description: Datetime when the latest alarm was triggered on the asset
+        alarmLastProcessedTime:
+          type: string
+          example: Aug 21,2017 05:52 AM
+          description: Datetime when the latest alarm was processed on the asset
+    AssetDetailsTagPointData:
+      type: object
+      properties:
+        payLoad:
+          type: array
+          items:
+            $ref: '#/components/schemas/TagPointDataArray'
+    TagPointData:
+      type: object
+      properties:
+        payLoad:
+          type: array
+          items:
+            $ref: '#/components/schemas/TagPointDataArrayCurrent'
+        status:
+          type: object
+          properties:
+            type:
+              type: string
+              description: '[INFO|ERROR] are the possible values'
+              enum: [INFO]
+            statuscode:
+              type: number
+              example: 1000
+              description: '[1000|3001|3002|3003|4000] are the possible status codes'
+            msg:
+              type: string
+              example: OK
+              description: '[Ok|Permission Denied|Invalid Account number|Invalid IBX|Invalid LevelType|Invalid LevelValue|Invalid Interval|Invalid From/To Date|INVALID_SESSION|INVALID_SESSION_IBX|INTERNAL_ERROR] are the'
+    AssetsList:
+      type: object
+      properties:
+        payLoad:
+          type: object
+          properties:
+            classification:
+              type: string
+              description: asset classification for the Electrical and Mechanical
+              example: Mechanical
+            categories:
+              type: array
+              items:
+                $ref: '#/components/schemas/Category'
+        status:
+          type: object
+          properties:
+            type:
+              type: string
+              description: '[INFO|ERROR] are the possible values'
+              enum: [INFO]
+            statuscode:
+              type: number
+              example: 1000
+              description: '[1000|3001|3002|3003|4000] are the possible status codes'
+            msg:
+              type: string
+              example: OK
+              description: '[Ok|Permission Denied|Invalid Account number|Invalid IBX|Invalid LevelType|Invalid LevelValue|Invalid Interval|Invalid From/To Date|INVALID_SESSION|INVALID_SESSION_IBX|INTERNAL_ERROR] are the possible messages possible messages'
+    Assets:
+      type: object
+      properties:
+        payLoad:
+          type: object
+          properties:
+            totalCount:
+              type: integer
+              example: 1
+            assetsList:
+              type: array
+              items:
+                $ref: '#/components/schemas/AssetsArray'
+        status:
+          type: object
+          properties:
+            type:
+              type: string
+              description: '[INFO|ERROR] are the possible values'
+              enum: [INFO]
+            statuscode:
+              type: number
+              example: 1000
+              description: '[1000|3001|3002|3003|4000] are the possible status codes'
+            msg:
+              type: string
+              example: OK
+              description: '[Ok|Permission Denied|Invalid Account number|Invalid IBX|Invalid LevelType|Invalid LevelValue|Invalid Interval|Invalid From/To Date|INVALID_SESSION|INVALID_SESSION_IBX|INTERNAL_ERROR] are the possible messages possible messages'
+    AssetForAssetAPI:
+      type: object
+      properties:
+        assetId:
+          type: string
+          description: asset id for the asset
+          enum: [CH1.Lead Chilled Water Manager, CH1.Chiller-6]
+        ibx:
+          type: string
+          description: ibx code for the ibx in which the asset it present
+          enum: [CH1, SG2]
+        alarmStatus:
+          type: string
+          description: alarm status for the asset
+          enum: [NOT OK, OK]
+        resiliencyStatus:
+          type: string
+          description: resiliency status for the asset
+          enum: [Resiliency as Designed, Resiliency at Fault, Resiliency in Maintenance]
+        alarmLastTriggeredTime:
+          type: string
+          example: Aug 21,2017 04:52 AM
+          description: datetime when the latest alarm on the asset was triggered
+        alarmLastClearedTime:
+          type: string
+          example: Aug 21,2017 05:52 AM
+          description: datetime when the latest alarm on the asset was cleared
+        primaryParentAsset:
+          type: string
+          description: the primary parent of the current asset it can be multi-valued (provided via comma separated asset id)
+          enum: ["[CH1.UPS-5]", "[CH1.UPS-5,CH1.UPS-6]"]
+        alternateParentAsset:
+          type: string
+          description: the alternate parent of the current asset it can be multi-valued (provided via comma separated asset id)
+          enum: ["[CH1.UPS-13]", "[CH1.UPS-13,CH1.UPS-14]"]
+    Template:
+      type: object
+      description: template is a blueprint for an asset.
+      properties:
+        assets:
+          type: array
+          items:
+            $ref: '#/components/schemas/AssetForAssetAPI'
+        templateId:
+          type: string
+          description: template id - unique identifier for the template
+          example: Cooling Plant
+    Category:
+      type: object
+      properties:
+        templates:
+          type: array
+          items:
+            $ref: '#/components/schemas/Template'
+        categoryName:
+          type: string
+          example: Cooling
+    Cages:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Cage Unique Space Id
+          example: CH1:05:000430
+        type:
+          type: string
+          description: type of the asset
+          example: cage
+        cabinets:
+          type: array
+          items:
+            $ref: '#/components/schemas/Cabinets'
+    Cabinets:
+      type: object
+      properties:
+        name:
+          type: string
+          enum: [CH1:05:000430:0105]
+        type:
+          type: string
+          example: cabinet
+        circuits:
+          type: array
+          items:
+            $ref: '#/components/schemas/Circuits'
+    Circuits:
+      type: object
+      properties:
+        name:
+          type: string
+          enum: ["877484"]
+        type:
+          type: string
+          enum: [circuit]
+    CircuitsMapWithCage:
+      type: object
+      properties:
+        name:
+          type: string
+          enum: ["877483"]
+        type:
+          type: string
+          enum: [circuit]
+    HierarchyNodeForAssetAPI:
+      type: object
+      properties:
+        payLoad:
+          type: object
+          properties:
+            cages:
+              type: array
+              items:
+                $ref: '#/components/schemas/Cages'
+            circuits:
+              type: array
+              items:
+                $ref: '#/components/schemas/CircuitsMapWithCage'
+        status:
+          type: object
+          properties:
+            type:
+              type: string
+              description: '[INFO|ERROR] are the possible values'
+              enum: [INFO]
+            statuscode:
+              type: number
+              example: 1000
+              description: '[1000|3001|3002|3003|4000] are the possible status codes'
+            msg:
+              type: string
+              example: OK
+              description: '[Ok|Permission Denied|Invalid Account number|Invalid IBX|Invalid LevelType|Invalid LevelValue|Invalid Interval|Invalid From/To Date|INVALID_SESSION|INVALID_SESSION_IBX|INTERNAL_ERROR] are the possible messages'
+    PowerDataResponse_IBX:
+      type: object
+      properties:
+        payLoad:
+          type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/PowerData_IBX'
+        status:
+          type: object
+          properties:
+            type:
+              type: string
+              description: '[INFO|ERROR] are the possible values'
+              enum: [INFO]
+            statuscode:
+              type: number
+              example: 1000
+              description: '[1000|3001|3002|3003|4000] are the possible status codes'
+            msg:
+              type: string
+              example: OK
+              description: '[Ok|Permission Denied|Invalid Account number|Invalid IBX|Invalid LevelType|Invalid LevelValue|Invalid Interval|Invalid From/To Date|INVALID_SESSION|INVALID_SESSION_IBX|INTERNAL_ERROR] are the possible messages'
+    TrendingPowerData:
+      type: object
+      properties:
+        payLoad:
+          type: object
+          properties:
+            accountNumber:
+              type: string
+              example: "123456"
+            ibx:
+              type: string
+              example: "ABX"
+            levelType:
+              type: string
+              description: power hierarchy node levelType linked to the power data
+              enum: [ibx, cage, cabinet, circuit]
+            levelValue:
+              type: string
+              example: "ABX"
+              description: ibx code, cage unique space id, cabinet unique space id and serial number for levelType ibx, cage, cabinet, circuit resp.
+            interval:
+              type: string
+              example: "1h"
+              description: serial number
+              enum: [5m, 15m, 1h, 1d]
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/ComparisonData_Trend'
+        status:
+          type: object
+          properties:
+            type:
+              type: string
+              description: '[INFO|ERROR] are the possible values'
+              enum: [INFO]
+            statuscode:
+              type: number
+              example: 1000
+              description: '[1000|3001|3002|3003|4000] are the possible status codes'
+            msg:
+              type: string
+              example: OK
+              description: '[Ok|Permission Denied|Invalid Account number|Invalid IBX|Invalid LevelType|Invalid LevelValue|Invalid Interval|Invalid From/To Date|From/ToDate interval cannot be greater  than 1 year|INVALID_SESSION|INVALID_SESSION_IBX|INTERNAL_ERROR] are the possible messages'
+    PowerData:
+      type: object
+      properties:
+        payLoad:
+          type: object
+          properties:
+            ibx:
+              type: string
+              description: ibx code
+              example: "ABC"
+            accountNo:
+              type: string
+              description: customer account number
+              example: "ABC"
+            levelType:
+              type: string
+              description: power hierarchy node levelType linked to the power data
+              enum: [ibx, cage, cabinet, circuit]
+              example: ibx
+            levelValue:
+              type: string
+              description: power hierarchy node levelValue linked to the power data
+              example: "ABC"
+            isAlarm:
+              type: string
+              example: "true"
+              description: returns boolean based on breakertip alarm
+            kva:
+              type: number
+              description: power consumption in kva
+              example: 54.402
+            amps:
+              type: number
+              description: instantaneous current amp reading on circuits
+              example: 123
+            soldKva:
+              type: number
+              description: maximum amp draw allowable on a circuit
+              example: 598.349
+            cabinetRating:
+              type: number
+              description: maximum kVA draw allowed for the cabinet|cabinet description when the levelType is cabinet. Null otherwise.
+              example: 341.54
+            contractualKva:
+              type: number
+              example: 341.54
+              description: The maximum power draw contractually allowable in a private cage.
+            percentageKva:
+              type: number
+              example: 341.54
+              description: calculated field kva / contractualKva
+            comparisonData:
+              $ref: '#/components/schemas/ComparisonData'
+            peakKvaLastSevenDays:
+              type: number
+              example: 55.296
+            peakKvaLastSevenDaysPercentage:
+              type: number
+              example: 55.296
+            peakKvaLastSevenDaysContractualKva:
+              type: number
+              example: 55.296
+            peakKvaLastSevenDaysTime:
+              type: integer
+              example: 55
+            soldAmps:
+              type: integer
+              example: 123
+              description: circuit description when the levelType is circuit. Null otherwise.
+            primaryKva:
+              type: number
+              example: 28.31
+              description: the sum of instantaneous power draw reading on all the primary circuits within the levelType.
+            redundantKva:
+              type: number
+              example: 26.092
+              description: the sum of instantaneous power draw reading on all the redundant circuits within the levelType.
+            kw:
+              type: string
+              example: NA
+              description: measure of real power expressed in kilowatt applicable for ibxs that have capability of energy meter reading|value will be "NA" for AMER and APAC regions
+            powerFactor:
+              type: string
+              example: NA
+              description: The ratio between real power and apparent power in a circuit.(kW/kVA)|value will be "NA" for AMER and APAC regions
+            readingTime:
+              type: string
+              example: "1497410400000"
+              description: date-time when the latest value was read in (epoc - milliseconds).
+            lastUpdatedTime:
+              type: string
+              example: "1497410520000"
+              description: date-time when the latest value was updated (epoc - milliseconds).
+            customerName:
+              type: string
+              example: "ABC"
+        status:
+          type: object
+          properties:
+            type:
+              type: string
+              description: '[INFO|ERROR] are the possible values'
+              enum: [INFO]
+            statuscode:
+              type: number
+              example: 1000
+              description: '[1000|3001|3002|3003|4000] are the possible status codes'
+            msg:
+              type: string
+              example: OK
+              description: '[Ok|Permission Denied|Invalid Account number|Invalid IBX|Invalid LevelType|Invalid LevelValue|Invalid Interval|Invalid From/To Date|INVALID_SESSION|INVALID_SESSION_IBX|INTERNAL_ERROR] are the possible messages'
+    PowerData_Error:
+      type: object
+      properties:
+        payLoad:
+          type: object
+        status:
+          type: object
+          properties:
+            type:
+              type: string
+              description: '[INFO|ERROR] are the possible values'
+              enum: [ERROR]
+            statuscode:
+              type: number
+              example: 4000
+              description: '[1000|3001|3002|3003|4000] are the possible status codes'
+            msg:
+              type: string
+              example: INTERNAL_ERROR
+              description: '[Ok|Permission Denied|Invalid Account number|Invalid IBX|Invalid LevelType|Invalid LevelValue|Invalid Interval|Invalid From/To Date|INVALID_SESSION|INVALID_SESSION_IBX|INTERNAL_ERROR] are the possible messages'
+    PowerData_IBX:
+      type: object
+      properties:
+        ibx:
+          type: string
+          description: ibx code
+          example: "ABC"
+        accountNo:
+          type: string
+          description: customer account number
+          example: "ABC"
+        levelType:
+          type: string
+          description: power hierarchy node levelType linked to the power data
+          enum: [ibx, cage, cabinet, circuit]
+          example: ibx
+        levelValue:
+          type: string
+          description: power hierarchy node levelValue linked to the power data
+          example: "ABC"
+        isAlarm:
+          type: string
+          example: "true"
+          description: returns boolean based on breakertip alarm
+        kva:
+          type: number
+          description: power consumption in kva
+          example: 54.402
+        amps:
+          type: number
+          description: instantaneous current amp reading on circuits
+          example: 123
+        soldKva:
+          type: number
+          description: maximum amp draw allowable on a circuit
+          example: 598.349
+        cabinetRating:
+          type: number
+          description: maximum kVA draw allowed for the cabinet
+          example: 123
+        contractualKva:
+          type: number
+          description: The maximum power draw contractually allowable in a private cage. example - 341.54
+        percentageKva:
+          type: number
+          example: 15.928
+          description: calculated field kva / contractualKva
+        comparisonData:
+          $ref: '#/components/schemas/ComparisonData'
+        peakKvaLastSevenDays:
+          type: number
+          example: 55.296
+        peakKvaLastSevenDaysPercentage:
+          type: number
+          example: 55.296
+        peakKvaLastSevenDaysContractualKva:
+          type: number
+          example: 55.296
+        peakKvaLastSevenDaysTime:
+          type: integer
+          example: 55
+        soldAmps:
+          type: integer
+          example: 123
+          description: circuit description when the levelType is circuit. Null otherwise.
+        primaryKva:
+          type: number
+          example: 28.31
+          description: the sum of instantaneous power draw reading on all the primary circuits within the levelType.
+        redundantKva:
+          type: number
+          example: 26.092
+          description: the sum of instantaneous power draw reading on all the redundant circuits within the levelType.
+        kw:
+          type: string
+          example: NA
+          description: measure of real power expressed in kilowatt applicable for ibxs that have capability of energy meter reading|value will be "NA" for AMER and APAC regions
+        powerFactor:
+          type: string
+          example: NA
+          description: The ratio between real power and apparent power in a circuit.(kW/kVA)|value will be "NA" for AMER and APAC regions
+        readingTime:
+          type: string
+          example: "1497410400000"
+          description: date-time when the latest value was read in (epoc - milliseconds).
+        lastUpdatedTime:
+          type: string
+          example: "1497410520000"
+          description: date-time when the latest value was updated (epoc - milliseconds).
+        customerName:
+          type: string
+          example: "ABC"
+    ComparisonData:
+      type: object
+      description: comparison of readings with the current reading for specified datapoint
+      properties:
+        datapoint:
+          type: string
+          description: datapoint on which the comparison is done.
+          enum: [percentageKva]
+        yesterday:
+          type: number
+          example: 0.147
+          description: comparison for the current value of the datapoint with yesterday's value
+        lastWeek:
+          type: number
+          example: -0.295
+          description: comparison for the current value of the datapoint with last week's value
+        lastMonth:
+          type: number
+          example: -0.184
+          description: comparison for the current value of the datapoint with the last month's value
+        lastQuarter:
+          type: number
+          example: 52.434
+          description: comparison for the current value of the datapoint with the last quarter's value
+    ComparisonData_Trend:
+      type: object
+      description: date and corresponding values
+      properties:
+        datetime:
+          type: string
+          format: date-time
+          nullable: true
+          x-equinix-format: epoch-millis
+          x-example: "1483228800000"
+        value:
+          type: string
+          example: "0.147"
+          description: trending values
+    PowerCurrentPostRequest:
+      type: object
+      description: date and corresponding values
+      properties:
+        accountNo:
+          type: string
+          example: "1234"
+          description: Customer Account Number
+        ibx:
+          type: string
+          example: "0.147"
+          description: trending values
+        levelType:
+          type: string
+          example: "ibx"
+          description: level type allowed value [ibx|cage|cabinet|circuit]
+          enum: [ibx, cage, cabinet, circuit]
+    SearchCondition:
+      required:
+        - operator
+        - property
+        - values
+      type: object
+      properties:
+        property:
+          type: string
+          description: Field name
+          example: status
+        operator:
+          type: string
+          description: Condition used to compare the property and the value(s).
+          example: "="
+          enum: ["<=", ">=", "LIKE", "IN", "=", "!="]
+        values:
+          type: array
+          description: Array of values to be compared with the field.
+          minItems: 1
+          maxItems: 2147483647
+          items:
+            type: string
+    SearchFilter:
+      type: object
+      properties:
+        and:
+          type: array
+          description: Array of search conditions.
+          items:
+            $ref: '#/components/schemas/SearchCondition'
+        or:
+          type: array
+          description: Array of search conditions.
+          items:
+            $ref: '#/components/schemas/SearchCondition'
+    SearchPagination:
+      required:
+        - limit
+        - offset
+      type: object
+      properties:
+        offset:
+          type: integer
+          format: int64
+          minimum: 0
+          description: Starting index of an item. First item is offset 0. Default value for offset is 0.
+          example: 0
+        limit:
+          type: integer
+          format: int32
+          description: The maximum number of items to return starting from the index denotes by the offset item. Default value for limit is 20. Upper limit is 1000
+          example: 20
+    SearchRequest:
+      type: object
+      properties:
+        filter:
+          $ref: '#/components/schemas/SearchFilter'
+        pagination:
+          $ref: '#/components/schemas/SearchPagination'
+        sort:
+          type: array
+          description: Array of sorting conditions.
+          items:
+            $ref: '#/components/schemas/SearchSort'
+    SearchSort:
+      required:
+        - property
+      type: object
+      properties:
+        direction:
+          type: string
+          description: Direction of sorting. Default is ASC.
+          example: DESC
+          enum: [ASC, DESC]
+        property:
+          type: string
+          description: Property used for sorting the data.
+          example: /asset/ibx
+    ApiError:
+      required:
+        - errorCode
+        - errorMessage
+      type: object
+      properties:
+        errorCode:
+          type: string
+          description: Application error code.
+          example: EQ-1912306
+        errorMessage:
+          type: string
+          description: Application error message
+          example: Wrong customer id
+        correlationId:
+          type: string
+          description: Correlation ID without any sensitive or meaningful information.
+          example: b1ea22f8-34ae-6f67-4a33-b4f5ec99a1c6
+        details:
+          type: string
+          description: More information on errors.
+          example: Wrong value of ph#. Correct format is xxx-xxx-xxxx
+        help:
+          type: string
+          description: >
+            URL to a help page for the corresponding errorCode.
+          example: https://docs.equinix.com/help/error/EQ-1912306
+        additionalInfo:
+          type: array
+          description: >
+            Contains application specific information for this error. The object inside this array can have any number of application specific properties.
+            It has two reserved properties (they are optional):
+            - property - This refers to the name of one of the following that is passed when invoking the API - query parameter, path parameter, JSON property of HTTP request body. It is used if there is a need to explicitly hightlight the name of the property.
+            - reason - Error message specific to the corresponding property.
+          items:
+            $ref: '#/components/schemas/ErrorAdditionalInfo'
+    ErrorAdditionalInfo:
+      type: object
+      properties:
+        constraintCode:
+          type: string
+          description: Violated constraint name (simple class name). Can be used to render and localize the validation message by the consumer component such as a frontend application.
+          example: InvalidFormat
+        root:
+          type: string
+          description: The root bean. Multiple parameters can be validated during a single validation call, this parameter indicates the validated parameter name (example pagination, requestBody etc.).
+          example: requestBody
+        property:
+          type: string
+          description: Represents the JSON path of the property that failed validation. Can be used to map the failed property to the UI input.
+          example: id
+        reason:
+          type: string
+          description: Server side constraint violation message. Can be used as a translation fallback. The message will always be in English.
+          example: Unable to deserialize input value to destination type.
+    ApiErrorResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/ApiError'
+    AlertReadModel:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: database ID
+          example: 420
+        alertUid:
+          type: string
+          description: alert unique ID
+          example: PA8A.CB-CRITICAL-DB2:tripped#DIGITAL:ALARM
+        traceUid:
+          type: string
+          description: alert trace unique ID related to status change
+          example: 1652686263561/PA8A.CB-CRITICAL-DB2:tripped#DIGITAL:ALARM
+        assetTagUid:
+          type: string
+          description: asset tag point unique id
+          example: PA8A.CB-CRITICAL-DB2:tripped
+        assetTagDisplayName:
+          type: string
+          description: asset tag point display name
+          example: Tripped
+        status:
+          type: string
+          description: alert status
+          example: INACTIVE
+          enum: [ACTIVE, INACTIVE]
+        value:
+          $ref: '#/components/schemas/ValueReadModel'
+        asset:
+          $ref: '#/components/schemas/AssetReadModel'
+        configuration:
+          $ref: '#/components/schemas/ConfigurationReadModel'
+        activeProcessing:
+          $ref: '#/components/schemas/ProcessingTimeReadModel'
+        inactiveProcessing:
+          $ref: '#/components/schemas/ProcessingTimeReadModel'
+    AssetReadModel:
+      type: object
+      properties:
+        ibx:
+          type: string
+          description: ibx
+          example: PA8A
+        assetUid:
+          type: string
+          description: asset unique id
+          example: PA8A.CB-CRITICAL-DB2
+        assetType:
+          type: string
+          description: asset type
+          example: Circuit Breaker with Metering
+        assetClassification:
+          type: string
+          description: asset classification
+          example: Electrical
+        assetRegion:
+          type: string
+          description: asset region
+          example: EMEA
+        assetUnderMaintenance:
+          type: boolean
+          description: asset was under maintenance during alert processing
+          example: false
+    ConfigurationReadModel:
+      type: object
+      properties:
+        thresholdValue:
+          type: string
+          description: threshold value
+          example: "0"
+        thresholdValueDisplayName:
+          type: string
+          description: threshold display value
+          example: ALARM
+        unitOfMeasurement:
+          type: string
+          description: unit of measurement
+          example: i.e °C
+        thresholdType:
+          type: string
+          description: threshold type
+          example: DIGITAL
+          enum: [DIGITAL, ABSOLUTE, DEVIATION, MULTI_STATE]
+        conditionName:
+          type: string
+          description: condition name
+          example: ALARM
+          enum: [ALARM, WARNING, VERY_LOW, LOW, HIGH, VERY_HIGH]
+        customerVisible:
+          type: boolean
+          description: asset is customer visible
+          example: false
+        configurationVersion:
+          type: string
+          description: alert configuration version
+          example: "1.0"
+    PaginatedResponseAlertReadModel:
+      type: object
+      properties:
+        data:
+          type: array
+          description: Array of the alerts.
+          items:
+            $ref: '#/components/schemas/AlertReadModel'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+    ProcessingTimeReadModel:
+      type: object
+      properties:
+        edgeCollectedOn:
+          type: string
+          format: date-time
+          description: when tag reading was collected on source
+          example: 2023-01-11T16:06:10.082Z
+        tagCalculationJobProcessedOn:
+          type: string
+          format: date-time
+          description: when tag reading was processed by tag-calculation rtp
+          example: 2023-01-11T16:06:10.082Z
+        processingStartOn:
+          type: string
+          format: date-time
+          description: when tag reading was accepted by alert rtp
+          example: 2023-01-11T16:06:10.082Z
+        processingEndOn:
+          type: string
+          format: date-time
+          description: when tag reading was processed by alert rtp
+          example: 2023-01-11T16:06:10.082Z
+        publishedOn:
+          type: string
+          format: date-time
+          description: when tag reading was published by alert rtp
+          example: 2023-01-11T16:06:10.082Z
+    ValueReadModel:
+      type: object
+      properties:
+        alertTagValue:
+          type: string
+          description: tag reading raw value
+          example: "1"
+        alertTagValueDisplayName:
+          type: string
+          description: tag reading display value
+          example: NORMAL
+        activeAlertTagValueDisplayName:
+          type: string
+          description: active tag reading display value
+          example: ALARM
+        currentTagValue:
+          type: string
+          description: current tag reading display value
+          example: NORMAL
+    PowerEventsPaginatedResponse:
+      type: object
+      description: Paginated response containing a list of power events
+      properties:
+        items:
+          type: array
+          description: Array of power events
+          items:
+            $ref: '#/components/schemas/PowerEventReadModel'
+        limit:
+          type: integer
+          description: Number of records returned per request
+          example: 100
+        offset:
+          type: integer
+          description: Starting record index for this page
+          example: 0
+        totalCount:
+          type: integer
+          description: Total number of records matching the query
+          example: 42
+    PowerEventReadModel:
+      type: object
+      description: Represents a single power event
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Database ID of the power event
+          example: 1042
+        alertUid:
+          type: string
+          description: Unique identifier of the power event
+          example: "SV5.CAGE-DRAW#EXCEEDS:95"
+        traceUid:
+          type: string
+          description: Trace unique ID related to the power event status change
+          example: "1652686263561/SV5.CAGE-DRAW#EXCEEDS:95"
+        status:
+          type: string
+          description: Status of the power event
+          enum: [ ACTIVE, INACTIVE ]
+          example: ACTIVE
+        asset:
+          $ref: '#/components/schemas/PowerEventAssetReadModel'
+        activeProcessing:
+          $ref: '#/components/schemas/PowerEventProcessingTimeReadModel'
+        category:
+          type: string
+          description: Category of the power event
+          example: POWER
+        eventType:
+          type: string
+          description: Type of power event (e.g., CAGE_DRAW, CABINET_DRAW_TO_USABLE_KVA)
+          example: CAGE_DRAW
+        conditionType:
+          type: string
+          description: Condition type that triggered the event (e.g., EXCEEDS, FALLS_BELOW)
+          example: EXCEEDS
+        triggerValue:
+          type: string
+          description: The threshold value that was configured to trigger the event
+          example: "95"
+        currentValue:
+          type: string
+          description: The actual value at the time the event was triggered
+          example: "97.3"
+        accountNo:
+          type: string
+          description: Customer account number associated with the event
+          example: "123456"
+    PowerEventAssetReadModel:
+      type: object
+      description: Asset information associated with a power event
+      properties:
+        ibx:
+          type: string
+          description: IBX code where the asset is located
+          example: SV5
+        assetUid:
+          type: string
+          description: Unique identifier of the asset
+          example: "SV5:01:A1234"
+    PowerEventProcessingTimeReadModel:
+      type: object
+      description: Processing time information for a power event
+      properties:
+        edgeCollectedOn:
+          type: string
+          format: date-time
+          description: Timestamp when the power event data was collected at the edge
+          example: "2024-01-15T08:30:00.000Z"
+    AlertPaginatedResponse:
+      type: object
+      description: Paginated response containing a list of power alert configurations
+      properties:
+        data:
+          type: array
+          description: Array of power alert configurations
+          items:
+            $ref: '#/components/schemas/AlertConfigurationReadModel'
+        pagination:
+          type: object
+          description: Pagination metadata
+          properties:
+            offset:
+              type: integer
+              description: Starting record index for this page
+              example: 0
+            limit:
+              type: integer
+              description: Number of records returned per request
+              example: 100
+            total:
+              type: integer
+              description: Total number of records matching the query
+              example: 15
+    CreateAlertConfigurationCommand:
+      type: object
+      description: Request payload for creating a new power alert configuration
+      required:
+        - accountNo
+        - ibx
+        - section
+        - condition
+        - recipients
+      properties:
+        accountNo:
+          type: string
+          description: Customer account number
+          example: "123456"
+        ibx:
+          type: string
+          description: IBX code where the alert should be monitored
+          example: SV5
+        section:
+          type: string
+          description: Section type for the alert. Use POWER for power-related alerts.
+          example: POWER
+        condition:
+          $ref: '#/components/schemas/PowerAlertCondition'
+        recipients:
+          type: array
+          description: List of recipients to be notified when the alert condition is met
+          items:
+            $ref: '#/components/schemas/PowerAlertRecipient'
+        assets:
+          type: object
+          description: Assets to monitor, scoped by level type (CAGE, CABINET, CIRCUIT)
+          properties:
+            CAGE:
+              type: array
+              description: List of cage assets to monitor
+              items:
+                $ref: '#/components/schemas/PowerAlertConfigurationAsset'
+            CABINET:
+              type: array
+              description: List of cabinet assets to monitor
+              items:
+                $ref: '#/components/schemas/PowerAlertConfigurationAsset'
+            CIRCUIT:
+              type: array
+              description: List of circuit assets to monitor
+              items:
+                $ref: '#/components/schemas/PowerAlertConfigurationAsset'
+    CreateAlertConfigurationCommandResponse:
+      type: object
+      description: Response returned after successfully creating a power alert configuration
+      properties:
+        alertConfigurationUid:
+          type: string
+          format: uuid
+          description: Unique identifier of the newly created power alert configuration
+          example: "9756a585-c3c1-4648-b2e1-7d8804912098"
+    UpdateAlertConfigurationCommand:
+      type: object
+      description: Request payload for updating an existing power alert configuration
+      required:
+        - alertConfigurationUid
+      properties:
+        alertConfigurationUid:
+          type: string
+          format: uuid
+          description: Unique identifier of the power alert configuration to update
+          example: "9756a585-c3c1-4648-b2e1-7d8804912098"
+        state:
+          type: string
+          description: New state for the configuration
+          enum: [ ACTIVE, PAUSED, DELETED ]
+          example: ACTIVE
+        condition:
+          $ref: '#/components/schemas/PowerAlertCondition'
+        recipients:
+          type: array
+          description: Updated list of recipients
+          items:
+            $ref: '#/components/schemas/PowerAlertRecipient'
+        assets:
+          type: object
+          description: Updated assets to monitor, scoped by level type (CAGE, CABINET, CIRCUIT)
+          properties:
+            CAGE:
+              type: array
+              items:
+                $ref: '#/components/schemas/PowerAlertConfigurationAsset'
+            CABINET:
+              type: array
+              items:
+                $ref: '#/components/schemas/PowerAlertConfigurationAsset'
+            CIRCUIT:
+              type: array
+              items:
+                $ref: '#/components/schemas/PowerAlertConfigurationAsset'
+    AlertConfigurationReadModel:
+      type: object
+      description: Represents a single power alert configuration
+      properties:
+        alertConfigurationUid:
+          type: string
+          format: uuid
+          description: Unique identifier of the alert configuration
+          example: "9756a585-c3c1-4648-b2e1-7d8804912098"
+        ibx:
+          type: string
+          description: IBX code associated with the alert configuration
+          example: SV5
+        state:
+          type: string
+          description: Current state of the alert configuration
+          enum: [ ACTIVE, PAUSED, DELETED ]
+          example: ACTIVE
+        section:
+          type: string
+          description: Section type of the alert configuration
+          example: POWER
+        source:
+          type: string
+          description: Source system that created the configuration
+          example: API
+        condition:
+          $ref: '#/components/schemas/PowerAlertCondition'
+        recipients:
+          type: array
+          description: List of configured notification recipients
+          items:
+            $ref: '#/components/schemas/PowerAlertRecipient'
+        creator:
+          type: object
+          description: Information about the user who created the configuration
+          properties:
+            accountNo:
+              type: string
+              description: Account number of the creator
+              example: "123456"
+            ucmId:
+              type: string
+              nullable: true
+              description: UCM ID of the creator
+              example: null
+            accountName:
+              type: string
+              description: Account name of the creator
+              example: "Acme Corp"
+            userKey:
+              type: string
+              description: User key of the creator
+              example: "jdoe"
+            email:
+              type: string
+              description: Email address of the creator
+              example: "jdoe@example.com"
+        createdOn:
+          type: string
+          format: date-time
+          description: Timestamp when the configuration was created
+          example: "2024-01-10T12:00:00.000Z"
+        updatedOn:
+          type: string
+          format: date-time
+          nullable: true
+          description: Timestamp when the configuration was last updated
+          example: "2024-01-15T09:30:00.000Z"
+        assets:
+          type: object
+          description: Assets being monitored, keyed by level type (CAGE, CABINET, CIRCUIT)
+          additionalProperties:
+            type: array
+            items:
+              $ref: '#/components/schemas/PowerAlertConfigurationAsset'
+    PowerAlertCondition:
+      type: object
+      description: Defines the condition that triggers a power alert
+      properties:
+        conditionType:
+          type: string
+          description: The type of condition that triggers the alert (e.g., EXCEEDS, FALLS_BELOW)
+          example: EXCEEDS
+        eventType:
+          type: string
+          description: The power metric being monitored (e.g., CAGE_DRAW, CABINET_DRAW_TO_USABLE_KVA)
+          example: CAGE_DRAW
+        threshold:
+          $ref: '#/components/schemas/PowerAlertThreshold'
+    PowerAlertThreshold:
+      type: object
+      description: Threshold configuration for a power alert condition
+      properties:
+        unit:
+          type: string
+          description: Unit of measurement for the threshold value (e.g., %)
+          example: "%"
+        value:
+          type: string
+          description: Threshold value that triggers the alert
+          example: "95"
+        min:
+          type: object
+          nullable: true
+          description: Minimum threshold value (used for range-based conditions)
+          example: null
+        max:
+          type: object
+          nullable: true
+          description: Maximum threshold value (used for range-based conditions)
+          example: null
+    PowerAlertRecipient:
+      type: object
+      description: A recipient to be notified when a power alert condition is met
+      properties:
+        firstName:
+          type: string
+          description: First name of the recipient
+          example: John
+        lastName:
+          type: string
+          description: Last name of the recipient
+          example: Doe
+        sms:
+          $ref: '#/components/schemas/PowerAlertContactMethod'
+        email:
+          $ref: '#/components/schemas/PowerAlertContactMethod'
+    PowerAlertContactMethod:
+      type: object
+      description: A contact method (SMS or email) for alert notifications
+      properties:
+        value:
+          type: string
+          description: The contact value (phone number for SMS, email address for email)
+          example: "user@example.com"
+        enabled:
+          type: boolean
+          description: Whether this contact method is enabled for notifications
+          example: true
+    PowerAlertConfigurationAsset:
+      type: object
+      description: An asset included in a power alert configuration
+      properties:
+        assetId:
+          type: string
+          description: Unique identifier of the asset (e.g., cage, cabinet, or circuit ID)
+          example: "SV5:01:A1234"
+        assetName:
+          type: string
+          description: Display name of the asset
+          example: "Customer Cage 1"
+  examples:
+    SearchRequest:
+      summary: search request with multiple filters
+      value:
+        filter:
+          and:
+            - property: /status
+              operator: "="
+              values: [ACTIVE]
+            - property: /asset/ibx
+              operator: IN
+              values: [MI1, NY1, WAW2]
+            - property: /asset/assetUid
+              operator: "="
+              values: [MI1.arc-reactor]
+            - property: /assetTagUid
+              operator: "="
+              values: [MI1.arc-reactor:alarm]
+            - property: /assetTagDisplayName
+              operator: "="
+              values: [Arc Reactor Alarm]
+            - property: /asset/assetType
+              operator: "="
+              values: [Arc Reactor]
+            - property: /asset/assetClassification
+              operator: "="
+              values: [Mechanical]
+            - property: /asset/assetUnderMaintenance
+              operator: "="
+              values: ["false"]
+            - property: /state
+              operator: "="
+              values: [OPEN]
+            - property: /configuration/thresholdType
+              operator: "="
+              values: [DIGITAL]
+            - property: /configuration/conditionName
+              operator: "="
+              values: [ALARM]
+            - property: activeProcessing.edgeCollectedOn
+              operator: ">="
+              values: [2000-03-25T04:03:06.000Z]
+        pagination:
+          offset: 0
+          limit: 50
+    ApiError400:
+      summary: bad request
+      value:
+        - errorCode: EQ-50001400
+          errorMessage: Bad request
+          correlationId: dc1fe6b2-4ee1-11ed-bdc3-0242ac120002
+          details: ""
+          help: Please fix submitted payload
+    ApiError401:
+      summary: unauthorized error
+      value:
+        - errorDomain: api-platform
+          errorTitle: Access Token expired
+          errorCode: "401"
+          developerMessage: Please pass a valid access token
+          errorMessage: Access Token expired
+    ApiError403:
+      summary: authorization error
+      value:
+        - errorCode: EQ-5000002
+          errorMessage: Forbidden
+          correlationId: dc1fe6b2-4ee1-11ed-bdc3-0242ac120002
+          details: Access is denied
+    ApiError422:
+      summary: wrong search filters
+      value:
+        - errorCode: EQ-5000023
+          errorMessage: Unprocessable Entity
+          correlationId: dc1fe6b2-4ee1-11ed-bdc3-0242ac120002
+          details: The submitted payload does not meet validation criteria.
+          help: Please fix submitted payload according to additionalInfo.
+          additionalInfo:
+            - constraintCode: AllowedSearchRequest
+              root: searchRequest
+              property: and[ 17 ]
+              reason: Unsupported search field operator `customers.ucid` `LIKE`
+    ApiError500:
+      summary: internal error
+      value:
+        - errorCode: EQ-5000030
+          errorMessage: Internal Server Error
+          correlationId: dc1fe6b2-4ee1-11ed-bdc3-0242ac120002
+          details: The server was unable to process the request due to an internal server error. Additional information can be found in server logs.
+          help: Please contact vendor.
+    CreateAlertConfigurationCommandExample:
+      summary: Create a cage draw alert configuration
+      value:
+        accountNo: "123456"
+        ibx: "SV5"
+        section: "POWER"
+        condition:
+          conditionType: "EXCEEDS"
+          eventType: "CAGE_DRAW"
+          threshold:
+            unit: "%"
+            value: "95"
+            min: null
+            max: null
+        recipients:
+          - firstName: "John"
+            lastName: "Doe"
+            sms:
+              value: "+1234567890"
+              enabled: false
+            email:
+              value: "user@example.com"
+              enabled: true
+        assets:
+          CAGE:
+            - assetId: "SV5:01:A1234"
+              assetName: "Customer Cage 1"
+    UpdateAlertConfigurationCommandExample:
+      summary: Update a cabinet draw alert configuration
+      value:
+        alertConfigurationUid: "9756a585-c3c1-4648-b2e1-7d8804912098"
+        state: "ACTIVE"
+        condition:
+          conditionType: "EXCEEDS"
+          eventType: "CABINET_DRAW_TO_USABLE_KVA"
+          threshold:
+            unit: "%"
+            value: "2"
+            min: "2"
+            max: "3"
+        recipients:
+          - firstName: "John"
+            lastName: "Doe"
+            sms:
+              value: ""
+              enabled: false
+            email:
+              value: "user@equinix.com"
+              enabled: true
+        assets:
+          CAGE:
+            - assetId: "SG1:04:A1ER46"
+              assetName: "SG1:04:A1ER46"
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: token generated from /v1/auth/satoken endpoint
+  parameters:
+    authorizationHeader:
+      name: Authorization
+      in: header
+      description: The OAuth Bearer token. Please add the prefix 'Bearer ' before the token.
+      required: true
+      schema:
+        type: string
+      x-prefix: Bearer

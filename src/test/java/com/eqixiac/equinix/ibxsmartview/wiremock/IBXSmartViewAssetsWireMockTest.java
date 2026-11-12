@@ -115,7 +115,7 @@ class IBXSmartViewAssetsWireMockTest extends WireMockTestBase {
             wireMock.stubFor(post(urlPathEqualTo(ASSET_DETAILS_PATH))
                     .willReturn(aResponse().withStatus(500)
                             .withHeader("Content-Type", "application/json")
-                            .withBody("[{\"errorCode\":\"ERR-500\",\"errorMessage\":\"Internal server error\"}]")));
+                            .withBody("[{\"errorCode\":\"DCIM-ASSET-500\",\"title\":\"Request Validation Error\",\"message\":\"DCIM-ASSET-500\",\"developerMessage\":\"Internal server error\",\"fieldName\":null}]")));
 
             AssetDetailsRequest request = new AssetDetailsRequest(
                     ACCOUNT_NO, IBX, CLASSIFICATION, List.of("ASSET-SV5-001"));
@@ -162,7 +162,7 @@ class IBXSmartViewAssetsWireMockTest extends WireMockTestBase {
             wireMock.stubFor(post(urlPathEqualTo(CURRENT_TAGPOINTS_PATH))
                     .willReturn(aResponse().withStatus(404)
                             .withHeader("Content-Type", "application/json")
-                            .withBody("[{\"errorCode\":\"ERR-404\",\"errorMessage\":\"Tag not found\"}]")));
+                            .withBody("[{\"errorCode\":\"DCIM-ASSET-404\",\"title\":\"Request Validation Error\",\"message\":\"DCIM-ASSET-404\",\"developerMessage\":\"Tag not found\",\"fieldName\":null}]")));
 
             CurrentTagPointRequest request = new CurrentTagPointRequest(
                     ACCOUNT_NO, List.of("TAG-UNKNOWN"), IBX);
@@ -325,11 +325,11 @@ class IBXSmartViewAssetsWireMockTest extends WireMockTestBase {
             assertEquals("kW", response.getPayLoad().get(0).getUom());
             assertEquals("SUCCESS", response.getStatus().getType());
 
-            // getAssetDetails uses "assetId" but this op sends the tag id under the lowercase "tagid" key.
+            // the live service reads "tagId" (the spec says "tagid"; observed 2026-11-12)
             wireMock.verify(getRequestedFor(urlPathEqualTo(CURRENT_TAGPOINTS_PATH))
                     .withQueryParam("accountNo", equalTo(ACCOUNT_NO))
                     .withQueryParam("ibx", equalTo(IBX))
-                    .withQueryParam("tagid", equalTo(TAG_ID)));
+                    .withQueryParam("tagId", equalTo(TAG_ID)));
         }
     }
 }

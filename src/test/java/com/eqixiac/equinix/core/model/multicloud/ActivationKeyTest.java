@@ -103,9 +103,7 @@ class ActivationKeyTest {
         assertEquals(V2_BASE64, b64(V2_JSON));
     }
 
-    // ══════════════════════════════════════════════
     //  Version 1
-    // ══════════════════════════════════════════════
 
     @Nested
     @DisplayName("version 1")
@@ -225,9 +223,7 @@ class ActivationKeyTest {
         }
     }
 
-    // ══════════════════════════════════════════════
     //  Version 2
-    // ══════════════════════════════════════════════
 
     @Nested
     @DisplayName("version 2 (encrypted)")
@@ -279,9 +275,7 @@ class ActivationKeyTest {
         }
     }
 
-    // ══════════════════════════════════════════════
     //  Opaque
-    // ══════════════════════════════════════════════
 
     static Stream<String> uninterpretableInputs() {
         String v1MissingAccount = "{\"version\":1,\"destinationEnvironmentUri\":\"" + ENV_URI + "\","
@@ -359,9 +353,7 @@ class ActivationKeyTest {
         assertThrows(IllegalArgumentException.class, () -> ActivationKey.decode(" \t\r\n"));
     }
 
-    // ══════════════════════════════════════════════
     //  Keys are credentials
-    // ══════════════════════════════════════════════
 
     @Nested
     @DisplayName("redaction")

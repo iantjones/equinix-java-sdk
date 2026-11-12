@@ -35,7 +35,7 @@ import java.util.Map;
 import java.util.function.UnaryOperator;
 
 /**
- * Generic base for internal resource clients, collapsing the request-build → invoke →
+ * Generic base for internal resource clients, collapsing the request-build -> invoke ->
  * response-handle boilerplate that was previously copy-pasted across every {@code *ClientImpl}.
  *
  * <p>Parameterized over the public model type {@code M} and its JSON model {@code J}. The
@@ -180,7 +180,7 @@ public abstract class ResourceClientBase<M, J> extends ClientBase implements Pag
 
     /**
      * POST search whose pagination travels as {@code offset}/{@code limit} <em>query
-     * parameters</em> (per the endpoint's spec) rather than inside the body — e.g. assets v1 and
+     * parameters</em> (per the endpoint's spec) rather than inside the body - e.g. assets v1 and
      * the EIA services/prices searches. Builds a {@code PaginatedRequest} (so the shared paging
      * pipeline advances the query-parameter offset between pages, re-sending the same filter body)
      * instead of a {@code PaginatedPostRequest} (whose paging advances state inside the body).
@@ -264,7 +264,7 @@ public abstract class ResourceClientBase<M, J> extends ClientBase implements Pag
     /**
      * Dry-run variant of {@link #patchOne(String, String, List)}: sends the <em>identical</em>
      * RFC&nbsp;6902 JSON Patch request (same {@code application/json-patch+json} content type)
-     * plus the {@code dryRun=true} query parameter — per the spec, an "option to verify that API
+     * plus the {@code dryRun=true} query parameter - per the spec, an "option to verify that API
      * calls will succeed". Nothing is persisted; the returned JSON is the server's simulation of
      * the patched resource.
      */
@@ -279,7 +279,7 @@ public abstract class ResourceClientBase<M, J> extends ClientBase implements Pag
     /**
      * Dry-run variant of {@link #updateOne(String, String, Object)}: sends the <em>identical</em>
      * update request (same default {@code application/json} content type) plus the
-     * {@code dryRun=true} query parameter — per the spec, an "option to verify that API calls
+     * {@code dryRun=true} query parameter - per the spec, an "option to verify that API calls
      * will succeed". Nothing is persisted; the returned JSON is the server's simulation of the
      * updated resource.
      */
@@ -337,8 +337,8 @@ public abstract class ResourceClientBase<M, J> extends ClientBase implements Pag
         if (itemMapper != null) {
             // Dual-shape sub-resource paging: this request's elements are NOT this client's J
             // (the producer built the request over a different JSON class), so the class-level
-            // wrap() would ClassCastException on them. Apply the producer-supplied mapper —
-            // which mirrors its page-1 mapping — instead; see EquinixRequest#getPageItemMapper().
+            // wrap() would ClassCastException on them. Apply the producer-supplied mapper - 
+            // which mirrors its page-1 mapping - instead; see EquinixRequest#getPageItemMapper().
             return ResponseHandler.toPaginatedList(page, this, (j, client) -> castItem(itemMapper.apply(j)));
         }
         return ResponseHandler.toPaginatedList(page, this, (j, client) -> wrap(j));
@@ -351,7 +351,7 @@ public abstract class ResourceClientBase<M, J> extends ClientBase implements Pag
         Page<J> page = ResponseHandler.handlePaginatedListResponse(invoke(equinixRequest), equinixRequest);
         UnaryOperator<Object> itemMapper = equinixRequest.getPageItemMapper();
         if (itemMapper != null) {
-            // Dual-shape sub-resource paging — see nextPage(PaginatedRequest) above.
+            // Dual-shape sub-resource paging - see nextPage(PaginatedRequest) above.
             return ResponseHandler.toPaginatedFilteredList(page, this, (j, client) -> castItem(itemMapper.apply(j)));
         }
         return ResponseHandler.toPaginatedFilteredList(page, this, (j, client) -> wrap(j));

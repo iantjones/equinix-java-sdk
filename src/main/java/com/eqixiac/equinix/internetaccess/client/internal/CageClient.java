@@ -23,7 +23,7 @@ import com.eqixiac.equinix.internetaccess.model.json.CageJson;
 
 /**
  * Internal client for the Equinix Internet Access (EIA) v1 product-availability lookup:
- * {@code GET /internetAccess/v1/cages} — the cages a customer has in a given IBX.
+ * {@code GET /internetAccess/v1/cages} - the cages a customer has in a given IBX.
  */
 public interface CageClient extends Pageable<Cage> {
 

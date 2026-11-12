@@ -54,7 +54,7 @@ public class UserSite {
      * otherwise the headcount normalized against the given total.
      *
      * <p><strong>Returns {@code 0} when neither weight nor headcount is set</strong> (or the total
-     * headcount is 0) — but that does <em>not</em> mean the site has no influence on scoring. The
+     * headcount is 0) - but that does <em>not</em> mean the site has no influence on scoring. The
      * engine applies a per-site fallback on top of this value: a site with a stated weight of 0 is
      * weighted as an average site for its {@link SiteRole} (the stated weight per unit of role
      * importance, times its own role multiplier), and the result's explanation names such sites as

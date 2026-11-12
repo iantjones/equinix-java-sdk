@@ -21,7 +21,7 @@ import com.eqixiac.equinix.internetaccess.model.AccountAgreement;
 import com.eqixiac.equinix.internetaccess.model.AccountDetails;
 
 /**
- * Client interface for the Equinix Internet Access (EIA) v1 account lookups — the billing accounts
+ * Client interface for the Equinix Internet Access (EIA) v1 account lookups - the billing accounts
  * available at an IBX ({@code GET /internetAccess/v1/accounts}), a single account by number
  * ({@code GET /internetAccess/v1/accounts/{accountNumber}}) and an account's agreements
  * ({@code GET /internetAccess/v1/accounts/{accountNumber}/agreements}).

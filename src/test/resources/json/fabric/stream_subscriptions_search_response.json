@@ -1,0 +1,45 @@
+{
+  "pagination": {
+    "offset": 0,
+    "limit": 20,
+    "total": 1
+  },
+  "data": [
+    {
+      "href": "https://api.equinix.com/fabric/v4/streams/12f4d4a1-c7cb-4def-9f77-5ce93c19d999/subscriptions/8ac8ecfe-c7cb-4def-9f77-5ce93c19d83d",
+      "uuid": "8ac8ecfe-c7cb-4def-9f77-5ce93c19d83d",
+      "type": "STREAM_SUBSCRIPTION",
+      "name": "demo-subscription",
+      "description": "Subscription for demo stream events",
+      "state": "PROVISIONED",
+      "enabled": true,
+      "metricSelector": {
+        "include": [
+          "equinix.fabric.connection.*"
+        ]
+      },
+      "eventSelector": {
+        "include": [
+          "equinix.fabric.connection.*"
+        ]
+      },
+      "sink": {
+        "uri": "https://hooks.example.com/fabric",
+        "type": "WEBHOOK",
+        "batchEnabled": false,
+        "batchSizeMax": 50,
+        "batchWaitTimeMax": 5
+      },
+      "operation": {
+        "eventsDeliveredCount": 12,
+        "metricsDeliveredCount": 4,
+        "alertsDeliveredCount": 0,
+        "errors": []
+      },
+      "changeLog": {
+        "createdDateTime": "2026-06-17T10:15:30Z",
+        "updatedDateTime": "2026-06-18T10:15:30Z"
+      }
+    }
+  ]
+}

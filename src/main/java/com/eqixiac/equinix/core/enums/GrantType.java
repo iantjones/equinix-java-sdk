@@ -26,7 +26,7 @@ package com.eqixiac.equinix.core.enums;
 public enum GrantType {
 
     /**
-     * The OAuth2 client-credentials grant — the SDK default and the only grant the Equinix
+     * The OAuth2 client-credentials grant - the SDK default and the only grant the Equinix
      * token endpoint still supports (the resource-owner password grant reached end-of-life
      * in January 2025 and was removed from this SDK).
      */

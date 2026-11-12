@@ -45,7 +45,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * WireMock-backed tests for the Equinix Internet Access (EIA) v1 PurchaseOrders read surface — the
+ * WireMock-backed tests for the Equinix Internet Access (EIA) v1 PurchaseOrders read surface - the
  * {@code PurchaseOrdersV1} group in {@code apiParams_InternetAccess.json}. Covers the list
  * ({@code ListPurchaseOrders}) and its IBX/category-narrowed overload. These route through the shared
  * uriFormat {@code internetAccess/v{version}/{rootUri}/{requestUri}} with {@code defaultVersion: 1},

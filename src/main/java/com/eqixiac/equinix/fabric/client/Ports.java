@@ -18,9 +18,7 @@ package com.eqixiac.equinix.fabric.client;
 
 import com.eqixiac.equinix.core.http.response.PaginatedFilteredList;
 import com.eqixiac.equinix.core.http.response.PaginatedList;
-import com.eqixiac.equinix.fabric.model.Metric;
 import com.eqixiac.equinix.fabric.model.Port;
-import com.eqixiac.equinix.fabric.model.PortStatistic;
 import com.eqixiac.equinix.fabric.model.PortVlan;
 import com.eqixiac.equinix.fabric.model.implementation.PhysicalPort;
 import com.eqixiac.equinix.fabric.model.implementation.filter.FilterPropertyList;
@@ -28,7 +26,6 @@ import com.eqixiac.equinix.fabric.model.implementation.sort.SortPropertyList;
 import com.eqixiac.equinix.fabric.model.json.PhysicalPortsResponseJson;
 import com.eqixiac.equinix.fabric.model.json.creators.PortOperator;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -40,11 +37,14 @@ import java.util.List;
 public interface Ports {
 
     /**
-     * Lists all ports accessible to the current account.
+     * Lists all ports accessible to the current account ({@code GET /fabric/v4/ports}). Spec 4.34.0 declares no {@code offset} on this GET and the
+     * live service returns every item in one response (for {@code GET /ports}: {@code limit 999},
+     * {@code offset} and {@code limit} ignored, observed 2026-11-11), so this is a plain list, not
+     * a multi-page one.
      *
-     * @return a paginated list of ports
+     * @return the ports
      */
-    PaginatedList<Port> list();
+    List<Port> list();
 
     /**
      * Searches for ports using default filter and sort criteria.
@@ -95,38 +95,6 @@ public interface Ports {
     List<PortVlan> getVlans(String portUuid);
 
     /**
-     * Retrieves bandwidth statistics for a port over the specified time range.
-     *
-     * <p>UTC contract: {@code LocalDateTime} inputs are UTC wall clock (matching every timestamp
-     * the SDK returns); use {@code LocalDateTime.now(ZoneOffset.UTC)} for the current time.</p>
-     *
-     * @param uuid the unique identifier of the port
-     * @param startDateTime the start of the statistics time range, as UTC wall clock
-     * @param endDateTime the end of the statistics time range, as UTC wall clock
-     * @return the port statistics for the specified time range
-     * @deprecated the {@code /stats} endpoint is deprecated by Equinix; use
-     *             {@link #getMetrics(String, String, LocalDateTime, LocalDateTime)} or
-     *             {@link Metrics#search(FilterPropertyList)} instead.
-     */
-    @Deprecated
-    PortStatistic getStatistics(String uuid, LocalDateTime startDateTime, LocalDateTime endDateTime);
-
-    /**
-     * Retrieves metrics for a single port over the specified time range. This is the
-     * non-deprecated replacement for {@link #getStatistics(String, LocalDateTime, LocalDateTime)}.
-     *
-     * <p>UTC contract: {@code LocalDateTime} inputs are UTC wall clock (matching every timestamp
-     * the SDK returns); use {@code LocalDateTime.now(ZoneOffset.UTC)} for the current time.</p>
-     *
-     * @param uuid the unique identifier of the port
-     * @param name the metric name to retrieve (for example {@code equinix.fabric.port.bandwidth_rx.usage}), or {@code null} for all metrics
-     * @param fromDateTime the start of the metrics time range, as UTC wall clock
-     * @param toDateTime the end of the metrics time range, as UTC wall clock
-     * @return the list of metrics for the port over the specified time range
-     */
-    List<Metric> getMetrics(String uuid, String name, LocalDateTime fromDateTime, LocalDateTime toDateTime);
-
-    /**
      * Begins the fluent builder for creating a new port ({@code POST /fabric/v4/ports}).
      * Configure the returned builder, then call {@code create()}.
      *
@@ -148,13 +116,13 @@ public interface Ports {
      * will succeed"; boolean, default {@code false}).
      *
      * <p>With {@code dryRun = true} nothing is deleted: the API responds {@code 200} (rather than
-     * the real delete's {@code 202 Accepted}) with the existing port entity — uuid, name and all —
+     * the real delete's {@code 202 Accepted}) with the existing port entity - uuid, name and all - 
      * that WOULD be deleted. With {@code dryRun = false} this behaves exactly like
      * {@link #delete(String)}.</p>
      *
      * @param uuid the unique identifier of the port to delete
      * @param dryRun {@code true} to only verify that the delete would succeed, without deleting
-     * @return the deleted port — or, on a dry run, the port that would be deleted
+     * @return the deleted port - or, on a dry run, the port that would be deleted
      */
     Port delete(String uuid, boolean dryRun);
 

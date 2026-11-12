@@ -1,0 +1,546 @@
+swagger: '2.0'
+info:
+  version: 1.0.0
+  title: Billing API
+  description: Based on a user's permission, a User can view financial records and payment history and download invoice documents for their permitted billing accounts. The invoice and payment document can be filtered by product type, account, or date range. Only the account billing and invoice details will be from the past 12 months will be returned. 
+  termsOfService: https://www.equinix.com/about/legal/terms
+  contact:
+    name: Equinix API Support
+    url: https://docs.equinix.com/api-support.htm
+host: api.equinix.com
+schemes:
+- https
+consumes:
+- application/json
+paths:
+  /v1/finance/accounts:
+    get:
+      operationId: getBillingAccounts
+      summary: Get billing accounts summary
+      tags:
+      - Accounts
+      description: This method returns a summary of all the billing accounts that the user has permissions to view.
+      produces:
+      - application/json
+      parameters:
+      - name: offset
+        in: query
+        description: Use offset and limit to restrict the number of users in the output. Offset can be used to specify the start record
+        type: integer
+        default: 0
+        minimum: 0
+      - name: limit
+        in: query
+        description: Use offset and limit to restrict the number of users in the output. Limit can be used to restrict the number of reports in the response
+        type: integer
+        default: 10
+        minimum: 0
+        maximum: 100
+      - name: sorts
+        in: query
+        description: Use sorts to get the accounts in the response sorted in the particular order. for example, use '-ACCOUNT_NUMBER' to sort the reports by generated date in descending order. And 'ACCOUNT_NUMBER' for ascending order. For descending order, the field name should be prefixed with '-'
+        type: string
+        enum:
+        - ACCOUNT_NUMBER
+        - -ACCOUNT_NUMBER
+        - PARENT_ACCOUNT_NUMBER
+        - -PARENT_ACCOUNT_NUMBER
+        - ACCOUNT_NAME
+        - -ACCOUNT_NAME
+        default: ACCOUNT_NUMBER
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/records'
+          examples:
+            application/json:
+              data:
+              - accountName: Example Inc.
+                accountNumber: '124353'
+                parentAccountNumber: '54321'
+                accountIbxs:
+                - IBX1
+                - IBX2
+                - IBX3
+                - IBX4
+              page:
+                total: 1200
+                limit: 20
+                offset: 0
+              _links:
+                prev:
+                  href: /accounts?limit=10&offset=50
+                self:
+                  href: /accounts?limit=10&offset=40
+                next:
+                  href: /accounts?limit=10&offset=30
+    parameters:
+    - $ref: '#/parameters/authorizationHeader'
+  /v1/finance/accounts/{accountNumber}/{invoiceId}:
+    parameters:
+    - name: accountNumber
+      in: path
+      description: Account number
+      required: true
+      type: string
+    - name: invoiceId
+      in: path
+      description: Invoice Id
+      required: true
+      type: string
+    - $ref: '#/parameters/authorizationHeader'
+    get:
+      operationId: downloadBillingDocument
+      summary: Download specific invoice document
+      description: This method billing document from an account by its specific invoice identifier and document identifier
+      tags:
+      - Accounts
+      produces:
+      - application/octet-stream
+      parameters:
+      - name: documentId
+        in: query
+        description: Document Id
+        required: true
+        type: string
+        minLength: 1
+      responses:
+        '200':
+          description: ''
+          schema:
+            type: file
+  /v1/finance/accounts/{accountNumber}:
+    parameters:
+    - name: accountNumber
+      in: path
+      description: Account number
+      required: true
+      type: string
+    - $ref: '#/parameters/authorizationHeader'
+    get:
+      operationId: getBillingAccountByNumber
+      summary: Get specific billing account summary
+      tags:
+      - Accounts
+      description: This method returns a billing summary of an account based on the account number given.
+      produces:
+      - application/json
+      parameters:
+      - name: months
+        in: query
+        description: 'Finance documents will be pulled for these months ex: 2017-12-03,2018-01-03
+          in ISO_LOCAL_DATE format'
+        required: false
+        type: array
+        default: ''
+        format: date
+        items:
+          type: string
+        collectionFormat: csv
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/account'
+          examples:
+            application/json:
+              accountNumber: '124353'
+              billingContact:
+                firstName: John
+                lastName: Doe
+                email: john.doe@example.lk
+              billingFrequency: MONTHLY
+              invoiceLanguage: English
+              invoiceFormat: PDF
+              invoices:
+              - invoiceId: '654321879'
+                transactionNumber: '654321879'
+                amount: 456.87
+                date: '2017-03-23'
+                type: INVOICE
+                documents:
+                - documentId: 'DETAILED_PDF_EN'
+                  fileType: PDF_DETAILS
+                  type: INVOICE
+                - documentId: 'DETAILED_XLS_EN'
+                  fileType: EXCEL_DETAILS
+                  type: INVOICE
+                - documentId: 'SUMMARY_PDF_EN'
+                  fileType: PDF_SUMMARY
+                  type: INVOICE
+                - documentId: 'BOLETO_PDF_NA'
+                  fileType: BOLETO_PDF
+                  type: INVOICE
+                - documentId: 'OFFICIAL_INVOICE_PDF_NA'
+                  fileType: INVOICE_PDF
+                  type: INVOICE
+                - documentId: 'NF_URL_NA'
+                  fileType: NF_URL
+                  type: INVOICE
+              - invoiceId: '654321879'
+                transactionNumber: '654321879'
+                date: '2017-03-23'
+                type: CREDIT_MEMO
+                amount: -1456.87
+                documents:
+                - documentId: 'DETAILED_PDF_EN'
+                  fileType: PDF_DETAILS
+                  type: CREDIT_MEMO
+              currencyCode: GBP
+              payments:
+              - paymentId: 'FRT0554400011122'
+                amount: 43218.79
+                date: '2017-03-23'
+                type: APPLIED
+              - paymentId: 'FRT0554400011133'
+                amount: 23218.80
+                date: '2017-03-23'
+                type: APPLIED
+definitions:
+  invoiceType:
+    title: InvoiceType
+    type: string
+    description: Type of the invoice
+    enum:
+    - INVOICE
+    - MANUAL_INVOICE
+    - CREDIT_MEMO
+    - STATEMENT
+  invoiceDocument:
+    title: InvoiceDocument
+    type: object
+    properties:
+      documentId:
+        type: string
+        description: Unique Identifier for the document
+      fileType:
+        type: string
+        description: File type of the document
+        enum:
+        - PDF_DETAILS
+        - EXCEL_DETAILS
+        - PDF_SUMMARY
+        - EXCEL_SUMMARY
+        - INVOICE_PDF
+        - BOLETO_PDF
+        - NF_URL
+      type:
+        $ref: '#/definitions/invoiceType'
+    required:
+    - documentId
+    - fileType
+    - type
+    example:
+      documentId: 'DETAILED_PDF_EN'
+      fileType: PDF_DETAILS
+      type: STATEMENT
+  records:
+    title: Records
+    type: object
+    properties:
+      data:
+        type: array
+        description: List accounts with billing summary
+        items:
+          $ref: '#/definitions/account'
+      page:
+        $ref: '#/definitions/page'
+      _links:
+        $ref: '#/definitions/links'
+    required:
+    - data
+    - _links
+    example:
+      data:
+      - accountName: Example Inc.
+        accountNumber: '124353'
+        parentAccountNumber: '54321'
+        accountIbxs:
+        - IBX1
+        - IBX2
+        - IBX3
+        - IBX4
+      page:
+        total: 1200
+        limit: 20
+        offset: 0
+      _links:
+        prev:
+          href: /accounts?limit=10&offset=50
+        self:
+          href: /accounts?limit=10&offset=40
+        next:
+          href: /accounts?limit=10&offset=30
+  account:
+    title: Account
+    type: object
+    properties:
+      accountNumber:
+        type: string
+      parentAccountNumber:
+        type: string
+      accountName:
+        type: string
+      billingFrequency:
+        type: string
+        description: Frequency of billing
+        enum:
+        - MONTHLY
+        - QUARTERLY
+        - ANNUALLY
+      currencyCode:
+        type: string
+        description: Currency code of the account
+        minLength: 1
+      invoiceLanguage:
+        type: string
+        description: Language of the invoice
+      invoiceFormat:
+        type: string
+        description: Format of the invoice
+        enum:
+        - PDF
+        - EXCEL
+      invoices:
+        description: Available invoices for the account
+        type: array
+        items:
+          $ref: '#/definitions/invoice'
+      payments:
+        description: Available payments for the account
+        type: array
+        items:
+          $ref: '#/definitions/payment'
+      billingContact:
+        description: Details of billing contact
+        $ref: '#/definitions/billingContact'
+      accountIbxs:
+        type: array
+        items:
+          type: string
+    example:
+      accountName: Example Inc.
+      accountNumber: '124353'
+      parentAccountNumber: '54321'
+      accountIbxs:
+      - IBX1
+      - IBX2
+      - IBX3
+      - IBX4
+      billingContact:
+        firstName: John
+        lastName: Doe
+        email: john.doe@example.lk
+      billingFrequency: MONTHLY
+      invoiceLanguage: English
+      invoiceFormat: PDF
+      invoices:
+      - invoiceId: '123435'
+        transactionNumber: '654321879'
+        date: '2017-03-23'
+        type: CREDIT_MEMO
+        amount: 13456.87
+        documents:
+        - documentId: '24242'
+          fileType: PDF_DETAILS
+          type: STATEMENT
+        - documentId: 3521de
+          fileType: PDF_DETAILS
+          type: INVOICE
+        - documentId: 234234de
+          fileType: PDF_DETAILS
+          type: MANUAL_INVOICE
+      - invoiceId: '123435'
+        transactionNumber: '654321879'
+        date: '2017-03-23'
+        type: CREDIT_MEMO
+        amount: -914.52
+        documents:
+        - documentId: '242142'
+          fileType: PDF_DETAILS
+          type: STATEMENT
+      payments:
+      - paymentId: '123435'
+        amount: 43218.79
+        date: '2017-03-23'
+        type: APPLIED
+      currencyCode: SGD
+  page:
+    title: Page
+    type: object
+    properties:
+      total:
+        type: integer
+        minimum: 0
+        description: Total number of records
+        default: 0
+      limit:
+        type: integer
+        minimum: 0
+        default: 0
+        description: Number of records per page
+      offset:
+        type: integer
+        minimum: 0
+        default: 0
+        description: The page number
+      sorts:
+        type: array
+        description: Sort fields based on polarity
+        items:
+          type: string
+    required:
+    - total
+    - limit
+    - offset
+    example:
+      total: 5469
+      limit: 50
+      offset: 15
+      sorts:
+      - cupidatat
+      - dolor occaecat
+  reference-link:
+    title: ReferenceLink
+    type: object
+    properties:
+      href:
+        type: string
+        description: href of the link
+        minLength: 1
+    required:
+    - href
+    example:
+      href: /accounts?limit=10
+  links:
+    title: Links
+    type: object
+    properties:
+      prev:
+        $ref: '#/definitions/reference-link'
+      self:
+        $ref: '#/definitions/reference-link'
+      next:
+        $ref: '#/definitions/reference-link'
+    required:
+    - self
+    example:
+      prev:
+        href: /accounts?limit=10&offset=50
+      self:
+        href: /accounts?limit=10&offset=40
+      next:
+        href: /accounts?limit=10&offset=30
+  invoice:
+    title: Invoice
+    type: object
+    properties:
+      invoiceId:
+        type: string
+        description: Identifier for the invoice
+        minLength: 1
+      transactionNumber:
+        type: string
+        description: Tansaction number of the invoice
+        minLength: 1
+      amount:
+        type: number
+        description: Total amount of the invoice
+        format: double
+      date:
+        type: string
+        description: Date of the invoice
+        format: date
+      type:
+        $ref: '#/definitions/invoiceType'
+      documents:
+        type: array
+        description: Array of invoice documents
+        items:
+          $ref: '#/definitions/invoiceDocument'
+    required:
+    - invoiceId
+    - date
+    - amount
+    - status
+    example:
+      invoiceId: '123435'
+      transactionNumber: '654321879'
+      amount: 914526.87
+      date: '2017-03-23'
+      type: CREDIT_MEMO
+      documents:
+      - documentId: '64322'
+        fileType: EXCEL_DETAILS
+        type: STATEMENT
+      - documentId: '213324'
+        fileType: EXCEL_DETAILS
+        type: INVOICE
+      - documentId: '44353'
+        fileType: PDF_DETAILS
+        type: STATEMENT
+      - documentId: '233424'
+        fileType: EXCEL_SUMMARY
+        type: MANUAL_INVOICE
+  payment:
+    title: Payment
+    type: object
+    properties:
+      paymentId:
+        type: string
+        description: Identifier for the payment, payment receipt number
+        minLength: 1
+      date:
+        type: string
+        description: Payment created date
+        format: date
+      status:
+        type: string
+        description: Status of the payment
+        enum:
+        - APPLIED
+        - UNAPPLIED
+      amount:
+        type: number
+        description: Amount of the payment
+        format: double
+    required:
+    - paymentId
+    - date
+    - amount
+    - status
+    example:
+      paymentId: '123435'
+      amount: 43218.79
+      date: '2017-03-23'
+      type: APPLIED
+  billingContact:
+    title: BillingContact
+    type: object
+    properties:
+      firstName:
+        type: string
+        description: First name
+      lastName:
+        type: string
+        description: Last name
+      email:
+        type: string
+        description: Email address
+        format: email
+    required:
+    - firstName
+    - lastName
+    - email
+    example:
+      firstName: John
+      lastName: Doe
+      email: john.doe@example.lk
+parameters:
+  authorizationHeader:
+    name: Authorization
+    in: header
+    description: Specify the Access token with prefix 'Bearer '.
+    type: string
+    required: true

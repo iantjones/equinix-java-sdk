@@ -1,0 +1,14 @@
+{
+  "RequestorId": "CUST-REF-12345",
+  "ServicerId": "1-234567890",
+  "ActivityId": "ACTIVITY-78901",
+  "State": "InProgress",
+  "Description": "SmartHands work order in progress - technician dispatched",
+  "CustomerContact": "customer@example.com",
+  "Location": "SV1",
+  "ServiceDetails": {
+    "WorkType": "SmartHands",
+    "EstimatedCompletion": "2021-07-15T16:00:00Z"
+  },
+  "Attachments": []
+}

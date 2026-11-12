@@ -30,7 +30,7 @@ import com.eqixiac.equinix.projects.client.implementation.ProjectsConfigImpl;
  * <p>Projects are read-only organizational containers associated with a root organization,
  * grouping related Equinix infrastructure components under named projects.</p>
  *
- * <p>All resource accessors use lazy initialization — internal clients are created on first access
+ * <p>All resource accessors use lazy initialization - internal clients are created on first access
  * and reused for subsequent calls.</p>
  *
  * <h3>Quick Start</h3>

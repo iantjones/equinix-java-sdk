@@ -31,7 +31,10 @@ public interface IAMEffectivePermissions {
      * Resolves the effective permissions for a project and service
      * (operationId {@code getEffectivePermissions}).
      *
-     * @param projectId the project identifier (e.g. {@code project:abc-123})
+     * @param projectId the IAM project id, {@code project:<id>} (for example {@code project:abc-123}); a bare
+     *                  Resource Manager UUID is rejected, convert it with {@link ProjectIds#of(String)}.
+     *                  Project-scoped endpoints need an STS access-policy token
+     *                  ({@code new IAM(BearerTokenProvider)})
      * @param serviceId the service to resolve permissions for
      * @return the resolved effective permissions
      */
@@ -41,7 +44,10 @@ public interface IAMEffectivePermissions {
      * Resolves the effective permissions for a project and service, optionally scoped by project ERN
      * (operationId {@code getEffectivePermissions}).
      *
-     * @param projectId the project identifier (e.g. {@code project:abc-123})
+     * @param projectId the IAM project id, {@code project:<id>} (for example {@code project:abc-123}); a bare
+     *                  Resource Manager UUID is rejected, convert it with {@link ProjectIds#of(String)}.
+     *                  Project-scoped endpoints need an STS access-policy token
+     *                  ({@code new IAM(BearerTokenProvider)})
      * @param serviceId the service to resolve permissions for
      * @param projectErn the project ERN to scope resolution to, or {@code null}
      * @return the resolved effective permissions

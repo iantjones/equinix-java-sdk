@@ -22,7 +22,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 /**
  * Status of a SmartView alert or power event (spec schemas {@code AlertReadModel} and
  * {@code PowerEventReadModel}, property {@code status}). {@link #UNKNOWN} is a read-side fallback
- * for values added after this SDK release — never send it.
+ * for values added after this SDK release - never send it.
  */
 public enum AlertStatus implements APIParam {
     ACTIVE,

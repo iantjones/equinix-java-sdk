@@ -138,60 +138,22 @@ class FabricPricesWireMockTest extends WireMockTestBase {
                 """;
 
         @Test
-        @DisplayName("loadAll() fetches page 2 by advancing the body's pagination offset (regression: ClassCastException on page 2)")
-        void loadAllFetchesSecondPage() {
-            // Page 1: request body carries pagination.offset = 0.
-            wireMock.stubFor(post(urlPathEqualTo("/fabric/v4/prices/search"))
-                    .withRequestBody(matchingJsonPath("$.pagination.offset", equalTo("0")))
-                    .willReturn(okJson(PAGE_1)));
-            // Page 2: the paging pipeline must re-send the SAME body with offset advanced to 100.
-            wireMock.stubFor(post(urlPathEqualTo("/fabric/v4/prices/search"))
-                    .withRequestBody(matchingJsonPath("$.pagination.offset", equalTo("100")))
-                    .willReturn(okJson(PAGE_2)));
+        @DisplayName("the search body carries only the filter (spec FilterBody) and the result is one page")
+        void singlePageWithoutPaginationBody() {
+            // The live service ignores pagination here (offset=1, limit=1 still answered offset 0, 2026-11-11).
+            wireMock.stubFor(post(urlPathEqualTo("/fabric/v4/prices/search")).willReturn(okJson(PAGE_1)));
 
-            PaginatedFilteredList<Pricing> prices = fabric.prices().list(null);
+            PaginatedFilteredList<Pricing> prices = fabric.prices().list(
+                    com.eqixiac.equinix.fabric.model.implementation.filter.Filter.filter().and()
+                            .equals("/type", "VIRTUAL_CONNECTION_PRODUCT"));
+
             assertEquals(1, prices.size());
-            assertTrue(prices.hasNextPage());
-
-            prices.loadAll();
-
-            assertEquals(2, prices.size());
-            assertEquals("PAGE1_ITEM", prices.get(0).getCode());
-            assertEquals("PAGE2_ITEM", prices.get(1).getCode());
             assertFalse(prices.hasNextPage());
-
+            prices.loadAll();
+            assertEquals(1, prices.size());
             wireMock.verify(1, postRequestedFor(urlPathEqualTo("/fabric/v4/prices/search"))
-                    .withRequestBody(matchingJsonPath("$.pagination.offset", equalTo("100"))));
-        }
-
-        @Test
-        @DisplayName("a failed page fetch rolls the offset back so a retried next() gets the same page")
-        void failedPageFetchIsRetriable() {
-            wireMock.stubFor(post(urlPathEqualTo("/fabric/v4/prices/search"))
-                    .withRequestBody(matchingJsonPath("$.pagination.offset", equalTo("0")))
-                    .willReturn(okJson(PAGE_1)));
-            // Page 2 fails once, then succeeds (scenario state machine).
-            wireMock.stubFor(post(urlPathEqualTo("/fabric/v4/prices/search"))
-                    .withRequestBody(matchingJsonPath("$.pagination.offset", equalTo("100")))
-                    .inScenario("page2-retry").whenScenarioStateIs(com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED)
-                    .willReturn(aResponse().withStatus(500)
-                            .withHeader("Content-Type", "application/json")
-                            .withBody("[{\"errorCode\":\"ERR-500\",\"errorMessage\":\"boom\"}]"))
-                    .willSetStateTo("recovered"));
-            wireMock.stubFor(post(urlPathEqualTo("/fabric/v4/prices/search"))
-                    .withRequestBody(matchingJsonPath("$.pagination.offset", equalTo("100")))
-                    .inScenario("page2-retry").whenScenarioStateIs("recovered")
-                    .willReturn(okJson(PAGE_2)));
-
-            PaginatedFilteredList<Pricing> prices = fabric.prices().list(null);
-
-            assertThrows(EquinixServerException.class, prices::next);
-            assertEquals(1, prices.size(), "failed fetch must not append items");
-
-            prices.next(); // retry must re-request offset 100, not skip to offset 200
-
-            assertEquals(2, prices.size());
-            assertEquals("PAGE2_ITEM", prices.get(1).getCode());
+                    .withRequestBody(matchingJsonPath("$.filter.and[0].property", equalTo("/type")))
+                    .withRequestBody(notContaining("pagination")));
         }
     }
 

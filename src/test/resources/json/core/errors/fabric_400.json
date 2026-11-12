@@ -1,0 +1,11 @@
+[
+  {
+    "errorCode": "EQ-3142501",
+    "errorMessage": "Invalid seller metroCode location",
+    "correlationId": "f3d0c1a2-1b2c-4d5e-8f90-0a1b2c3d4e5f",
+    "details": "zSide metroCode must match a seller location",
+    "additionalInfo": [
+      { "property": "/zSide/accessPoint/location/metroCode", "reason": "Invalid seller metroCode location" }
+    ]
+  }
+]

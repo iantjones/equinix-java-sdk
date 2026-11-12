@@ -39,7 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@DisplayName("Safe Mutation Broker registration — the mutate toolset is OFF unless explicitly enabled")
+@DisplayName("Safe Mutation Broker registration - the mutate toolset is OFF unless explicitly enabled")
 class BrokerCatalogTest {
 
     private static final List<String> BROKER_TOOLS = List.of("fabric_propose_change", "fabric_confirm_change");
@@ -72,7 +72,7 @@ class BrokerCatalogTest {
         assertFalse(Toolset.defaults().contains(Toolset.MUTATE), "defaults() must exclude mutate");
         assertFalse(Toolset.parse("").contains(Toolset.MUTATE), "blank csv must exclude mutate");
         assertFalse(Toolset.parse(null).contains(Toolset.MUTATE), "null csv must exclude mutate");
-        assertEquals(5, Toolset.parse("").size(), "the five read-only toolsets are the default");
+        assertEquals(6, Toolset.parse("").size(), "the six read-only toolsets are the default");
         assertEquals(EnumSet.of(Toolset.MUTATE), Toolset.parse("mutate"));
         assertEquals(EnumSet.of(Toolset.DESIGN, Toolset.MUTATE), Toolset.parse("design,mutate"));
         assertEquals(Toolset.MUTATE, Toolset.fromId("mutate"));
@@ -84,7 +84,7 @@ class BrokerCatalogTest {
         withServer(builder -> {
         }, server -> {
             List<String> served = names(server);
-            assertEquals(14, served.size(), "the default catalog stays the 14 read-only tools: " + served);
+            assertEquals(22, served.size(), "the default catalog stays the 22 read-only tools: " + served);
             BROKER_TOOLS.forEach(tool ->
                     assertFalse(served.contains(tool), tool + " must be absent unless mutate is enabled"));
         });
@@ -106,7 +106,7 @@ class BrokerCatalogTest {
                 assertNotNull(tool.getOutputSchema());
                 String lower = tool.getName().toLowerCase(Locale.ROOT);
                 assertFalse(lower.contains("delete") || lower.contains("remove") || lower.contains("update"),
-                        tool.getName() + " — no delete or update tools exist");
+                        tool.getName() + " - no delete or update tools exist");
             }
 
             // The MCP wire carries the same honesty: mutating but non-destructive.
@@ -124,19 +124,19 @@ class BrokerCatalogTest {
     void mutateComposes() {
         withServer(builder -> builder.toolsets(Toolset.DESIGN, Toolset.MUTATE), server -> {
             List<String> served = names(server);
-            assertEquals(11, served.size(), "9 design tools + the broker pair: " + served);
+            assertEquals(18, served.size(), "16 design tools + the broker pair: " + served);
             assertTrue(served.containsAll(BROKER_TOOLS));
         });
     }
 
     @Test
-    @DisplayName("the change-type surface is exactly the three creates — smallest honest broker")
+    @DisplayName("the change-type surface is exactly the three creates - smallest honest broker")
     void threeCreateChangeTypesOnly() {
         assertEquals(3, ChangeType.values().length);
         assertEquals(List.of("connection_create", "network_create", "service_token_create"),
                 List.of(ChangeType.ids()));
         for (String id : ChangeType.ids()) {
-            assertTrue(id.endsWith("_create"), id + " — only creates exist, no updates, no deletes");
+            assertTrue(id.endsWith("_create"), id + " - only creates exist, no updates, no deletes");
         }
     }
 

@@ -28,7 +28,7 @@
     "projectId": "44f4c4f8-2f39-494a-838c-5350c32f0a2e",
     "href": "https://api.equinix.com/resourceManager/v1/projects/44f4c4f8-2f39-494a-838c-5350c32f0a2e"
   },
-  "changeLog": {
+  "changelog": {
     "createdBy": "tokenCreator",
     "createdByFullName": "Token Creator",
     "createdByEmail": "token@example.com",

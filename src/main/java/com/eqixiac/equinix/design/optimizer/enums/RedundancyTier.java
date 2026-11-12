@@ -3,40 +3,46 @@ package com.eqixiac.equinix.design.optimizer.enums;
 import lombok.Getter;
 
 /**
- * Redundancy requirements for metro placement. Higher tiers provide greater
- * geographic diversity and fault isolation at increased cost.
+ * The least redundancy a design accepts. Each tier is an explicit, checkable rule on the SET of
+ * metros a design uses (enforced by the {@code minimum_redundancy} constraint); no tier steers
+ * selection any other way, and none silently forces a cross-region spread.
  *
- * <p>{@code minimumMetros} is the tier's <em>floor</em>, not the recommendation size: when no
- * explicit {@code maxMetros} constraint is set, the engine recommends up to
- * {@code max(3, minimumMetros + 1)} metros regardless of tier — so an intentionally single-metro
- * deployment needs {@code maxMetros(1)} in addition to (or instead of) {@code NONE}. The
- * {@code MULTI_METRO} and {@code MULTI_REGION} tiers additionally switch selection to
- * region-diversity-aware round-robin (best metro per region), so geographic spread is a hard
- * outcome rather than a scoring nudge; a selected set that still falls short of the tier raises a
- * {@code REDUNDANCY_GAP} risk finding.</p>
- *
- * @see com.eqixiac.equinix.design.optimizer.model.OptimizationConstraints
+ * <ul>
+ *   <li>{@link #NONE}: one metro is enough.</li>
+ *   <li>{@link #N_PLUS_1}: at least two metros, at least two of them in the same region (a nearby
+ *       standby that fails over without crossing a region).</li>
+ *   <li>{@link #MULTI_METRO}: at least two metros, in any regions.</li>
+ *   <li>{@link #MULTI_REGION}: at least two metros in at least two different regions.</li>
+ * </ul>
  */
 @Getter
 public enum RedundancyTier {
 
     /** No redundancy requirement: a single metro satisfies the tier. */
-    NONE(1, "Single metro, no redundancy"),
+    NONE(1, 1, false, "One metro; no redundancy"),
 
-    /** At least two metros; the same region is acceptable (component-level, not geographic, redundancy). */
-    N_PLUS_1(2, "Two metros in the same region"),
+    /** At least two metros, at least two of which share a region. */
+    N_PLUS_1(2, 1, true, "At least two metros, two of them in the same region"),
 
-    /** At least two metros with region-diversity-aware selection across regions. */
-    MULTI_METRO(2, "Two or more metros across regions"),
+    /** At least two metros in any regions. */
+    MULTI_METRO(2, 1, false, "At least two metros, in any regions"),
 
-    /** At least three metros spanning multiple regions, selected region-diversity-aware. */
-    MULTI_REGION(3, "Three or more metros spanning multiple regions");
+    /** At least two metros spanning at least two regions. */
+    MULTI_REGION(2, 2, false, "At least two metros spanning at least two regions");
 
+    /** Fewest metros the tier needs. */
     private final int minimumMetros;
+    /** Fewest distinct regions the tier needs. */
+    private final int minimumRegions;
+    /** Whether two of the metros must share a region. */
+    private final boolean sameRegionPairRequired;
+    /** Human-readable statement of the rule. */
     private final String description;
 
-    RedundancyTier(int minimumMetros, String description) {
+    RedundancyTier(int minimumMetros, int minimumRegions, boolean sameRegionPairRequired, String description) {
         this.minimumMetros = minimumMetros;
+        this.minimumRegions = minimumRegions;
+        this.sameRegionPairRequired = sameRegionPairRequired;
         this.description = description;
     }
 }

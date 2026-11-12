@@ -36,7 +36,7 @@ import java.util.stream.Stream;
  * on resource clients such as {@code fabric.connections().search()}.</p>
  *
  * <p>Like {@link PaginatedList}, it is an {@link Iterable} view of the loaded results plus
- * pagination metadata — not a {@link java.util.List}. Iterate it directly, call {@link #stream()},
+ * pagination metadata - not a {@link java.util.List}. Iterate it directly, call {@link #stream()},
  * or take a snapshot with {@link #toList()}.</p>
  *
  * @param <T> the type of resource in the list
@@ -48,7 +48,7 @@ public class PaginatedFilteredList<T> implements Iterable<T> {
 
     private final List<T> items = new ArrayList<>();
 
-    // Internal paging machinery — deliberately not exposed on the public list type. The
+    // Internal paging machinery - deliberately not exposed on the public list type. The
     // request/response element types are unbounded: the carried request may be typed over
     // the public model or the resource's JSON model (see Page), and paging never needs it.
     @Getter(AccessLevel.PACKAGE)
@@ -60,6 +60,9 @@ public class PaginatedFilteredList<T> implements Iterable<T> {
 
     @Getter
     private Pagination pagination;
+
+    /** See {@code PaginatedList#stalled}: stops paging when the server makes no progress. */
+    private boolean stalled;
 
     /**
      *
@@ -145,8 +148,17 @@ public class PaginatedFilteredList<T> implements Iterable<T> {
     }
 
     private void loadNextPage() {
+        Pagination previous = this.pagination;
         PaginatedFilteredList<T> primaryObjectList = fetchNextPage();
-        this.items.addAll(primaryObjectList.items);
+        Pagination fetched = primaryObjectList.getPagination();
+        boolean offsetRepeated = previous != null && fetched != null && previous.getOffset() != null
+                && previous.getOffset().equals(fetched.getOffset());
+        if (offsetRepeated || primaryObjectList.items.isEmpty()) {
+            this.stalled = true;
+        }
+        if (!offsetRepeated) {
+            this.items.addAll(primaryObjectList.items);
+        }
         this.equinixRequest = primaryObjectList.getEquinixRequest();
         this.equinixResponse = primaryObjectList.getEquinixResponse();
         this.pagination = primaryObjectList.getPagination();
@@ -158,7 +170,7 @@ public class PaginatedFilteredList<T> implements Iterable<T> {
      * @return {@code true} if a next page exists; {@code false} if this is the last page
      */
     public boolean hasNextPage() {
-        return this.pagination != null && !this.pagination.isLastPage();
+        return !this.stalled && this.pagination != null && !this.pagination.isLastPage();
     }
 
     /**

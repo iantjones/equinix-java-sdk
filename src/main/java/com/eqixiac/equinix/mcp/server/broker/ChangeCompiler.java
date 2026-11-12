@@ -36,19 +36,29 @@ import com.eqixiac.equinix.fabric.model.implementation.LocationCode;
 import com.eqixiac.equinix.fabric.model.json.creators.ConnectionOperator;
 import com.eqixiac.equinix.fabric.model.json.creators.NetworkOperator;
 import com.eqixiac.equinix.fabric.model.json.creators.ServiceTokenOperator;
+import com.eqixiac.equinix.core.internal.Constants;
+import com.eqixiac.equinix.fabric.model.json.creators.ConnectionCreatorJson;
+import com.eqixiac.equinix.fabric.model.json.creators.NetworkCreatorJson;
+import com.eqixiac.equinix.fabric.model.json.creators.ServiceTokenCreatorJson;
 import com.eqixiac.equinix.mcp.server.ServerContext;
+import com.eqixiac.equinix.mcp.server.UntrustedText;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 
 /**
- * Compiles a broker change spec into the SDK's fluent creators and executes it — the same
- * compilation for both phases, differing only in whether {@code dryRun()} is applied. All
+ * Compiles a broker change spec into the SDK's fluent creators ({@link #compile}) without sending
+ * anything. The {@link Compiled} result exposes the exact JSON body the create will send and its
+ * SHA-256 (the value a confirm token is bound to) and sends it once, as the dry run or the real
+ * create - the same compilation for both phases, differing only in whether {@code dryRun()} is
+ * applied. All
  * spec validation happens <em>before</em> any SDK client is touched, so a malformed spec
  * fails with a precise, LLM-correctable message and zero side effects (not even a facade
  * construction).
@@ -62,7 +72,7 @@ final class ChangeCompiler {
             "notification_emails", "a_side", "z_side", "purchase_order_number", "project_id");
     private static final Set<String> SIDE_KEYS = Set.of("port_uuid", "service_profile_uuid",
             "cloud_router_uuid", "network_uuid", "service_token_uuid", "virtual_device_uuid",
-            "interface_type", "interface_id", "link_protocol");
+            "interface_type", "interface_id", "link_protocol", "metro_code");
     private static final Set<String> LINK_PROTOCOL_KEYS = Set.of("type", "vlan_tag", "vlan_c_tag", "vlan_s_tag");
     private static final Set<String> NETWORK_KEYS = Set.of("type", "name", "scope",
             "notification_emails", "project_id", "metro_code");
@@ -77,27 +87,84 @@ final class ChangeCompiler {
     }
 
     /**
-     * Validates the spec, assembles the matching SDK creator, and executes it — as a real
-     * dry run when {@code dryRun} is {@code true} (the API validates, nothing is provisioned),
-     * as the real create otherwise. Returns the resulting entity summarized for an agent
-     * (dry-run echoes may carry no uuid/state; those fields are simply absent).
+     * Validates the spec and assembles the matching SDK creator without sending anything. The
+     * result carries the exact JSON body the create will send and its SHA-256, and sends it at most
+     * once, either as the spec-documented dry run or as the real create.
+     *
+     * @param changeType the kind of create
+     * @param spec the broker spec
+     * @param ctx the server context (Fabric client)
+     * @param compiledAt the reference instant for time-relative fields ({@code expiry_days}); the
+     *        confirm phase passes the proposal's instant so the recompiled body is identical
+     * @return the compiled request
      */
-    static ObjectNode execute(ChangeType changeType, JsonNode spec, ServerContext ctx, boolean dryRun) {
+    static Compiled compile(ChangeType changeType, JsonNode spec, ServerContext ctx, Instant compiledAt) {
         return switch (changeType) {
-            case CONNECTION_CREATE -> createConnection(spec, ctx, dryRun);
-            case NETWORK_CREATE -> createNetwork(spec, ctx, dryRun);
-            case SERVICE_TOKEN_CREATE -> createServiceToken(spec, ctx, dryRun);
+            case CONNECTION_CREATE -> createConnection(spec, ctx);
+            case NETWORK_CREATE -> createNetwork(spec, ctx);
+            case SERVICE_TOKEN_CREATE -> createServiceToken(spec, ctx, compiledAt);
         };
     }
 
-    // ── connection_create ───────────────────────────────────────────────────
+    /**
+     * One compiled create request: the body it will send, the body's binding hash, and a one-shot
+     * sender.
+     */
+    static final class Compiled {
+
+        private final ChangeType changeType;
+        private final JsonNode requestBody;
+        private final String requestSha256;
+        private final Function<Boolean, ObjectNode> sender;
+        private boolean sent;
+
+        Compiled(ChangeType changeType, Object creatorJson, Function<Boolean, ObjectNode> sender) {
+            this.changeType = changeType;
+            // The body exactly as the HTTP layer serializes it: the shared wire mapper, no filters
+            // (create POSTs carry none). dryRun is a query parameter, so both phases send this body.
+            this.requestBody = Constants.mapper().valueToTree(creatorJson);
+            this.requestSha256 = SpecHash.sha256Hex(changeType.id() + "\n"
+                    + SpecHash.canonicalize(requestBody, Constants.mapper()));
+            this.sender = sender;
+        }
+
+        /** @return the JSON body the create sends */
+        JsonNode requestBody() {
+            return requestBody;
+        }
+
+        /** @return the SHA-256 (hex) of the change type and the canonical request body */
+        String requestSha256() {
+            return requestSha256;
+        }
+
+        /** Sends the body with {@code dryRun=true}; nothing is provisioned. */
+        ObjectNode dryRun() {
+            return send(true);
+        }
+
+        /** Sends the body to the real create endpoint. */
+        ObjectNode create() {
+            return send(false);
+        }
+
+        private synchronized ObjectNode send(boolean dryRun) {
+            if (sent) {
+                throw new IllegalStateException("This compiled " + changeType.id() + " request was already sent.");
+            }
+            sent = true;
+            return sender.apply(dryRun);
+        }
+    }
+
+    // connection_create
 
     /** The connection type of a validated spec, for the price context. */
     static ConnectionType connectionType(JsonNode spec) {
         return strictEnum(ConnectionType.class, requireString(spec, "type", "spec.type"), "spec.type");
     }
 
-    private static ObjectNode createConnection(JsonNode spec, ServerContext ctx, boolean dryRun) {
+    private static Compiled createConnection(JsonNode spec, ServerContext ctx) {
         rejectUnknownKeys(spec, CONNECTION_KEYS, "spec");
         ConnectionType type = connectionType(spec);
         String name = requireString(spec, "name", "spec.name");
@@ -120,27 +187,29 @@ final class ChangeCompiler {
         emails.forEach(builder::notification);
         applySide(builder, true, aSide);
         applySide(builder, false, zSide);
-        if (dryRun) {
-            builder.dryRun();
-        }
-        Connection connection = builder.create();
+        return new Compiled(ChangeType.CONNECTION_CREATE, new ConnectionCreatorJson(builder), dryRun -> {
+            if (dryRun) {
+                builder.dryRun();
+            }
+            Connection connection = builder.create();
 
-        ObjectNode node = ctx.objectMapper().createObjectNode();
-        node.put("resource", "connection");
-        putIfPresent(node, "uuid", connection.getUuid());
-        putIfPresent(node, "name", connection.getName());
-        putEnum(node, "type", connection.getType());
-        putEnum(node, "state", connection.getState());
-        if (connection.getBandwidth() != null) {
-            node.put("bandwidth_mbps", connection.getBandwidth());
-        }
-        return node;
+            ObjectNode node = ctx.objectMapper().createObjectNode();
+            node.put("resource", "connection");
+            putIfPresent(node, "uuid", connection.getUuid());
+            putRemote(node, "name", connection.getName());
+            putEnum(node, "type", connection.getType());
+            putEnum(node, "state", connection.getState());
+            if (connection.getBandwidth() != null) {
+                node.put("bandwidth_mbps", connection.getBandwidth());
+            }
+            return node;
+        });
     }
 
     private enum SideKind { PORT, SERVICE_PROFILE, CLOUD_ROUTER, NETWORK, SERVICE_TOKEN, VIRTUAL_DEVICE }
 
     private record SideSpec(SideKind kind, String uuid, LinkProtocol linkProtocol,
-                            InterfaceType interfaceType, Integer interfaceId) {
+                            InterfaceType interfaceType, Integer interfaceId, String metroCode) {
     }
 
     private static SideSpec parseSide(JsonNode spec, String field) {
@@ -198,7 +267,12 @@ final class ChangeCompiler {
             throw new IllegalArgumentException("'" + where + "' interface_type/interface_id apply only to "
                     + "a virtual_device endpoint; remove them.");
         }
-        return new SideSpec(kind, uuid, protocol, interfaceType, interfaceId);
+        String metro = optString(node, "metro_code").orElse(null);
+        if (metro != null && kind != SideKind.SERVICE_PROFILE) {
+            throw new IllegalArgumentException("'" + where + ".metro_code' applies only to a "
+                    + "service_profile endpoint; remove it.");
+        }
+        return new SideSpec(kind, uuid, protocol, interfaceType, interfaceId, metro);
     }
 
     private static String sideKey(SideKind kind) {
@@ -227,7 +301,12 @@ final class ChangeCompiler {
                     builder.aSideAccessPointServiceProfile(side.uuid(), side.linkProtocol());
                 }
                 else {
-                    builder.zSideAccessPointServiceProfile(side.uuid(), side.linkProtocol());
+                    if (side.metroCode() == null) {
+                        throw new IllegalArgumentException("'spec.z_side.metro_code' is required for a "
+                                + "service_profile endpoint: Fabric rejects a provider side without "
+                                + "location.metroCode (HTTP 400 EQ-3142501).");
+                    }
+                    builder.zSideAccessPointServiceProfile(side.uuid(), side.linkProtocol(), side.metroCode());
                 }
             }
             case CLOUD_ROUTER -> {
@@ -290,9 +369,9 @@ final class ChangeCompiler {
         };
     }
 
-    // ── network_create ──────────────────────────────────────────────────────
+    // network_create
 
-    private static ObjectNode createNetwork(JsonNode spec, ServerContext ctx, boolean dryRun) {
+    private static Compiled createNetwork(JsonNode spec, ServerContext ctx) {
         rejectUnknownKeys(spec, NETWORK_KEYS, "spec");
         NetworkType type = strictEnum(NetworkType.class,
                 requireString(spec, "type", "spec.type"), "spec.type");
@@ -314,24 +393,26 @@ final class ChangeCompiler {
         projectId.ifPresent(id -> builder.withProject(new Project(id)));
         metro.ifPresent(code -> builder.withLocation(new LocationCode(code)));
         emails.forEach(email -> builder.notification(NotificationType.ALL, email));
-        if (dryRun) {
-            builder.dryRun();
-        }
-        Network network = builder.create();
+        return new Compiled(ChangeType.NETWORK_CREATE, new NetworkCreatorJson(builder), dryRun -> {
+            if (dryRun) {
+                builder.dryRun();
+            }
+            Network network = builder.create();
 
-        ObjectNode node = ctx.objectMapper().createObjectNode();
-        node.put("resource", "network");
-        putIfPresent(node, "uuid", network.getUuid());
-        putIfPresent(node, "name", network.getName());
-        putEnum(node, "type", network.getType());
-        putEnum(node, "state", network.getState());
-        putEnum(node, "scope", network.getScope());
-        return node;
+            ObjectNode node = ctx.objectMapper().createObjectNode();
+            node.put("resource", "network");
+            putIfPresent(node, "uuid", network.getUuid());
+            putRemote(node, "name", network.getName());
+            putEnum(node, "type", network.getType());
+            putEnum(node, "state", network.getState());
+            putEnum(node, "scope", network.getScope());
+            return node;
+        });
     }
 
-    // ── service_token_create ────────────────────────────────────────────────
+    // service_token_create
 
-    private static ObjectNode createServiceToken(JsonNode spec, ServerContext ctx, boolean dryRun) {
+    private static Compiled createServiceToken(JsonNode spec, ServerContext ctx, Instant compiledAt) {
         rejectUnknownKeys(spec, TOKEN_KEYS, "spec");
         Side issuerSide = parseIssuerSide(requireString(spec, "issuer_side", "spec.issuer_side"));
         ServiceTokenType type = strictEnum(ServiceTokenType.class,
@@ -371,7 +452,12 @@ final class ChangeCompiler {
                 .ofType(type)
                 .withName(name);
         optString(spec, "description").ifPresent(builder::withDescription);
-        optInt(spec, "expiry_days").ifPresent(builder::withExpiry);
+        // Relative to the proposal's compile instant (whole seconds), not "now": the confirm phase
+        // recompiles at the same instant, so the body it sends is the one the dry run validated
+        // and the human reviewed.
+        optInt(spec, "expiry_days").ifPresent(days -> builder.withExpirationDateTime(
+                java.time.LocalDateTime.ofInstant(compiledAt.truncatedTo(java.time.temporal.ChronoUnit.SECONDS),
+                        java.time.ZoneOffset.UTC).plusDays(days)));
         optString(spec, "project_id").ifPresent(builder::inProject);
         connectionType.ifPresent(builder::forConnectionType);
         optBool(spec, "allow_remote_connection").ifPresent(builder::allowRemoteConnection);
@@ -396,21 +482,23 @@ final class ChangeCompiler {
             }
         }
         stringList(spec, "notification_emails").forEach(builder::withNotificationEmail);
-        if (dryRun) {
-            builder.dryRun();
-        }
-        ServiceToken token = builder.create();
+        return new Compiled(ChangeType.SERVICE_TOKEN_CREATE, new ServiceTokenCreatorJson(builder), dryRun -> {
+            if (dryRun) {
+                builder.dryRun();
+            }
+            ServiceToken token = builder.create();
 
-        ObjectNode node = ctx.objectMapper().createObjectNode();
-        node.put("resource", "service_token");
-        putIfPresent(node, "uuid", token.getUuid());
-        putIfPresent(node, "name", token.getName());
-        putEnum(node, "type", token.getType());
-        putEnum(node, "state", token.getState());
-        if (token.getExpiry() != null) {
-            node.put("expiry_days", token.getExpiry());
-        }
-        return node;
+            ObjectNode node = ctx.objectMapper().createObjectNode();
+            node.put("resource", "service_token");
+            putIfPresent(node, "uuid", token.getUuid());
+            putRemote(node, "name", token.getName());
+            putEnum(node, "type", token.getType());
+            putEnum(node, "state", token.getState());
+            if (token.getExpirationDateTime() != null) {
+                node.put("expiration_date_time", token.getExpirationDateTime().toString());
+            }
+            return node;
+        });
     }
 
     private static Side parseIssuerSide(String raw) {
@@ -423,12 +511,12 @@ final class ChangeCompiler {
         };
     }
 
-    // ── shared plumbing ─────────────────────────────────────────────────────
+    // shared plumbing
 
     /**
      * Networks and service tokens are not on the narrow {@link FabricGateway} view the design
      * engines use, so those change types need the full {@link Fabric} client (which is what a
-     * session-built context always provides — {@code Fabric} implements the gateway).
+     * session-built context always provides - {@code Fabric} implements the gateway).
      */
     private static Fabric requireFullFabric(ServerContext ctx, String what) {
         FabricGateway gateway = ctx.fabric();
@@ -459,7 +547,7 @@ final class ChangeCompiler {
         });
         if (!unknown.isEmpty()) {
             throw new IllegalArgumentException("'" + where + "' has unknown field(s) " + unknown
-                    + " — a mutation spec must be exact, nothing is silently dropped. Known fields: "
+                    + " - a mutation spec must be exact, nothing is silently dropped. Known fields: "
                     + String.join(", ", known.stream().sorted().toList()) + ".");
         }
     }
@@ -491,62 +579,115 @@ final class ChangeCompiler {
                 + "Valid values: " + String.join(", ", valid) + ".");
     }
 
+    // Field readers are strict: a field that is present must have the documented JSON type, or the
+    // spec is rejected. Silently dropping a mistyped value (for example "allow_remote_connection":
+    // "false") would execute something different from the spec the human reviewed and the confirm
+    // token's SHA-256 covers. Strings may not contain control characters, so a value such as a
+    // connection name cannot add forged lines to the human confirmation prompt.
+
+    private static boolean absent(JsonNode value) {
+        return value == null || value.isNull();
+    }
+
+    private static String checkedText(JsonNode value, String where) {
+        String text = value.asText().trim();
+        for (int i = 0; i < text.length(); i++) {
+            if (Character.isISOControl(text.charAt(i))) {
+                throw new IllegalArgumentException("'" + where + "' must not contain control characters "
+                        + "(newlines, tabs, escape sequences).");
+            }
+        }
+        return text;
+    }
+
+    private static int checkedInt(JsonNode value, String where) {
+        if (!value.isNumber() || !value.canConvertToExactIntegral() || !value.canConvertToInt()) {
+            throw new IllegalArgumentException("'" + where + "' must be a whole number within the 32-bit "
+                    + "integer range, got " + value + ".");
+        }
+        return value.intValue();
+    }
+
     private static String requireString(JsonNode node, String field, String where) {
         JsonNode value = node.get(field);
-        if (value == null || value.isNull() || !value.isTextual() || value.asText().trim().isEmpty()) {
+        if (absent(value) || !value.isTextual() || value.asText().trim().isEmpty()) {
             throw new IllegalArgumentException("'" + where + "' is required and must be a non-empty string.");
         }
-        return value.asText().trim();
+        return checkedText(value, where);
     }
 
     private static int requireInt(JsonNode node, String field, String where) {
         JsonNode value = node.get(field);
-        if (value == null || !value.isNumber()) {
+        if (absent(value)) {
             throw new IllegalArgumentException("'" + where + "' is required and must be an integer.");
         }
-        return value.asInt();
+        return checkedInt(value, where);
     }
 
     private static Optional<String> optString(JsonNode node, String field) {
         JsonNode value = node.get(field);
-        if (value == null || value.isNull() || !value.isTextual() || value.asText().trim().isEmpty()) {
+        if (absent(value)) {
             return Optional.empty();
         }
-        return Optional.of(value.asText().trim());
+        if (!value.isTextual()) {
+            throw new IllegalArgumentException("'" + field + "' must be a string, got " + value.getNodeType()
+                    .name().toLowerCase(Locale.ROOT) + ".");
+        }
+        String text = checkedText(value, field);
+        return text.isEmpty() ? Optional.empty() : Optional.of(text);
     }
 
     private static Optional<Integer> optInt(JsonNode node, String field) {
         JsonNode value = node.get(field);
-        return value != null && value.isNumber() ? Optional.of(value.asInt()) : Optional.empty();
+        return absent(value) ? Optional.empty() : Optional.of(checkedInt(value, field));
     }
 
     private static Optional<Boolean> optBool(JsonNode node, String field) {
         JsonNode value = node.get(field);
-        return value != null && value.isBoolean() ? Optional.of(value.asBoolean()) : Optional.empty();
+        if (absent(value)) {
+            return Optional.empty();
+        }
+        if (!value.isBoolean()) {
+            throw new IllegalArgumentException("'" + field + "' must be a JSON boolean (true or false), got "
+                    + value + ".");
+        }
+        return Optional.of(value.booleanValue());
+    }
+
+    private static JsonNode optArray(JsonNode node, String field) {
+        JsonNode array = node.get(field);
+        if (absent(array)) {
+            return null;
+        }
+        if (!array.isArray()) {
+            throw new IllegalArgumentException("'" + field + "' must be an array.");
+        }
+        return array;
     }
 
     private static List<String> stringList(JsonNode node, String field) {
         List<String> values = new ArrayList<>();
-        JsonNode array = node.get(field);
-        if (array != null && array.isArray()) {
-            array.forEach(item -> {
-                if (item.isTextual() && !item.asText().trim().isEmpty()) {
-                    values.add(item.asText().trim());
+        JsonNode array = optArray(node, field);
+        if (array != null) {
+            for (int i = 0; i < array.size(); i++) {
+                JsonNode item = array.get(i);
+                String where = field + "[" + i + "]";
+                if (!item.isTextual() || item.asText().trim().isEmpty()) {
+                    throw new IllegalArgumentException("'" + where + "' must be a non-empty string.");
                 }
-            });
+                values.add(checkedText(item, where));
+            }
         }
         return values;
     }
 
     private static List<Integer> intList(JsonNode node, String field) {
         List<Integer> values = new ArrayList<>();
-        JsonNode array = node.get(field);
-        if (array != null && array.isArray()) {
-            array.forEach(item -> {
-                if (item.isNumber()) {
-                    values.add(item.asInt());
-                }
-            });
+        JsonNode array = optArray(node, field);
+        if (array != null) {
+            for (int i = 0; i < array.size(); i++) {
+                values.add(checkedInt(array.get(i), field + "[" + i + "]"));
+            }
         }
         return values;
     }
@@ -554,6 +695,13 @@ final class ChangeCompiler {
     private static void putIfPresent(ObjectNode node, String field, String value) {
         if (value != null && !value.isEmpty()) {
             node.put(field, value);
+        }
+    }
+
+    /** A name echoed by the API: remote text, labelled as untrusted. */
+    private static void putRemote(ObjectNode node, String field, String value) {
+        if (value != null && !value.isEmpty()) {
+            UntrustedText.put(node, field, value);
         }
     }
 

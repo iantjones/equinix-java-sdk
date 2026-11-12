@@ -52,10 +52,16 @@ public class Page<J> {
     /**
      * The page's items. Initialized so a response that omits the {@code items}/{@code data}
      * array (some endpoints do this on empty results) reads as an empty page rather than
-     * {@code null} — a {@code null} here used to NPE deep inside the list-mapping helpers.
+     * {@code null} - a {@code null} here used to NPE deep inside the list-mapping helpers.
      */
     @JsonAlias("data")
     private List<J> items = new ArrayList<>();
 
+    /**
+     * The page metadata. Fabric, IBX SmartView, EIA and most operations APIs name it
+     * {@code pagination}; the operations attachments, finance accounts, report center and
+     * asset search APIs name the same {@code offset/limit/total} object {@code page}.
+     */
+    @JsonAlias("page")
     private Pagination pagination;
 }

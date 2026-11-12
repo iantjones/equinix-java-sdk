@@ -1,0 +1,18 @@
+{
+  "pagination": {
+    "limit": 20,
+    "offset": 0,
+    "total": 1
+  },
+  "data": [
+    {
+      "href": "https://api.equinix.com/fabric/v4/appSubscriptions/20f3ef8e-d670-4236-86fa-bb0038adcfc3",
+      "type": "APP_SUBSCRIPTION",
+      "uuid": "20f3ef8e-d670-4236-86fa-bb0038adcfc3",
+      "state": "PROVISIONED",
+      "account": {
+        "organizationName": "equinix"
+      }
+    }
+  ]
+}

@@ -25,8 +25,8 @@ import java.io.IOException;
 
 /**
  * Case-insensitive {@link MetroCode} deserializer. Delegates to {@link MetroCode#fromCode(String)},
- * so a metro the API has brought online that the enum does not yet list — as well as a blank or
- * whitespace-only code — maps to the forward-compatible {@link MetroCode#UNKNOWN} sentinel rather
+ * so a metro the API has brought online that the enum does not yet list - as well as a blank or
+ * whitespace-only code - maps to the forward-compatible {@link MetroCode#UNKNOWN} sentinel rather
  * than failing the whole response. Only an explicit JSON {@code null} yields {@code null}.
  *
  * @author ianjones

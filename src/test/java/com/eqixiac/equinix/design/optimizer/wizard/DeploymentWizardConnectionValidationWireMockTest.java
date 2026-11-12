@@ -62,12 +62,12 @@ import static org.mockito.Mockito.mock;
  * Locks the wizard engine's rebuilt plan-time validation contract over the real Fabric wire:
  *
  * <ul>
- *   <li><b>Layer&nbsp;2 — live router dry-run:</b> {@code plan()} validates every planned Cloud Router
+ *   <li><b>Layer&nbsp;2 - live router dry-run:</b> {@code plan()} validates every planned Cloud Router
  *       against the native Fabric dry-run surface
  *       ({@code POST /fabric/v4/routers?dryRun=true} through {@code cloudRouters().define(..).dryRun().create()}).
  *       Self-contained FCRs need nothing the customer owns, so this runs for real. A rejection folds
  *       into the plan's validation errors and invalidates the plan.</li>
- *   <li><b>Layer&nbsp;3 — connection endpoint dry-run is DEFERRED:</b> a connection whose A-side Cloud
+ *   <li><b>Layer&nbsp;3 - connection endpoint dry-run is DEFERRED:</b> a connection whose A-side Cloud
  *       Router does not exist yet is NOT sent a doomed, endpoint-less connection dry-run
  *       (the old {@code EQ-3142501 "Null value for aSide access point"} failure). Zero connection POSTs
  *       are made; the connection is recorded as deferred, with the customer authorization it will need
@@ -76,11 +76,11 @@ import static org.mockito.Mockito.mock;
  *       step instead of failing the plan.</li>
  * </ul>
  */
-@DisplayName("DeploymentWizard — layered plan-time validation (router dry-run, deferred connections)")
+@DisplayName("DeploymentWizard - layered plan-time validation (router dry-run, deferred connections)")
 class DeploymentWizardConnectionValidationWireMockTest extends WireMockTestBase {
 
     // Named MetroId constants, for readability. The topology lookup matches on VALUE, not reference
-    // identity — sharing an instance is a convenience here, never a requirement.
+    // identity - sharing an instance is a convenience here, never a requirement.
     private static final MetroId DC = MetroId.of(MetroCode.DC);
     private static final MetroId DA = MetroId.of(MetroCode.DA);
 
@@ -103,7 +103,7 @@ class DeploymentWizardConnectionValidationWireMockTest extends WireMockTestBase 
         resetStubs();
     }
 
-    // ── Layer 2 (router dry-run) + Layer 3 (deferred connection) ──
+    // Layer 2 (router dry-run) + Layer 3 (deferred connection)
 
     @Test
     @DisplayName("plan() dry-runs each planned Cloud Router over REST and defers every connection")
@@ -119,7 +119,7 @@ class DeploymentWizardConnectionValidationWireMockTest extends WireMockTestBase 
         assertTrue(plan.getValidationErrors().isEmpty());
 
         // The wire: exactly TWO router dry-runs (FCR-DC, FCR-DA), each carrying dryRun=true. NO
-        // connection is posted — the to-be-created-FCR connection is deferred, never dry-run.
+        // connection is posted - the to-be-created-FCR connection is deferred, never dry-run.
         wireMock.verify(2, postRequestedFor(urlPathEqualTo("/fabric/v4/routers"))
                 .withQueryParam("dryRun", equalTo("true")));
         wireMock.verify(1, postRequestedFor(urlPathEqualTo("/fabric/v4/routers"))
@@ -134,7 +134,7 @@ class DeploymentWizardConnectionValidationWireMockTest extends WireMockTestBase 
     }
 
     @Test
-    @DisplayName("required customer inputs are enumerated per connection (AWS Account ID, VLAN) — nothing fabricated")
+    @DisplayName("required customer inputs are enumerated per connection (AWS Account ID, VLAN) - nothing fabricated")
     void requiredInputsEnumerated() {
         stubRouterDryRunOk();
         stubServiceProfileOk();
@@ -177,7 +177,7 @@ class DeploymentWizardConnectionValidationWireMockTest extends WireMockTestBase 
     }
 
     @Test
-    @DisplayName("a gateway with no usable Fabric surface skips every live step — best-effort, never fatal")
+    @DisplayName("a gateway with no usable Fabric surface skips every live step - best-effort, never fatal")
     void bareStubGatewaySkipsLiveValidation() {
         // A bare Mockito stub returns null from cloudRouters()/serviceProfiles()/connections(): the
         // engine must skip validation silently (offline planning stays possible) rather than warn or throw.
@@ -211,16 +211,16 @@ class DeploymentWizardConnectionValidationWireMockTest extends WireMockTestBase 
         wireMock.verify(0, postRequestedFor(urlPathEqualTo("/fabric/v4/connections")));
     }
 
-    // ── connection-config resilience: redundancy assembly (lens-3b real dry-run) ──
+    // connection-config resilience: redundancy assembly (lens-3b real dry-run)
 
     @Test
-    @DisplayName("a connection-level redundancy group is stamped onto the connection body, not silently dropped")
+    @DisplayName("a connection-level redundancy priority is stamped onto the connection body, never the plan-local group token")
     void redundancyGroupIsStampedOntoConnectionBody() {
         wireMock.stubFor(post(urlPathEqualTo("/fabric/v4/connections"))
                 .willReturn(okJson(loadFixture("/json/fabric/connection_response.json"))));
 
         // A lens-3b provider connection (pre-existing A-side + auth key present) so the live endpoint
-        // dry-run runs for REAL at plan time — the wire is what proves the redundancy group survives.
+        // dry-run runs for REAL at plan time - the wire is what proves the redundancy group survives.
         DeploymentPlan plan = lens3bPlan(PlannedConnection.builder()
                 .name("FCR-DC-to-aws")
                 .connectionType(ConnectionType.IP_VC)
@@ -243,13 +243,15 @@ class DeploymentWizardConnectionValidationWireMockTest extends WireMockTestBase 
 
         wireMock.verify(1, postRequestedFor(urlPathEqualTo("/fabric/v4/connections"))
                 .withQueryParam("dryRun", equalTo("true"))
-                .withRequestBody(matchingJsonPath("$.redundancy.group", equalTo("aws-redundant-pair")))
+                // The plan's group token is SDK-side pairing only, never a Fabric group id: a SECONDARY
+                // sends the PRIMARY's live group, which does not exist at plan time.
+                .withRequestBody(notMatching(".*aws-redundant-pair.*"))
                 .withRequestBody(matchingJsonPath("$.redundancy.priority", equalTo("SECONDARY")))
                 .withRequestBody(matchingJsonPath("$.zSide.accessPoint.linkProtocol.vlanTag", equalTo("1001"))));
     }
 
     @Test
-    @DisplayName("a connection with no redundancy group stays standalone — no redundancy is sent")
+    @DisplayName("a connection with no redundancy group stays standalone - no redundancy is sent")
     void noRedundancyGroupLeavesConnectionStandalone() {
         wireMock.stubFor(post(urlPathEqualTo("/fabric/v4/connections"))
                 .willReturn(okJson(loadFixture("/json/fabric/connection_response.json"))));
@@ -279,7 +281,7 @@ class DeploymentWizardConnectionValidationWireMockTest extends WireMockTestBase 
     }
 
     @Test
-    @DisplayName("a connection with no VLAN tag still dry-runs — a tagless DOT1Q, not a crash or a guessed tag")
+    @DisplayName("a connection with no VLAN tag still dry-runs - a tagless DOT1Q, not a crash or a guessed tag")
     void missingVlanTagDegradesToTaglessDot1q() {
         wireMock.stubFor(post(urlPathEqualTo("/fabric/v4/connections"))
                 .willReturn(okJson(loadFixture("/json/fabric/connection_response.json"))));
@@ -304,7 +306,7 @@ class DeploymentWizardConnectionValidationWireMockTest extends WireMockTestBase 
 
         plan.dryRun();
 
-        // The dry-run is attempted (no crash from the null VLAN) and the body carries NO guessed vlanTag —
+        // The dry-run is attempted (no crash from the null VLAN) and the body carries NO guessed vlanTag - 
         // the API is left to surface the missing tag rather than the SDK inventing one.
         wireMock.verify(1, postRequestedFor(urlPathEqualTo("/fabric/v4/connections"))
                 .withQueryParam("dryRun", equalTo("true"))
@@ -325,7 +327,7 @@ class DeploymentWizardConnectionValidationWireMockTest extends WireMockTestBase 
                 .build();
     }
 
-    // ── stubbing helpers ──
+    // stubbing helpers
 
     /** Stubs the Cloud Router dry-run POST to accept the request (the fixture body is a router echo). */
     private static void stubRouterDryRunOk() {
@@ -339,7 +341,7 @@ class DeploymentWizardConnectionValidationWireMockTest extends WireMockTestBase 
                 .willReturn(okJson(loadFixture("/json/fabric/service_profile_response.json"))));
     }
 
-    // ── plan helpers ──
+    // plan helpers
 
     private DeploymentWizard.Builder wizard() {
         return fabric.deploymentWizard(twoMetroResult())
@@ -352,7 +354,7 @@ class DeploymentWizardConnectionValidationWireMockTest extends WireMockTestBase 
 
     /**
      * Two metros: DC with AWS available and a single 8000 Mbps AWS-dependent workload placed there,
-     * plus DA with no providers — so the plan carries exactly one provider connection
+     * plus DA with no providers - so the plan carries exactly one provider connection
      * (FCR-DC-to-aws, 8000 Mbps) and one backbone link (FCR-DC-to-DA). sp-aws is a real catalog UUID
      * whose service_profile_response fixture offers metro DC with seller region us-east-1.
      */

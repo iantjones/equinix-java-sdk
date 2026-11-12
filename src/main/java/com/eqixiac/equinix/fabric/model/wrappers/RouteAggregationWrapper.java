@@ -29,6 +29,8 @@ public class RouteAggregationWrapper extends ResourceImpl<RouteAggregation> impl
 
     @Delegate(excludes = RouteAggregationMutability.class)
     private RouteAggregationJson jsonObject;
+
+    private boolean deleted;
     @Getter
     private final Pageable<RouteAggregation> serviceClient;
 
@@ -42,8 +44,17 @@ public class RouteAggregationWrapper extends ResourceImpl<RouteAggregation> impl
     }
 
     public Boolean delete() {
-        this.jsonObject = ((RouteAggregationClientImpl)this.serviceClient).delete(this.getUuid());
+        RouteAggregationJson response = ((RouteAggregationClientImpl)this.serviceClient).delete(this.getUuid());
+        if (response != null) {
+            this.jsonObject = response;
+        }
+        this.deleted = true;
         return true;
+    }
+
+    @Override
+    public boolean isDeleted() {
+        return this.deleted;
     }
 
     public void refresh() {

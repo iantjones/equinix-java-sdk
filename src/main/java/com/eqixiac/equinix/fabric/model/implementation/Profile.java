@@ -30,7 +30,7 @@ import java.util.List;
 @Getter
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Profile {
-    
+
     @JsonProperty("uuid")
     private String uuid;
 

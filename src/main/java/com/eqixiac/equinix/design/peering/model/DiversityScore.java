@@ -18,6 +18,8 @@ package com.eqixiac.equinix.design.peering.model;
 
 import com.eqixiac.equinix.core.model.MetroId;
 import com.eqixiac.equinix.design.peering.enums.DiversityRating;
+import com.eqixiac.equinix.design.optimizer.context.LatencyFigure;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Builder;
 import lombok.Value;
 
@@ -35,6 +37,7 @@ import lombok.Value;
  */
 @Value
 @Builder
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class DiversityScore {
 
     MetroId primaryMetro;
@@ -42,31 +45,40 @@ public class DiversityScore {
     MetroId backupMetro;
 
     /**
-     * Great-circle distance between the two metros in kilometers.
-     *
-     * <p><b>Only meaningful when {@link #distanceUnavailable} is {@code false}.</b> When the distance
-     * could not be computed (coordinates missing for at least one metro) this is {@link Double#NaN} — a
-     * deliberate non-value, never {@code 0}, so it can never be mistaken for a "same-site" 0&nbsp;km
-     * proximity finding.</p>
+     * Great-circle distance between the two metros in kilometres, or {@code null} when it could not be
+     * computed (coordinates missing for at least one metro). Unknown is an absent value, never {@code 0}
+     * and never {@code NaN}, so it cannot be mistaken for a "same-site" 0&nbsp;km finding and it is simply
+     * left out of JSON.
      */
-    double distanceKm;
+    Double distanceKm;
 
     /**
      * {@code true} when the geographic distance could not be determined because at least one metro has
      * no known Equinix-facility or Fabric coordinate. Such a pair is honestly <em>unassessed</em>: it is
      * excluded from same-site detection and from the overall resiliency score, its {@link #rating} is
-     * {@link DiversityRating#UNKNOWN}, and {@link #distanceKm}/{@link #estimatedRttMs} are
-     * {@link Double#NaN} rather than a fabricated {@code 0}.
+     * {@link DiversityRating#UNKNOWN}, and {@link #distanceKm} / {@link #rttFloorMs} are {@code null}.
      */
     boolean distanceUnavailable;
 
     /**
-     * Estimated round-trip fibre latency between the two metros, in milliseconds — the
-     * {@linkplain com.eqixiac.equinix.design.geo.SpeedOfLightLatency speed-of-light floor} for the
-     * {@link #distanceKm} great-circle distance. A physical lower bound; real latency is higher
-     * (switching, queuing, non-direct fibre).
+     * The straight-fibre speed-of-light round trip for {@link #distanceKm}, in ms: a physical lower bound.
+     * {@code null} when the distance is unknown.
      */
-    double estimatedRttMs;
+    Double rttFloorMs;
+
+    /**
+     * The round trip between the two metros in ms, the way the Metro Optimizer states it: Fabric's measured
+     * {@code connectedMetros.avgLatency} when Fabric publishes the pair, otherwise the floor times the
+     * route factor fitted from the measured pairs ({@code RouteFactorCalibration}). {@code null} when
+     * neither a measurement nor a distance is available. {@link #rttBasis} says which.
+     */
+    Double estimatedRttMs;
+
+    /** How {@link #estimatedRttMs} was obtained; {@code null} when it is unknown. */
+    LatencyFigure.Basis rttBasis;
+
+    /** Detail for {@link #estimatedRttMs} (which pair was measured, the route factor used). */
+    String rttNote;
 
     boolean sameRegion;
 

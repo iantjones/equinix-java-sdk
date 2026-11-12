@@ -35,9 +35,9 @@ import static org.junit.jupiter.api.Assertions.*;
  *
  * <p>Exercises the two read-only discovery endpoints:</p>
  * <ul>
- *   <li>{@code getJwks()} — GET {@code /jwks} (operationId {@code getJwks}), asserting the parsed
+ *   <li>{@code getJwks()} - GET {@code /jwks} (operationId {@code getJwks}), asserting the parsed
  *       JSON Web Key Set.</li>
- *   <li>{@code getOpenIdConfiguration()} — GET {@code /.well-known/openid-configuration}
+ *   <li>{@code getOpenIdConfiguration()} - GET {@code /.well-known/openid-configuration}
  *       (operationId {@code getOpenIdConfiguration}), asserting the parsed discovery document.</li>
  * </ul>
  *
@@ -116,7 +116,7 @@ class STSDiscoveryWireMockTest extends WireMockTestBase {
         @DisplayName("500 throws EquinixServerException")
         void serverError() {
             stubErrorInline(wireMock, "/jwks", 500,
-                    "{\"errorCode\":\"ERR-500\",\"errorMessage\":\"Internal server error\"}");
+                    "{\"error\":{\"errorCode\":\"internal-error\"}}");
 
             assertThrows(EquinixServerException.class, () -> sts.discovery().getJwks());
 
@@ -127,6 +127,27 @@ class STSDiscoveryWireMockTest extends WireMockTestBase {
     @Nested
     @DisplayName("getOpenIdConfiguration()")
     class GetOpenIdConfiguration {
+
+        @Test
+        @DisplayName("parses the snake_case document the live service returns, without a bearer header")
+        void parsesLiveSnakeCaseDocument() {
+            // Shape captured from https://sts.eqix.equinix.com/.well-known/openid-configuration
+            // on 2026-11-11 (the stsv1 spec documents camelCase; the service emits snake_case).
+            stubSingleton(wireMock, "/\\.well-known/openid-configuration",
+                    "/json/sts/openid_configuration_live.json");
+
+            OpenIdConfiguration config = sts.discovery().getOpenIdConfiguration();
+
+            assertEquals("https://sts.eqix.equinix.com", config.getIssuer());
+            assertEquals("https://sts.eqix.equinix.com/jwks", config.getJwksUri());
+            assertEquals("https://sts.eqix.equinix.com/use/token", config.getTokenEndpoint());
+            assertEquals(5, config.getClaimsSupported().size());
+            assertEquals(List.of("id_token"), config.getResponseTypesSupported());
+            assertEquals(List.of("public"), config.getSubjectTypesSupported());
+            assertEquals(List.of("ES256"), config.getIdTokenSigningAlgValuesSupported());
+            wireMock.verify(getRequestedFor(urlPathEqualTo("/.well-known/openid-configuration"))
+                    .withoutHeader("Authorization"));
+        }
 
         @Test
         @DisplayName("GETs /.well-known/openid-configuration and parses the discovery document")
@@ -152,7 +173,7 @@ class STSDiscoveryWireMockTest extends WireMockTestBase {
         @DisplayName("500 throws EquinixServerException")
         void serverError() {
             stubErrorInline(wireMock, "/\\.well-known/openid-configuration", 500,
-                    "{\"errorCode\":\"ERR-500\",\"errorMessage\":\"Internal server error\"}");
+                    "{\"error\":{\"errorCode\":\"internal-error\"}}");
 
             assertThrows(EquinixServerException.class, () -> sts.discovery().getOpenIdConfiguration());
 

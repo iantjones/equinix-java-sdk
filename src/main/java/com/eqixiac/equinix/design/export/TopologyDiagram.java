@@ -312,8 +312,8 @@ public class TopologyDiagram {
         }
         // Mermaid renders quoted node labels as HTML, so &, <, > and double-quotes in
         // user-supplied names must all be encoded as entities ('&' first, so the others'
-        // entities are not double-escaped). Only the diagram's own <br/> separators —
-        // appended outside escape() — remain live markup.
+        // entities are not double-escaped). Only the diagram's own <br/> separators - 
+        // appended outside escape() - remain live markup.
         return text.replace("&", "&amp;")
                 .replace("<", "&lt;")
                 .replace(">", "&gt;")

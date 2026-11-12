@@ -26,6 +26,7 @@ import com.eqixiac.equinix.networkedge.model.implementation.NetworkInterface;
 import com.eqixiac.equinix.networkedge.model.json.creators.DeviceACLRequest;
 import com.eqixiac.equinix.networkedge.model.json.creators.DeviceRMARequest;
 import com.eqixiac.equinix.networkedge.model.wrappers.DeviceWrapper;
+import com.eqixiac.equinix.networkedge.model.json.creators.DeviceDeleteRequest;
 import org.junit.jupiter.api.*;
 
 import java.util.List;
@@ -241,7 +242,8 @@ class NetworkEdgeDevicesWireMockTest extends WireMockTestBase {
                     .willReturn(okJson(loadFixture("/json/networkedge/interface_stats_response.json"))));
 
             InterfaceStats stats = networkEdge.devices()
-                    .getInterfaceStatistics(UUID, "1", "2021-05-01T00:00:00Z", "2021-05-02T00:00:00Z");
+                    .getInterfaceStatistics(UUID, "1", java.time.Instant.parse("2021-05-01T00:00:00.123Z"),
+                            java.time.Instant.parse("2021-05-02T00:00:00Z"));
 
             assertNotNull(stats);
             assertNotNull(stats.getStats());
@@ -252,18 +254,11 @@ class NetworkEdgeDevicesWireMockTest extends WireMockTestBase {
         }
 
         @Test
-        @DisplayName("getInterfaceStatistics() with null date bounds sends no date query params")
+        @DisplayName("getInterfaceStatistics() without date bounds fails before any request (live HTTP 400)")
         void getsInterfaceStatisticsNoDates() {
-            wireMock.stubFor(get(urlPathEqualTo("/ne/v1/devices/" + UUID + "/interfaces/1/stats"))
-                    .willReturn(okJson(loadFixture("/json/networkedge/interface_stats_response.json"))));
-
-            InterfaceStats stats = networkEdge.devices()
-                    .getInterfaceStatistics(UUID, "1", null, null);
-
-            assertNotNull(stats);
-            wireMock.verify(getRequestedFor(urlPathEqualTo("/ne/v1/devices/" + UUID + "/interfaces/1/stats"))
-                    .withoutQueryParam("startDateTime")
-                    .withoutQueryParam("endDateTime"));
+            assertThrows(IllegalArgumentException.class,
+                    () -> networkEdge.devices().getInterfaceStatistics(UUID, "1", null, null));
+            wireMock.verify(0, getRequestedFor(urlPathEqualTo("/ne/v1/devices/" + UUID + "/interfaces/1/stats")));
         }
 
         @Test
@@ -326,7 +321,7 @@ class NetworkEdgeDevicesWireMockTest extends WireMockTestBase {
             stubSingleton(wireMock, "/ne/v1/devices/" + NEW_UUID, "/json/networkedge/device_response.json");
 
             // DeviceVendorConfig is a read-model (@Getter only), so build the spec-shaped
-            // VendorConfig via Jackson — which also locks its wire property names.
+            // VendorConfig via Jackson - which also locks its wire property names.
             DeviceVendorConfig vendorConfig = Constants.mapper().readValue(
                     "{\"siteId\":\"567\",\"systemIpAddress\":\"192.168.7.100\",\"adminPassword\":\"srb@dm1n\"}",
                     DeviceVendorConfig.class);
@@ -350,7 +345,7 @@ class NetworkEdgeDevicesWireMockTest extends WireMockTestBase {
                     .withRequestBody(matchingJsonPath("$.metroCode", equalTo("SV")))
                     .withRequestBody(matchingJsonPath("$.accountNumber", equalTo("123456")))
                     .withRequestBody(matchingJsonPath("$.notifications[0]", equalTo("ops@example.com")))
-                    // Spec VirtualDeviceRequest.vendorConfig — the create body must carry the nested object.
+                    // Spec VirtualDeviceRequest.vendorConfig - the create body must carry the nested object.
                     .withRequestBody(matchingJsonPath("$.vendorConfig.siteId", equalTo("567")))
                     .withRequestBody(matchingJsonPath("$.vendorConfig.systemIpAddress", equalTo("192.168.7.100")))
                     .withRequestBody(matchingJsonPath("$.vendorConfig.adminPassword", equalTo("srb@dm1n"))));
@@ -518,6 +513,18 @@ class NetworkEdgeDevicesWireMockTest extends WireMockTestBase {
             wireMock.verify(putRequestedFor(urlPathEqualTo("/ne/v1/devices/" + UUID + "/licenseTokens"))
                     .withRequestBody(matchingJsonPath("$.token", equalTo("token-abc-123"))));
         }
+        @Test
+        @DisplayName("an empty 202 from licenseTokens is a success, not a deserialization failure")
+        void updatesLicenseTokenWithEmptyAccepted() {
+            stubSingleton(wireMock, "/ne/v1/devices/" + UUID, "/json/networkedge/device_response.json");
+            wireMock.stubFor(put(urlPathEqualTo("/ne/v1/devices/" + UUID + "/licenseTokens"))
+                    .willReturn(aResponse().withStatus(202)));
+
+            DeviceWrapper device = (DeviceWrapper) networkEdge.devices().getByUuid(UUID);
+
+            assertNull(device.updateLicenseToken("token-abc-123"));
+            wireMock.verify(putRequestedFor(urlPathEqualTo("/ne/v1/devices/" + UUID + "/licenseTokens")));
+        }
     }
 
     @Nested
@@ -537,7 +544,56 @@ class NetworkEdgeDevicesWireMockTest extends WireMockTestBase {
             Boolean result = device.delete();
 
             assertTrue(result);
-            wireMock.verify(deleteRequestedFor(urlPathEqualTo("/ne/v1/devices/" + UUID)));
+            wireMock.verify(deleteRequestedFor(urlPathEqualTo("/ne/v1/devices/" + UUID))
+                    .withQueryParam("deleteRedundantDevice", absent()));
+            // The 204 leaves the wrapper readable.
+            assertEquals(UUID, device.getUuid());
+        }
+
+        @Test
+        @DisplayName("delete(DeviceDeleteRequest) sends deleteRedundantDevice and the deletionInfo body")
+        void deletesPairWithDeactivationKeys() {
+            stubSingleton(wireMock, "/ne/v1/devices/" + UUID, "/json/networkedge/device_response.json");
+            wireMock.stubFor(delete(urlPathEqualTo("/ne/v1/devices/" + UUID))
+                    .willReturn(aResponse().withStatus(204)));
+
+            Device device = networkEdge.devices().getByUuid(UUID);
+            assertTrue(device.delete(new DeviceDeleteRequest()
+                    .deleteRedundantDevice(true)
+                    .deactivationKey("key-primary")
+                    .secondaryDeactivationKey("key-secondary")));
+
+            wireMock.verify(deleteRequestedFor(urlPathEqualTo("/ne/v1/devices/" + UUID))
+                    .withQueryParam("deleteRedundantDevice", equalTo("true"))
+                    .withRequestBody(equalToJson("{\"deactivationKey\":\"key-primary\","
+                            + "\"secondary\":{\"deactivationKey\":\"key-secondary\"}}")));
+        }
+
+        @Test
+        @DisplayName("delete(DeviceDeleteRequest) with only the flag sends no body")
+        void deletesPairWithoutBody() {
+            stubSingleton(wireMock, "/ne/v1/devices/" + UUID, "/json/networkedge/device_response.json");
+            wireMock.stubFor(delete(urlPathEqualTo("/ne/v1/devices/" + UUID))
+                    .willReturn(aResponse().withStatus(204)));
+
+            networkEdge.devices().getByUuid(UUID).delete(new DeviceDeleteRequest().deleteRedundantDevice(false));
+
+            wireMock.verify(deleteRequestedFor(urlPathEqualTo("/ne/v1/devices/" + UUID))
+                    .withQueryParam("deleteRedundantDevice", equalTo("false"))
+                    .withRequestBody(absent()));
+        }
+
+        @Test
+        @DisplayName("refresh() on an empty 2xx body keeps the wrapper readable")
+        void refreshWithEmptyBodyKeepsState() {
+            stubSingleton(wireMock, "/ne/v1/devices/" + UUID, "/json/networkedge/device_response.json");
+            Device device = networkEdge.devices().getByUuid(UUID);
+            wireMock.stubFor(get(urlPathEqualTo("/ne/v1/devices/" + UUID))
+                    .willReturn(aResponse().withStatus(204)));
+
+            device.refresh();
+
+            assertEquals(UUID, device.getUuid());
         }
     }
 
@@ -623,7 +679,7 @@ class NetworkEdgeDevicesWireMockTest extends WireMockTestBase {
         }
 
         @Test
-        @DisplayName("postLicenseFile() POSTs the file body to licenseFiles with metro/type/license query params and returns fileId")
+        @DisplayName("postLicenseFile() POSTs multipart/form-data (binary file part) to licenseFiles with metro/type/license query params")
         void postsLicenseFile() {
             // mapOp reads the response body into a String map, so return a flat JSON object.
             wireMock.stubFor(post(urlPathEqualTo("/ne/v1/devices/licenseFiles"))
@@ -636,7 +692,28 @@ class NetworkEdgeDevicesWireMockTest extends WireMockTestBase {
             wireMock.verify(postRequestedFor(urlPathEqualTo("/ne/v1/devices/licenseFiles"))
                     .withQueryParam("metroCode", equalTo("SV"))
                     .withQueryParam("deviceTypeCode", equalTo("VSRX"))
-                    .withRequestBody(matchingJsonPath("$.file", equalTo("BASE64-LICENSE-CONTENTS"))));
+                    .withQueryParam("licenseType", equalTo("SUB"))
+                    .withHeader("Content-Type", containing("multipart/form-data; boundary="))
+                    .withRequestBody(containing("Content-Disposition: form-data; name=\"file\""))
+                    .withRequestBody(containing("BASE64-LICENSE-CONTENTS"))
+                    .withRequestBody(notContaining("{\"file\"")));
+        }
+
+        @Test
+        @DisplayName("postLicenseFile(deviceUuid, ...) POSTs multipart/form-data to licenseFiles/{uuid}")
+        void postsLicenseFileToDevice() {
+            String deviceUuid = "ed7891f4-7a67-11e9-9bea-1681be663d3e";
+            stubSingleton(wireMock, "/ne/v1/devices/" + deviceUuid, "/json/networkedge/device_response.json");
+            wireMock.stubFor(post(urlPathEqualTo("/ne/v1/devices/licenseFiles/" + deviceUuid))
+                    .willReturn(okJson("{\"fileId\":\"lic-file-5678\"}")));
+
+            DeviceWrapper device = (DeviceWrapper) networkEdge.devices().getByUuid(deviceUuid);
+            String fileId = device.postLicenseFile("LICENSE");
+
+            assertEquals("lic-file-5678", fileId);
+            wireMock.verify(postRequestedFor(urlPathEqualTo("/ne/v1/devices/licenseFiles/" + deviceUuid))
+                    .withHeader("Content-Type", containing("multipart/form-data"))
+                    .withRequestBody(containing("LICENSE")));
         }
     }
 
@@ -650,8 +727,8 @@ class NetworkEdgeDevicesWireMockTest extends WireMockTestBase {
         @Test
         @DisplayName("re-GETs the device and updates the wrapper's state in place")
         void refreshesInPlace() {
-            // First GET returns the original state; the second GET — triggered by
-            // wrapper.refresh() — returns a DIFFERENT payload (renamed, bandwidth bumped).
+            // First GET returns the original state; the second GET - triggered by
+            // wrapper.refresh() - returns a DIFFERENT payload (renamed, bandwidth bumped).
             wireMock.stubFor(get(urlPathEqualTo(PATH))
                     .inScenario("device-refresh")
                     .whenScenarioStateIs(com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED)

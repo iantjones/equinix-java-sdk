@@ -109,6 +109,44 @@ class FabricEiaServicesWireMockTest extends WireMockTestBase {
                     .withRequestBody(notMatching("(?s).*\"billing\".*"))
                     .withRequestBody(notMatching("(?s).*\"order\".*")));
         }
+
+        @Test
+        @DisplayName("a BGP routing protocol sends the asn reference, not the deprecated customerAsn/customerAsnRange")
+        void bgpSendsAsnReference() {
+            stubCreate(wireMock, "/fabric/v4/internetAccessServices", "/json/fabric/eia_service_response.json");
+
+            fabric.eiaServices().define()
+                    .ofType(EiaServiceType.SINGLE_IA)
+                    .name("BGP-EIA")
+                    .bandwidth(100)
+                    .withRoutingProtocol(new EiaRoutingProtocolRequest(EiaRoutingProtocolType.BGP)
+                            .exportPolicy("FULL")
+                            .asn("ad8c5042-b553-4d5e-a2ac-c73bf6d4fd91")
+                            .bgpAuthKey("SecretKey")
+                            .addConnection("9b8c5042-b553-4d5e-a2ac-c73bf6d4fd81"))
+                    .withProject(new Project("proj-1"))
+                    .create();
+
+            wireMock.verify(postRequestedFor(urlPathEqualTo("/fabric/v4/internetAccessServices"))
+                    .withRequestBody(matchingJsonPath("$.routingProtocol.asn.uuid", equalTo("ad8c5042-b553-4d5e-a2ac-c73bf6d4fd91")))
+                    .withRequestBody(matchingJsonPath("$.routingProtocol.bgpAuthKey", equalTo("SecretKey")))
+                    .withRequestBody(notContaining("customerAsn")));
+        }
+
+        @Test
+        @DisplayName("the routing protocol reads back asn and bgpAuthType")
+        void readsRoutingProtocol() {
+            wireMock.stubFor(get(urlPathEqualTo("/fabric/v4/internetAccessServices/eia-1")).willReturn(okJson("""
+                    {"uuid":"eia-1","routingProtocol":{"type":"BGP","exportPolicy":"FULL","bgpAuthType":"AUTH_KEY",
+                     "asn":{"href":"https://api.equinix.com/fabric/v4/asns/ad8c5042-b553-4d5e-a2ac-c73bf6d4fd91",
+                            "uuid":"ad8c5042-b553-4d5e-a2ac-c73bf6d4fd91"},"customerAsn":11111}}""")));
+
+            EiaService service = fabric.eiaServices().getByUuid("eia-1");
+
+            assertEquals(EiaRoutingProtocolType.BGP, service.getRoutingProtocol().getType());
+            assertEquals(com.eqixiac.equinix.fabric.enums.EiaBgpAuthType.AUTH_KEY, service.getRoutingProtocol().getBgpAuthType());
+            assertEquals("ad8c5042-b553-4d5e-a2ac-c73bf6d4fd91", service.getRoutingProtocol().getAsn().getUuid());
+        }
     }
 
     @Nested

@@ -46,7 +46,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * <pre>
  * Public internet : 100,000 GB x 0.09 (AWS) + 100,000 GB x 0.1118 (Google)          = 20,180.00
  * Equinix         : 2,000 + 1,860 private egress + 2 x 350 VC
- *                   + 1,642.50 (AWS port) + 1,676 (Google port) + 300 cross-connect  =  8,178.50
+ *                   + 1,642.50 (AWS port) + 1,676 (Google port) + 300 cross-connect  =  8,393.20
  * Native          : 12.33 x 730 (AWS) + 19.00 x 730 (Google) + 0 data transfer      = 22,870.90
  * </pre>
  */
@@ -69,7 +69,7 @@ class NativeMulticloudTcoTest {
         return tco.breakdown(archetype).orElseThrow();
     }
 
-    // ── The native archetype ──
+    // The native archetype
 
     @Test
     void aPeerCloudAddsTheNativeArchetypeToTheDefaultSetAndRemovesOnPrem() {
@@ -172,7 +172,7 @@ class NativeMulticloudTcoTest {
         assertMoney("823352.40", nativeLink.getTotalOverTerm()); // 22,870.90 x 36
     }
 
-    // ── Fairness: the other archetypes are two-sided too ──
+    // Fairness: the other archetypes are two-sided too
 
     @Test
     void publicInternetArchetypePricesEgressFromBothClouds() {
@@ -193,11 +193,11 @@ class NativeMulticloudTcoTest {
         assertMoney("1860.00", equinix.getLineItems().get("Cloud egress from GOOGLE_CLOUD (private interconnect)"));
         assertMoney("350", equinix.getLineItems().get("Equinix Fabric connection to AWS"));
         assertMoney("350", equinix.getLineItems().get("Equinix Fabric connection to GOOGLE_CLOUD"));
-        assertMoney("1642.50", equinix.getLineItems().get("Cloud provider interconnect port (AWS)"));
-        assertMoney("1676", equinix.getLineItems().get("Cloud provider interconnect port (GOOGLE_CLOUD)"));
+        assertMoney("1810.40", equinix.getLineItems().get("Cloud provider interconnect port (AWS)")); // 2.48 USD/h x 730
+        assertMoney("1722.80", equinix.getLineItems().get("Cloud provider interconnect port (GOOGLE_CLOUD)")); // 2.36 USD/h x 730
         assertMoney("300", equinix.getLineItems().get("Equinix cross-connect"));
         assertEquals(7, equinix.getLineItems().size());
-        assertMoney("8178.50", equinix.getMonthlyTotal());
+        assertMoney("8393.20", equinix.getMonthlyTotal());
     }
 
     @Test
@@ -210,7 +210,7 @@ class NativeMulticloudTcoTest {
                 DeploymentArchetype.EQUINIX_INTERCONNECT);
 
         assertMoney("500", equinix.getSetupTotal()); // 2 connections x 250
-        assertMoney("8278.50", equinix.getMonthlyTotal()); // 8,178.50 + 2 x (400 - 350)
+        assertMoney("8493.20", equinix.getMonthlyTotal()); // 8,393.20 + 2 x (400 - 350)
     }
 
     @Test
@@ -222,7 +222,7 @@ class NativeMulticloudTcoTest {
         TcoComparison oneWay = awsToGoogle().reverseEgress(0, DataUnit.GIGABYTE).compare();
         assertFalse(oneWay.getTrafficNote().contains("assumed"), oneWay.getTrafficNote());
         assertMoney("9000.00", breakdown(oneWay, DeploymentArchetype.PUBLIC_CLOUD_INTERNET).getMonthlyTotal());
-        assertMoney("6318.50", breakdown(oneWay, DeploymentArchetype.EQUINIX_INTERCONNECT).getMonthlyTotal());
+        assertMoney("6533.20", breakdown(oneWay, DeploymentArchetype.EQUINIX_INTERCONNECT).getMonthlyTotal());
         assertMoney("22870.90", breakdown(oneWay, DeploymentArchetype.NATIVE_MULTICLOUD_INTERCONNECT).getMonthlyTotal());
 
         TcoComparison asymmetric = awsToGoogle().reverseEgress(40, DataUnit.TERABYTE).compare();
@@ -234,14 +234,14 @@ class NativeMulticloudTcoTest {
     void equinixIsRecommendedAtLowVolumeAndTheNativeLinkAtHighVolume() {
         TcoComparison low = awsToGoogle().compare();
         assertEquals(DeploymentArchetype.EQUINIX_INTERCONNECT, low.getRecommended());
-        assertMoney("12001.50", low.getMonthlySavingsVsBaseline()); // 20,180.00 - 8,178.50
+        assertMoney("11786.80", low.getMonthlySavingsVsBaseline()); // 20,180.00 - 8,393.20
 
-        // 1 PB each way: Equinix = 20,000 + 18,600 egress + 4,318.50 fixed = 42,918.50 > 22,870.90.
+        // 1 PB each way: Equinix = 20,000 + 18,600 egress + 4,533.20 fixed = 43,133.20 > 22,870.90.
         TcoComparison high = awsToGoogle().egress(1, DataUnit.PETABYTE)
                 .archetypes(DeploymentArchetype.PUBLIC_CLOUD_INTERNET, DeploymentArchetype.EQUINIX_INTERCONNECT,
                         DeploymentArchetype.NATIVE_MULTICLOUD_INTERCONNECT)
                 .compare();
-        assertMoney("42918.50", breakdown(high, DeploymentArchetype.EQUINIX_INTERCONNECT).getMonthlyTotal());
+        assertMoney("43133.20", breakdown(high, DeploymentArchetype.EQUINIX_INTERCONNECT).getMonthlyTotal());
         assertEquals(DeploymentArchetype.NATIVE_MULTICLOUD_INTERCONNECT, high.getRecommended());
     }
 
@@ -257,13 +257,13 @@ class NativeMulticloudTcoTest {
 
         CostBreakdown withRouter = breakdown(awsToGoogle().includeCloudRouter("STANDARD").compare(),
                 DeploymentArchetype.EQUINIX_INTERCONNECT);
-        assertMoney("9378.50", withRouter.getMonthlyTotal()); // + 1,200 reference router, once
+        assertMoney("9593.20", withRouter.getMonthlyTotal()); // + 1,200 reference router, once
         assertFalse(String.join("\n", withRouter.getProvenance()).contains("Equinix A-side"));
     }
 
     @Test
     void equinixArchetypeIsPartialWhenAPeerCloudHasNoReferencePortOrEgressRate() {
-        // ORACLE_CLOUD: no reference egress rates and no reference CSP port figure.
+        // ORACLE_CLOUD: no reference egress rates (its FastConnect hosted fee is tabulated since 2026-11).
         TcoComparison tco = TcoCalculator.builder(null)
                 .egress(100, DataUnit.TERABYTE)
                 .fromCloud(CloudProviderType.AWS).toCloud(CloudProviderType.ORACLE_CLOUD)
@@ -272,15 +272,15 @@ class NativeMulticloudTcoTest {
         CostBreakdown equinix = breakdown(tco, DeploymentArchetype.EQUINIX_INTERCONNECT);
         assertFalse(equinix.isPriced(), "a missing peer-side component must not be silently dropped");
         assertTrue(equinix.getNote().contains("Private egress rate unavailable for ORACLE_CLOUD"), equinix.getNote());
-        assertTrue(equinix.getNote().contains("No reference CSP interconnect-port figure for ORACLE_CLOUD"),
-                equinix.getNote());
+        assertTrue(equinix.getUnpriced().stream().anyMatch(u -> u.startsWith("Private egress rate unavailable for ORACLE_CLOUD")),
+                equinix.getUnpriced().toString());
         CostBreakdown internet = breakdown(tco, DeploymentArchetype.PUBLIC_CLOUD_INTERNET);
         assertFalse(internet.isPriced());
         assertMoney("9000.00", internet.getMonthlyTotal()); // the AWS direction stays visible
         assertTrue(internet.getNote().contains("ORACLE_CLOUD"), internet.getNote());
     }
 
-    // ── Partial pricing ──
+    // Partial pricing
 
     @Test
     void anUnpricedSideLeavesTheNativeArchetypePartialWithNoZeroDataTransferLine() {
@@ -340,7 +340,7 @@ class NativeMulticloudTcoTest {
         assertMoney("20100.00", priced.getMonthlyTotal());
     }
 
-    // ── AWS free tier ──
+    // AWS free tier
 
     @Test
     void awsFreeTierIsAppliedOnlyOnRequest() {
@@ -388,7 +388,7 @@ class NativeMulticloudTcoTest {
         assertTrue(tco.toMarkdown().contains("The AWS free tier was requested but not applied"), tco.toMarkdown());
     }
 
-    // ── Report ──
+    // Report
 
     @Test
     void markdownRendersTheNativeRowsWithProvenanceAndThe730HourNote() {
@@ -404,11 +404,11 @@ class NativeMulticloudTcoTest {
         assertTrue(md.contains("### Equinix interconnected: line items and provenance"), md);
 
         String partial = awsToGoogle().bandwidthMbps(1_000).compare().toMarkdown();
-        assertTrue(partial.contains("| Native cloud-to-cloud interconnect | _unavailable_ |"), partial);
+        assertTrue(partial.contains("| Native cloud-to-cloud interconnect | _incomplete_ |"), partial);
         assertTrue(partial.contains("- Not fully priced: The AWS side is unpriced"), partial);
     }
 
-    // ── Fail-fast lever validation ──
+    // Fail-fast lever validation
 
     @Test
     void nativeArchetypeRequiresAPeerCloud() {

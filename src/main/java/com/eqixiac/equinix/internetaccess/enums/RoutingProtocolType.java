@@ -22,9 +22,9 @@ import com.eqixiac.equinix.core.model.APIParam;
  * Discriminator for the routing protocol nested in an EIA v2 service request.
  *
  * <ul>
- *   <li>{@code DIRECT} — directly attached peering.</li>
- *   <li>{@code STATIC} — static customer routes.</li>
- *   <li>{@code BGP} — BGP routing with customer ASN, export policy and peerings.</li>
+ *   <li>{@code DIRECT} - directly attached peering.</li>
+ *   <li>{@code STATIC} - static customer routes.</li>
+ *   <li>{@code BGP} - BGP routing with customer ASN, export policy and peerings.</li>
  * </ul>
  */
 public enum RoutingProtocolType implements APIParam {

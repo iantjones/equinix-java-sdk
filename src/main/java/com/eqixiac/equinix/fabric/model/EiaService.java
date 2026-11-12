@@ -33,7 +33,7 @@ import java.util.List;
  * An Equinix Internet Access (EIA) service, providing dedicated internet connectivity
  * (single or dual) over Equinix Fabric.
  */
-public interface EiaService {
+public interface EiaService extends DeletableResource {
 
     String getUuid();
 
@@ -64,6 +64,14 @@ public interface EiaService {
     Project getProject();
 
     EiaServiceOrder getOrder();
+
+    /**
+     * The routing protocol as read back: type, export policy, the {@code asn} reference and
+     * {@code bgpAuthType}.
+     *
+     * @return the routing protocol, or {@code null}
+     */
+    com.eqixiac.equinix.fabric.model.implementation.EiaRoutingProtocol getRoutingProtocol();
 
     /**
      * Begins a fluent update of this EIA service, e.g.

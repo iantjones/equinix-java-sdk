@@ -16,8 +16,11 @@
 
 package com.eqixiac.equinix.design.optimizer.wizard.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import com.eqixiac.equinix.design.value.ratecard.MulticloudLinkQuote;
 import lombok.Builder;
+import lombok.extern.jackson.Jacksonized;
 import lombok.Value;
 
 import java.math.BigDecimal;
@@ -70,6 +73,7 @@ import java.util.Optional;
  */
 @Value
 @Builder(toBuilder = true)
+@Jacksonized
 public class MulticloudLinkPricing {
 
     /** The two-sided native link quote as resolved, or {@code null}. */
@@ -132,6 +136,7 @@ public class MulticloudLinkPricing {
      *
      * @return {@code true} when {@code getNativeMonthly()} is not {@code null}
      */
+    @JsonIgnore
     public boolean isNativePriced() {
         return nativeMonthly != null;
     }

@@ -9,6 +9,7 @@ import com.eqixiac.equinix.core.http.response.PaginatedFilteredList;
 import com.eqixiac.equinix.core.http.response.PaginatedList;
 import com.eqixiac.equinix.fabric.enums.*;
 import com.eqixiac.equinix.fabric.model.*;
+import java.util.List;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.Tag;
 
@@ -42,7 +43,7 @@ class FabricCloudRouterScenarioTest extends IntegrationTestBase {
 
         // Attempt to find a DOT1Q port for dry-run tests
         try {
-            PaginatedList<Port> ports = timedCall("Fabric", "list", "Port", "GET",
+            List<Port> ports = timedCall("Fabric", "list", "Port", "GET",
                     () -> fabric.ports().list());
             for (Port port : ports) {
                 if (port.getEncapsulation() != null
@@ -61,7 +62,7 @@ class FabricCloudRouterScenarioTest extends IntegrationTestBase {
         if (fabric != null) fabric.close();
     }
 
-    // ── Dry-Run Tests ───────────────────────────────────────────────────
+    // Dry-Run Tests
 
     @Test
     @Order(1)
@@ -112,7 +113,7 @@ class FabricCloudRouterScenarioTest extends IntegrationTestBase {
         }
     }
 
-    // ── Full CRUD Tests ─────────────────────────────────────────────────
+    // Full CRUD Tests
 
     @Test
     @Order(3)

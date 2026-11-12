@@ -1,0 +1,11 @@
+{
+  "pagination": { "offset": 0, "limit": 20, "total": 2 },
+  "data": [
+    { "href": "https://api.equinix.com/fabric/v4/routerPackages/LAB", "type": "ROUTER_PACKAGE", "code": "LAB",
+      "totalIPv4RoutesMax": 50, "totalIPv6RoutesMax": 50, "routeFilterSupported": true, "vcBandwidthMax": 50,
+      "changeLog": { "createdDateTime": "2023-01-01T00:00:00Z" } },
+    { "href": "https://api.equinix.com/fabric/v4/routerPackages/STANDARD", "type": "ROUTER_PACKAGE", "code": "STANDARD",
+      "totalIPv4RoutesMax": 2000, "totalIPv6RoutesMax": 2000, "routeFilterSupported": true, "vcCountMax": 10,
+      "vcBandwidthMax": 10000, "changeLog": { "createdDateTime": "2023-01-01T00:00:00Z" } }
+  ]
+}

@@ -34,6 +34,7 @@ public class HierarchyClientImpl extends ClientBase implements HierarchyClient {
     }
 
     public List<HierarchyNode> getLocationHierarchy(String accountNo, String ibx) {
+        SmartViewArguments.require("hierarchy", "accountNo", accountNo);
         Map<String, List<String>> qParams = new HashMap<>();
         ParameterMapper.addAdditionalValue(qParams, "accountNo", accountNo);
         ParameterMapper.addAdditionalValue(qParams, "ibx", ibx);
@@ -41,6 +42,7 @@ public class HierarchyClientImpl extends ClientBase implements HierarchyClient {
     }
 
     public List<PowerHierarchyNode> getPowerHierarchy(String accountNo, String ibx) {
+        SmartViewArguments.require("hierarchy", "accountNo", accountNo);
         Map<String, List<String>> qParams = new HashMap<>();
         ParameterMapper.addAdditionalValue(qParams, "accountNo", accountNo);
         ParameterMapper.addAdditionalValue(qParams, "ibx", ibx);

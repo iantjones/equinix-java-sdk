@@ -24,7 +24,7 @@ import lombok.NoArgsConstructor;
 /**
  * End customer details for a connection.
  *
- * <p>Prefer {@code builder()} over the positional constructor — {@code name} and
+ * <p>Prefer {@code builder()} over the positional constructor - {@code name} and
  * {@code mdmId} are adjacent same-typed {@code String} parameters.</p>
  */
 @Getter

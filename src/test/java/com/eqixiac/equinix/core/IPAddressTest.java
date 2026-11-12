@@ -59,7 +59,7 @@ class IPAddressTest {
 
     @Test
     void rejectsHostnamesWithoutDnsLookup() {
-        // Hostnames must never be resolved — parse() accepts literals only.
+        // Hostnames must never be resolved - parse() accepts literals only.
         assertThrows(EquinixClientException.class, () -> IPAddress.parse("example.com"));
         assertThrows(EquinixClientException.class, () -> IPAddress.parse("localhost"));
         // A typo that is not a literal must fail locally, not via a DNS round-trip.

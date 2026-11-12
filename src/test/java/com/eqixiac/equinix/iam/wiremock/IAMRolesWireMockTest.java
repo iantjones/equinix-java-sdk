@@ -31,7 +31,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * WireMock-based API tests for the IAM RBAC layer — the roles catalog ({@code iam.roles()})
+ * WireMock-based API tests for the IAM RBAC layer - the roles catalog ({@code iam.roles()})
  * and role assignments ({@code iam.roleAssignments()}).
  *
  * <p>Roles is read-only and token-paginated:
@@ -239,7 +239,7 @@ class IAMRolesWireMockTest extends WireMockTestBase {
         @DisplayName("404 throws EquinixNotFoundException")
         void notFound() {
             stubErrorInline(wireMock, "/v1/roleAssignments/[^/]+",
-                    404, "{\"errorCode\":\"IAM-404\",\"errorMessage\":\"Role assignment not found\"}");
+                    404, "{\"error\":{\"errorCode\":\"role-assignment-not-found\"}}");
 
             assertThrows(EquinixNotFoundException.class,
                     () -> iam.roleAssignments().getByUuid("roleassignment:does-not-exist"));
@@ -279,7 +279,7 @@ class IAMRolesWireMockTest extends WireMockTestBase {
         @DisplayName("409 throws EquinixConflictException")
         void conflict() {
             stubErrorInline(wireMock, "/v1/roleAssignments",
-                    409, "{\"errorCode\":\"IAM-409\",\"errorMessage\":\"Role assignment already exists\"}");
+                    409, "{\"error\":{\"errorCode\":\"role-assignment-already-exists\"}}");
 
             assertThrows(EquinixConflictException.class,
                     () -> iam.roleAssignments().create(
@@ -316,7 +316,7 @@ class IAMRolesWireMockTest extends WireMockTestBase {
         @DisplayName("404 on delete throws EquinixNotFoundException")
         void deleteNotFound() {
             stubErrorInline(wireMock, "/v1/roleAssignments/[^/]+",
-                    404, "{\"errorCode\":\"IAM-404\",\"errorMessage\":\"Role assignment not found\"}");
+                    404, "{\"error\":{\"errorCode\":\"role-assignment-not-found\"}}");
 
             assertThrows(EquinixNotFoundException.class,
                     () -> iam.roleAssignments().delete("roleassignment:does-not-exist"));

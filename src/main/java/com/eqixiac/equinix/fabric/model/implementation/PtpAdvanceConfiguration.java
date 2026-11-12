@@ -29,7 +29,7 @@ import lombok.NoArgsConstructor;
  * {@code ptpAdvanceConfiguration} schema). {@code timeScale} is {@code ARB} or {@code PTP};
  * {@code transportMode} is {@code MULTICAST}, {@code UNICAST} or {@code HYBRID}.
  *
- * <p>Prefer {@code builder()} over the positional constructor — seven of the nine parameters
+ * <p>Prefer {@code builder()} over the positional constructor - seven of the nine parameters
  * are {@code Integer}s, so builder construction is self-documenting and transposition-proof.</p>
  *
  * @author ianjones

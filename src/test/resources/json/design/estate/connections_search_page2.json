@@ -1,0 +1,21 @@
+{ "pagination": { "offset": 2, "limit": 2, "total": 3 }, "data": [
+    {
+      "href": "https://api.equinix.com/fabric/v4/connections/c0000000-0000-4000-8000-000000000002",
+      "uuid": "c0000000-0000-4000-8000-000000000002",
+      "name": "synthetic-connection-2",
+      "type": "EVPL_VC",
+      "state": "ACTIVE",
+      "direction": "OUTGOING",
+      "isRemote": false,
+      "bandwidth": 500,
+      "account": { "accountNumber": 100, "orgId": 1, "globalOrgId": "g" },
+      "project": { "projectId": "aaaaaaaa-0000-4000-8000-000000000001" },
+      "order": { "billingTier": "Up to 1 G", "isBillable": true, "termLength": 12 },
+      "operation": { "equinixStatus": "PROVISIONED", "providerStatus": "AVAILABLE", "lockEnabled": false },
+      "redundancy": { "group": "g2", "priority": "PRIMARY" },
+      "notifications": [ { "type": "ALL", "emails": [ "noc@example.com" ] } ],
+      "changeLog": { "createdBy": "synthetic", "createdDateTime": "2025-01-01T00:00:00Z", "updatedDateTime": "2025-01-01T00:00:00Z" },
+      "aSide": { "accessPoint": { "type": "VD", "virtualDevice": { "uuid": "d0000000-0000-4000-8000-000000000001", "name": "synthetic-device", "type": "EDGE" }, "location": { "metroCode": "DC" } } },
+      "zSide": { "accessPoint": { "type": "SP", "profile": { "uuid": "sp000000-0000-4000-8000-0000000000a1", "name": "AWS Direct Connect", "type": "L2_PROFILE" }, "location": { "metroCode": "DC" } } }
+    }
+] }

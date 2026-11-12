@@ -35,6 +35,8 @@ public class ConnectionWrapper extends ResourceImpl<Connection> implements Conne
 
     @Delegate(excludes = ConnectionMutability.class)
     private ConnectionJson jsonObject;
+
+    private boolean deleted;
     @Getter
     private final Pageable<Connection> serviceClient;
 
@@ -60,8 +62,17 @@ public class ConnectionWrapper extends ResourceImpl<Connection> implements Conne
     }
 
     public Boolean delete() {
-        this.jsonObject = ((ConnectionClientImpl)this.serviceClient).delete(this.getUuid());
+        ConnectionJson response = ((ConnectionClientImpl)this.serviceClient).delete(this.getUuid());
+        if (response != null) {
+            this.jsonObject = response;
+        }
+        this.deleted = true;
         return true;
+    }
+
+    @Override
+    public boolean isDeleted() {
+        return this.deleted;
     }
 
     public void refresh() {

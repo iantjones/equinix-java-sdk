@@ -1,0 +1,49 @@
+{
+  "type": "XC",
+  "name": "My-CC-service",
+  "bmmrType": "SELF",
+  "aSide": {
+    "demarcationPoint": {
+      "patchPanelId": "CP:Demarc:1259684",
+      "patchPanelPortA": 35,
+      "patchPanelPortB": 32,
+      "connectorType": "SC"
+    }
+  },
+  "zSide": {
+    "location": {
+      "ibxCode": "SV11"
+    }
+  },
+  "notifications": [
+    {
+      "type": "TECHNICAL",
+      "emails": [
+        "abc@test.com"
+      ],
+      "phone": [
+        {
+          "type": "MOBILE",
+          "number": "+14085551234",
+          "contactPreference": {
+            "timezone": "PST",
+            "availability": "ANYTIME"
+          }
+        }
+      ]
+    }
+  ],
+  "order": {
+    "customerReferenceId": "12345"
+  },
+  "notes": [
+    {
+      "comments": "test note"
+    }
+  ],
+  "attachments": [
+    {
+      "attachmentId": "e41f485e-3094-42de-8797-0ef19a51df79"
+    }
+  ]
+}

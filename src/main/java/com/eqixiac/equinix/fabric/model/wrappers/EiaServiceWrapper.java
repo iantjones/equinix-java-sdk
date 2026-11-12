@@ -29,6 +29,8 @@ public class EiaServiceWrapper extends ResourceImpl<EiaService> implements EiaSe
 
     @Delegate(excludes = EiaServiceMutability.class)
     private EiaServiceJson jsonObject;
+
+    private boolean deleted;
     @Getter
     private final Pageable<EiaService> serviceClient;
 
@@ -42,8 +44,17 @@ public class EiaServiceWrapper extends ResourceImpl<EiaService> implements EiaSe
     }
 
     public Boolean delete() {
-        this.jsonObject = ((EiaServiceClientImpl) this.serviceClient).delete(this.getUuid());
+        EiaServiceJson response = ((EiaServiceClientImpl) this.serviceClient).delete(this.getUuid());
+        if (response != null) {
+            this.jsonObject = response;
+        }
+        this.deleted = true;
         return true;
+    }
+
+    @Override
+    public boolean isDeleted() {
+        return this.deleted;
     }
 
     public void refresh() {

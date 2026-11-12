@@ -1,0 +1,434 @@
+openapi: 3.0.3
+info:
+  title: Notifications API 
+  description: The notifications API will return email notifications for different categories, such as orders, IBX maintenance announcements, incidents and advisories. Please check the Category, Type, and ProductType schemas for the allowed lists of values to perform a search request.
+  termsOfService: https://www.equinix.com/about/legal/terms
+  contact:
+    name: Equinix API Support
+    url: "https://docs.equinix.com/api-support.htm"
+  version: 2.0.1
+tags:
+  - name: Events
+    description: Orders and colo notifications
+externalDocs:
+  description: You can find more information on the Equinix Developer Portal.
+  url: https://developer.equinix.com
+servers:
+  - url: https://api.equinix.com
+    description: Equinix Inc
+paths:
+  /notifications/v2/events/findAll:
+    post:
+      tags:
+        - Events
+      summary: Search notification
+      description: Search events by search criteria
+      operationId: getNotifications
+      security:
+        - BearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EventSearchRequest"
+      responses:
+        '200':
+          description: Success response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventSearchResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorList'
+              example:
+                - errorCode: EQ-2041025
+                  errorMessage: Selected value is not in the allowed list of values.
+                  correlationId: '100087013727518'
+                  additionalInfo:
+                    - property: type
+                      reason: Selected type is invalid
+        '403':
+          description: Authentication failed or user doesn't have permissions for requested operation.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorList'
+              example:
+                - errorCode: EQ-2041005
+                  errorMessage: Unable to access. Please ensure you have appropriate permissions.
+                  correlationId: '100087008963544'
+        '500':
+          description:  Something went wrong. Please contact customer service.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorList'
+              example:
+                - errorCode: EQ-2041030
+                  errorMessage: The server has encountered an unexpected exception. We apologize for the inconvenience and suggest trying again later.
+                  correlationId: '200929150051795'
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    EventSearchRequest:
+      type: object
+      description: Event search request object containing filter, sort and pagination criteria.
+      properties:
+        filter:
+          $ref: '#/components/schemas/Filter'
+        sort:
+          type: array
+          items:
+            $ref: '#/components/schemas/SortCriteria'
+        pagination:
+          $ref: '#/components/schemas/PaginationRequest'
+    Filter:
+      type: object
+      title: Filter the event
+      properties:
+        category:
+          type: array
+          minItems: 1
+          items:
+            "$ref": "#/components/schemas/Category"
+        type:
+          type: array
+          minItems: 1
+          items:
+            "$ref": "#/components/schemas/Type"
+        notificationNumber:
+          type: array
+          minItems: 1
+          items:
+            type: string
+            example: "1-123894189299"
+        accountNumber:
+          type: array
+          minItems: 1
+          items:
+            type: string
+            example: "596697"
+        createdDateTime:
+          type: array
+          minItems: 1
+          items:
+            type: string
+            example: "2024-01-31T16:00:00.000Z"
+    SortCriteria:
+      type: object
+      properties:
+        direction:
+          $ref: '#/components/schemas/SortDirection'
+        property:
+          $ref: '#/components/schemas/SortBy'
+    SortDirection:
+      type: string
+      description: Sorting direction
+      default: DESC
+      enum:
+        - DESC
+        - ASC
+    SortBy:
+      type: string
+      description: Possible field names to use on sorting
+      default: createdDateTime
+      enum:
+        - createdDateTime
+    ErrorList:
+      type: array
+      description: Error list
+      items:
+        $ref: '#/components/schemas/Error'
+    Error:
+      required:
+        - errorCode
+        - errorMessage
+      type: object
+      properties:
+        errorCode:
+          type: string
+          example: EQ-20XXXXX
+        errorMessage:
+          type: string
+          example: Error message
+        details:
+          type: string
+          example: Error details
+        correlationId:
+          type: string
+          example: Correlation ID to trace the error back
+        help:
+          type: string
+          example: URL to a help page for the corresponding errorCode
+        additionalInfo:
+          title: Error details
+          type: array
+          items:
+            $ref: '#/components/schemas/ErrorAdditionalInfo'
+      description: Error with details
+    ErrorAdditionalInfo:
+      type: object
+      properties:
+        property:
+          type: string
+          example: id
+        reason:
+          type: string
+          example: missing id
+    PaginationRequest:
+      type: object
+      properties:
+        offset:
+          minimum: 0
+          type: integer
+          description: Index of the first element.
+          default: 0
+        limit:
+          minimum: 1
+          type: integer
+          description: "Number of elements to be requested per page. Number must be\
+            \ between 1 and 100, and the default is 25."
+          default: 25
+      description: Pagination request information
+    EventSearchResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          description: POST Event Search
+          items:
+            $ref: '#/components/schemas/Event'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+    Category:
+      title: Category
+      type: string
+      description: Category of events.
+      default: GENERAL
+      enum:
+        - GENERAL
+        - INCIDENT
+        - MAINTENANCE
+        - ADVISORY
+    Type:
+      title: Type
+      type: string
+      description: Notification types.
+      enum:
+        - ORDERS
+        - SMART_HANDS_SUPPORT_PLAN
+        - NETWORK_SPECIFICATION
+        - NETWORK_INCIDENT
+        - NETWORK_MAINTENANCE
+        - VIRTUAL_ASSET_UPDATES
+        - IBX_MAINTENANCE
+        - IBX_INCIDENT
+        - IBX_ADVISORY
+        - IBX_SECURITY_INCIDENT
+        - MANAGED_SERVICES_INCIDENT
+        - MANAGED_SERVICES_IBX_MAINTENANCE
+        - MANAGED_SERVICES_NETWORK_MAINTENANCE
+    ProductType:
+      type: string
+      enum:
+        - ACCESSORIES
+        - BI_CLOUD
+        - BI_VLA
+        - BOOK_CONFERENCEROOM
+        - CABINET
+        - CAGE
+        - EQUINIX_FABRIC
+        - CLOUD_IX
+        - CROSS_CONNECT
+        - DEINSTALL
+        - EQUINIX_CONNECT
+        - EQUINIX_CONNECT_PORT
+        - ETHERNET_EXCHANGE
+        - EXPEDITE
+        - HANDSCAN
+        - INBOUND_SHIPMENT
+        - INTERNET_EXCHANGE
+        - INTERNET_EXCHANGE_PORT
+        - INTER_METRO_CONNECT
+        - MANAGEMENT_ACCESS
+        - METRO_CONNECT
+        - MOBILITY_EXCHANGE
+        - NETWORK_TIMING
+        - OTHER
+        - OTHER_SERVICES
+        - OUTBOUND_SHIPMENT
+        - POWER
+        - SITE_VISIT
+        - SMART_HANDS
+        - SMART_HANDS_MONTHLY_PLAN
+        - SMART_HANDS_ANNUAL_PLAN
+        - TOUR_REQUEST
+        - TROUBLE_TICKET
+        - VMMR_SDH
+        - VOIP
+        - UNKNOWN
+        - NETWORK_EDGE
+        - FABRIC
+        - PRECISION_TIME
+      example: "SMART_HANDS"
+    Status:
+      title: Status
+      type: string
+      description: Event/Notification Status.If no status found none will be returned
+      example: RESOLVED
+      enum:
+        - CANCELLED
+        - COMPLETED
+        - EXPEDITE
+        - EXPIRED_CANCELLED
+        - EXTENDED
+        - IN_PROGRESS
+        - MODIFIED
+        - NEW
+        - OTHER
+        - RECEIVED
+        - REQUIRE_APPROVAL
+        - RESCHEDULED
+        - RESOLVED
+        - SCHEDULED
+        - SHIPMENT_NOTIFICATION
+        - UPDATED
+        - FAILED
+        - PROVISIONED
+        - DEPROVISIONED
+    NotificationContact:
+      title: NotificationContact
+      type: object
+      description: 'Order notification contact.'
+      properties:
+        type:
+          type: string
+          description: Type of Notification Contact
+          example: NOTIFICATION
+          enum:
+            - NOTIFICATION
+        firstName:
+          type: string
+          description: First name.
+          example: John
+        lastName:
+          type: string
+          description: Last name.
+          example: Doe
+        details:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContactDetails'
+      required:
+        - firstName
+        - lastName
+        - email
+    ContactDetails:
+      type: object
+      title: NotificationContactDetails
+      properties:
+        type:
+          type: string
+          description: Name of the type
+          example: EMAIL
+        value:
+          type: string
+          description: The value of the corresponding type
+          example: "johndoe@acme.com"
+    AdditionalInfo:
+      type: object
+      title: AdditionalInfoAttribute
+      properties:
+        key:
+          type: string
+          description: Name of the key
+          example: START_DATETIME
+        value:
+          type: string
+          description: The value of the corresponding key
+          example: "2017-11-28T17:41:56.218013Z"
+    Event:
+      type: object
+      required:
+        - id
+        - notificationNumber
+        - type
+        - summary
+      properties:
+        notificationNumber:
+          type: string
+          description: Notification reference number.
+          example: 1-123894189299
+        category:
+          $ref: '#/components/schemas/Category'
+        type:
+          $ref: '#/components/schemas/Type'
+        productTypes:
+          type: array
+          description: Product types associated with the given order notification.
+          items:
+            $ref: '#/components/schemas/ProductType'
+        ibxs:
+          type: array
+          description: 'IBX(s) associated with the notification.'
+          items:
+            type: string
+          example: ["LD8"]
+        createdDateTime:
+          type: string
+          description: Time when the notification was sent.
+          format: date-time
+          example: "2017-11-28T17:41:56.218Z"
+        summary:
+          type: string
+          description: Notification summary.
+          example: "Your Equinix Order # 1-204456332435 – Expired/Canceled order lines"
+        status:
+          $ref: '#/components/schemas/Status'
+        contacts:
+          type: array
+          description: Notification recipient list, if any.
+          items:
+            $ref: '#/components/schemas/NotificationContact'
+        additionalInfo:
+          type: array
+          description: "Additional info, if any. Available fields: SUPPORT_PLAN_PERCENTAGE, ACCOUNT_NAME, ACCOUNT_NUMBER, START_DATETIME, END_DATETIME, PRIORITY, IS_GLOBAL_NOTIFICATION"
+          items:
+            "$ref": "#/components/schemas/AdditionalInfo"
+    Pagination:
+      required:
+        - limit
+        - total
+      type: object
+      properties:
+        offset:
+          minimum: 0
+          type: integer
+          description: "Index of the first item returned in the response. The default is 0."
+          default: 0
+        limit:
+          minimum: 0
+          type: integer
+          description: "Maximum number of search results returned per page. Number must be between 1 and 100, and the default is 25."
+          default: 25
+        total:
+          minimum: 0
+          type: integer
+          description: Total number of elements returned.
+        next:
+          type: string
+          description: The offset value relative to the next item in the response.
+          example: "20"
+        previous:
+          type: string
+          description: The offset value relative to the previous item in the response.
+          example: "30"
+      description: Pagination response information

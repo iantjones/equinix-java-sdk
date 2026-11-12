@@ -30,6 +30,18 @@ public enum StreamAssetType {
     XF_ROUTER,
     ORGANIZATION,
     PROJECT,
+    /** A Network Edge device attached through {@code /streams/{id}/devices/{deviceId}} (spec 4.34.0). */
+    VIRTUAL_DEVICE,
+    /** Network Edge device interface type DATA. */
+    DATA,
+    /** Network Edge device interface type MGMT. */
+    MGMT,
+    /** Network Edge device interface type SSH. */
+    SSH,
+    /** Network Edge device interface type FAB. */
+    FAB,
+    /** Network Edge device interface type CTRL. */
+    CTRL,
     UNKNOWN;
 
     @JsonCreator

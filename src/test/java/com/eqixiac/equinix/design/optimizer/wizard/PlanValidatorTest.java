@@ -64,20 +64,18 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
- * Unit tests for {@link PlanValidator} — the layered, plan-time validation the Deployment Wizard runs
+ * Unit tests for {@link PlanValidator} - the layered, plan-time validation the Deployment Wizard runs
  * without provisioning anything. Catalog behaviour is driven with Mockito service-profile / cloud-router
  * / connection clients so the pass/fail cases are exact and HTTP-free.
  */
-@DisplayName("PlanValidator — layered plan-time validation")
+@DisplayName("PlanValidator - layered plan-time validation")
 class PlanValidatorTest {
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
     private static final MetroId DC = MetroId.of(MetroCode.DC);
     private static final MetroId SV = MetroId.of(MetroCode.SV);
 
-    // ══════════════════════════════════════════════
-    //  Layer 1 — catalog checks
-    // ══════════════════════════════════════════════
+    //  Layer 1 - catalog checks
 
     @Test
     @DisplayName("a bandwidth outside the profile's allowed tiers is a precise error")
@@ -169,9 +167,7 @@ class PlanValidatorTest {
         assertTrue(r.errors.isEmpty(), () -> "a catalog-clean plan must have no errors: " + r.errors);
     }
 
-    // ══════════════════════════════════════════════
-    //  Layer 1 — router package ceilings
-    // ══════════════════════════════════════════════
+    //  Layer 1 - router package ceilings
 
     @Test
     @DisplayName("more connections than the router package allows is flagged")
@@ -208,9 +204,7 @@ class PlanValidatorTest {
                 () -> "expected a per-VC bandwidth ceiling error: " + r.errors);
     }
 
-    // ══════════════════════════════════════════════
-    //  Layer 1 — local structural
-    // ══════════════════════════════════════════════
+    //  Layer 1 - local structural
 
     @Test
     @DisplayName("a duplicate resource name is flagged")
@@ -290,9 +284,7 @@ class PlanValidatorTest {
                 () -> "expected an over-long-name error: " + r.errors);
     }
 
-    // ══════════════════════════════════════════════
-    //  Layer 1 — FCR A-side => IP_VC (connection type)
-    // ══════════════════════════════════════════════
+    //  Layer 1 - FCR A-side => IP_VC (connection type)
 
     @Test
     @DisplayName("an EVPL_VC connection on a Cloud Router A-side is a Layer-1 error naming the FCR A-side => IP_VC rule")
@@ -340,7 +332,7 @@ class PlanValidatorTest {
     @Test
     @DisplayName("IP_VC on an FCR A-side and EVPL_VC on a customer-PORT A-side are both accepted")
     void ipVcAndPortBasedTypesAreAccepted() {
-        // The wizard's own shape: IP_VC on a Cloud Router A-side — no type error.
+        // The wizard's own shape: IP_VC on a Cloud Router A-side - no type error.
         PlanValidator.Result ip = validate(null,
                 List.of(router("FCR-DC", DC)),
                 List.of(provider("FCR-DC-to-aws", "FCR-DC", DC, 1000, "sp-aws", "us-east-1", CloudProviderType.AWS)));
@@ -361,9 +353,7 @@ class PlanValidatorTest {
                 () -> "a port A-side is exempt from the FCR type rule: " + port.errors);
     }
 
-    // ══════════════════════════════════════════════
-    //  Layer 1 — new-market gap
-    // ══════════════════════════════════════════════
+    //  Layer 1 - new-market gap
 
     @Test
     @DisplayName("a required cloud not available at a metro hosting a dependent workload is a new-market gap")
@@ -417,9 +407,7 @@ class PlanValidatorTest {
         assertTrue(r.errors.isEmpty(), () -> "no dependency means no new-market gap: " + r.errors);
     }
 
-    // ══════════════════════════════════════════════
-    //  Layer 2 — router dry-run
-    // ══════════════════════════════════════════════
+    //  Layer 2 - router dry-run
 
     @Test
     @DisplayName("each planned Cloud Router is dry-run over the SDK cloudRouter surface")
@@ -436,7 +424,7 @@ class PlanValidatorTest {
                 List.of(router("FCR-DC", DC), router("FCR-SV", SV)),
                 Collections.emptyList());
 
-        // Two routers → two dry-run defines, each terminated with dryRun().create().
+        // Two routers -> two dry-run defines, each terminated with dryRun().create().
         verify(cr, org.mockito.Mockito.times(2)).define();
         verify(crb, org.mockito.Mockito.times(2)).dryRun();
         verify(crb, org.mockito.Mockito.times(2)).create();
@@ -444,7 +432,7 @@ class PlanValidatorTest {
     }
 
     @Test
-    @DisplayName("a 403 on the router dry-run is a SKIPPED(reason), not an error — the plan stays valid")
+    @DisplayName("a 403 on the router dry-run is a SKIPPED(reason), not an error - the plan stays valid")
     void routerDryRun403IsSkippedNotError() {
         // A brand-new customer whose credential is not entitled to the dry-run endpoint gets a 403. That
         // is an infeasibility, not a plan defect: it must NOT invalidate an otherwise-sound plan.
@@ -478,7 +466,7 @@ class PlanValidatorTest {
     @Test
     @DisplayName("a 400 validation rejection on the router dry-run IS an error and invalidates the plan")
     void routerDryRun400IsError() {
-        // A well-formed request the API rejects for being wrong (400) is a real defect — an ERROR.
+        // A well-formed request the API rejects for being wrong (400) is a real defect - an ERROR.
         FabricGateway fabric = dryRunThrowsGateway(
                 new EquinixServiceException("Bad request", 400, "/fabric/v4/routers", null, null));
 
@@ -490,14 +478,12 @@ class PlanValidatorTest {
                 () -> "a 400 rejection must not be a skip: " + r.skipped);
     }
 
-    // ══════════════════════════════════════════════
-    //  Layer 1 — notifications required (EQ-3040013)
-    // ══════════════════════════════════════════════
+    //  Layer 1 - notifications required (EQ-3040013)
 
     @Test
     @DisplayName("a Cloud Router with no notification email is a Layer-1 error per router AND its live dry-run is never attempted")
     void missingNotificationIsStructuralErrorAndSkipsDryRun() {
-        // A CloudRouters surface that WOULD serve a dry-run if one were attempted — so verifying it is
+        // A CloudRouters surface that WOULD serve a dry-run if one were attempted - so verifying it is
         // never called proves the doomed dry-run (which would 400 live on the mandatory $.notifications
         // field, EQ-3040013) is skipped, not sent.
         CloudRouters cr = mock(CloudRouters.class);
@@ -510,7 +496,7 @@ class PlanValidatorTest {
 
         PlannedCloudRouter noNotify = PlannedCloudRouter.builder()
                 .name("FCR-DC").metroId(DC).packageCode(GatewayPackageCode.STANDARD).build();
-        // "No notification" now means an EMPTY (or all-blank) recipient LIST — routers carry every
+        // "No notification" now means an EMPTY (or all-blank) recipient LIST - routers carry every
         // configured address, not a single one.
         PlannedCloudRouter blankNotify = PlannedCloudRouter.builder()
                 .name("FCR-SV").metroId(SV).packageCode(GatewayPackageCode.STANDARD)
@@ -518,7 +504,7 @@ class PlanValidatorTest {
 
         PlanValidator.Result r = validate(fabric, List.of(noNotify, blankNotify), Collections.emptyList());
 
-        // A clear per-router structural error, naming each router and the fix — not a raw EQ-3040013.
+        // A clear per-router structural error, naming each router and the fix - not a raw EQ-3040013.
         assertTrue(r.errors.stream().anyMatch(e -> e.contains("FCR-DC")
                         && e.contains("requires at least one notification recipient")
                         && e.contains("deployment.notifications")),
@@ -576,12 +562,10 @@ class PlanValidatorTest {
                 List.of("noc@example.com", "neteng@example.com"));
     }
 
-    // ══════════════════════════════════════════════
-    //  Skipped — offline / bare-stub infeasibility
-    // ══════════════════════════════════════════════
+    //  Skipped - offline / bare-stub infeasibility
 
     @Test
-    @DisplayName("an offline gateway emits a SKIPPED note for EVERY live layer — never silence, never an error")
+    @DisplayName("an offline gateway emits a SKIPPED note for EVERY live layer - never silence, never an error")
     void offlineGatewayEmitsSkippedForEachLiveLayer() {
         // A bare Mockito stub returns null from serviceProfiles()/cloudRouters()/connections(): every
         // live layer must be recorded as skipped (with a reason) rather than silently doing nothing.
@@ -618,7 +602,7 @@ class PlanValidatorTest {
                 .zSideVlanTag(1000)
                 .aSideExistingRouterUuid("cr-existing-uuid")
                 .build();
-        FabricGateway bareStub = mock(FabricGateway.class); // connections() returns null → offline
+        FabricGateway bareStub = mock(FabricGateway.class); // connections() returns null -> offline
 
         PlanValidator.Result r = validate(bareStub, List.of(router("FCR-DC", DC)), List.of(existing));
 
@@ -630,9 +614,7 @@ class PlanValidatorTest {
         assertTrue(r.errors.isEmpty(), () -> "offline is never an error: " + r.errors);
     }
 
-    // ══════════════════════════════════════════════
-    //  Layer 3 — connection endpoint dispatch
-    // ══════════════════════════════════════════════
+    //  Layer 3 - connection endpoint dispatch
 
     @Test
     @DisplayName("a to-be-created-FCR connection is DEFERRED, never dry-run, and its inputs are enumerated")
@@ -693,9 +675,7 @@ class PlanValidatorTest {
         assertTrue(req.isAuthenticationKeyProvided(), "the key was supplied, so it is marked provided");
     }
 
-    // ══════════════════════════════════════════════
     //  Helpers
-    // ══════════════════════════════════════════════
 
     private static PlanValidator.Result validate(
             FabricGateway fabric, List<PlannedCloudRouter> routers, List<PlannedConnection> connections) {
@@ -716,7 +696,7 @@ class PlanValidatorTest {
     private static PlannedConnection provider(String name, String routerName, MetroId metro, int bw,
                                               String spUuid, String region, CloudProviderType type) {
         // IP_VC: the A-side is a Cloud Router, the only shape Fabric accepts as IP_VC (the
-        // FCR A-side => IP_VC fix) — the Layer-1 type check would flag EVPL_VC here.
+        // FCR A-side => IP_VC fix) - the Layer-1 type check would flag EVPL_VC here.
         return PlannedConnection.builder()
                 .name(name).connectionType(ConnectionType.IP_VC).purpose(ConnectionPurpose.PROVIDER)
                 .bandwidthMbps(bw).aSideMetro(metro).aSideRouterName(routerName)

@@ -1,0 +1,507 @@
+{
+  "openapi": "3.0.0",
+  "x-eqx-api-linter-skip-rules": [
+    3,
+    24
+],
+  "info": {
+      "title": "Smarthands Support Plans",
+      "description": "The Smart Hands Support plan API allows users to retrieve information of their purchased plan. Information includes but is not limited to plan name, plan type, purchased minutes, consumed minutes, and remaining minutes for Smart Hands. The authorization token and content-type are the only headers that are passed to this API and a response is received based on the values passed.",
+      "version": "2.0-beta",
+      "termsOfService": "https://www.equinix.com/about/legal/terms",
+      "contact": {
+          "name": "Equinix API Support",
+          "url": "https://docs.equinix.com/api-support.htm"
+      }
+  },
+  "servers": [
+      {
+          "url": "https://api.equinix.com"
+      },
+      {
+          "url": "https://sandboxapi.equinix.com"
+      }
+  ],
+  "tags": [
+      {
+          "name": "Smart Hands Support Plans",
+          "description": "Smart Hands Support Plans"
+      }
+  ],
+  "paths": {
+      "/colocations/v2/supportPlans": {
+          "get": {
+              "tags": [
+                  "Smart Hands Support Plans"
+              ],
+              "operationId": "Retrieve Smart Hands support plans",
+              "summary": "Retrieve Smart Hands support plans",
+              "description": "This method retrieves all the available Smart Hands support plans and its remaining minutes to consume for a user with Smart Hands support plans viewing permission.",
+              "security": [
+                  {
+                      "BearerAuth": []
+                  }
+              ],
+              "parameters": [
+                  {
+                      "name": "accountNumbers",
+                      "in": "query",
+                      "description": "List of accounts to be filtered",
+                      "required": false,
+                      "style": "form",
+                      "explode": false,
+                      "schema": {
+                          "type": "array",
+                          "items": {
+                              "type": "string"
+                          }
+                      }
+                  },
+                  {
+                      "name": "ibxs",
+                      "in": "query",
+                      "description": "List of IBXs to be filtered",
+                      "required": false,
+                      "style": "form",
+                      "explode": false,
+                      "schema": {
+                          "type": "array",
+                          "items": {
+                              "type": "string"
+                          }
+                      }
+                  },
+                  {
+                      "name": "offset",
+                      "in": "query",
+                      "description": "Use `offset` to control the number of records to be skipped in the response.",
+                      "required": false,
+                      "style": "form",
+                      "explode": false,
+                      "schema": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "default": 0
+                      }
+                  },
+                  {
+                      "name": "limit",
+                      "in": "query",
+                      "description": "Use `limit` to restrict the number of records in the response.",
+                      "required": false,
+                      "style": "form",
+                      "explode": false,
+                      "schema": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 200,
+                          "default": 10
+                      }
+                  },
+                  {
+                      "name": "sorts",
+                      "in": "query",
+                      "description": "Sort the users in the response in a particular order. For descending order, prefix the field name with '-'.",
+                      "schema": {
+                          "type": "array",
+                          "items": {
+                              "type": "string",
+                              "default": "ACCOUNT_NUMBER",
+                              "enum": [
+                                  "START_DATE",
+                                  "-START_DATE",
+                                  "END_DATE",
+                                  "-END_DATE",
+                                  "ACCOUNT_NUMBER",
+                                  "-ACCOUNT_NUMBER",
+                                  "ID",
+                                  "-ID",
+                                  "PLAN_NAME",
+                                  "-PLAN_NAME"
+                              ]
+                          }
+                      }
+                  },
+                  {
+                    "name": "planIds",
+                    "in": "query",
+                    "description": "List of PlanIds to be filtered",
+                    "required": false,
+                    "style": "form",
+                    "explode": false,
+                    "schema": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "minItems": 1,
+                      "maxItems": 10
+                    }
+                  }
+              ],
+              "responses": {
+                  "200": {
+                      "description": "Ok",
+                      "content": {
+                          "application/json": {
+                              "schema": {
+                                  "$ref": "#/components/schemas/supportPlanResponse"
+                              },
+                              "examples": {
+                                  "success": {
+                                      "value": {
+                                          "data": [
+                                              {
+                                                  "accountNumber": "100001",
+                                                  "ibxs": [
+                                                      "TY10",
+                                                      "TY8",
+                                                      "TY9"
+                                                  ],
+                                                  "id": "1891931002",
+                                                  "planName": "Monthly Smart Hands Support Plan (Rollover)",
+                                                  "purchasedMinutes": 12,
+                                                  "assignedMinutes": 12,
+                                                  "remainingMinutes": 12,
+                                                  "transitionMinutes": 0,
+                                                  "startDate": "2020-11-01",
+                                                  "endDate": "2020-12-31"
+                                              },
+                                              {
+                                                  "accountNumber": "100001",
+                                                  "ibxs": [
+                                                      "TY10",
+                                                      "TY8",
+                                                      "TY9"
+                                                  ],
+                                                  "id": "1891931001",
+                                                  "planName": "Monthly Smart Hands Support Plan",
+                                                  "purchasedMinutes": 12,
+                                                  "assignedMinutes": 12,
+                                                  "remainingMinutes": 12,
+                                                  "transitionMinutes": 0,
+                                                  "startDate": "2020-12-01",
+                                                  "endDate": "2021-01-31"
+                                              },
+                                              {
+                                                  "accountNumber": "100001",
+                                                  "ibxs": [
+                                                      "TY10",
+                                                      "TY8",
+                                                      "TY9"
+                                                  ],
+                                                  "id": "1891931000",
+                                                  "planName": "Prepaid Smart Hands Support Plan",
+                                                  "purchasedMinutes": 12,
+                                                  "assignedMinutes": 12,
+                                                  "remainingMinutes": 12,
+                                                  "transitionMinutes": 0,
+                                                  "startDate": "2020-12-01",
+                                                  "endDate": "2021-12-31"
+                                              }
+                                          ],
+                                          "pagination": {
+                                              "offset": 0,
+                                              "limit": 25,
+                                              "total": 100,
+                                              "next": "/supportPlans?offset=25&limit=25",
+                                              "previous": "/supportPlans?offset=0&limit=25"
+                                          }
+                                      }
+                                  }
+                              }
+                          }
+                      }
+                  },
+                  "400": {
+                      "description": "Bad Request",
+                      "content": {
+                          "application/json": {
+                              "schema": {
+                                  "$ref": "#/components/schemas/Error"
+                              },
+                              "example": [
+                                  {
+                                      "errorCode": "EQ-2092010",
+                                      "errorMessage": "Value is not a valid format'",
+                                      "correlationId": "99740129126918",
+                                      "additionalInfo": [
+                                          {
+                                              "property": "startDate",
+                                              "value": "2020/07/24"
+                                          }
+                                      ]
+                                  }
+                              ]
+                          }
+                      }
+                  },
+                  "403": {
+                      "description": "Forbidden",
+                      "content": {
+                          "application/json": {
+                              "schema": {
+                                  "$ref": "#/components/schemas/Error"
+                              },
+                              "example": [
+                                  {
+                                      "errorCode": "EQ-2092006",
+                                      "errorMessage": "Permission denied to view the smarthands support plan",
+                                      "correlationId": "99740129126918"
+                                  }
+                              ]
+                          }
+                      }
+                  },
+                  "500": {
+                      "description": "Internal Server Error",
+                      "content": {
+                          "application/json": {
+                              "schema": {
+                                  "$ref": "#/components/schemas/Error"
+                              },
+                              "example": [
+                                  {
+                                      "errorCode": "EQ-2092030",
+                                      "errorMessage": "The server has encountered an unexpected error. We apologize for the inconvenience. Please try again later.",
+                                      "correlationId": "99740129126918"
+                                  }
+                              ]
+                          }
+                      }
+                  }
+              }
+          }
+      }
+  },
+  "components": {
+      "securitySchemes": {
+          "BearerAuth": {
+              "type": "http",
+              "scheme": "bearer",
+              "bearerFormat": "JWT"
+          }
+      },
+      "schemas": {
+          "supportPlanResponse": {
+              "type": "object",
+              "description": "Support plan response",
+              "properties": {
+                  "data": {
+                      "type": "array",
+                      "items": {
+                          "$ref": "#/components/schemas/supports"
+                      }
+                  },
+                  "pagination": {
+                      "$ref": "#/components/schemas/pagination"
+                  }
+              }
+          },
+          "supports": {
+              "title": "support plan details response",
+              "type": "object",
+              "properties": {
+                  "id": {
+                      "type": "string",
+                      "description": "Unique identifier for the specific plan. Note that `id` can be repeated for rollover plans or plan assignment. "
+                  },
+                  "accountNumber": {
+                      "type": "string",
+                      "description": "Account number of the owner of support plan "
+                  },
+                  "planName": {
+                      "type": "string",
+                      "description": "Name of support plan"
+                  },
+                  "productCode": {
+                      "type": "string",
+                      "description": "Equinix product catalog code"
+                  },
+                  "ibxs": {
+                      "type": "array",
+                      "description": "List of IBXs where support plans can be used",
+                      "items": {
+                          "type": "string"
+                      }
+                  },
+                  "ibxSpecific": {
+                      "type": "boolean",
+                      "description": "When `true`, support plans can only be used on a specific IBX. "
+                  },
+                  "planFrequency": {
+                      "type": "string",
+                      "description": "Plan frequency ",
+                      "enum": [
+                          "MONTHLY",
+                          "ANNUAL",
+                          "MONTHLY_ROLLOVER"
+                      ]
+                  },
+                  "purchasedMinutes": {
+                      "type": "integer",
+                      "description": "Shows the number of minutes purchased for a specific plan"
+                  },
+                  "assignedMinutes": {
+                      "type": "integer",
+                      "description": "Shows the number of minutes assigned for a specific plan when plan is pro-rated. Plans are pro-rated when they are not purchased on the 1st of the month."
+                  },
+                  "consumedMinutes": {
+                      "type": "integer",
+                      "description": "Shows the number of minutes consumed for a specific plan"
+                  },
+                  "remainingMinutes": {
+                      "type": "integer",
+                      "description": "Shows the number of minutes remaining for a specific plan"
+                  },
+                  "previousConsumedMinutes": {
+                      "type": "integer",
+                      "description": "Shows the number of minutes consumed in the previous month. This is only  applicable for `MONTHLY` and `MONTHLY_ROLLOVER`"
+                  },
+                  "currentConsumedMinutes": {
+                      "type": "integer",
+                      "description": "Shows the number of minutes consumed in the current month. This is only  applicable for `MONTHLY` and `MONTHLY_ROLLOVER`"
+                  },
+                  "prepaidConsumedMinutes": {
+                      "type": "integer",
+                      "description": "Shows the number of minutes consumed for prepaid plans. This is only applicable if plan frequency is of `ANNUAL` "
+                  },
+                  "transitionMinutes": {
+                      "type": "integer",
+                      "description": "Shows the number of minutes assigned to your end customer. Applicable to resellers only."
+                  },
+                  "startDate": {
+                      "type": "string",
+                      "format": "date",
+                      "description": "Plan start date in `YYYY-MM-DD` format"
+                  },
+                  "endDate": {
+                      "type": "string",
+                      "format": "date",
+                      "description": "Plan end date `YYYY-MM-DD` format"
+                  },
+                  "status": {
+                      "type": "string",
+                      "enum": [
+                          "ACTIVE",
+                          "CANCELLED"
+                      ],
+                      "description": "Status of support plan. This can be of `ACTIVE` or `CANCELLED` "
+                  },
+                  "createdDateTime": {
+                      "type": "string",
+                      "format": "date-time",
+                      "description": "Shows the date and time when support plan was created in ISO 8601 format"
+                  },
+                  "updatedDateTime": {
+                      "type": "string",
+                      "format": "date-time",
+                      "description": "Shows the date and time when support plan was last updated in ISO 8601 format."
+                  },
+                  "assignment": {
+                      "$ref": "#/components/schemas/assignment"
+                  }
+              }
+          },
+          "assignment": {
+              "type": "object",
+              "description": "Customer assignment details. This information's is available for reseller",
+              "properties": {
+                  "name": {
+                      "type": "string",
+                      "description": "Customer name of assigned plans"
+                  },
+                  "accountNumber": {
+                      "type": "string",
+                      "description": "Customer account number of assigned plans"
+                  },
+                  "status": {
+                      "type": "string",
+                      "description": "Shows the current status of assignment.",
+                      "enum": [
+                          "ASSIGNED",
+                          "UNASSIGNED",
+                          "PENDING_ASSIGNED",
+                          "PENDING_UNASSIGNED",
+                          "CANCELLED"
+                      ]
+                  },
+                  "eligible": {
+                      "type": "boolean",
+                      "description": "When `true`, plans can be assigned to customers"
+                  }
+              }
+          },
+          "Error": {
+            "title": "Error Info",
+            "type": "array",
+            "items": {
+              "title": "Error details",
+              "type": "object",
+              "properties": {
+                "errorCode": {
+                  "type": "string",
+                  "example": "EQ-20YYXXX"
+                },
+                "errorMessage": {
+                  "type": "string",
+                  "example": "Error message"
+                },
+                "details": {
+                  "type": "string",
+                  "example": "Error details"
+                },
+                "correlationId": {
+                  "type": "string",
+                  "example": "Correlation ID to trace the error back"
+                },
+                "help": {
+                  "type": "string",
+                  "example": "URL to a help page for the corresponding errorCode"
+                },
+                "additionalInfo": {
+                  "title": "Error details",
+                  "type": "object",
+                  "properties": {
+                    "property": {
+                      "type": "string",
+                      "example": "id"
+                    },
+                    "reason": {
+                      "type": "string",
+                      "example": "missing id"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "pagination": {
+              "type": "object",
+              "properties": {
+                  "offset": {
+                      "type": "integer",
+                      "example": 0
+                  },
+                  "limit": {
+                      "type": "integer",
+                      "example": 25
+                  },
+                  "total": {
+                      "type": "integer",
+                      "example": 100
+                  },
+                  "next": {
+                      "type": "string",
+                      "example": "/supportPlans?offset=25&limit=25"
+                  },
+                  "previous": {
+                      "type": "string",
+                      "example": "/supportPlans?offset=0&limit=25"
+                  }
+              },
+              "description": "Pagination"
+          }
+      }
+  }
+}

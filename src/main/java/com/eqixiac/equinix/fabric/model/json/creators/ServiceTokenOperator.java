@@ -45,8 +45,16 @@ public class ServiceTokenOperator extends ResourceImpl<ServiceToken> {
         this.serviceClient = serviceClient;
     }
 
-    public ServiceTokenBuilder create(Side issuerSide) {
-        return new ServiceTokenBuilder(issuerSide);
+    /**
+     * Begins a service-token create.
+     *
+     * @param tokenSide the connection side the token's access point is placed on: {@code A_Side}
+     *        puts it under {@code connection.aSide}, {@code Z_Side} under {@code connection.zSide}
+     *        (the deprecated {@code issuerSide} property is no longer sent)
+     * @return a builder
+     */
+    public ServiceTokenBuilder create(Side tokenSide) {
+        return new ServiceTokenBuilder(tokenSide);
     }
 
     /**
@@ -84,8 +92,17 @@ public class ServiceTokenOperator extends ResourceImpl<ServiceToken> {
             return this;
         }
 
-        public ServiceTokenUpdater expiry(Integer expiry) {
-            operations.add(PatchOperation.replace("/expiry", expiry));
+        /**
+         * Replaces the expiration date and time ({@code /expirationDateTime}, the path the spec's
+         * {@code ServiceTokenChangeOperation} example uses).
+         *
+         * @param expirationDateTime the new expiration, UTC wall clock
+         * @return this updater
+         */
+        public ServiceTokenUpdater expirationDateTime(LocalDateTime expirationDateTime) {
+            java.util.Objects.requireNonNull(expirationDateTime, "expirationDateTime");
+            operations.add(PatchOperation.replace("/expirationDateTime",
+                    com.eqixiac.equinix.core.http.ParameterMapper.dateTimeForQuery(expirationDateTime)));
             return this;
         }
 
@@ -126,11 +143,10 @@ public class ServiceTokenOperator extends ResourceImpl<ServiceToken> {
         private ServiceTokenType serviceTokenType;
         private String name;
         private String description;
-        private Integer expiry;
         private LocalDateTime expirationDateTime;
         private String projectId;
 
-        private final Side issuerSide;
+        private final Side tokenSide;
 
         private ConnectionType connectionType;
         private Boolean allowRemoteConnection = false;
@@ -140,7 +156,6 @@ public class ServiceTokenOperator extends ResourceImpl<ServiceToken> {
 
         private AccessPointType accessPointType;
         private String portUuid;
-        private Boolean hideAssetInfo;
 
         private String virtualDeviceUuid;
         private Integer interfaceId;
@@ -154,8 +169,8 @@ public class ServiceTokenOperator extends ResourceImpl<ServiceToken> {
         private List<String> emails;
         private boolean dryRun;
 
-        protected ServiceTokenBuilder(Side issuerSide) {
-            this.issuerSide = issuerSide;
+        protected ServiceTokenBuilder(Side tokenSide) {
+            this.tokenSide = java.util.Objects.requireNonNull(tokenSide, "tokenSide");
         }
 
         public ServiceTokenOperator.ServiceTokenBuilder ofType(ServiceTokenType serviceTokenType) {
@@ -170,11 +185,6 @@ public class ServiceTokenOperator extends ResourceImpl<ServiceToken> {
 
         public ServiceTokenOperator.ServiceTokenBuilder withDescription(String description) {
             this.description = description;
-            return this;
-        }
-
-        public ServiceTokenOperator.ServiceTokenBuilder withExpiry(Integer expiry) {
-            this.expiry = expiry;
             return this;
         }
 
@@ -269,16 +279,6 @@ public class ServiceTokenOperator extends ResourceImpl<ServiceToken> {
          */
         public ServiceTokenOperator.ServiceTokenBuilder onNetworkUuid(String networkUuid) {
             this.networkUuid = networkUuid;
-            return this;
-        }
-
-        /**
-         * Hides asset information from the token recipient. Deprecated in the spec but still accepted.
-         *
-         * @return this builder
-         */
-        public ServiceTokenOperator.ServiceTokenBuilder hideAssetInfo() {
-            this.hideAssetInfo = true;
             return this;
         }
 

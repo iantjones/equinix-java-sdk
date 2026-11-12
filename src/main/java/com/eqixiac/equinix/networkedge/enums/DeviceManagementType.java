@@ -21,9 +21,9 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 /**
  * Device management type (network-edgev1 wire values {@code EQUINIX-CONFIGURED} /
- * {@code SELF-CONFIGURED} — hyphenated, unlike the constant names). {@code toString()} returns
+ * {@code SELF-CONFIGURED} - hyphenated, unlike the constant names). {@code toString()} returns
  * the hyphenated wire form so body ({@code @JsonValue}) and query-parameter ({@code paramValue()})
- * serialization agree — enforced by {@code ApiParamContractTest}.
+ * serialization agree - enforced by {@code ApiParamContractTest}.
  *
  * @author ianjones
  */

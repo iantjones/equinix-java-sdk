@@ -25,7 +25,7 @@ import java.util.Optional;
  * A forward-compatible identifier for an Equinix metro: a normalized metro code string that can name
  * <em>any</em> metro, including ones added after this SDK was built and therefore absent from the
  * {@link MetroCode} enum. Use it where a metro must be referenced by code without being constrained
- * to the well-known set — e.g. keys in {@code MetroRegistry}, or provisioning against a brand-new
+ * to the well-known set - e.g. keys in {@code MetroRegistry}, or provisioning against a brand-new
  * metro.
  *
  * <p>The code is normalized to upper case with surrounding whitespace trimmed. Two {@code MetroId}s

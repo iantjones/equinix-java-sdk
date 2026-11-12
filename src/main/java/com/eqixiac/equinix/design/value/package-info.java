@@ -28,8 +28,8 @@
  * figures ({@code ReferenceRateCard}); optional provider-API adapters slot in for live
  * cloud egress rates. Every figure is tagged with its
  * {@link com.eqixiac.equinix.design.value.ratecard.PriceSource} so provenance survives
- * aggregation, and a card that cannot price an item returns empty — never a phantom
- * zero — so the next layer gets consulted.</p>
+ * aggregation, and a card that cannot price an item returns empty - never a phantom
+ * zero - so the next layer gets consulted.</p>
  *
  * <p>The layer's one hard rule is currency honesty, centralized in
  * {@link com.eqixiac.equinix.design.value.CurrencyReconciler}: amounts are only added,

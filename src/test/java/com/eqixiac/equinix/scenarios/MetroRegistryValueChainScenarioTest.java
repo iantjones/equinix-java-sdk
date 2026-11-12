@@ -35,7 +35,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * data flows into the calculator input, and all three wire families (Fabric metros, EIA ibxs,
  * Fabric prices) execute over the same shared core with a single OAuth token.</p>
  */
-@DisplayName("Enriched MetroRegistry → latency → SavingsCalculator over one session")
+@DisplayName("Enriched MetroRegistry -> latency -> SavingsCalculator over one session")
 class MetroRegistryValueChainScenarioTest extends WireMockTestBase {
 
     @BeforeEach
@@ -57,11 +57,11 @@ class MetroRegistryValueChainScenarioTest extends WireMockTestBase {
             redirectToWireMock(eq.fabric());
             eq.authenticate();
 
-            // Step 1 — enriched registry: Fabric metros + EIA per-IBX geo detail in one load.
+            // Step 1 - enriched registry: Fabric metros + EIA per-IBX geo detail in one load.
             MetroRegistry registry = eq.metroRegistry();
             assertTrue(registry.isEnriched(), "EIA detail merged into the metro registry");
 
-            // Step 2 — latency-based site choice between two candidate IBXs from the registry.
+            // Step 2 - latency-based site choice between two candidate IBXs from the registry.
             Ibx sv5 = registry.ibx("SV5").orElseThrow();
             Ibx la4 = registry.ibx("LA4").orElseThrow();
             double rttMillis = SpeedOfLightLatency.roundTrip().millisBetween(sv5, la4);
@@ -72,7 +72,7 @@ class MetroRegistryValueChainScenarioTest extends WireMockTestBase {
             MetroCode chosenMetro = MetroCode.valueOf(sv5.getMetroCode());
             assertEquals(MetroCode.SV, chosenMetro);
 
-            // Step 3 — savings estimate for that metro; the default chain prices the
+            // Step 3 - savings estimate for that metro; the default chain prices the
             // interconnect live from fabric.prices() over the SAME session.
             SavingsEstimate estimate = eq.design().savingsCalculator()
                     .egressTerabytes(50)

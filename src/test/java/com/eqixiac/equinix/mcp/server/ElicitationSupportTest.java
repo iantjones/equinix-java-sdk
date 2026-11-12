@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@DisplayName("ElicitationSupport — chooseOne and confirm over a stub client exchange")
+@DisplayName("ElicitationSupport - chooseOne and confirm over a stub client exchange")
 class ElicitationSupportTest {
 
     private static final List<ElicitationSupport.Option> OPTIONS = List.of(
@@ -131,7 +131,7 @@ class ElicitationSupportTest {
         assertTrue(ElicitationSupport.supportsForm(StubExchanges.accepts("a")));
     }
 
-    // ── confirm: the boolean approval form ──────────────────────────────────
+    // confirm: the boolean approval form
 
     @Test
     @DisplayName("confirm: no exchange, or no declared capability, is UNSUPPORTED_BY_CLIENT and nothing is sent")

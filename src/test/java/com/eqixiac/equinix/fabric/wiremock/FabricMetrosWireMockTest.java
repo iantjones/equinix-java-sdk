@@ -221,7 +221,7 @@ class FabricMetrosWireMockTest extends WireMockTestBase {
             Metro metro = fabric.metros().getByMetroCode(MetroCode.SV);
             assertEquals("Silicon Valley", metro.getName());
 
-            // The wrapper's own refresh() — distinct from MetroRegistry.refresh(), which reloads
+            // The wrapper's own refresh() - distinct from MetroRegistry.refresh(), which reloads
             // the whole registry rather than a single wrapper in place.
             Metro refreshed = metro.refresh();
 

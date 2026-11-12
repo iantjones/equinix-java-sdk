@@ -23,7 +23,7 @@ import com.eqixiac.equinix.internetaccess.model.TermsAndConditions;
 
 /**
  * Client interface for the Equinix Internet Access (EIA) v1 terms-and-conditions lookup
- * ({@code GET /internetAccess/v1/terms}) — the terms and conditions applicable to an account at a
+ * ({@code GET /internetAccess/v1/terms}) - the terms and conditions applicable to an account at a
  * given IBX for a given product.
  */
 public interface InternetAccessTerms {

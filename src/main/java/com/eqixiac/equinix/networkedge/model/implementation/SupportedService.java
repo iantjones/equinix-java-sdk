@@ -29,7 +29,7 @@ import java.util.ArrayList;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Getter
 public class SupportedService {
-    
+
     @JsonProperty("name")
     private String name;
 

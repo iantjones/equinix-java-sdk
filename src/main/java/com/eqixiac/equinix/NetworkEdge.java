@@ -47,7 +47,7 @@ import com.eqixiac.equinix.networkedge.client.implementation.VPNsImpl;
  * including virtual devices, ACL templates, VPN connections, BGP peerings,
  * device links, public keys, and backups.</p>
  *
- * <p>All resource accessors use lazy initialization — internal clients are created on first access
+ * <p>All resource accessors use lazy initialization - internal clients are created on first access
  * and reused for subsequent calls.</p>
  *
  * <h3>Quick Start</h3>

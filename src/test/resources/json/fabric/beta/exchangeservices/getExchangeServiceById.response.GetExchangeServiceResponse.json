@@ -1,0 +1,83 @@
+{
+  "href": "https://api.equinix.com/fabric/v4/exchangeServices/a8ba52de-faae-43b5-b0b1-6904d37ee011",
+  "uuid": "a8ba52de-faae-43b5-b0b1-6904d37ee011",
+  "type": "IX",
+  "name": "ix_exchange_service",
+  "bandwidth": 400000,
+  "description": "ix_exchange_service",
+  "state": "PROVISIONING",
+  "location": {
+    "metroHref": "https://api.equinix.com/fabric/v4/metros/SV",
+    "metroCode": "SV"
+  },
+  "publicPeeringConnection": {
+    "type": "IX_VC",
+    "href": "https://api.equinix.com/fabric/v4/connections/b44c6e6c-2c36-4488-b3f1-47064357b5b4",
+    "uuid": "b44c6e6c-2c36-4488-b3f1-47064357b5b4"
+  },
+  "routingProtocol": {
+    "customerAsn": 5555,
+    "macAddress": "00:11:22:33:44:55",
+    "vlan": 99,
+    "routeServerAsn": 24115,
+    "bgpIpv4": {
+      "customerPeerIp": "12.1.1.1",
+      "domainName": "gw01.sin.example.net",
+      "primaryRouteServerIp": "10.1.1.1",
+      "secondaryRouteServerIp": "10.1.1.2",
+      "asSet": "AS-EC-SV",
+      "mlpeEnabled": true,
+      "md5AuthKey": "TESTMD5Key12345",
+      "prefixes": [
+        "203.0.113.0/24"
+      ],
+      "maxPrefixLimit": 300,
+      "prependSelfEnabled": true
+    },
+    "bgpIpv6": {
+      "customerPeerIp": "2001:db8:c59b::22",
+      "domainName": "gw01.sin.example.net",
+      "primaryRouteServerIp": "2001:db8:c59b::33",
+      "secondaryRouteServerIp": "2001:db8:c59b::322",
+      "asSet": "AS-EC-SV",
+      "mlpeEnabled": true,
+      "md5AuthKey": "TESTMD5Key123456",
+      "prefixes": [
+        "2001:DB8:123::/48"
+      ],
+      "maxPrefixLimit": 300,
+      "prependSelfEnabled": true
+    },
+    "routeCollector": {
+      "asn": 1238,
+      "ipV4": "10.255.255.254",
+      "ipV6": "2001:db8:85a3::8a2e:370:7334\\"
+    }
+  },
+  "order": {
+    "purchaseOrderNumber": "1-3456576",
+    "orderNumber": "1-139105284200"
+  },
+  "project": {
+    "projectId": "e275485c-7072-439f-943a-c923548b2be5"
+  },
+  "account": {
+    "accountNumber": 100179
+  },
+  "notifications": [
+    {
+      "type": "NOTIFICATION",
+      "registeredUsers": [
+        "jaguarsuser-port-order"
+      ]
+    }
+  ],
+  "changelog": {
+    "createdBy": "12345",
+    "createdDateTime": "2025-08-30T07:21:39Z"
+  },
+  "additionalInfo": {
+    "errorCode": "EQ-3058039",
+    "errorMessage": "Unable to activate Exchange Service Port. Please verify your configuration or contact support."
+  }
+}

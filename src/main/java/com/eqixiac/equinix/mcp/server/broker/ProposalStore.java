@@ -21,8 +21,10 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.HexFormat;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicLong;
@@ -34,11 +36,13 @@ import java.util.concurrent.atomic.AtomicLong;
  * <p><strong>Scope:</strong> single-process only, like the plan store. Tokens are valid only
  * for the lifetime of this server process; if the MCP host restarts the server, outstanding
  * proposals are gone and must be re-proposed. Entries expire after {@link #ttl()} (default
- * 10 minutes) and the store keeps at most {@link #capacity()} live proposals, evicting the
- * oldest.</p>
+ * 10 minutes) and the store keeps at most {@link #capacity()} live proposals. Minting beyond
+ * capacity evicts the oldest live proposal; {@link #mint} returns what it evicted so the caller of
+ * {@code fabric_propose_change} is told, and a later confirm of an evicted token resolves to
+ * {@link Outcome#EVICTED}.</p>
  *
  * <p><strong>Single use, consumed on attempt:</strong> {@link #consume(String)} removes a live
- * proposal on the <em>first</em> attempt, before the caller executes anything — a failed
+ * proposal on the <em>first</em> attempt, before the caller executes anything - a failed
  * execution does not resurrect the token. Recently consumed and recently expired tokens are
  * remembered (for one further TTL window) so a second confirm gets a precise
  * {@link Outcome#REPLAYED} or {@link Outcome#EXPIRED} answer instead of a generic
@@ -70,6 +74,9 @@ public final class ProposalStore {
     /** Tokens that expired unconfirmed, remembered until the mapped instant. */
     private final LinkedHashMap<String, Instant> expired = new LinkedHashMap<>();
 
+    /** Tokens evicted at capacity before any confirm attempt, remembered until the mapped instant. */
+    private final LinkedHashMap<String, Instant> evicted = new LinkedHashMap<>();
+
     /** Creates a store with the default TTL (10 minutes) and capacity (20 proposals). */
     public ProposalStore() {
         this(Clock.systemUTC(), DEFAULT_TTL, DEFAULT_CAPACITY);
@@ -92,48 +99,61 @@ public final class ProposalStore {
     }
 
     /**
-     * Mints a proposal: a fresh unguessable token bound to the given canonical spec and its
-     * SHA-256, expiring one TTL from now.
-     *
-     * @param changeType the kind of create the proposal performs
-     * @param canonicalSpec the canonical-form spec JSON the dry run validated
-     * @param specSha256 the SHA-256 (hex) of {@code canonicalSpec}
-     * @return the pending change, carrying the confirm token and expiry
+     * @return the current instant on this store's clock (the reference time a proposal is compiled at)
      */
-    public synchronized PendingChange mint(ChangeType changeType, String canonicalSpec, String specSha256) {
-        return mint(changeType, canonicalSpec, specSha256, null);
+    public Instant now() {
+        return clock.instant();
     }
 
     /**
-     * Mints a proposal as {@link #mint(ChangeType, String, String)} does and records the price
-     * context the propose phase reported, so the confirm prompt can repeat it without a second
-     * price lookup.
+     * Mints a proposal: a fresh unguessable token bound to the SHA-256 of the compiled request,
+     * expiring one TTL from now. When the store is at capacity the oldest live proposal is evicted
+     * first and returned in {@link Minted#evicted()}.
      *
      * @param changeType the kind of create the proposal performs
      * @param canonicalSpec the canonical-form spec JSON the dry run validated
      * @param specSha256 the SHA-256 (hex) of {@code canonicalSpec}
+     * @param requestSha256 the SHA-256 (hex) of the compiled request the confirm phase will send
+     * @param compiledAt the reference instant the request was compiled at; the confirm phase
+     *        recompiles at the same instant
      * @param priceSummary the one-line price context shown with the proposal; may be {@code null}
-     * @return the pending change, carrying the confirm token, mint instant and expiry
+     * @return the pending change and any proposals evicted to make room for it
      */
-    public synchronized PendingChange mint(ChangeType changeType, String canonicalSpec, String specSha256,
-                                           String priceSummary) {
+    public synchronized Minted mint(ChangeType changeType, String canonicalSpec, String specSha256,
+                                    String requestSha256, Instant compiledAt, String priceSummary) {
         Objects.requireNonNull(changeType, "changeType");
         Objects.requireNonNull(canonicalSpec, "canonicalSpec");
         Objects.requireNonNull(specSha256, "specSha256");
+        Objects.requireNonNull(requestSha256, "requestSha256");
+        Objects.requireNonNull(compiledAt, "compiledAt");
         prune();
+        List<PendingChange> dropped = new ArrayList<>();
+        Instant now = clock.instant();
         while (live.size() >= capacity) {
-            Iterator<String> oldest = live.keySet().iterator();
-            oldest.next();
+            Iterator<Map.Entry<String, PendingChange>> oldest = live.entrySet().iterator();
+            Map.Entry<String, PendingChange> entry = oldest.next();
             oldest.remove();
+            evicted.put(entry.getKey(), now.plus(ttl));
+            dropped.add(entry.getValue());
         }
         byte[] entropy = new byte[12];
         random.nextBytes(entropy);
         String token = "chg-" + sequence.incrementAndGet() + "-" + HexFormat.of().formatHex(entropy);
-        Instant mintedAt = clock.instant();
-        PendingChange change = new PendingChange(token, changeType, canonicalSpec, specSha256,
-                mintedAt, mintedAt.plus(ttl), priceSummary);
+        PendingChange change = new PendingChange(token, changeType, canonicalSpec, specSha256, requestSha256,
+                compiledAt, now, now.plus(ttl), priceSummary);
         live.put(token, change);
-        return change;
+        return new Minted(change, List.copyOf(dropped));
+    }
+
+    /**
+     * Whether a proposal's TTL has elapsed on this store's clock. The confirm phase asks again after
+     * the human prompt returns, because the prompt may have been open past the expiry.
+     *
+     * @param change a proposal minted by this store
+     * @return {@code true} when the proposal is no longer within its TTL
+     */
+    public boolean isExpired(PendingChange change) {
+        return !change.expiresAt().isAfter(clock.instant());
     }
 
     /**
@@ -141,7 +161,7 @@ public final class ProposalStore {
      * with {@link Outcome#CONSUMED}; every other outcome carries no change.
      *
      * @param token the confirm token presented by {@code fabric_confirm_change}
-     * @return the consumption result — exactly one of consumed, expired, replayed, or unknown
+     * @return the consumption result - exactly one of consumed, expired, replayed, or unknown
      */
     public synchronized Consumption consume(String token) {
         prune();
@@ -155,6 +175,9 @@ public final class ProposalStore {
         }
         if (expired.containsKey(token)) {
             return new Consumption(Outcome.EXPIRED, null);
+        }
+        if (evicted.containsKey(token)) {
+            return new Consumption(Outcome.EVICTED, null);
         }
         return new Consumption(Outcome.UNKNOWN, null);
     }
@@ -205,6 +228,7 @@ public final class ProposalStore {
         }
         consumed.values().removeIf(forgetAt -> !forgetAt.isAfter(now));
         expired.values().removeIf(forgetAt -> !forgetAt.isAfter(now));
+        evicted.values().removeIf(forgetAt -> !forgetAt.isAfter(now));
     }
 
     /** How a {@link #consume(String)} attempt resolved. */
@@ -219,6 +243,9 @@ public final class ProposalStore {
         /** The token was already consumed by an earlier confirm attempt. */
         REPLAYED,
 
+        /** The proposal was evicted unconfirmed because the store reached capacity. */
+        EVICTED,
+
         /** The token was never minted by this process (or is long forgotten). */
         UNKNOWN
     }
@@ -227,9 +254,18 @@ public final class ProposalStore {
      * The result of one consume attempt.
      *
      * @param outcome how the attempt resolved
-     * @param change the consumed proposal — non-null only when {@code outcome} is
+     * @param change the consumed proposal - non-null only when {@code outcome} is
      *        {@link Outcome#CONSUMED}
      */
     public record Consumption(Outcome outcome, PendingChange change) {
+    }
+
+    /**
+     * The result of {@link #mint}.
+     *
+     * @param change the new pending proposal
+     * @param evicted proposals evicted (oldest first) to stay within capacity; usually empty
+     */
+    public record Minted(PendingChange change, List<PendingChange> evicted) {
     }
 }

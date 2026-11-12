@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 
 /**
  * Status of an agreement-acceptance request (spec {@code AgreementAcceptResponse.status}: {@code SUCCESS} /
- * {@code FAILED}). {@link #UNKNOWN} is a read-side fallback for values added after this SDK release — never
+ * {@code FAILED}). {@link #UNKNOWN} is a read-side fallback for values added after this SDK release - never
  * send it.
  *
  * @author ianjones

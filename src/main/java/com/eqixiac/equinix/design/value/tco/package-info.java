@@ -16,7 +16,7 @@
 
 /**
  * Design-time total-cost-of-ownership comparison across the
- * {@link com.eqixiac.equinix.design.value.tco.DeploymentArchetype}s — public cloud over
+ * {@link com.eqixiac.equinix.design.value.tco.DeploymentArchetype}s - public cloud over
  * the internet, on-premises, Equinix-interconnected, and (for a cloud-to-cloud comparison) the
  * providers' native multicloud link. The entry point is
  * {@code fabric.tcoComparison()} (or
@@ -32,8 +32,8 @@
  * {@link com.eqixiac.equinix.design.value.ratecard}: by default live Equinix Fabric
  * pricing backed by bundled reference figures, replaceable with a caller-supplied card.
  * Each breakdown records which components priced ({@code isPriced()}), carries the
- * currency its own components reconciled to, and — per the layer's currency-honesty
- * rule — figures in differing currencies are never summed and no FX rate is fabricated:
+ * currency its own components reconciled to, and - per the layer's currency-honesty
+ * rule - figures in differing currencies are never summed and no FX rate is fabricated:
  * a mixed-currency archetype is reported unpriced with per-currency subtotals, and the
  * baseline-versus-recommended saving is left null when the two sides' currencies
  * differ.</p>

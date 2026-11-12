@@ -18,7 +18,9 @@ package com.eqixiac.equinix.fabric.client.internal;
 
 import com.eqixiac.equinix.core.http.request.PatchOperation;
 import com.eqixiac.equinix.core.http.response.Page;
-import com.eqixiac.equinix.core.http.response.Pageable;
+import com.eqixiac.equinix.core.http.response.PageablePost;
+import com.eqixiac.equinix.fabric.model.implementation.filter.FilterPropertyList;
+import com.eqixiac.equinix.fabric.model.implementation.sort.SortPropertyList;
 import com.eqixiac.equinix.fabric.enums.PrecisionTimePackageCode;
 import com.eqixiac.equinix.fabric.model.PrecisionTime;
 import com.eqixiac.equinix.fabric.model.TimeServiceConnection;
@@ -30,9 +32,9 @@ import com.eqixiac.equinix.fabric.model.json.creators.PrecisionTimeCreatorJson;
 
 import java.util.List;
 
-public interface PrecisionTimeClient<T> extends Pageable<T> {
+public interface PrecisionTimeClient<T> extends PageablePost<T> {
 
-    Page<PrecisionTimeJson> list();
+    Page<PrecisionTimeJson> search(FilterPropertyList filter, SortPropertyList sort);
 
     PrecisionTimeJson getByUuid(String uuid);
 

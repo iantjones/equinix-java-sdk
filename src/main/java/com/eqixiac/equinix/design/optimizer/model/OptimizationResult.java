@@ -1,281 +1,157 @@
 package com.eqixiac.equinix.design.optimizer.model;
 
+import com.eqixiac.equinix.design.cost.CostComparability;
+import com.eqixiac.equinix.design.geo.RouteFactorCalibration;
+import com.eqixiac.equinix.design.placement.PlacementPlan;
+import com.eqixiac.equinix.design.solve.SensitivityReport;
+import com.eqixiac.equinix.design.spec.DesignSpec;
+import com.eqixiac.equinix.design.spi.ConstraintVerdict;
+import com.eqixiac.equinix.design.spi.DesignOption;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.Builder;
 import lombok.Value;
 
-import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * The complete result of a metro optimization run, containing ranked
- * recommendations, deployment topology, latency data, risk assessment,
- * cost estimates, and formatted report outputs.
+ * The result of a Metro Optimizer run.
+ *
+ * <p>The design answer is {@code getRecommended()} (one {@link DesignOption}: a set of metros with every
+ * objective measured, its priced cost lines and every constraint verdict), chosen from
+ * {@code getFrontier()} (every Pareto-optimal trade-off between cost, latency, resilience, coverage and
+ * compliance). {@code getSensitivity()} says how firm the choice is, {@code getPlacement()} where each
+ * workload runs. The result carries the {@code getSpec()} and its {@code getSpecFingerprint()} so it can be stored and compared.</p>
+ *
+ * <p>The remaining fields restate the recommended design in the shape the Deployment Wizard, the
+ * exporters and the MCP server read: {@code getRecommendations()} (one entry per recommended metro,
+ * primary first), {@code getTopology()}, {@code getCostEstimate()} (the same lines as
+ * {@code getRecommended().cost()}), {@code getRiskAssessment()}, {@code getLatencyMatrix()} and
+ * {@code getRequest()} (the spec restated). When nothing is feasible they are empty and
+ * {@code getSolverNotes()} says why.</p>
  */
 @Value
 @Builder
 public class OptimizationResult {
 
+    /** The spec restated for the Deployment Wizard. */
     OptimizationRequest request;
+    /** The recommended metros, primary first; empty when nothing is feasible. */
     List<MetroRecommendation> recommendations;
+    /** Workload placements on the recommended metros (primary placements, then standby ones). */
     DeploymentTopology topology;
+    /** Cloud availability per recommended metro. */
     ProviderConnectivityMap providerMap;
+    /** Round trip from each recommended metro to each site. */
     LatencyMatrix latencyMatrix;
+    /** Findings a reader should act on (unevaluated limits, unpriced items, single points of failure). */
     RiskAssessment riskAssessment;
+    /** The recommended design's cost, from the same lines as {@code recommended.cost()}. */
     CostEstimate costEstimate;
+    /** Methodology, assumptions and data freshness. */
     OptimizationExplanation explanation;
+    /** When the result was produced. */
     Instant computedAt;
+    /** Total run time including data gathering, ms. */
     long computeTimeMs;
 
+    /** The spec the run evaluated. */
+    DesignSpec spec;
+    /** {@code spec.fingerprint()}. */
+    String specFingerprint;
+    /** The recommended option, or {@code null} when nothing is feasible. */
+    DesignOption recommended;
+    /** Every Pareto-optimal option, best weighted score first. */
+    List<DesignOption> frontier;
+    /** Every constraint verdict for the recommended option. */
+    List<ConstraintVerdict> constraintVerdicts;
+    /** What the reader should know about the search. */
+    List<String> solverNotes;
+    /** Search statistics. */
+    SolveStatistics solveStatistics;
+    /** Weight ranges, nearest alternative and binding constraints; {@code null} when nothing is feasible. */
+    SensitivityReport sensitivity;
+    /** Per objective id, how its values were turned into 0..100 scores ({@code ValueScale.describe()}). */
+    Map<String, String> objectiveScales;
+    /** Per objective id, the unit of its values (for example {@code ms}). */
+    Map<String, String> objectiveUnits;
     /**
-     * Returns the top-ranked metro recommendation.
-     *
-     * @return the rank-1 recommendation, or {@code null} when no metro was viable
-     *         (empty recommendation list)
+     * Whether every feasible design's cost could be compared in the spec currency, and whether cost was
+     * withdrawn from the ranking because exchange rates are missing ({@code CostComparability.RULE}).
      */
+    CostComparability costComparability;
+    /** The route factor used for unmeasured latencies and what it was fitted from. */
+    RouteFactorCalibration latencyCalibration;
+    /** Where every workload runs on the recommended design; {@code null} when nothing is feasible. */
+    PlacementPlan placement;
+    /** When the catalogue facts were gathered. */
+    Instant dataAsOf;
+    /** Where the facts came from and how complete they are. */
+    List<String> dataProvenance;
+
+    /** @return the primary recommended metro, or {@code null} when nothing is feasible */
     public MetroRecommendation primaryMetro() {
-        return recommendations.isEmpty() ? null : recommendations.get(0);
+        return recommendations == null || recommendations.isEmpty() ? null : recommendations.get(0);
     }
 
     /**
-     * Returns the top N metro recommendations — a truncation of the already-ranked list,
-     * never a re-scoring.
-     *
-     * @param n the maximum number of recommendations to return
-     * @return the first {@code n} recommendations, or all of them when fewer exist
+     * @param n how many
+     * @return the first {@code n} recommended metros
      */
     public List<MetroRecommendation> top(int n) {
-        return recommendations.stream().limit(n).collect(Collectors.toList());
+        return recommendations == null ? List.of() : recommendations.stream().limit(n).collect(Collectors.toList());
     }
 
     /**
-     * Generates a concise plain-text summary of the optimization result.
+     * The spec with every exchange rate this result used pinned in {@code commercial.exchangeRates}, so running it
+     * again reproduces the figures exactly.
+     *
+     * @return the spec with pinned rates (the spec unchanged when nothing was converted)
      */
-    public String toSummary() {
-        if (recommendations.isEmpty()) {
-            return "No viable metros found matching the given constraints.";
+    public DesignSpec specWithUsedRatesPinned() {
+        java.util.List<com.eqixiac.equinix.design.spi.PortfolioCost> costs = new java.util.ArrayList<>();
+        if (recommended != null) {
+            costs.add(recommended.cost());
         }
-
-        StringBuilder sb = new StringBuilder();
-        MetroRecommendation primary = primaryMetro();
-        sb.append("Recommended primary metro: ").append(primary.getMetroName())
-                .append(" (").append(primary.getMetroId()).append(")")
-                .append(" with a score of ").append(String.format("%.1f", primary.getScore().getComposite()))
-                .append("/100.\n");
-
-        if (recommendations.size() > 1) {
-            sb.append("Additional metros: ");
-            sb.append(recommendations.subList(1, recommendations.size()).stream()
-                    .map(r -> r.getMetroName() + " (" + r.getMetroId() + ")")
-                    .collect(Collectors.joining(", ")));
-            sb.append(".\n");
-        }
-
-        if (riskAssessment != null && !riskAssessment.critical().isEmpty()) {
-            sb.append("WARNING: ").append(riskAssessment.critical().size())
-                    .append(" critical risk(s) identified.\n");
-        }
-
-        if (costEstimate != null) {
-            if (costEstimate.getMonthlyTotal() != null) {
-                sb.append("Estimated monthly cost: ")
-                        .append(money(costEstimate.getMonthlyTotal(), costEstimate.getCurrency()));
-                if (!costEstimate.isWithinBudget()) {
-                    sb.append(" (OVER BUDGET)");
-                }
-                sb.append(".\n");
-            } else {
-                // The metros span currencies, so there is no single total to state — show the
-                // per-currency subtotals rather than a fabricated cross-currency figure.
-                sb.append("Estimated monthly cost spans multiple currencies: ")
-                        .append(describeByCurrency(costEstimate.getMonthlyByCurrency()))
-                        .append(" (no single-currency total).\n");
+        if (frontier != null) {
+            for (DesignOption option : frontier) {
+                costs.add(option.cost());
             }
         }
+        return com.eqixiac.equinix.design.cost.CurrencyConverters.pinUsedRates(spec, costs);
+    }
 
-        sb.append("Computed in ").append(computeTimeMs).append("ms.");
-        return sb.toString();
+    /** @return a few sentences: the recommendation, its objectives, the frontier size and the search statistics */
+    public String toSummary() {
+        return OptimizationReport.summary(this);
     }
 
     /**
-     * Generates a full markdown-formatted deployment report.
+     * @return a Markdown report: recommendation and why, frontier table, sensitivity, constraints,
+     *         placement, cost lines, latency, risks, assumptions and data provenance
      */
     public String toMarkdown() {
-        StringBuilder md = new StringBuilder();
-        md.append("# Metro Optimization Report\n\n");
-        md.append("_Generated: ").append(computedAt).append(" (").append(computeTimeMs).append("ms)_\n\n");
-
-        // Executive Summary
-        md.append("## Executive Summary\n\n");
-        md.append(toSummary()).append("\n\n");
-
-        // Recommendations
-        md.append("## Ranked Recommendations\n\n");
-        for (MetroRecommendation rec : recommendations) {
-            md.append("### #").append(rec.getRank()).append(": ")
-                    .append(rec.getMetroName()).append(" (").append(rec.getMetroId()).append(")\n\n");
-            md.append("- **Region**: ").append(rec.getRegion()).append("\n");
-            md.append("- **Composite Score**: ").append(String.format("%.1f", rec.getScore().getComposite())).append("/100\n");
-            md.append("- **Score Breakdown**:\n");
-            for (ScoreComponent comp : rec.getScore().getComponents()) {
-                md.append("  - ").append(comp.getCategory()).append(": ")
-                        .append(String.format("%.1f", comp.getScore()))
-                        .append(" (weight: ").append(String.format("%.0f%%", comp.getWeight() * 100))
-                        .append(") — ").append(comp.getExplanation()).append("\n");
-            }
-            md.append("- **Reasons**: ").append(String.join("; ", rec.getReasons())).append("\n");
-
-            if (rec.getSiteLatencies() != null && !rec.getSiteLatencies().isEmpty()) {
-                md.append("- **Site Latencies**:\n");
-                rec.getSiteLatencies().forEach((site, latency) ->
-                        md.append("  - ").append(site).append(": ")
-                                .append(String.format("%.1fms", latency)).append("\n"));
-            }
-
-            if (rec.getAvailableProviders() != null && !rec.getAvailableProviders().isEmpty()) {
-                md.append("- **Providers Available**: ");
-                md.append(rec.getAvailableProviders().stream()
-                        .filter(ProviderAvailability::isAvailable)
-                        .map(ProviderAvailability::getProviderLabel)
-                        .collect(Collectors.joining(", ")));
-                md.append("\n");
-            }
-            md.append("\n");
-        }
-
-        // Latency Matrix
-        if (latencyMatrix != null && !latencyMatrix.getMetros().isEmpty()) {
-            md.append("## Latency Matrix\n\n");
-            md.append("```\n").append(latencyMatrix.toTableString()).append("\n```\n\n");
-        }
-
-        // Deployment Topology
-        if (topology != null && !topology.getPlacements().isEmpty()) {
-            md.append("## Deployment Topology\n\n");
-            md.append(topology.summary()).append("\n");
-        }
-
-        // Risk Assessment
-        if (riskAssessment != null && !riskAssessment.getFindings().isEmpty()) {
-            md.append("## Risk Assessment\n\n");
-            md.append("Resiliency Score: ").append(String.format("%.1f", riskAssessment.getResiliencyScore()))
-                    .append("/100\n\n");
-            for (RiskFinding finding : riskAssessment.getFindings()) {
-                md.append("- **[").append(finding.getSeverity()).append("]** ")
-                        .append(finding.getDescription());
-                if (finding.getRecommendation() != null) {
-                    md.append("\n  _Recommendation: ").append(finding.getRecommendation()).append("_");
-                }
-                md.append("\n");
-            }
-            md.append("\n");
-        }
-
-        // Cost Estimate. Every figure carries its own currency: per-metro rows render the row's
-        // currency (live Fabric pricing legitimately quotes EUR in Frankfurt next to USD in
-        // Ashburn), and the total renders the aggregate currency. A hardcoded "$" against a
-        // non-USD figure misstated the amount by whatever the exchange rate happened to be.
-        if (costEstimate != null) {
-            md.append("## Cost Estimate\n\n");
-            md.append("| Metro | Monthly | Setup |\n");
-            md.append("|-------|--------:|------:|\n");
-            for (MetroCostBreakdown mcb : costEstimate.getPerMetro()) {
-                String rowCurrency = mcb.getCurrency() != null
-                        ? mcb.getCurrency() : costEstimate.getCurrency();
-                md.append("| ").append(mcb.getMetroId())
-                        .append(" | ").append(money(mcb.getMonthlyRecurring(), rowCurrency))
-                        .append(" | ").append(money(mcb.getNonRecurring(), rowCurrency)).append(" |\n");
-            }
-            if (costEstimate.getMonthlyTotal() != null) {
-                md.append("| **Total** | **")
-                        .append(money(costEstimate.getMonthlyTotal(), costEstimate.getCurrency()))
-                        .append("** | **")
-                        .append(money(costEstimate.getSetupTotal(), costEstimate.getCurrency()))
-                        .append("** |\n\n");
-            } else {
-                md.append("| **Total** | **")
-                        .append(describeByCurrency(costEstimate.getMonthlyByCurrency()))
-                        .append("** | _multiple currencies_ |\n\n");
-            }
-            md.append("_").append(costEstimate.getCostDisclaimer()).append("_\n\n");
-        }
-
-        // Explanation
-        if (explanation != null) {
-            md.append("## Methodology\n\n");
-            md.append(explanation.getMethodology()).append("\n\n");
-            if (explanation.getAssumptions() != null && !explanation.getAssumptions().isEmpty()) {
-                md.append("**Assumptions**:\n");
-                explanation.getAssumptions().forEach(a -> md.append("- ").append(a).append("\n"));
-            }
-        }
-
-        return md.toString();
+        return OptimizationReport.markdown(this);
     }
 
-    /**
-     * Renders a monetary amount with the symbol of its actual currency ({@code "$2300.00"},
-     * {@code "€1800.00"}), falling back to {@code "<amount> <code>"} when the code has no distinct
-     * symbol or is unknown, and to the bare amount when no currency was stated at all. Replaces the
-     * former hardcoded {@code "$"}, which asserted US dollars against figures that live Fabric
-     * pricing legitimately quotes in other currencies.
-     */
-    private static String money(BigDecimal amount, String currency) {
-        if (amount == null) {
-            return "unavailable";
-        }
-        if (currency == null || currency.isBlank()) {
-            return amount.toPlainString();
-        }
-        try {
-            String symbol = java.util.Currency.getInstance(currency).getSymbol(java.util.Locale.US);
-            if (!symbol.equals(currency)) {
-                return symbol + amount.toPlainString();
-            }
-        }
-        catch (IllegalArgumentException notIso4217) {
-            // Not an ISO 4217 code: fall through to the "<amount> <code>" form below.
-        }
-        return amount.toPlainString() + " " + currency;
-    }
-
-    /**
-     * Renders a per-currency monthly breakdown, e.g. {@code "USD 2300.00, EUR 1800.00"}, used when
-     * the metros span currencies and no single aggregate total exists.
-     */
-    private static String describeByCurrency(Map<String, BigDecimal> monthlyByCurrency) {
-        if (monthlyByCurrency == null || monthlyByCurrency.isEmpty()) {
-            return "unavailable";
-        }
-        return monthlyByCurrency.entrySet().stream()
-                .map(e -> e.getKey() + " " + e.getValue().toPlainString())
-                .collect(Collectors.joining(", "));
-    }
-
-    /**
-     * Serializes the result to JSON for programmatic consumption.
-     */
+    /** @return the result as indented JSON (ISO-8601 instants) */
     @JsonIgnore
     public String toJson() {
         try {
             ObjectMapper mapper = new ObjectMapper();
-            mapper.findAndRegisterModules();
-            // Register the JavaTime module explicitly so the Instant computedAt field always
-            // serializes, independent of module auto-discovery on the runtime classpath, and as a
-            // readable ISO-8601 string rather than a numeric timestamp.
             mapper.registerModule(new JavaTimeModule());
+            mapper.registerModule(new Jdk8Module());
             mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
             mapper.enable(SerializationFeature.INDENT_OUTPUT);
             return mapper.writeValueAsString(this);
-        }
-        catch (Exception e) {
-            return "{\"error\": \"" + e.getMessage() + "\"}";
+        } catch (Exception e) {
+            throw new IllegalStateException("OptimizationResult could not be serialised: " + e.getMessage(), e);
         }
     }
 }

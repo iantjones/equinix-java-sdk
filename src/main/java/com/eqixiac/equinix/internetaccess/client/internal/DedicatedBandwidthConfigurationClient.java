@@ -25,7 +25,7 @@ import com.eqixiac.equinix.internetaccess.model.json.DedicatedBandwidthConfigura
 
 /**
  * Internal client for the Equinix Internet Access (EIA) v1 dedicated-bandwidth-configuration lookup:
- * {@code GET /internetAccess/v1/dedicatedBandwidthConfigurations} — the allowed dedicated-bandwidth
+ * {@code GET /internetAccess/v1/dedicatedBandwidthConfigurations} - the allowed dedicated-bandwidth
  * configurations for a given use case, billing model and physical-port speed.
  */
 public interface DedicatedBandwidthConfigurationClient extends Pageable<DedicatedBandwidthConfiguration> {

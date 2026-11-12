@@ -20,6 +20,6 @@ public enum RiskSeverity {
     /** A minor observation worth knowing about (e.g. mild provider concentration). */
     LOW,
 
-    /** Informational only — includes the {@code HEALTHY} finding emitted when no risk was found. */
+    /** Informational only - includes the {@code HEALTHY} finding emitted when no risk was found. */
     INFO
 }

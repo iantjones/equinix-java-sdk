@@ -38,13 +38,13 @@ import static org.junit.jupiter.api.Assertions.*;
  * <ul>
  *   <li>HTTP 429 is retried (honouring {@code Retry-After}, capped) instead of surfacing as an
  *       immediately-fatal {@link IOException}; other statuses still fail on the first attempt;</li>
- *   <li>multi-ASN lookups are batched with PeeringDB's {@code asn__in} query operator — one
- *       request per endpoint instead of one per ASN — while single-ASN lookups keep the plain
+ *   <li>multi-ASN lookups are batched with PeeringDB's {@code asn__in} query operator - one
+ *       request per endpoint instead of one per ASN - while single-ASN lookups keep the plain
  *       {@code asn=} wire shape;</li>
  *   <li>the client is {@link AutoCloseable} and releases its HTTP client on {@code close()}.</li>
  * </ul>
  */
-@DisplayName("PeeringDbClient — 429 rate-limit handling, asn__in batching, close()")
+@DisplayName("PeeringDbClient - 429 rate-limit handling, asn__in batching, close()")
 class PeeringDbClientRateLimitAndBatchWireMockTest extends WireMockTestBase {
 
     private static final long AWS = 16509L;
@@ -182,7 +182,7 @@ class PeeringDbClientRateLimitAndBatchWireMockTest extends WireMockTestBase {
             assertEquals(2, nets.size());
             assertEquals("Alpha", nets.get(64500L).getName());
             assertEquals("Beta", nets.get(64501L).getName());
-            // Exactly one HTTP request for the whole batch — the per-ASN loop is gone.
+            // Exactly one HTTP request for the whole batch - the per-ASN loop is gone.
             wireMock.verify(exactly(1), getRequestedFor(urlPathEqualTo("/api/net")));
         }
 
@@ -228,16 +228,21 @@ class PeeringDbClientRateLimitAndBatchWireMockTest extends WireMockTestBase {
         }
 
         @Test
-        @DisplayName("getEquinixFacPresence(Collection) batches netfac by local_asn and filters to Equinix facilities")
+        @DisplayName("getEquinixFacPresence(Collection) resolves net ids, batches netfac by net_id__in, and filters to Equinix facilities")
         void equinixFacPresenceBatch() throws IOException {
             wireMock.stubFor(get(urlPathEqualTo("/api/org/2"))
                     .willReturn(okJson(loadFixture("/json/peering/peeringdb_org_response.json"))));
-            wireMock.stubFor(get(urlPathEqualTo("/api/netfac"))
+            // PeeringDB ignores asn__in on netfac (checked live 2026-11-11), so the client resolves
+            // ASNs to network ids first and filters netfac by net_id__in.
+            wireMock.stubFor(get(urlPathEqualTo("/api/net"))
                     .withQueryParam("asn__in", equalTo("16509,64500"))
+                    .willReturn(okJson("{\"data\":[{\"id\":1234,\"asn\":16509},{\"id\":5678,\"asn\":64500}]}")));
+            wireMock.stubFor(get(urlPathEqualTo("/api/netfac"))
+                    .withQueryParam("net_id__in", equalTo("1234,5678"))
                     .willReturn(okJson("{\"data\":["
-                            + "{\"fac_id\":200,\"local_asn\":16509,\"city\":\"Ashburn\"},"
-                            + "{\"fac_id\":888,\"local_asn\":16509,\"city\":\"Elsewhere\"},"
-                            + "{\"fac_id\":201,\"local_asn\":64500,\"city\":\"San Jose\"}"
+                            + "{\"fac_id\":200,\"net_id\":1234,\"local_asn\":16509,\"city\":\"Ashburn\"},"
+                            + "{\"fac_id\":888,\"net_id\":1234,\"local_asn\":16509,\"city\":\"Elsewhere\"},"
+                            + "{\"fac_id\":201,\"net_id\":5678,\"local_asn\":64500,\"city\":\"San Jose\"}"
                             + "]}")));
 
             PeeringDbClient client = client();
@@ -267,7 +272,7 @@ class PeeringDbClientRateLimitAndBatchWireMockTest extends WireMockTestBase {
 
             PeeringDbClient client = client();
             client.close();
-            client.close(); // idempotent — must not throw
+            client.close(); // idempotent - must not throw
 
             assertThrows(Exception.class, () -> client.getNetwork(AWS),
                     "a closed client must not silently keep issuing requests");

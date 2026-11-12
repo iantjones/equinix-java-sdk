@@ -43,7 +43,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  *
  * <h3>Degrades, never dictates</h3>
  * <p>Elicitation is a capability the <strong>client</strong> declares at initialize time (it is not a
- * server capability — the server discovers it off the negotiated {@link McpSchema.ClientCapabilities}
+ * server capability - the server discovers it off the negotiated {@link McpSchema.ClientCapabilities}
  * on the exchange). So this helper is defensive by construction:</p>
  * <ul>
  *   <li>no exchange (a direct call, or a transport that supplied none), or a client that did not
@@ -64,7 +64,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * <p>The SDK's {@code createElicitation} blocks until the client answers. A stalled or silent client
  * must never wedge a tool call, so the round-trip runs on a daemon worker under a hard timeout; on
  * timeout the call returns {@link Status#FAILED} and the caller proceeds. The timeout is generous (a
- * human may be at the other end) but bounded — see {@link ServerContext#elicitTimeoutMillis()}.</p>
+ * human may be at the other end) but bounded - see {@link ServerContext#elicitTimeoutMillis()}.</p>
  */
 final class ElicitationSupport {
 
@@ -123,7 +123,7 @@ final class ElicitationSupport {
      */
     static Outcome chooseOne(ServerContext ctx, McpSyncServerExchange exchange, String message,
                             List<Option> options) {
-        return chooseOne(exchange, message, options, ctx.elicitTimeoutMillis());
+        return chooseOne(exchange, message, options, ctx.elicitTimeoutMillis(), ctx.currentCancellation());
     }
 
     /**
@@ -133,11 +133,20 @@ final class ElicitationSupport {
      * @param message the human-readable prompt
      * @param options the options to choose from (must be non-empty)
      * @param timeoutMillis the hard timeout for the round-trip
-     * @return the typed outcome — {@link Status#UNSUPPORTED} when the client cannot elicit, so the
+     * @return the typed outcome - {@link Status#UNSUPPORTED} when the client cannot elicit, so the
      *         caller can fall back cleanly
      */
     static Outcome chooseOne(McpSyncServerExchange exchange, String message, List<Option> options,
                             long timeoutMillis) {
+        return chooseOne(exchange, message, options, timeoutMillis, CancellationSignal.none());
+    }
+
+    /**
+     * As {@link #chooseOne(McpSyncServerExchange, String, List, long)}, abandoning the prompt
+     * ({@link Status#FAILED}) when {@code cancellation} trips.
+     */
+    static Outcome chooseOne(McpSyncServerExchange exchange, String message, List<Option> options,
+                            long timeoutMillis, CancellationSignal cancellation) {
         if (options == null || options.isEmpty()) {
             throw new IllegalArgumentException("chooseOne needs at least one option");
         }
@@ -150,7 +159,7 @@ final class ElicitationSupport {
                 .builder(message, singleSelectSchema(message, options))
                 .build();
 
-        RoundTrip trip = roundTrip(exchange, request, timeoutMillis);
+        RoundTrip trip = roundTrip(exchange, request, timeoutMillis, cancellation);
         if (trip.result() == null) {
             return new Outcome(Status.FAILED, null, trip.failure());
         }
@@ -180,7 +189,7 @@ final class ElicitationSupport {
      * @return the typed result
      */
     static HumanConfirmation confirm(ServerContext ctx, McpSyncServerExchange exchange, String message) {
-        return confirm(exchange, message, ctx.elicitTimeoutMillis());
+        return confirm(exchange, message, ctx.elicitTimeoutMillis(), ctx.currentCancellation());
     }
 
     /**
@@ -197,6 +206,20 @@ final class ElicitationSupport {
      *         the client cannot service a form elicitation; otherwise what the client reported
      */
     static HumanConfirmation confirm(McpSyncServerExchange exchange, String message, long timeoutMillis) {
+        return confirm(exchange, message, timeoutMillis, CancellationSignal.none());
+    }
+
+    /**
+     * As {@link #confirm(McpSyncServerExchange, String, long)}; when {@code cancellation} trips while
+     * the prompt is open the prompt is abandoned and the result is
+     * {@link HumanConfirmation.Status#CALL_CANCELLED}. A call that is already cancelled sends nothing.
+     */
+    static HumanConfirmation confirm(McpSyncServerExchange exchange, String message, long timeoutMillis,
+                                     CancellationSignal cancellation) {
+        if (cancellation.isCancelled()) {
+            return new HumanConfirmation(HumanConfirmation.Status.CALL_CANCELLED,
+                    "the client cancelled the tool call before the prompt was sent");
+        }
         if (!supportsForm(exchange)) {
             return new HumanConfirmation(HumanConfirmation.Status.UNSUPPORTED_BY_CLIENT,
                     "the client did not declare elicitation support, so no confirmation prompt was sent");
@@ -205,7 +228,11 @@ final class ElicitationSupport {
                 .builder(message, confirmSchema())
                 .build();
 
-        RoundTrip trip = roundTrip(exchange, request, timeoutMillis);
+        RoundTrip trip = roundTrip(exchange, request, timeoutMillis, cancellation);
+        if (trip.cancelled()) {
+            return new HumanConfirmation(HumanConfirmation.Status.CALL_CANCELLED,
+                    "the client cancelled the tool call while the confirmation prompt was open");
+        }
         if (trip.result() == null) {
             return new HumanConfirmation(trip.timedOut()
                     ? HumanConfirmation.Status.TIMED_OUT : HumanConfirmation.Status.FAILED, trip.failure());
@@ -232,35 +259,46 @@ final class ElicitationSupport {
      * {@link RoundTrip#failure()} says why.
      */
     private static RoundTrip roundTrip(McpSyncServerExchange exchange, McpSchema.ElicitRequest request,
-                                       long timeoutMillis) {
+                                       long timeoutMillis, CancellationSignal cancellation) {
         McpSchema.ElicitResult result;
         Future<McpSchema.ElicitResult> future = ELICIT_EXECUTOR.submit(() -> exchange.createElicitation(request));
+        cancellation.onCancel(() -> future.cancel(true));
         try {
             result = future.get(timeoutMillis, TimeUnit.MILLISECONDS);
+        }
+        catch (java.util.concurrent.CancellationException e) {
+            logger.info("Elicitation abandoned: the client cancelled the tool call");
+            return new RoundTrip(null, false, "the client cancelled the tool call", true);
         }
         catch (TimeoutException e) {
             future.cancel(true);
             logger.warn("Elicitation timed out after {} ms; falling back", timeoutMillis);
-            return new RoundTrip(null, true, "the elicitation timed out after " + timeoutMillis + " ms");
+            return new RoundTrip(null, true, "the elicitation timed out after " + timeoutMillis + " ms", false);
         }
         catch (ExecutionException e) {
             Throwable cause = e.getCause() == null ? e : e.getCause();
-            logger.warn("Elicitation failed: {}", cause.toString());
-            return new RoundTrip(null, false, "the elicitation failed: " + cause.getMessage());
+            logger.warn("Elicitation failed: {}", UntrustedText.sanitize(cause.toString(), 300));
+            return new RoundTrip(null, false, "the elicitation failed: "
+                    + UntrustedText.sanitize(cause.getMessage(), 300), false);
         }
         catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             future.cancel(true);
-            return new RoundTrip(null, false, "the elicitation was interrupted");
+            return new RoundTrip(null, false, "the elicitation was interrupted", false);
+        }
+        if (cancellation.isCancelled()) {
+            // The answer raced the cancel: the call is cancelled, so the answer is not acted on.
+            return new RoundTrip(null, false, "the client cancelled the tool call", true);
         }
         if (result == null || result.action() == null) {
-            return new RoundTrip(null, false, "the client returned no elicitation result");
+            return new RoundTrip(null, false, "the client returned no elicitation result", false);
         }
-        return new RoundTrip(result, false, null);
+        return new RoundTrip(result, false, null, false);
     }
 
     /** One elicitation round trip: the answer, or why there is none. */
-    private record RoundTrip(McpSchema.ElicitResult result, boolean timedOut, String failure) {
+    private record RoundTrip(McpSchema.ElicitResult result, boolean timedOut, String failure,
+                             boolean cancelled) {
     }
 
     /** Whether the accepted form content carries {@code field} as boolean {@code true} (or the text "true"). */
@@ -317,7 +355,7 @@ final class ElicitationSupport {
     /**
      * A restricted single-select form schema: one required {@code choice} string field whose allowed
      * values are the option ids, each paired with a human-readable title (the SDK's modern titled
-     * single-select shape — {@code type: string} + {@code oneOf: [{const, title}]}).
+     * single-select shape - {@code type: string} + {@code oneOf: [{const, title}]}).
      */
     private static Map<String, Object> singleSelectSchema(String message, List<Option> options) {
         List<Map<String, Object>> oneOf = new ArrayList<>(options.size());
@@ -354,16 +392,16 @@ final class ElicitationSupport {
     /** The status of an elicitation attempt. */
     enum Status {
 
-        /** The user accepted and picked an option — {@link Outcome#option()} is set. */
+        /** The user accepted and picked an option - {@link Outcome#option()} is set. */
         PICKED,
 
-        /** The user declined or cancelled — the caller should use its default. */
+        /** The user declined or cancelled - the caller should use its default. */
         DECLINED,
 
         /** The client cannot elicit (no exchange, or no form-elicitation capability). */
         UNSUPPORTED,
 
-        /** The round-trip timed out or errored — treated like a decline. */
+        /** The round-trip timed out or errored - treated like a decline. */
         FAILED
     }
 
@@ -383,13 +421,13 @@ final class ElicitationSupport {
 
         /** The display title shown to the user: {@code label}, with {@code detail} appended when present. */
         String title() {
-            return detail == null || detail.isBlank() ? label : label + " — " + detail;
+            return detail == null || detail.isBlank() ? label : label + " - " + detail;
         }
     }
 
     /**
      * The typed result of {@link #chooseOne}. Callers branch on {@link #picked()} to use the selection,
-     * and otherwise fall back — {@link #status()} and {@link #detail()} distinguish <em>why</em> for the
+     * and otherwise fall back - {@link #status()} and {@link #detail()} distinguish <em>why</em> for the
      * payload (unsupported vs declined vs failed).
      *
      * @param status the outcome status

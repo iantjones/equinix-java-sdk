@@ -23,7 +23,7 @@ import com.eqixiac.equinix.internetaccess.model.json.VirtualConnectionDefaultCon
 
 /**
  * Internal client for the Equinix Internet Access (EIA) v1 virtual-connection default-configuration
- * lookup: {@code GET /internetAccess/v1/virtualConnectionDefaultConfigurations} — the default
+ * lookup: {@code GET /internetAccess/v1/virtualConnectionDefaultConfigurations} - the default
  * virtual-connection configurations for a given IBX and metro.
  */
 public interface VirtualConnectionDefaultConfigurationClient extends Pageable<VirtualConnectionDefaultConfiguration> {

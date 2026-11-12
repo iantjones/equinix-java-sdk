@@ -19,7 +19,7 @@ package com.eqixiac.equinix;
 import com.eqixiac.equinix.core.auth.EquinixCredentials;
 import com.eqixiac.equinix.core.auth.EquinixCredentialsProvider;
 import com.eqixiac.equinix.core.auth.EquinixStaticCredentialsProvider;
-import com.eqixiac.equinix.sts.client.implementation.STSConfigImpl;
+import com.eqixiac.equinix.core.exception.EquinixClientException;
 import com.eqixiac.equinix.sts.client.STSDiscovery;
 import com.eqixiac.equinix.sts.client.STSOidcProviders;
 import com.eqixiac.equinix.sts.client.STSTokens;
@@ -31,34 +31,34 @@ import com.eqixiac.equinix.sts.client.implementation.STSTokensImpl;
 /**
  * The primary entry point for accessing the Equinix Security Token Service (STS) API (STS v1).
  *
- * <p>The STS exchanges OpenID Connect (OIDC) ID tokens — issued by trusted OIDC providers — for
+ * <p>The STS exchanges OpenID Connect (OIDC) ID tokens - issued by trusted OIDC providers - for
  * Equinix access tokens (RFC&nbsp;8693 token exchange), and manages the trust relationships and
  * discovery metadata that underpin that exchange:</p>
  *
  * <ul>
- *   <li>{@link #tokens()} — the OAuth 2.0 token exchange ({@code POST /v1/token}) and the
+ *   <li>{@link #tokens()} - the OAuth 2.0 token exchange ({@code POST /v1/token}) and the
  *       granted-access-policy listing ({@code POST /v1/accessPoliciesGranted}).</li>
- *   <li>{@link #oidcProviders()} — registration and lifecycle (create / page / patch / delete /
+ *   <li>{@link #oidcProviders()} - registration and lifecycle (create / page / patch / delete /
  *       suspend / resume) of trusted OIDC providers within a root project.</li>
- *   <li>{@link #discovery()} — the unauthenticated discovery endpoints: the JSON Web Key Set
+ *   <li>{@link #discovery()} - the unauthenticated discovery endpoints: the JSON Web Key Set
  *       ({@code GET /jwks}) and the OpenID Connect discovery document
  *       ({@code GET /.well-known/openid-configuration}).</li>
  * </ul>
  *
- * <p>Each accessor uses lazy initialization — the internal client is created on first access and
+ * <p>Each accessor uses lazy initialization - the internal client is created on first access and
  * reused for subsequent calls.</p>
  *
- * <h3>Service host</h3>
- * <p>The STS v1 OpenAPI specification declares its own service host
- * ({@code https://sts.eqix.equinix.com}), with the discovery endpoints ({@code /jwks} and
- * {@code /.well-known/openid-configuration}) served at the host root and token exchange under
- * {@code /v1/token}. This SDK, however, routes every domain — STS included — through the unified
- * Equinix API gateway ({@code https://api.equinix.com}) configured on the shared
- * {@link EquinixClient}, which fronts the per-service hosts and exposes the same paths (the
- * {@code bearerAuth} security scheme is likewise defined against the gateway). The relative request
- * URIs in {@code apiParams_STS.json} are therefore resolved against that single gateway host rather
- * than the spec's per-service {@code sts.eqix.equinix.com} server. This is the intended SDK-wide
- * design; no per-domain host override is provided.</p>
+ * <h3>Service host and authentication</h3>
+ * <p>STS requests go to the service's own host, {@code https://sts.eqix.equinix.com}, declared as
+ * the {@code hostName} of the STS functional area in {@code apiParams_STS.json}. The unified
+ * gateway {@code https://api.equinix.com} answers 404 for every STS path. The OAuth client-credentials
+ * login (when one is needed) still goes to {@code api.equinix.com}. Override the host with
+ * {@code getEquinixClient().setDomainEndPoint("STS", ...)}.</p>
+ *
+ * <p>The token exchange, granted-access-policy listing, JWKS and OpenID discovery endpoints are
+ * unauthenticated in the specification: they never trigger an Equinix login and are sent without a
+ * bearer header. A workload that holds only an OIDC ID token can therefore use
+ * {@link #withoutCredentials()}; OIDC-provider management still needs Equinix credentials.</p>
  *
  * <h3>Quick Start</h3>
  * <pre>{@code
@@ -69,7 +69,10 @@ import com.eqixiac.equinix.sts.client.implementation.STSTokensImpl;
  *     .grantType("urn:ietf:params:oauth:grant-type:token-exchange")
  *     .subjectToken(idToken)
  *     .subjectTokenType("urn:ietf:params:oauth:token-type:id_token")
- *     .scope("accesspolicy:abc-123:idp:example-policy"));
+ *     .scope(StsScope.projectPolicies("abc-123")));
+ *
+ * // Workload identity federation: no Equinix client secret needed for the exchange itself.
+ * StsToken federated = STS.withoutCredentials().tokens().generate(request);
  * }</pre>
  *
  * @author ianjones
@@ -84,6 +87,21 @@ public final class STS extends EquinixClient {
     private STSDiscovery discovery;
 
     final private STSConfigImpl stsConfig;
+
+    /**
+     * Creates an STS client with no Equinix credentials, for workload identity federation: the
+     * token exchange ({@link #tokens()}) and discovery ({@link #discovery()}) work without a login.
+     * Calling an operation that needs an Equinix bearer token (the {@link #oidcProviders()}
+     * management API) fails with an {@link EquinixClientException} naming the missing credentials.
+     *
+     * @return a credential-less STS client targeting production
+     */
+    public static STS withoutCredentials() {
+        return new STS((EquinixCredentialsProvider) () -> {
+            throw new EquinixClientException("This STS client was created without Equinix credentials;"
+                    + " only the unauthenticated token-exchange and discovery operations are available.");
+        }, false);
+    }
 
     /**
      * Creates a new STS client using the provided credentials.
@@ -193,7 +211,7 @@ public final class STS extends EquinixClient {
     }
 
     /**
-     * Returns the client for the STS unauthenticated discovery endpoints — the JSON Web Key Set
+     * Returns the client for the STS unauthenticated discovery endpoints - the JSON Web Key Set
      * ({@code GET /jwks}) and the OpenID Connect discovery document
      * ({@code GET /.well-known/openid-configuration}).
      *

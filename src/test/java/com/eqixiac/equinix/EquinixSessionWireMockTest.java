@@ -47,7 +47,7 @@ class EquinixSessionWireMockTest extends WireMockTestBase {
         // all share this same core, so this redirects the whole session.
         redirectToWireMock(eq.fabric());
 
-        // Authenticate the session once — fetches a single OAuth token onto the shared core.
+        // Authenticate the session once - fetches a single OAuth token onto the shared core.
         eq.authenticate();
 
         // A call over the shared core succeeds.
@@ -58,7 +58,7 @@ class EquinixSessionWireMockTest extends WireMockTestBase {
         // ...so a subsequent call still succeeds over the same pool + cached token.
         assertNotNull(eq.fabric().prices().list(null));
 
-        // Token endpoint hit exactly once for the whole session — a single shared token.
+        // Token endpoint hit exactly once for the whole session - a single shared token.
         wireMock.verify(1, postRequestedFor(urlPathEqualTo("/oauth2/v1/token")));
         // Both post-auth calls executed over the still-open shared pool (close-safety).
         wireMock.verify(2, postRequestedFor(urlPathEqualTo("/fabric/v4/prices/search")));

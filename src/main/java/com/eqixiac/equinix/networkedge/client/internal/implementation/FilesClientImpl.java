@@ -91,7 +91,7 @@ public class FilesClientImpl extends ClientBase implements FilesClient {
      * binary file part, using an explicit boundary.
      *
      * @param boundary      the multipart boundary string
-     * @param formFields    the plain form fields (name → value), in order
+     * @param formFields    the plain form fields (name -> value), in order
      * @param fileFieldName the form field name of the file part (e.g. {@code file})
      * @param fileName      the file name to advertise in the file part's Content-Disposition
      * @param fileBytes     the raw file content

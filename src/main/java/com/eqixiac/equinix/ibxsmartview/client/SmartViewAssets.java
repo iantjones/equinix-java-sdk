@@ -37,22 +37,24 @@ public interface SmartViewAssets {
     /**
      * Lists monitored assets for the specified account/IBX as a category/template/asset hierarchy.
      *
-     * @param accountNo the Equinix account number
+     * @param accountNo the Equinix account number (required; the service answers HTTP 400 without it)
      * @param ibx the IBX code identifying the data center
      * @param classification the asset classification to filter by ({@code Electrical} or {@code Mechanical})
      * @param cages the list of cage unique space ids to filter by, or {@code null} for all
      * @return the assets list hierarchy
+     * @throws IllegalArgumentException if a parameter the spec marks required is null or blank
      */
     AssetsList list(String accountNo, String ibx, String classification, List<String> cages);
 
     /**
      * Retrieves detailed information (including tag points) for a single monitored asset.
      *
-     * @param accountNo the Equinix account number
+     * @param accountNo the Equinix account number (required; the service answers HTTP 400 without it)
      * @param ibx the IBX code identifying the data center
      * @param classification the asset classification ({@code Electrical} or {@code Mechanical})
      * @param assetId the unique identifier of the asset
      * @return the asset detail envelope
+     * @throws IllegalArgumentException if a parameter the spec marks required is null or blank
      */
     AssetDetail getAssetDetails(String accountNo, String ibx, String classification, String assetId);
 
@@ -67,31 +69,34 @@ public interface SmartViewAssets {
     /**
      * Searches for monitored assets matching a wildcard search string within an account/IBX.
      *
-     * @param accountNo the Equinix account number
+     * @param accountNo the Equinix account number (required; the service answers HTTP 400 without it)
      * @param ibx the IBX code identifying the data center
      * @param searchString the search term to match against asset identifiers
      * @return the asset search results
+     * @throws IllegalArgumentException if a parameter the spec marks required is null or blank
      */
     Assets search(String accountNo, String ibx, String searchString);
 
     /**
      * Retrieves the hierarchy of customer assets affected by a given asset.
      *
-     * @param accountNo the Equinix account number
+     * @param accountNo the Equinix account number (required; the service answers HTTP 400 without it)
      * @param ibx the IBX code identifying the data center
      * @param assetId the unique identifier of the asset
      * @param classification the asset classification ({@code Electrical} or {@code Mechanical})
      * @return the affected-assets hierarchy
+     * @throws IllegalArgumentException if a parameter the spec marks required is null or blank
      */
     HierarchyNodeForAssetAPI getAffectedAssets(String accountNo, String ibx, String assetId, String classification);
 
     /**
      * Retrieves the most recent tag-point data for a given tag identifier.
      *
-     * @param accountNo the Equinix account number
+     * @param accountNo the Equinix account number (required; the service answers HTTP 400 without it)
      * @param ibx the IBX code identifying the data center
      * @param tagId the unique identifier of the tag point
      * @return the current tag-point data
+     * @throws IllegalArgumentException if a parameter the spec marks required is null or blank
      */
     TagPointData getCurrentTagPoint(String accountNo, String ibx, String tagId);
 

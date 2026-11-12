@@ -31,6 +31,8 @@ hs_err_pid*
 
 # Custom
 target/
+# eqixiac.com documentation site: published separately, not part of this repository
+/site/
 settings.xml
 Testing.java
 
@@ -41,9 +43,6 @@ Testing.java
 *.p12
 *.jks
 credentials.*
-
-# Claude Code
-.claude/
 
 # Local credentials - NEVER committed (REST live tiers)
 .env.local

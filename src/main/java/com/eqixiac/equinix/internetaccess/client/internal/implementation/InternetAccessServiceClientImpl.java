@@ -82,6 +82,9 @@ public class InternetAccessServiceClientImpl
         // internetaccessv2 paginates the services search via offset/limit QUERY PARAMETERS (the
         // body carries only the filter), so this builds a query-paginated request: the shared
         // paging pipeline advances the query offset between pages, re-sending the same body.
-        return searchPageQueryPaginated("SearchServices", searchRequest);
+        String sort = searchRequest == null ? null : searchRequest.getSortParameter();
+        return sort == null
+                ? searchPageQueryPaginated("SearchServices", searchRequest)
+                : searchPageQueryPaginated("SearchServices", Map.of("sort", List.of(sort)), searchRequest);
     }
 }

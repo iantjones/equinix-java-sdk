@@ -59,7 +59,7 @@ class MulticloudRateCardLayeringTest {
         assertEquals(0, new BigDecimal(expected).compareTo(actual), "expected " + expected + " but was " + actual);
     }
 
-    // ── The seam ──
+    // The seam
 
     @Test
     void aCardThatDoesNotOverrideTheSeamReturnsEmpty() {
@@ -85,7 +85,7 @@ class MulticloudRateCardLayeringTest {
                 "Equinix sells no part of a native link; the live card does not price it");
     }
 
-    // ── CustomRateCard ──
+    // CustomRateCard
 
     @Test
     void customMonthlyRatePricesOneSideAndLeavesTheOtherEmptyWithAReason() {
@@ -162,7 +162,7 @@ class MulticloudRateCardLayeringTest {
                 () -> b.multicloudLinkHourlyRate(CloudProviderType.AWS, 10_000, 0, BigDecimal.ONE));
     }
 
-    // ── Layering: per-side precedence ──
+    // Layering: per-side precedence
 
     @Test
     void layeredTakesEachSideFromTheEarliestCardThatPricesIt() {

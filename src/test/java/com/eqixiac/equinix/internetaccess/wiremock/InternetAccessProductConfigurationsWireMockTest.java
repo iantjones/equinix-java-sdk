@@ -43,8 +43,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * <p>Every op is a {@code GET} under {@code /internetAccess/v1/<rootUri>} (from the
  * {@code defaultVersion: 1} groups in {@code apiParams_InternetAccess.json}, resolved through the
  * {@code internetAccess/v{version}/{rootUri}/{requestUri}} uriFormat). These tests pin the exact
- * path, verb and query-parameter placement for each overload — including the optional-parameter
- * combinations and the (sometimes deeply-nested) query-param key names the internal clients emit —
+ * path, verb and query-parameter placement for each overload - including the optional-parameter
+ * combinations and the (sometimes deeply-nested) query-param key names the internal clients emit - 
  * and confirm the read-only model deserialization.
  */
 class InternetAccessProductConfigurationsWireMockTest extends WireMockTestBase {

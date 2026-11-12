@@ -4,36 +4,82 @@ on:
   push:
     branches: [ main ]
   pull_request:
+  workflow_dispatch:
 
+# Least privilege: the build only reads the repository.
+permissions:
+  contents: read
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+# Actions are pinned to full commit SHAs (Dependabot keeps them current); the tag is in the comment.
 jobs:
-  test:
+  build:
+    name: Tests, coverage, javadoc, server jar
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Set up JDK 21
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78 # v6.2.0
         with:
           distribution: temurin
           java-version: '21'
           cache: maven
 
-      # Default unit/deserialization suite (writes target/jacoco.exec).
-      - name: Default test suite
-        run: mvn -B clean test
+      # One build runs: the default suite, the WireMock suite (second surefire execution of the
+      # coverage profile, appending to the same jacoco.exec), the combined JaCoCo report and the
+      # jacoco:check gate, the javadoc jar (doclint=reference, failOnWarnings), the sources jar
+      # and the shaded MCP server jar. No GPG key is needed: signing lives in -Prelease.
+      - name: Default + WireMock suites, coverage gate, packaging
+        run: ./mvnw -B -ntp clean verify -Pcoverage
 
-      # WireMock request-contract suite; appends to target/jacoco.exec (no clean),
-      # so the coverage gate below sees combined coverage.
-      - name: WireMock test suite
-        run: mvn -B -P wiremock test
+      - name: Javadoc reference gate
+        run: ./mvnw -B -ntp javadoc:javadoc
 
-      # Fail the build if combined coverage drops below the configured threshold.
-      - name: Enforce coverage gate
-        run: mvn -B -P coverage jacoco:check
+      # Launches target/*-mcp-server.jar over stdio. mcp.server.jar.required turns a missing jar
+      # into a failure instead of a skip.
+      - name: Build the shaded MCP server jar
+        run: ./mvnw -B -ntp package -DskipTests
+      - name: Shaded server jar smoke test
+        run: ./mvnw -B -ntp test -Dtest=ShadedJarSmokeTest -Dsurefire.failIfNoSpecifiedTests=false -Dmcp.server.jar.required=true
 
       - name: Upload JaCoCo report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: jacoco-report
           path: target/site/jacoco/
+          if-no-files-found: ignore
+
+      - name: Upload test reports
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: surefire-reports
+          path: |
+            target/surefire-reports/
+            target/surefire-reports-wiremock/
+          if-no-files-found: ignore
+
+  vulnerability-scan:
+    name: Dependency vulnerability scan (OSV)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # OSV-Scanner resolves pom.xml (including transitive and test-scope dependencies) against
+      # the OSV database. It needs no secret, unlike an NVD-backed OWASP dependency-check run
+      # (which is available locally as: ./mvnw -Pdependency-check verify).
+      - name: Scan pom.xml
+        uses: google/osv-scanner-action/osv-scanner-action@32d3cd482bdadfb38b186c0ad1b031902d55d932 # v2.7.1
+        with:
+          scan-args: |-
+            --lockfile=pom.xml

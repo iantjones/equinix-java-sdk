@@ -11,8 +11,8 @@ import java.util.Optional;
 /**
  * A source of unit prices for the design-time cost, savings, and TCO models.
  *
- * <p>A rate card resolves the price of an individual planned resource — a Fabric
- * connection or a Cloud Router — for a given bandwidth, metro, and commitment
+ * <p>A rate card resolves the price of an individual planned resource - a Fabric
+ * connection or a Cloud Router - for a given bandwidth, metro, and commitment
  * {@link Term}. Lookups return an {@link Optional}: an empty result means
  * <em>this card cannot price that item</em>, which is distinct from a zero price.
  * That distinction lets callers fall back to another source rather than silently
@@ -20,17 +20,17 @@ import java.util.Optional;
  *
  * <p>Implementations differ by provenance (see {@link PriceSource}):</p>
  * <ul>
- *   <li>{@link CustomRateCard} — caller-supplied rates (e.g. negotiated contract pricing), built fluently.</li>
- *   <li>{@code EquinixRateCard} — live {@code fabric.prices()} lookups (authoritative).</li>
- *   <li>{@code ReferenceRateCard} — bundled, dated reference figures (indicative).</li>
- *   <li>the {@code design.value.ratecard.provider} adapters — live cloud-egress rates from the public
+ *   <li>{@link CustomRateCard} - caller-supplied rates (e.g. negotiated contract pricing), built fluently.</li>
+ *   <li>{@code EquinixRateCard} - live {@code fabric.prices()} lookups (authoritative).</li>
+ *   <li>{@code ReferenceRateCard} - bundled, dated reference figures (indicative).</li>
+ *   <li>the {@code design.value.ratecard.provider} adapters - live cloud-egress rates from the public
  *       provider pricing APIs ({@code AzureRetailPricesRateCard}, {@code AwsPriceListRateCard},
  *       {@code GcpBillingCatalogRateCard}, {@code OracleCloudPriceListRateCard}), tagged
  *       {@link PriceSource#PROVIDER_API}.</li>
  * </ul>
  *
  * <p>Use {@link #layered(RateCard...)} to combine several cards into a precedence
- * chain — the first card that can price an item wins.</p>
+ * chain - the first card that can price an item wins.</p>
  *
  * <p>{@link #multicloudLink(MulticloudLinkRequest)} prices a native provider-to-provider
  * multicloud link, which has no Equinix component. It exists so the TCO and savings models can
@@ -43,12 +43,12 @@ public interface RateCard {
      *
      * <p><strong>Implementation contract.</strong> The matching strategy is
      * implementation-specific, and a card whose data lacks an axis (metro, term, type)
-     * still returns its best figure — or empty — rather than failing; callers must not
+     * still returns its best figure - or empty - rather than failing; callers must not
      * assume every card is sensitive to every parameter. Of the bundled cards:
      * {@link CustomRateCard} resolves the most specific declared entry (exact metro+term
      * down to metro/term-agnostic, then a declared default); {@code EquinixRateCard}
      * matches bandwidth and type against the live catalogue, honours a requested metro
-     * strictly (a wrong-metro row is never returned), and prefers a term-matched row —
+     * strictly (a wrong-metro row is never returned), and prefers a term-matched row - 
      * a different-term row is only ever returned with a note naming the substitution;
      * {@code ReferenceRateCard} matches on bandwidth alone (smallest tabulated tier at or
      * above the request, linearly extrapolated with an {@code EXTRAPOLATED} note above
@@ -91,7 +91,7 @@ public interface RateCard {
      * {@link CustomRateCard} (your figures), a {@code ReferenceRateCard} (bundled
      * indicative figures), or a provider-pricing-API card. The default returns
      * empty so cards that do not model egress need not override it. Cards whose
-     * data has no region or term axis ignore those parameters — the custom and
+     * data has no region or term axis ignore those parameters - the custom and
      * reference cards match on provider + path alone; only the provider-API
      * adapters are region-sensitive.</p>
      *
@@ -106,7 +106,7 @@ public interface RateCard {
     }
 
     /**
-     * Resolves the price of an Equinix <em>colocation</em> primitive — a cabinet, a kW of power, or
+     * Resolves the price of an Equinix <em>colocation</em> primitive - a cabinet, a kW of power, or
      * a cross-connect (see {@link ColocationItem} for the per-unit semantics). This lets the cost
      * models incorporate the physical-infrastructure side of a colocation-vs-cloud comparison with
      * the caller's real figures, not just the interconnection. Cards that do not model colocation
@@ -159,6 +159,77 @@ public interface RateCard {
     }
 
     /**
+     * A short name for this card in provenance trails and unpriced reasons; the simple class name
+     * by default.
+     *
+     * @return the card's name
+     */
+    default String cardName() {
+        return getClass().getSimpleName();
+    }
+
+    /**
+     * {@link #connection} with the reason when it cannot be priced. Cards override this to say
+     * exactly why (no metro, no live row, no declared rate); the default states that this card
+     * holds no figure.
+     *
+     * @param type          the connection type; may be {@code null}
+     * @param bandwidthMbps the bandwidth in Mbps
+     * @param metro         the metro; may be {@code null}
+     * @param term          the term; may be {@code null}
+     * @return the figure, or the reason there is none
+     */
+    default PriceLookup<PriceQuote> connectionLookup(ConnectionType type, int bandwidthMbps, MetroCode metro,
+                                                     Term term) {
+        return PriceLookup.of(connection(type, bandwidthMbps, metro, term), cardName(),
+                cardName() + " has no " + type + " " + bandwidthMbps + " Mbps connection figure"
+                        + (metro == null ? "" : " for " + metro) + (term == null ? "" : " at " + term));
+    }
+
+    /**
+     * {@link #cloudRouter} with the reason when it cannot be priced.
+     *
+     * @param packageCode the router package; may be {@code null}
+     * @param metro       the metro; may be {@code null}
+     * @param term        the term; may be {@code null}
+     * @return the figure, or the reason there is none
+     */
+    default PriceLookup<PriceQuote> cloudRouterLookup(String packageCode, MetroCode metro, Term term) {
+        return PriceLookup.of(cloudRouter(packageCode, metro, term), cardName(),
+                cardName() + " has no Cloud Router " + packageCode + " figure"
+                        + (metro == null ? "" : " for " + metro) + (term == null ? "" : " at " + term));
+    }
+
+    /**
+     * {@link #egress} with the reason when it cannot be priced.
+     *
+     * @param provider the provider; may be {@code null}
+     * @param region   the region; may be {@code null}
+     * @param path     the path; may be {@code null}
+     * @param term     the term; may be {@code null}
+     * @return the rate, or the reason there is none
+     */
+    default PriceLookup<EgressRate> egressLookup(CloudProviderType provider, String region, EgressPath path,
+                                                 Term term) {
+        return PriceLookup.of(egress(provider, region, path, term), cardName(),
+                cardName() + " has no " + path + " egress rate for " + provider
+                        + (region == null ? "" : " (" + region + ")"));
+    }
+
+    /**
+     * {@link #colocation} with the reason when it cannot be priced.
+     *
+     * @param item  the colocation primitive
+     * @param metro the metro; may be {@code null}
+     * @param term  the term; may be {@code null}
+     * @return the figure, or the reason there is none
+     */
+    default PriceLookup<PriceQuote> colocationLookup(ColocationItem item, MetroCode metro, Term term) {
+        return PriceLookup.of(colocation(item, metro, term), cardName(),
+                cardName() + " has no " + item + " figure" + (metro == null ? "" : " for " + metro));
+    }
+
+    /**
      * The dominant provenance of prices this card produces. Aggregating cards
      * report {@link PriceSource#COMPOSITE}.
      *
@@ -169,7 +240,7 @@ public interface RateCard {
     /**
      * Combines several rate cards into a single card that consults each in order
      * and returns the first non-empty quote. Earlier cards take precedence, so
-     * the conventional ordering is most-trusted first: custom → Equinix live →
+     * the conventional ordering is most-trusted first: custom -> Equinix live ->
      * reference.
      *
      * @param cards the cards to chain, in priority order
@@ -187,7 +258,7 @@ public interface RateCard {
      * supplied.
      *
      * @param fabric the Fabric client (or any {@link FabricGateway}) for live pricing
-     * @return a layered rate card: {@code EquinixRateCard} → {@code ReferenceRateCard}
+     * @return a layered rate card: {@code EquinixRateCard} -> {@code ReferenceRateCard}
      */
     static RateCard standardChain(FabricGateway fabric) {
         return layered(EquinixRateCard.of(fabric), ReferenceRateCard.standard());

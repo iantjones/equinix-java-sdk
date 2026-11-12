@@ -46,6 +46,10 @@ public class IbxClientImpl extends ResourceClientBase<Ibx, IbxJson> implements I
     }
 
     public Page<IbxJson> list(ConnectionType connectionType, String accessPointType, String assetType) {
+        if (connectionType == null) {
+            throw new IllegalArgumentException("connectionType is required by GET /internetAccess/v2/ibxs"
+                    + " (service.connection.type: IA_C or IA_VC)");
+        }
         Map<String, List<String>> queryParams = new HashMap<>();
         ParameterMapper.addAdditionalValue(queryParams, "service.connection.type", connectionType.toString());
         if (accessPointType != null) {

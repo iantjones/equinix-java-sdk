@@ -41,18 +41,18 @@ import java.util.concurrent.ConcurrentHashMap;
  * signing. Every rate it returns is tagged {@link PriceSource#PROVIDER_API}.
  *
  * <ul>
- *   <li>{@link EgressPath#INTERNET} → the {@code AWSDataTransfer} offer's {@code AWS Outbound} /
+ *   <li>{@link EgressPath#INTERNET} -> the {@code AWSDataTransfer} offer's {@code AWS Outbound} /
  *       {@code External} products, resolved by source region. The per-GB figure is the first paid
  *       on-demand tier (the headline rate; the free-tier dimension, if any, is skipped).</li>
- *   <li>{@link EgressPath#PRIVATE} → the {@code AWSDirectConnect} offer's {@code Data Transfer}
+ *   <li>{@link EgressPath#PRIVATE} -> the {@code AWSDirectConnect} offer's {@code Data Transfer}
  *       products with an {@code *Outbound} transfer type for the region. The per-GB figure is the
- *       <em>lowest</em> positive on-demand rate (the best-case / local Direct Connect egress rate —
+ *       <em>lowest</em> positive on-demand rate (the best-case / local Direct Connect egress rate - 
  *       the savings-relevant figure).</li>
  * </ul>
  *
  * <p>The offer files are large; each is fetched once on first <em>success</em> and cached for the
- * adapter's lifetime — a failed fetch is never memoized, so a transient outage is retried on the
- * next lookup rather than pinning "no rate" forever. The adapter is fault-tolerant — any fetch or
+ * adapter's lifetime - a failed fetch is never memoized, so a transient outage is retried on the
+ * next lookup rather than pinning "no rate" forever. The adapter is fault-tolerant - any fetch or
  * parse failure yields no rate rather than an exception. A {@code null} region yields empty, since
  * AWS egress pricing is region-specific.</p>
  */
@@ -101,7 +101,7 @@ public final class AwsPriceListRateCard implements RateCard {
     }
 
     /**
-     * Creates an adapter with a custom data-transfer offer URL (Direct Connect uses the default) —
+     * Creates an adapter with a custom data-transfer offer URL (Direct Connect uses the default) - 
      * for a mirror, a proxy, or testing.
      *
      * @param offerUrl the full URL of the {@code AWSDataTransfer} {@code index.json}
@@ -149,7 +149,7 @@ public final class AwsPriceListRateCard implements RateCard {
         // must never run inside ConcurrentHashMap's mapping function holding a bin lock.
         JsonNode root = path == EgressPath.INTERNET ? offer() : dxOffer();
         if (root == null) {
-            // Transient fetch failure: yield no rate but do NOT cache it — the next call retries.
+            // Transient fetch failure: yield no rate but do NOT cache it - the next call retries.
             return Optional.empty();
         }
         Optional<EgressRate> resolved = path == EgressPath.INTERNET
@@ -171,7 +171,7 @@ public final class AwsPriceListRateCard implements RateCard {
             return Optional.empty();
         }
 
-        // The "AWS Outbound" → "External" (internet) data-transfer product for this region.
+        // The "AWS Outbound" -> "External" (internet) data-transfer product for this region.
         String sku = internetSku(products, region);
         if (sku == null) {
             return Optional.empty();

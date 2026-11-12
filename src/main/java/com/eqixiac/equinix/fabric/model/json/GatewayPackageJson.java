@@ -19,7 +19,6 @@ package com.eqixiac.equinix.fabric.model.json;
 import com.eqixiac.equinix.core.http.response.Page;
 import com.eqixiac.equinix.fabric.enums.GatewayPackageCode;
 import com.eqixiac.equinix.fabric.enums.GatewayPackageType;
-import com.eqixiac.equinix.fabric.enums.NatType;
 import com.eqixiac.equinix.fabric.model.GatewayPackage;
 import com.eqixiac.equinix.fabric.model.implementation.ChangeLog;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -29,6 +28,12 @@ import lombok.Getter;
 
 import java.util.List;
 
+/**
+ * Router package as read back (spec {@code CloudRouterPackage}, 4.34.0). The fields match
+ * {@code GET /fabric/v4/routerPackages/{code}} as observed live 2026-11-11; the former
+ * {@code staticIPv4RoutesMax}, {@code staticIPv6RoutesMax}, {@code naclsMax}, {@code naclRulesMax},
+ * {@code haSupported} and {@code natType} are in neither the spec nor the live response.
+ */
 @Getter
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class GatewayPackageJson {
@@ -53,26 +58,17 @@ public class GatewayPackageJson {
     @JsonProperty("totalIPv6RoutesMax")
     private Integer totalIPv6RoutesMax;
 
-    @JsonProperty("staticIPv4RoutesMax")
-    private Integer staticIPv4RoutesMax;
-
-    @JsonProperty("staticIPv6RoutesMax")
-    private Integer staticIPv6RoutesMax;
-
-    @JsonProperty("naclsMax")
-    private Integer naclsMax;
-
-    @JsonProperty("naclRulesMax")
-    private Integer naclRulesMax;
-
-    @JsonProperty("haSupported")
-    private Boolean haSupported;
-
     @JsonProperty("routeFilterSupported")
     private Boolean routeFilterSupported;
 
-    @JsonProperty("natType")
-    private NatType natType;
+    @JsonProperty("vcCountMax")
+    private Integer vcCountMax;
+
+    @JsonProperty("crCountMax")
+    private Integer crCountMax;
+
+    @JsonProperty("vcBandwidthMax")
+    private Integer vcBandwidthMax;
 
     @JsonProperty("changeLog")
     private ChangeLog changeLog;

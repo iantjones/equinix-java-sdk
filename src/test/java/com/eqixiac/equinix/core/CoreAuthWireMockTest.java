@@ -56,11 +56,7 @@ class CoreAuthWireMockTest extends WireMockTestBase {
         wireMock.stubFor(get(urlPathMatching("/fabric/v4/metros"))
                 .willReturn(okJson("{\"pagination\":{\"offset\":0,\"limit\":20,\"total\":0},\"data\":[]}")));
 
-        try {
-            fabric.metros().list();
-        } catch (Exception ignored) {
-            // Response parsing may fail, we only care about the request headers
-        }
+        assertTrue(fabric.metros().list().isEmpty(), "the stubbed metros page is empty");
 
         wireMock.verify(getRequestedFor(urlPathMatching("/fabric/v4/metros"))
                 .withHeader("authorization", equalTo("Bearer test-token-abc123")));
@@ -82,11 +78,7 @@ class CoreAuthWireMockTest extends WireMockTestBase {
                     .willReturn(okJson("{\"pagination\":{\"offset\":0,\"limit\":20,\"total\":0},\"data\":[]}")));
 
             assertNull(fresh.getEquinixClient().getOAuthToken(), "no token before the first call");
-            try {
-                fresh.metros().list();
-            } catch (Exception ignored) {
-                // we only care that the request was signed
-            }
+            assertTrue(fresh.metros().list().isEmpty(), "the stubbed metros page is empty");
 
             assertNotNull(fresh.getEquinixClient().getOAuthToken(), "lazy auth published a token");
             wireMock.verify(getRequestedFor(urlPathMatching("/fabric/v4/metros"))
@@ -107,11 +99,7 @@ class CoreAuthWireMockTest extends WireMockTestBase {
             fresh.getEquinixClient().setOAuthToken(expired);
             assertFalse(expired.validSession(), "the injected token is already expired");
 
-            try {
-                fresh.metros().list();
-            } catch (Exception ignored) {
-                // we only care that the request was re-signed with a fresh token
-            }
+            assertTrue(fresh.metros().list().isEmpty(), "the stubbed metros page is empty");
 
             assertEquals("test-token-abc123", fresh.getEquinixClient().getOAuthToken().getSessionToken(),
                     "the stale token was replaced by a fresh one");
@@ -138,16 +126,12 @@ class CoreAuthWireMockTest extends WireMockTestBase {
             fresh.getEquinixClient().setOAuthToken(expired);
             assertFalse(expired.validSession(), "the injected token is already expired");
 
-            try {
-                fresh.metros().list();
-            } catch (Exception ignored) {
-                // we only care how the re-auth token request was signed
-            }
+            assertTrue(fresh.metros().list().isEmpty(), "the stubbed metros page is empty");
 
             // The re-auth actually happened: two token mints in total.
             wireMock.verify(2, postRequestedFor(urlPathEqualTo("/oauth2/v1/token")));
-            // And NO token-mint request — in particular the second, issued while the expired
-            // "stale-token" was still published — carried an authorization header.
+            // And NO token-mint request - in particular the second, issued while the expired
+            // "stale-token" was still published - carried an authorization header.
             wireMock.verify(0, postRequestedFor(urlPathEqualTo("/oauth2/v1/token"))
                     .withHeader("authorization", matching(".*")));
             wireMock.verify(2, postRequestedFor(urlPathEqualTo("/oauth2/v1/token"))

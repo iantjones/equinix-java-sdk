@@ -45,7 +45,7 @@ class OAuthTokenTest {
 
     @Test
     void timeoutProseAndGarbageAreTolerated() {
-        // The spec documents token_timeout as a string like "3599 (60 minutes)" — leading digits win.
+        // The spec documents token_timeout as a string like "3599 (60 minutes)" - leading digits win.
         assertTrue(new OAuthToken("tok", "bearer", "3599 (60 minutes)", Instant.now()).validSession());
         // No leading digits: invalid session, no exception.
         assertFalse(new OAuthToken("tok", "bearer", "soon", Instant.now()).validSession());

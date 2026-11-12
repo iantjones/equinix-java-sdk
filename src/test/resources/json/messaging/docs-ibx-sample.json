@@ -1,0 +1,27 @@
+{
+"Task": {
+    "Id": "370da978-b9bd-4030-b012-9dc97e2fdf98",
+    "Source": "3e095d30-40ff-11e9-8959-5be078353003",
+    "Verb": "Update",
+    "Resource": "DataCenter.Maintenance",
+    "ContentType": "application/json",
+    "CreationTimeUTC": "2021-06-09T07:42:45.396Z",
+    "Version": "1.0",
+    "Body": {
+    "RequestorId": "97ae4427-70cb-4162-bf52-c3c7f9d7b2d8",
+    "ServicerId": "5-204454471282",
+    "State": "CONFIRMED",
+    "Description": "Equinix Test Maintenance",
+    "Sequence": "2",
+    "StartDateTime": "2021-03-29T17:33:00",
+    "EndDateTime": "2021-03-31T18:00:00",
+    "AccountNumber": "123456",
+    "Impact": "NON_SERVICE_IMPACTING",
+    "ProdID": "DataCenter Notification https://developer.equinix.com",
+    "Organizer": "Equinix Customer Support https://www.equinix.com/contact-us/customer-support",
+    "Assets": []
+    }
+},
+"Signature": "RWNobwp7CiAgIklkIjogIjM1MGFlZjcwLTc4MWItMTFlOSogIH0KfQ==
+"
+}

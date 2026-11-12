@@ -14,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 /**
  * Live integration tests for the Projects domain of the Equinix Java SDK, catalog-complete against
  * the {@code getprojectsv2.yaml} spec ({@code GET /resourceManager/v2/projects}, operationId
- * {@code getAllProjects} — the spec's only operation; the resource is read-only).
+ * {@code getAllProjects} - the spec's only operation; the resource is read-only).
  *
  * <p>Spec-vs-reality contract: every call runs through
  * {@code IntegrationTestBase.requireEntitled}, which skips only on a 401/403 entitlement gap and
@@ -22,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  *
  * <h3>Usage</h3>
  * <pre>
- * mvn test -Pintegration-readonly -DaccessKey=ID -DsecretKey=SECRET
+ * EQUINIX_ACCESS_KEY=ID EQUINIX_SECRET_KEY=SECRET mvn test -Pintegration-readonly
  * </pre>
  */
 @Tag("integration-readonly")
@@ -36,9 +36,7 @@ class ProjectsIntegrationTest extends IntegrationTestBase {
         projects = new Projects(testCredentials());
     }
 
-    // ════════════════════════════════════════════════════════════════════
     //  READONLY TESTS - Safe GET/list operations
-    // ════════════════════════════════════════════════════════════════════
 
     @Nested
     @Tag("integration-readonly")

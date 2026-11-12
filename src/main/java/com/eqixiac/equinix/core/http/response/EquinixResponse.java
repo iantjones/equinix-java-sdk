@@ -27,7 +27,7 @@ import java.util.TreeMap;
 /**
  * Immutable view of a single HTTP exchange, exposing exactly what response handling needs: the
  * status line, a read-only case-insensitive snapshot of the response headers, and the body stream
- * with its declared length. No transport (Apache HttpClient) type appears in this class's API —
+ * with its declared length. No transport (Apache HttpClient) type appears in this class's API - 
  * the HTTP client captures these values from the raw transport response at construction.
  *
  * <p>Note that {@code getContent()} exposes the one-shot connection-backed body stream: once the
@@ -62,7 +62,7 @@ public class EquinixResponse<T> {
     private final Map<String, String> headers;
 
     /**
-     * Captures a response snapshot. Internal — constructed by the SDK's HTTP client from the raw
+     * Captures a response snapshot. Internal - constructed by the SDK's HTTP client from the raw
      * transport response.
      *
      * @param statusCode the HTTP status code
@@ -106,7 +106,7 @@ public class EquinixResponse<T> {
             in.transferTo(OutputStream.nullOutputStream());
         }
         catch (Exception ignored) {
-            // best effort — never let connection release break the call
+            // best effort - never let connection release break the call
         }
     }
 }

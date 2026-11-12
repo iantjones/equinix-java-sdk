@@ -30,13 +30,13 @@ import java.util.Map;
  *
  * <p>For each customer metro, the engine evaluates which analyzed ASNs would lose their IX
  * peering there and how much aggregate IX port capacity that removes, expressed as
- * {@code impactRatio} — the fraction of analyzed ASNs affected. Metros with no analyzed-ASN
+ * {@code impactRatio} - the fraction of analyzed ASNs affected. Metros with no analyzed-ASN
  * presence are excluded from the overall resiliency score (an empty metro is not resilience)
  * and are called out in the assessment findings instead.</p>
  *
  * <h3>Example</h3>
  * <p>"Losing DC metro takes out IX peering with 3 of your 5 analyzed ASNs (AWS, Azure, Google),
- * an impact ratio of 60% — HIGH."</p>
+ * an impact ratio of 60% - HIGH."</p>
  *
  * @author ianjones
  * @see FailureScope
@@ -49,7 +49,7 @@ public class BlastRadiusReport {
     /** The customer metro whose hypothetical failure this report quantifies. */
     MetroId metro;
 
-    /** The failure domain evaluated — currently always {@link FailureScope#METRO}. */
+    /** The failure domain evaluated - currently always {@link FailureScope#METRO}. */
     FailureScope scope;
 
     /** The analyzed ASNs whose IX peering at this metro would be lost. */
@@ -84,7 +84,7 @@ public class BlastRadiusReport {
     List<String> mitigations;
 
     /**
-     * Re-derives the severity classification from {@link #impactRatio} — by construction this
+     * Re-derives the severity classification from {@link #impactRatio} - by construction this
      * matches the stored {@code severity} on engine-built reports.
      *
      * @return {@code "CRITICAL"} ({@code >80%}), {@code "HIGH"} ({@code >50%}),
@@ -99,7 +99,7 @@ public class BlastRadiusReport {
 
     /**
      * Returns the total number of affected ASN entries: the size of {@code lostIxPeeringAsns} plus
-     * the size of {@code lostFabricAsns} — a plain sum, not a set union. It cannot double-count
+     * the size of {@code lostFabricAsns} - a plain sum, not a set union. It cannot double-count
      * today because the Fabric list is always empty (the analysis evaluates IX peering only), but
      * if Fabric losses are ever populated an ASN lost on both paths would count twice.
      *

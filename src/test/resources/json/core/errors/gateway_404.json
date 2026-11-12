@@ -1,0 +1,7 @@
+{
+  "errorCode": "IC-LG-01",
+  "errorMessage": "Resource not found",
+  "errorDomain": "apigateway",
+  "errorTitle": "Not Found",
+  "developerMessage": "No resource matched the requested path"
+}

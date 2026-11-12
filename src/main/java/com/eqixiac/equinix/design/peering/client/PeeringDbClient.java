@@ -59,12 +59,12 @@ import java.util.stream.Collectors;
  * <p>An HTTP 429 from PeeringDB is retried up to {@value #MAX_RATE_LIMIT_RETRIES} times,
  * honouring the {@code Retry-After} response header (seconds or HTTP-date form) and falling
  * back to a small exponential backoff when the header is absent or unparsable. The total time
- * spent waiting for a single logical request is capped at {@value #MAX_RATE_LIMIT_WAIT_MS} ms —
+ * spent waiting for a single logical request is capped at {@value #MAX_RATE_LIMIT_WAIT_MS} ms - 
  * a {@code Retry-After} beyond the remaining budget fails fast instead of stalling the caller.
  * Multi-ASN lookups should prefer the batched collection overloads ({@code getNetworks},
  * {@code getEquinixIxPresence(Collection)}, {@code getEquinixFacPresence(Collection)}), which
  * use PeeringDB's {@code asn__in} query operator to collapse N per-ASN requests into one
- * request per endpoint — the single most effective way to stay under the anonymous limit.</p>
+ * request per endpoint - the single most effective way to stay under the anonymous limit.</p>
  *
  * <h3>Lifecycle</h3>
  * <p>The client owns a {@link CloseableHttpClient} and is itself {@link AutoCloseable}:
@@ -105,6 +105,13 @@ public class PeeringDbClient implements AutoCloseable {
      * lists, but chunking keeps the URL well under practical length limits.
      */
     static final int MAX_ASNS_PER_REQUEST = 150;
+
+    /**
+     * Networks already fetched, keyed by ASN. Facility lookups need the network id (PeeringDB
+     * filters netfac only by {@code net_id}), and an analysis has normally just fetched the
+     * networks, so reusing them avoids a second {@code /net} request.
+     */
+    private final Map<Long, PeeringDbNetwork> networkCache = new java.util.concurrent.ConcurrentHashMap<>();
 
     private final CloseableHttpClient httpClient;
     private final ObjectMapper objectMapper;
@@ -223,7 +230,9 @@ public class PeeringDbClient implements AutoCloseable {
         if (data == null || !data.isArray() || data.size() == 0) {
             return null;
         }
-        return objectMapper.treeToValue(data.get(0), PeeringDbNetwork.class);
+        PeeringDbNetwork network = objectMapper.treeToValue(data.get(0), PeeringDbNetwork.class);
+        networkCache.put(asn, network);
+        return network;
     }
 
     /**
@@ -246,14 +255,32 @@ public class PeeringDbClient implements AutoCloseable {
      * @throws IOException if the API call fails
      */
     public List<PeeringDbNetFac> getNetFacs(long asn) throws IOException {
-        String url = baseUrl + "/netfac?asn=" + asn;
-        return getList(url, new TypeReference<List<PeeringDbNetFac>>() {});
+        // netfac has no filterable asn field: PeeringDB ignores ?asn= and ?local_asn= on this
+        // endpoint and returns unrelated rows (checked 2026-11-11: netfac?asn=15169 returned rows
+        // for AS1299 and AS20940). Resolve the ASN to its network id and filter on net_id, which
+        // PeeringDB honours, then keep only rows for that network.
+        PeeringDbNetwork network = networkCache.get(asn);
+        if (network == null) {
+            network = getNetwork(asn);
+        }
+        if (network == null) {
+            return new ArrayList<>();
+        }
+        String url = baseUrl + "/netfac?net_id=" + network.getId();
+        List<PeeringDbNetFac> rows = getList(url, new TypeReference<List<PeeringDbNetFac>>() {});
+        List<PeeringDbNetFac> mine = new ArrayList<>();
+        for (PeeringDbNetFac row : rows) {
+            if (row.getNetId() == network.getId()) {
+                mine.add(row);
+            }
+        }
+        return mine;
     }
 
     // ---- Batched (asn__in) lookups ----
 
     /**
-     * Retrieves network metadata for multiple ASNs in batched {@code net?asn__in=...} requests —
+     * Retrieves network metadata for multiple ASNs in batched {@code net?asn__in=...} requests - 
      * one HTTP request per {@value #MAX_ASNS_PER_REQUEST} ASNs instead of one per ASN.
      *
      * <p>A single-element collection delegates to {@code getNetwork(long)} (the plain
@@ -281,6 +308,7 @@ public class PeeringDbClient implements AutoCloseable {
             String url = baseUrl + "/net?asn__in=" + joinAsns(chunk);
             for (PeeringDbNetwork net : getList(url, new TypeReference<List<PeeringDbNetwork>>() {})) {
                 result.put(net.getAsn(), net);
+                networkCache.put(net.getAsn(), net);
             }
         }
         return result;
@@ -348,10 +376,37 @@ public class PeeringDbClient implements AutoCloseable {
             result.get(asn).addAll(getNetFacs(asn));
             return result;
         }
-        for (List<Long> chunk : chunked(distinct)) {
-            String url = baseUrl + "/netfac?asn__in=" + joinAsns(chunk);
+        // net_id__in is honoured on netfac; asn__in is not (see getNetFacs(long)). Resolve the
+        // ASNs to network ids first, then group the rows back by network id.
+        Map<Integer, Long> asnByNetId = new LinkedHashMap<>();
+        List<Long> uncached = new ArrayList<>();
+        for (Long asn : distinct) {
+            PeeringDbNetwork cached = networkCache.get(asn);
+            if (cached != null) {
+                asnByNetId.put(cached.getId(), asn);
+            } else {
+                uncached.add(asn);
+            }
+        }
+        if (!uncached.isEmpty()) {
+            for (Map.Entry<Long, PeeringDbNetwork> e : getNetworks(uncached).entrySet()) {
+                asnByNetId.put(e.getValue().getId(), e.getKey());
+            }
+        }
+        List<Integer> netIds = new ArrayList<>(asnByNetId.keySet());
+        for (int from = 0; from < netIds.size(); from += MAX_ASNS_PER_REQUEST) {
+            List<Integer> chunk = netIds.subList(from, Math.min(netIds.size(), from + MAX_ASNS_PER_REQUEST));
+            StringBuilder ids = new StringBuilder();
+            for (Integer id : chunk) {
+                if (ids.length() > 0) {
+                    ids.append(',');
+                }
+                ids.append(id);
+            }
+            String url = baseUrl + "/netfac?net_id__in=" + ids;
             for (PeeringDbNetFac nf : getList(url, new TypeReference<List<PeeringDbNetFac>>() {})) {
-                List<PeeringDbNetFac> bucket = result.get(nf.getLocalAsn());
+                Long asn = asnByNetId.get(nf.getNetId());
+                List<PeeringDbNetFac> bucket = asn != null ? result.get(asn) : null;
                 if (bucket != null) {
                     bucket.add(nf);
                 }
@@ -547,7 +602,7 @@ public class PeeringDbClient implements AutoCloseable {
      * {@value #MAX_RATE_LIMIT_RETRIES} times, honouring {@code Retry-After} (seconds or
      * HTTP-date) with a small exponential-backoff fallback, and the total wait across all
      * retries of this one request is capped at {@value #MAX_RATE_LIMIT_WAIT_MS} ms. Any other
-     * non-200 status — and a 429 that outlives the retry/wait budget — is an {@link IOException}.
+     * non-200 status - and a 429 that outlives the retry/wait budget - is an {@link IOException}.
      */
     private JsonNode executeGet(String url) throws IOException {
         long sleptMs = 0L;
@@ -597,8 +652,8 @@ public class PeeringDbClient implements AutoCloseable {
     }
 
     /**
-     * Resolves the wait for a 429: the {@code Retry-After} header when parsable — integer seconds
-     * or an RFC-1123 HTTP-date (clamped to now) — otherwise a small exponential backoff
+     * Resolves the wait for a 429: the {@code Retry-After} header when parsable - integer seconds
+     * or an RFC-1123 HTTP-date (clamped to now) - otherwise a small exponential backoff
      * ({@value #DEFAULT_BACKOFF_BASE_MS} ms doubled per attempt). Package-private for tests.
      *
      * @param retryAfter the raw {@code Retry-After} header value, or {@code null} when absent
@@ -663,7 +718,7 @@ public class PeeringDbClient implements AutoCloseable {
     /**
      * Closes the underlying HTTP client. Quiet by design: a close failure releases nothing
      * actionable to the caller, and the analysis result it would otherwise mask is already in
-     * hand. Safe to call more than once. Ownership: whoever constructed this client closes it —
+     * hand. Safe to call more than once. Ownership: whoever constructed this client closes it - 
      * the analysis engine never closes a client it was handed.
      */
     @Override

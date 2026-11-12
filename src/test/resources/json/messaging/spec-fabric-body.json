@@ -1,0 +1,16 @@
+{
+  "type": "PORT_OPSTATUS_NOTIFICATION",
+  "uuid": "11c954fb-8e8b-4515-97d7-cc80129a0985",
+  "description": "Port is not operational. Connections on this port might be affected.",
+  "data": {
+    "type": "XF_PORT",
+    "uuid": "a867f685-41b0-1b07-6de0-320a5c00abdd",
+    "name": "L2-DEV-USER01-DC5-CX-10G-SECONDARY-NOKIA-02",
+    "href": "https://api.equinix.com/fabric/v4/ports/a867f685-41b0-1b07-6de0-320a5c00abdd",
+    "operation": {
+      "operationalStatus": "DOWN",
+      "opStatusChangedAt": "2020-05-21T10:20:00Z",
+      "maintenanceMode": false
+    }
+  }
+}

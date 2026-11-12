@@ -89,7 +89,7 @@ class NetworkEdgeIbxToolsTest {
         return tool.getHandler().handle(MAPPER.readTree(argsJson), context);
     }
 
-    // ── ne_list_devices ─────────────────────────────────────────────────────
+    // ne_list_devices
 
     private static Device device(String uuid, String name, DeviceStatus status) {
         Device device = mock(Device.class);
@@ -136,7 +136,7 @@ class NetworkEdgeIbxToolsTest {
         assertTrue(payload.get("truncation_note").asText().contains("limit"));
     }
 
-    // ── ibx_get_environmentals ──────────────────────────────────────────────
+    // ibx_get_environmentals
 
     private static SensorReading reading(String sensorId, String zone, double tempC, double humidityPct)
             throws Exception {
@@ -189,7 +189,7 @@ class NetworkEdgeIbxToolsTest {
         assertThrows(IllegalArgumentException.class, () -> call("ibx_get_environmentals", "{}"));
     }
 
-    // ── ibx_list_power_events ───────────────────────────────────────────────
+    // ibx_list_power_events
 
     private static PowerEvent powerEvent(long id, AlertStatus status) {
         PowerEvent event = mock(PowerEvent.class);

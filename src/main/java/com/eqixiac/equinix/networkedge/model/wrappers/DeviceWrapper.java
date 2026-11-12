@@ -23,6 +23,7 @@ import com.eqixiac.equinix.networkedge.model.Backup;
 import com.eqixiac.equinix.networkedge.model.Device;
 import com.eqixiac.equinix.networkedge.model.json.DeviceJson;
 import com.eqixiac.equinix.networkedge.model.json.Pricing;
+import com.eqixiac.equinix.networkedge.model.json.creators.DeviceDeleteRequest;
 import com.eqixiac.equinix.networkedge.model.json.creators.DeviceOperator;
 import com.eqixiac.equinix.networkedge.model.json.creators.DeviceUpdaterJson;
 import lombok.Getter;
@@ -62,7 +63,7 @@ public class DeviceWrapper extends ResourceImpl<Device> implements Device {
     }
 
     public Boolean updateAdditionalBandwidth(Integer additionalBandwidth) {
-        this.json =  ((DeviceClientImpl)this.serviceClient).updateAdditionalBandwidth(this.getUuid(), additionalBandwidth);
+        this.json = WrapperState.keep(this.json, ((DeviceClientImpl)this.serviceClient).updateAdditionalBandwidth(this.getUuid(), additionalBandwidth));
         return true;
     }
 
@@ -83,7 +84,7 @@ public class DeviceWrapper extends ResourceImpl<Device> implements Device {
     }
 
     public Boolean save(DeviceUpdaterJson updaterJson) {
-        this.json = ((DeviceClientImpl)this.serviceClient).update(this.getUuid(), updaterJson);
+        this.json = WrapperState.keep(this.json, ((DeviceClientImpl)this.serviceClient).update(this.getUuid(), updaterJson));
         return true;
     }
 
@@ -91,8 +92,12 @@ public class DeviceWrapper extends ResourceImpl<Device> implements Device {
         return ((DeviceClientImpl)this.serviceClient).delete(this.getUuid());
     }
 
+    public Boolean delete(DeviceDeleteRequest request) {
+        return ((DeviceClientImpl)this.serviceClient).delete(this.getUuid(), request);
+    }
+
     public Boolean refresh() {
-        this.json = ((DeviceClientImpl)this.serviceClient).refresh(this.getUuid());
+        this.json = WrapperState.keep(this.json, ((DeviceClientImpl)this.serviceClient).refresh(this.getUuid()));
         return true;
     }
 }

@@ -97,9 +97,7 @@ final class MulticloudLinkPlanner {
         }
     }
 
-    // ══════════════════════════════════════════════
     //  Planning
-    // ══════════════════════════════════════════════
 
     /**
      * Applies the configured {@link CloudToCloudStrategy}. Under {@code EQUINIX_ONLY} the catalog
@@ -580,9 +578,7 @@ final class MulticloudLinkPlanner {
                 .build();
     }
 
-    // ══════════════════════════════════════════════
     //  Create-then-accept steps (from provider documentation, retrieved 2026-09-21)
-    // ══════════════════════════════════════════════
 
     private static final String AWS_GETTING_STARTED =
             "https://docs.aws.amazon.com/interconnect/latest/userguide/getting-started-multicloud.html";
@@ -626,9 +622,7 @@ final class MulticloudLinkPlanner {
         return List.of();
     }
 
-    // ══════════════════════════════════════════════
     //  Pricing
-    // ══════════════════════════════════════════════
 
     /**
      * Returns the links with {@code pricing} and {@code recommendation} resolved against the
@@ -640,7 +634,7 @@ final class MulticloudLinkPlanner {
      * holds no cloud-provider figures. Fabric connection and Cloud Router prices come from
      * {@code configured} through the same methods as the plan's own pricing, including its
      * heuristic fallback. The caller passes the one card instance it prices the plan with
-     * ({@code DeploymentWizardEngine.resolveRateCard(config)}), so a live card's catalogue fetch
+     * ({@code PlanPricer.resolveRateCard(config)}), so a live card's catalogue fetch
      * and cache are shared with the plan's pricing rather than repeated per call.</p>
      *
      * @param configured the resolved rate card, or {@code null} when the wizard has neither an
@@ -690,7 +684,7 @@ final class MulticloudLinkPlanner {
         Term term = config.getTerm();
         List<String> notes = new ArrayList<>();
 
-        // ── Native link: priced at the covering size, exact match, no interpolation ──
+        // Native link: priced at the covering size, exact match, no interpolation
         MulticloudLinkQuote quote = null;
         BigDecimal nativeMonthly = null;
         String nativeCurrency = null;
@@ -725,7 +719,7 @@ final class MulticloudLinkPlanner {
             }
         }
 
-        // ── Equinix path for the same flow ──
+        // Equinix path for the same flow
         List<String> components = new ArrayList<>();
         CurrencyReconciler equinix = CurrencyReconciler.create();
         boolean equinixComplete = true;
@@ -743,7 +737,7 @@ final class MulticloudLinkPlanner {
                     }
                 }
             }
-            PriceQuote vc = DeploymentWizardEngine.priceConnection(configured, type, mbps, link.getMetro(), term);
+            PriceQuote vc = PlanPricer.priceConnection(configured, type, mbps, link.getMetro(), term);
             equinix.add(vc.getCurrency(), vc.getMonthlyRecurring(), BigDecimal.ZERO);
             components.add("Equinix path: Fabric virtual connection to " + leg.getCloud() + " at " + mbps + " Mbps ("
                     + leg.getConnectionName() + (leg.isOnPlan() ? "" : ", omitted from the plan")
@@ -774,7 +768,7 @@ final class MulticloudLinkPlanner {
         if (router != null) {
             String shared = routerSharedReason(link, providerConnections, backboneLinks, request);
             if (shared == null) {
-                PriceQuote routerQuote = DeploymentWizardEngine.priceRouter(configured, router, term);
+                PriceQuote routerQuote = PlanPricer.priceRouter(configured, router, term);
                 equinix.add(routerQuote.getCurrency(), routerQuote.getMonthlyRecurring(), BigDecimal.ZERO);
                 components.add("Equinix path: Cloud Router " + router.getName() + " (this flow is its only use): "
                         + amount(routerQuote.getMonthlyRecurring(), routerQuote.getCurrency()) + " per month, "
@@ -796,7 +790,7 @@ final class MulticloudLinkPlanner {
             }
         }
 
-        // ── Per-GB rates on each path ──
+        // Per-GB rates on each path
         PerGbSum equinixPerGb = perGbSum(chain, link, EgressPath.PRIVATE, term, "private interconnect", notes);
         PerGbSum nativePerGb = perGbSum(chain, link, EgressPath.MULTICLOUD_INTERCONNECT, term, "native link", notes);
         // The currency of the four per-GB rates together: known only when all four share it.
@@ -811,7 +805,7 @@ final class MulticloudLinkPlanner {
             }
         }
 
-        // ── Break-even: one currency throughout, or none ──
+        // Break-even: one currency throughout, or none
         BigDecimal breakEven = null;
         boolean nativeCheaperAbove = false;
         if (nativeMonthly != null && equinixFixed != null && equinixPerGb != null && nativePerGb != null) {

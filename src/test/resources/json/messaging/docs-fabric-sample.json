@@ -1,0 +1,36 @@
+{
+"Task": {
+    "Id": "bf9f2707-d612-4d63-9958-4c8b1fcf3cc0",
+    "Source": "3e095d30-40ff-11e9-8959-5be078353003",
+    "Verb": "Update",
+    "Resource": "DataCenter.Network.Port",
+    "ContentType": "application/json",
+    "Version": "1.0",
+    "Body": {
+    "timestamp":"2020-05-21T10:20:00Z",
+    "type":"PORT_OPSTATUS_NOTIFICATION",
+    "uuid":"11c954fb-8e8b-4515-97d7-cc80129a0985",
+    "description":"Port is not operational. Connections on this port might be affected.",
+    "data":{
+        "type":"XF_PORT",
+        "uuid":"a867f685-41b0-1b07-6de0-320a5c00abdd",
+        "name":"L2-DEV-USER01-DC5-CX-10G-SECONDARY-NOKIA-02",
+        "href":"https://api.equinix.com/fabric/v4/ports/a867f685-41b0-1b07-6de0-320a5c00abdd",
+        "operation":{
+            "operationalStatus":"DOWN",
+            "opStatusChangedAt":"2020-05-21T10:20:00Z",
+            "maintenanceMode":false
+        },
+        "embedded":{
+            "connections":{
+                "href":[
+                "https://api.equinix.com/fabric/v4/connections/8822de74-805f-4f63-b52d-93bcbf2a1d1b",
+                "https://api.equinix.com/fabric/v4/connections/8f20bea9-a5b9-47e5-88e6-a899584ebb90"
+                ]
+            }
+        }
+    }
+    }
+},
+"Signature": "RWNobwp7CiAgIklkIjogIjM1MGFlZjcwLTc4MWItMTFlOSogIH0KfQ=="
+}

@@ -47,7 +47,7 @@ import org.apache.http.message.BasicNameValuePair;
  * and copies the request headers.
  *
  * <p>This is the single place where a {@link RequestBody} becomes a transport entity, and it runs
- * once per dispatch attempt — so a JSON payload mutated between attempts (e.g. a POST-search body
+ * once per dispatch attempt - so a JSON payload mutated between attempts (e.g. a POST-search body
  * whose pagination offset was advanced) is re-serialized automatically.</p>
  *
  * @author ianjones
@@ -98,8 +98,8 @@ public class RequestFactory {
 
     /**
      * Builds the wire entity from the request's {@link RequestBody} (when present) and attaches it
-     * to an entity-enclosing Apache request. Keyed directly off {@code getBody()} — the request's
-     * only payload representation — so a set body can never be silently dropped.
+     * to an entity-enclosing Apache request. Keyed directly off {@code getBody()} - the request's
+     * only payload representation - so a set body can never be silently dropped.
      */
     private <T> HttpRequestBase wrapEntity(EquinixRequest<T> request, HttpEntityEnclosingRequestBase entityEnclosingRequest) {
         RequestBody body = request.getBody();

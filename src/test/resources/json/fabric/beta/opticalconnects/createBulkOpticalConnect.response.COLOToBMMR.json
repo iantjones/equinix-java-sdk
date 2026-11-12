@@ -1,0 +1,106 @@
+{
+  "data": [
+    {
+      "href": "https://api.equinix.com/fabric/v4/opticalConnects/06dbb0e3-e55d-4090-8aff-fc5654abaad0",
+      "uuid": "06dbb0e3-e55d-4090-8aff-fc5654abaad0",
+      "type": "OC",
+      "name": "270848-SV1-SV2-PRI-01",
+      "state": "PROVISIONING",
+      "bandwidth": 100000,
+      "connectionDestinationType": "BMMR",
+      "pathType": "DUAL_DIVERSE",
+      "bmmrType": "EQUINIX",
+      "redundancy": {
+        "priority": "PRIMARY",
+        "group": "22f8e668-4754-4564-825d-d1c7889c885a"
+      },
+      "aSide": {
+        "demarcationPoint": {
+          "patchPanelId": "CP:Demarc:1259684",
+          "patchPanelPortA": "10",
+          "patchPanelPortB": "11",
+          "connectorType": "SC",
+          "cageUniqueSpaceId": "SV1:01:002174",
+          "cabinetUniqueSpaceId": "Demarc"
+        },
+        "location": {
+          "ibxCode": "SV1"
+        }
+      },
+      "zSide": {
+        "location": {
+          "ibxCode": "SV2"
+        },
+        "loa": {
+          "uuid": "64de7e5-7fe7-41e6-b984-80d5aa159a0e"
+        }
+      },
+      "order": {
+        "orderNumber": "1-129105284100"
+      },
+      "account": {
+        "accountNumber": 270848,
+        "orgId": 123
+      },
+      "notifications": [
+        {
+          "type": "NOTIFICATION",
+          "emails": [
+            "test@test.com"
+          ]
+        }
+      ]
+    },
+    {
+      "href": "https://api.equinix.com/fabric/v4/opticalConnects/c9e2a1b6-7d4f-4c3e-8b2a-5f1d6e7a9c58",
+      "uuid": "c9e2a1b6-7d4f-4c3e-8b2a-5f1d6e7a9c58",
+      "type": "OC",
+      "name": "270848-SV1-SV2-SEC-02",
+      "state": "PROVISIONING",
+      "bandwidth": 100000,
+      "connectionDestinationType": "BMMR",
+      "pathType": "DUAL_DIVERSE",
+      "bmmrType": "EQUINIX",
+      "redundancy": {
+        "priority": "SECONDARY",
+        "group": "22f8e668-4754-4564-825d-d1c7889c885a"
+      },
+      "aSide": {
+        "demarcationPoint": {
+          "patchPanelId": "PP:Demarc:1260379",
+          "patchPanelPortA": "14",
+          "patchPanelPortB": "15",
+          "connectorType": "SC",
+          "cageUniqueSpaceId": "SV1:01:002174",
+          "cabinetUniqueSpaceId": "Demarc"
+        },
+        "location": {
+          "ibxCode": "SV1"
+        }
+      },
+      "zSide": {
+        "location": {
+          "ibxCode": "SV2"
+        },
+        "loa": {
+          "uuid": "e9e2a1b6-8d4f-4c3e-8b2a-5f1d6e7a9c59"
+        }
+      },
+      "order": {
+        "orderNumber": "1-129105284100"
+      },
+      "account": {
+        "accountNumber": 270848,
+        "orgId": 123
+      },
+      "notifications": [
+        {
+          "type": "NOTIFICATION",
+          "emails": [
+            "test@test.com"
+          ]
+        }
+      ]
+    }
+  ]
+}

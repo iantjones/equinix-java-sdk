@@ -17,6 +17,7 @@
 package com.eqixiac.equinix.design.optimizer.wizard.model;
 
 import lombok.Builder;
+import lombok.extern.jackson.Jacksonized;
 import lombok.Value;
 
 import java.util.List;
@@ -24,17 +25,18 @@ import java.util.List;
 /**
  * One service profile that can carry a given connection's bandwidth, as a typed decision point the
  * wizard exposes instead of silently picking. When several profiles cover a connection's speed in
- * genuinely different ways — a hosted profile versus a dedicated one at the same tier, or the same
- * profile in different seller regions — every covering candidate is carried on the connection's
+ * genuinely different ways - a hosted profile versus a dedicated one at the same tier, or the same
+ * profile in different seller regions - every covering candidate is carried on the connection's
  * {@link ProfileSelection} {@code alternatives} so an interactive layer (the MCP server) can
  * prompt the user to choose, while a non-interactive caller takes the first (the wizard's default).
  *
  * <p>Each candidate reports the exact tier <em>this</em> profile would use for the requested bandwidth
- * ({@code coveringTierMbps} — the round-up result for this profile), so the
+ * ({@code coveringTierMbps} - the round-up result for this profile), so the
  * caller can compare not just which profiles are eligible but how much each would over-provision.</p>
  */
 @Value
 @Builder
+@Jacksonized
 public class ProfileCandidate {
 
     /** The Fabric service-profile uuid this candidate refers to. */
@@ -42,13 +44,13 @@ public class ProfileCandidate {
 
     /**
      * The seller regions this profile publishes in the metro. The wizard's default pins the first;
-     * an interactive layer can offer the full list. Paired with {@link #serviceProfileUuid} — never
+     * an interactive layer can offer the full list. Paired with {@link #serviceProfileUuid} - never
      * spliced across profiles.
      */
     List<String> sellerRegions;
 
     /**
-     * The bandwidth this candidate would be billed at for the requested speed — the smallest tier it
+     * The bandwidth this candidate would be billed at for the requested speed - the smallest tier it
      * can build that satisfies the requirement (equal to the request when an exact tier or custom
      * bandwidth exists, larger when the request was rounded up).
      */

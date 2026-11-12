@@ -2,6 +2,7 @@ package com.eqixiac.equinix.design.optimizer.wizard.model;
 
 import com.eqixiac.equinix.fabric.enums.RoutingProtocolType;
 import lombok.Builder;
+import lombok.extern.jackson.Jacksonized;
 import lombok.Value;
 
 /**
@@ -16,34 +17,43 @@ import lombok.Value;
  */
 @Value
 @Builder
+@Jacksonized
 public class PlannedRoutingProtocol {
 
-    /** The protocol kind — {@code DIRECT} (IP assignment) or {@code BGP} (dynamic routing). */
+    /**
+     * The resource's stable logical key within its plan (for example {@code connection/DC/aws/rp/BGP}). Derived from the
+     * design (metro codes, provider and role), never from the generated name or the name prefix, so
+     * the same design always yields the same keys. Drift detection, reconcile and checkpoints
+     * identify the resource by this key.
+     */
+    String key;
+
+    /** The protocol kind - {@code DIRECT} (IP assignment) or {@code BGP} (dynamic routing). */
     RoutingProtocolType type;
 
     /** The generated protocol name. */
     String name;
 
     /**
-     * The planned connection this protocol attaches to, by name — resolved to the connection's
+     * The planned connection this protocol attaches to, by name - resolved to the connection's
      * real uuid at execution time (a protocol whose parent failed to provision is skipped).
      */
     String connectionName;
 
     /**
-     * The customer-side BGP peering address with prefix — the {@code .2} host of the
+     * The customer-side BGP peering address with prefix - the {@code .2} host of the
      * connection's /30 (e.g. {@code "10.100.0.2/30"}). BGP only; {@code null} for DIRECT.
      */
     String customerPeerIpv4;
 
     /**
-     * The Equinix-side BGP peering address with prefix — the {@code .1} host of the
+     * The Equinix-side BGP peering address with prefix - the {@code .1} host of the
      * connection's /30 (e.g. {@code "10.100.0.1/30"}). BGP only; {@code null} for DIRECT.
      */
     String equinixPeerIpv4;
 
     /**
-     * The Equinix interface address with prefix (e.g. {@code "10.100.0.1/30"} — the same
+     * The Equinix interface address with prefix (e.g. {@code "10.100.0.1/30"} - the same
      * {@code .1} host the BGP protocol peers from). DIRECT only; {@code null} for BGP.
      */
     String equinixIfaceIpv4;

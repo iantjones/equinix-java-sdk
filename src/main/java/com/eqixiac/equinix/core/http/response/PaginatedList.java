@@ -33,29 +33,29 @@ import java.util.stream.Stream;
  * A paginated list of resources returned by Equinix API list operations.
  *
  * <p>This is an {@link Iterable} view of the loaded results plus pagination metadata and automatic
- * page loading — it is deliberately <em>not</em> a {@link java.util.List}. A server response is not a
+ * page loading - it is deliberately <em>not</em> a {@link java.util.List}. A server response is not a
  * mutable collection: modeling it as one (the old {@code extends ArrayList}) exposed {@code add}/
- * {@code remove}/{@code clear}/{@code ensureCapacity}/… that make no sense for a page of API data.
+ * {@code remove}/{@code clear}/{@code ensureCapacity}/... that make no sense for a page of API data.
  * Instead it follows the idiom used by the major cloud SDKs (AWS SDK v2, Google Cloud, Stripe):
  * iterate it directly, call {@link #stream()}, or take a snapshot with {@link #toList()}.</p>
  *
  * <h3>Usage</h3>
  * <pre>{@code
- * PaginatedList<Port> ports = fabric.ports().list();
+ * PaginatedList<BillingAccount> accounts = portal.billingAccounts().summaries();
  *
  * // Iterate or stream the current page
- * for (Port p : ports) { ... }
- * ports.stream().filter(...).forEach(...);
- * Port first = ports.get(0);
+ * for (BillingAccount a : accounts) { ... }
+ * accounts.stream().filter(...).forEach(...);
+ * BillingAccount first = accounts.get(0);
  *
  * // Pagination metadata
- * Pagination pagination = ports.getPagination();
+ * Pagination pagination = accounts.getPagination();
  *
  * // Load additional pages
- * while (ports.hasNextPage()) { ports.next(); }
+ * while (accounts.hasNextPage()) { accounts.next(); }
  *
  * // Or load all pages at once, then take a List snapshot
- * List<Port> all = ports.loadAll().toList();
+ * List<BillingAccount> all = accounts.loadAll().toList();
  * }</pre>
  *
  * @param <T> the type of resource in the list
@@ -66,7 +66,7 @@ public class PaginatedList<T> implements Iterable<T> {
 
     private final List<T> items = new ArrayList<>();
 
-    // Internal paging machinery — deliberately not exposed on the public list type. The
+    // Internal paging machinery - deliberately not exposed on the public list type. The
     // request/response element types are unbounded: the carried request may be typed over
     // the public model or the resource's JSON model (see Page), and paging never needs it.
     @Getter(AccessLevel.PACKAGE)
@@ -78,6 +78,13 @@ public class PaginatedList<T> implements Iterable<T> {
 
     @Getter
     private Pagination pagination;
+
+    /**
+     * Set when the server stopped making progress: it returned an empty page, or echoed the
+     * same offset back, while its {@code total} still promised more. Paging stops instead of
+     * looping forever (and, for a repeated offset, re-appending the same items).
+     */
+    private boolean stalled;
 
     /**
      *
@@ -144,8 +151,8 @@ public class PaginatedList<T> implements Iterable<T> {
 
     @SuppressWarnings("unchecked") // the request's element type is erased and never used by paging
     private PaginatedList<T> fetchNextPage() {
-        // One shared advance path with PaginatedFilteredList: seek the request's pagination —
-        // whether it lives in the POST body or in offset/limit query parameters — from the
+        // One shared advance path with PaginatedFilteredList: seek the request's pagination - 
+        // whether it lives in the POST body or in offset/limit query parameters - from the
         // SERVER-reported pagination of the page we hold (clamp-safe), or fail fast with a clear
         // unsupported-pagination error (previously a hard cast here threw ClassCastException on
         // page 2 of POST searches wrapped in a PaginatedList).
@@ -174,8 +181,20 @@ public class PaginatedList<T> implements Iterable<T> {
     }
 
     private void loadNextPage() {
+        Pagination previous = this.pagination;
         PaginatedList<T> primaryObjectList = fetchNextPage();
-        this.items.addAll(primaryObjectList.items);
+        Pagination fetched = primaryObjectList.getPagination();
+        boolean offsetRepeated = previous != null && fetched != null && previous.getOffset() != null
+                && previous.getOffset().equals(fetched.getOffset());
+        if (offsetRepeated || primaryObjectList.items.isEmpty()) {
+            // The server ignored the requested offset (several spec endpoints accept no offset
+            // parameter yet report a total larger than one page) or ran dry early. Either way
+            // another request cannot make progress.
+            this.stalled = true;
+        }
+        if (!offsetRepeated) {
+            this.items.addAll(primaryObjectList.items);
+        }
         this.equinixRequest = primaryObjectList.getEquinixRequest();
         this.equinixResponse = primaryObjectList.getEquinixResponse();
         this.pagination = primaryObjectList.getPagination();
@@ -187,7 +206,7 @@ public class PaginatedList<T> implements Iterable<T> {
      * @return {@code true} if a next page exists; {@code false} if this is the last page
      */
     public boolean hasNextPage() {
-        return this.pagination != null && !this.pagination.isLastPage();
+        return !this.stalled && this.pagination != null && !this.pagination.isLastPage();
     }
 
     /**

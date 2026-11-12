@@ -29,9 +29,14 @@ import java.util.List;
  *
  * <p>Faithful to the spec's {@code InternetAccessRoutingProtocolRequest} (and its BGP variant):
  * a {@code type} discriminator, a list of customer routes referencing IP block UUIDs, a list of
- * connection UUIDs, plus the BGP-only fields ({@code exportPolicy}, {@code customerAsn},
- * {@code bgpAuthKey}, {@code customerAsnRange}) which are simply omitted (NON_NULL) for the
- * {@code DIRECT} and {@code STATIC} variants.</p>
+ * connection UUIDs, plus the BGP-only fields ({@code exportPolicy}, the {@code asn} reference and
+ * {@code bgpAuthKey}) which are simply omitted (NON_NULL) for the {@code DIRECT} and
+ * {@code STATIC} variants.</p>
+ *
+ * <p>The spec-deprecated {@code customerAsn} and {@code customerAsnRange} are not sent: name the
+ * customer ASN with {@link #asn(String)}, the uuid of an ASN resource ({@code /fabric/v4/asns}).
+ * {@code bgpAuthKey} stays on the request, where 4.34.0 does not deprecate it; on the response it
+ * is replaced by {@code bgpAuthType}.</p>
  */
 @Getter
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -49,14 +54,11 @@ public class EiaRoutingProtocolRequest {
     @JsonProperty("exportPolicy")
     private String exportPolicy;
 
-    @JsonProperty("customerAsn")
-    private Long customerAsn;
+    @JsonProperty("asn")
+    private AsnRef asn;
 
     @JsonProperty("bgpAuthKey")
     private String bgpAuthKey;
-
-    @JsonProperty("customerAsnRange")
-    private String customerAsnRange;
 
     /**
      * Creates a routing protocol request of the given type.
@@ -101,13 +103,16 @@ public class EiaRoutingProtocolRequest {
     }
 
     /**
-     * Sets the customer ASN.
+     * Sets the ASN resource the BGP session uses ({@code "asn": {"uuid": ...}}).
      *
-     * @param customerAsn the customer ASN
+     * @param asnUuid the uuid of an ASN resource
      * @return this request
      */
-    public EiaRoutingProtocolRequest customerAsn(Long customerAsn) {
-        this.customerAsn = customerAsn;
+    public EiaRoutingProtocolRequest asn(String asnUuid) {
+        if (asnUuid == null || asnUuid.isBlank()) {
+            throw new IllegalArgumentException("asnUuid is required");
+        }
+        this.asn = new AsnRef(asnUuid);
         return this;
     }
 
@@ -122,16 +127,6 @@ public class EiaRoutingProtocolRequest {
         return this;
     }
 
-    /**
-     * Sets the customer ASN range (e.g. {@code BITS_16} or {@code BITS_32}).
-     *
-     * @param customerAsnRange the customer ASN range
-     * @return this request
-     */
-    public EiaRoutingProtocolRequest customerAsnRange(String customerAsnRange) {
-        this.customerAsnRange = customerAsnRange;
-        return this;
-    }
 
     @Getter
     public static class CustomerRoute {
@@ -149,6 +144,22 @@ public class EiaRoutingProtocolRequest {
         private final String uuid;
 
         public IpBlockRef(String uuid) {
+            this.uuid = uuid;
+        }
+    }
+
+    /** ASN resource reference: {@code {"uuid": ...}}. */
+    @Getter
+    public static class AsnRef {
+        @JsonProperty("uuid")
+        private final String uuid;
+
+        /**
+         * Creates the reference.
+         *
+         * @param uuid the ASN resource uuid
+         */
+        public AsnRef(String uuid) {
             this.uuid = uuid;
         }
     }

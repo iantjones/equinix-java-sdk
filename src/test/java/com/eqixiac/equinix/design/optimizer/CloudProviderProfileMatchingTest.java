@@ -42,7 +42,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * "Amazon Web Services"). Real Fabric marketplace profiles are named after the <em>product</em>
  * ("AWS Direct Connect", "Azure ExpressRoute"), so the lookup resolved to nothing, the
  * provider-to-metro index came back empty, and every metro was then dropped by the
- * required-provider filter — observed live as "Analyzed 67 metros, 0 met constraints" with zero
+ * required-provider filter - observed live as "Analyzed 67 metros, 0 met constraints" with zero
  * recommendations.</p>
  *
  * <p><strong>Second regression.</strong> The first fix bought that false negative back with
@@ -70,9 +70,7 @@ class CloudProviderProfileMatchingTest {
                 .collect(Collectors.toList());
     }
 
-    // ══════════════════════════════════════════════════════════════════
-    //  1. True positives — real profile names resolve, exclusively
-    // ══════════════════════════════════════════════════════════════════
+    //  1. True positives - real profile names resolve, exclusively
 
     @ParameterizedTest(name = "\"{0}\" resolves to {1} and to no other provider")
     @CsvSource({
@@ -174,7 +172,7 @@ class CloudProviderProfileMatchingTest {
                 provider.getProviderName() + " must be claimed by " + provider + " alone");
     }
 
-    // ── OTHER is a placeholder, never a nameable provider ──
+    // OTHER is a placeholder, never a nameable provider
 
     @ParameterizedTest
     @ValueSource(strings = {"Custom Provider", "Other", "OTHER", "AWS Direct Connect", "Bespoke Seller Cloud"})
@@ -194,9 +192,7 @@ class CloudProviderProfileMatchingTest {
         assertFalse(provider.matchesServiceProfileName("   -  "));
     }
 
-    // ══════════════════════════════════════════════════════════════════
     //  2. False negatives that must stay fixed: no mid-word matching
-    // ══════════════════════════════════════════════════════════════════
 
     @ParameterizedTest
     @ValueSource(strings = {
@@ -233,9 +229,7 @@ class CloudProviderProfileMatchingTest {
                 "'" + profileName + "' must not resolve to " + wrongProvider);
     }
 
-    // ══════════════════════════════════════════════════════════════════
-    //  3. False positives the adversarial review found — now negatives
-    // ══════════════════════════════════════════════════════════════════
+    //  3. False positives the adversarial review found - now negatives
 
     @Nested
     @DisplayName("a generic name is never evidence that a cloud is reachable")
@@ -345,7 +339,7 @@ class CloudProviderProfileMatchingTest {
     void noProviderCarriesAGenericTermStandalone(CloudProviderType provider) {
         // Structural guard: the alias lists are hand-curated, so this pins the curation rule rather
         // than any one spelling. A term here is only ever a whole normalized phrase, so an exact
-        // comparison is the right test — "aws direct connect" is fine, a bare "direct connect" is
+        // comparison is the right test - "aws direct connect" is fine, a bare "direct connect" is
         // not, because it would match every seller profile carrying those two words.
         List<String> generic = List.of(
                 "direct connect", "direct link", "express connect", "cloud interconnect",

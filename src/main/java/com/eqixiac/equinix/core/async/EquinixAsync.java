@@ -31,7 +31,7 @@ import java.util.function.Supplier;
  * A small, generic asynchronous facade over <em>any</em> Equinix SDK call, backed by Java 21
  * virtual threads. Rather than mirroring the entire API surface with {@code ...Async} variants, this
  * runs an arbitrary blocking SDK call on a virtual thread and hands the caller a
- * {@link CompletableFuture}, so a single small class covers Fabric, NetworkEdge, CustomerPortal and
+ * {@link CompletableFuture}, so a single small class covers Fabric, NetworkEdge, Operations and
  * every other domain.
  *
  * <p>Each submitted call runs on its own virtual thread from

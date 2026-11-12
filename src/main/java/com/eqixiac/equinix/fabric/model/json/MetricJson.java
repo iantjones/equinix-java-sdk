@@ -51,8 +51,24 @@ public class MetricJson implements Metric {
     @JsonProperty("resource")
     private MetricResource resource;
 
+    // The spec types summary as a string; the live port metrics response returns an object (checked
+    // 2026-11-11). Kept as a tree so both read; getSummary() renders an object as its JSON text.
     @JsonProperty("summary")
-    private String summary;
+    @Getter(lombok.AccessLevel.NONE)
+    private com.fasterxml.jackson.databind.JsonNode summary;
+
+    @Override
+    public String getSummary() {
+        if (summary == null || summary.isNull()) {
+            return null;
+        }
+        return summary.isValueNode() ? summary.asText() : summary.toString();
+    }
+
+    /** @return the summary as returned, a text or object node, or {@code null} */
+    public com.fasterxml.jackson.databind.JsonNode getSummaryNode() {
+        return summary;
+    }
 
     @JsonProperty("datapoints")
     private List<MetricDatapoint> datapoints;

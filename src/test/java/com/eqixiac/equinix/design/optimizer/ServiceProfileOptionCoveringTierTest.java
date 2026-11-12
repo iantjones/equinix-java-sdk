@@ -30,11 +30,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * The bandwidth round-up primitive on {@link ServiceProfileOption}: {@link ServiceProfileOption#covers(int)}
  * stays the <em>exact</em>-tier test (the {@code PlanValidator.checkProfile} mirror), while
- * {@link ServiceProfileOption#coveringTier(int)} implements the owner's round-up — the smallest tier that
+ * {@link ServiceProfileOption#coveringTier(int)} implements the owner's round-up - the smallest tier that
  * satisfies (is not below) the requirement, clamped to the per-metro ceiling, and
  * {@link ServiceProfileOption#NO_COVERING_TIER} only when even rounding up cannot satisfy it.
  */
-@DisplayName("ServiceProfileOption — bandwidth round-up primitive")
+@DisplayName("ServiceProfileOption - bandwidth round-up primitive")
 class ServiceProfileOptionCoveringTierTest {
 
     private static ServiceProfileOption tiered(List<Integer> tiers, Integer vcBandwidthMax) {
@@ -54,7 +54,7 @@ class ServiceProfileOptionCoveringTierTest {
         private final ServiceProfileOption option = tiered(List.of(1000, 5000, 10000), null);
 
         @Test
-        @DisplayName("a non-exact requirement rounds UP to the smallest satisfying tier (3000 → 5000)")
+        @DisplayName("a non-exact requirement rounds UP to the smallest satisfying tier (3000 -> 5000)")
         void roundsUpToSmallestSatisfyingTier() {
             assertEquals(5000, option.coveringTier(3000));
             assertEquals(10000, option.coveringTier(6000));
@@ -72,10 +72,10 @@ class ServiceProfileOptionCoveringTierTest {
         }
 
         @Test
-        @DisplayName("covers() stays EXACT — the round-up is coveringTier's job, not covers()'")
+        @DisplayName("covers() stays EXACT - the round-up is coveringTier's job, not covers()'")
         void coversStaysExact() {
             assertFalse(option.covers(3000), "3000 is not an exact tier");
-            assertTrue(option.covers(5000), "5000 is an exact tier — and is what a rounded-up connection is stamped at");
+            assertTrue(option.covers(5000), "5000 is an exact tier - and is what a rounded-up connection is stamped at");
             assertTrue(option.covers(1000));
         }
 

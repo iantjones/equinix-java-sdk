@@ -16,15 +16,15 @@
 
 package com.eqixiac.equinix.mcp.server;
 
-import com.eqixiac.equinix.CustomerPortal;
+import com.eqixiac.equinix.Operations;
 import com.eqixiac.equinix.FabricGateway;
 import com.eqixiac.equinix.core.enums.MetroCode;
 import com.eqixiac.equinix.core.enums.Region;
 import com.eqixiac.equinix.core.http.response.PaginatedFilteredList;
 import com.eqixiac.equinix.core.http.response.PaginatedList;
 import com.eqixiac.equinix.core.model.MetroId;
-import com.eqixiac.equinix.customerportal.client.BillingAccounts;
-import com.eqixiac.equinix.customerportal.model.BillingAccount;
+import com.eqixiac.equinix.operations.client.BillingAccounts;
+import com.eqixiac.equinix.operations.model.BillingAccount;
 import com.eqixiac.equinix.fabric.client.Metros;
 import com.eqixiac.equinix.fabric.client.ServiceProfiles;
 import com.eqixiac.equinix.fabric.model.Metro;
@@ -54,20 +54,20 @@ import static org.mockito.Mockito.when;
 /**
  * End-to-end {@code design_plan_deployment} account-number auto-resolution over a Mockito-stubbed
  * Fabric gateway (the shared three-AMER-metro / one-AWS-profile fixture) and a stubbed Customer Portal
- * billing surface. The exchange is bound the way the live adapter binds it — via
+ * billing surface. The exchange is bound the way the live adapter binds it - via
  * {@link ServerContext#withExchange}.
  */
-@DisplayName("design_plan_deployment — billing account auto-resolution")
+@DisplayName("design_plan_deployment - billing account auto-resolution")
 class PlanDeploymentAccountTest {
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
     private static final String OPTIMIZATION = """
-            {"optimization": {
-                "workloads": [{"label": "Web Tier", "type": "general_compute", "bandwidth_mbps": 1000}],
-                "sites": [{"label": "HQ", "metro_code": "DC"}],
-                "require_clouds": ["aws"],
-                "constraints": {"max_metros": 1}},
+            {"spec": {"name": "account-test", "sites": [{"label": "HQ", "metro": "DC"}],
+                "clouds": [{"id": "aws", "provider": "AWS", "region": "us-east-1"}],
+                "workloads": [{"label": "Web Tier", "type": "GENERAL_COMPUTE", "bandwidthMbps": 1000,
+                               "clouds": ["aws"]}],
+                "constraints": {"maxMetros": 1}},
              "deployment": {"router_package": "STANDARD"%s}}
             """;
 
@@ -102,12 +102,12 @@ class PlanDeploymentAccountTest {
         BillingAccounts billingAccounts = mock(BillingAccounts.class);
         when(billingAccounts.summaries()).thenReturn(
                 new PaginatedList<>(List.of(accounts), null, null, null, null));
-        CustomerPortal portal = mock(CustomerPortal.class);
+        Operations portal = mock(Operations.class);
         when(portal.billingAccounts()).thenReturn(billingAccounts);
         return ServerContext.builder()
                 .fabric(fabric)
                 .metroRegistry(MetroRegistry.load(metros))
-                .customerPortal(portal)
+                .operations(portal)
                 .environment(Map.of())
                 .build();
     }
@@ -178,7 +178,7 @@ class PlanDeploymentAccountTest {
         List<String> candidates = payload.get("account_number").get("candidates").findValuesAsText("account_number");
         assertTrue(candidates.contains("111") && candidates.contains("222"),
                 "both candidate account numbers are named: " + candidates);
-        assertEquals(0, ctx.planStore().size(), "nothing is stored when the account is unresolved");
+        assertEquals(0, ctx.designStore().size(DesignStore.Kind.PLAN), "nothing is stored when the account is unresolved");
     }
 
     @Test
@@ -193,7 +193,7 @@ class PlanDeploymentAccountTest {
     }
 
     @Test
-    @DisplayName("zero visible accounts leaves the account unset and says so — no fabricated number")
+    @DisplayName("zero visible accounts leaves the account unset and says so - no fabricated number")
     void zeroAccountsHonestAndUnfabricated() throws Exception {
         ServerContext ctx = contextWithAccounts();
         ObjectNode payload = plan(ctx, "", null);
@@ -206,7 +206,7 @@ class PlanDeploymentAccountTest {
         assertFalse(payload.get("executed").asBoolean(), "the plan is still produced, just without an account");
     }
 
-    // ── shared fabric stub builders (same recipe as DesignToolsTest) ─────────
+    // shared fabric stub builders (same recipe as DesignToolsTest)
 
     private static Metro metro(String code, String name, double lat, double lon) throws Exception {
         Metro m = mock(Metro.class);

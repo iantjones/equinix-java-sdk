@@ -22,8 +22,8 @@ import com.eqixiac.equinix.core.model.APIParam;
  * Topology of an Equinix Internet Access (EIA) v2 service.
  *
  * <ul>
- *   <li>{@code SINGLE} — service supported with one connection.</li>
- *   <li>{@code DUAL} — service supported with two redundant connections.</li>
+ *   <li>{@code SINGLE} - service supported with one connection.</li>
+ *   <li>{@code DUAL} - service supported with two redundant connections.</li>
  * </ul>
  */
 public enum ServiceTypeV2 implements APIParam {

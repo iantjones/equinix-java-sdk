@@ -34,7 +34,6 @@ public class FabricConfigImpl extends Config {
 
     private final PortClientImpl portsClient;
 
-    private final PortStatisticClientImpl portStatisticsClient;
 
     private final PricingClientImpl pricingClient;
 
@@ -101,7 +100,6 @@ public class FabricConfigImpl extends Config {
         this.metrosClient = new MetroClientImpl(this);
         this.serviceTokensClient = new ServiceTokenClientImpl(this);
         this.portsClient = new PortClientImpl(this);
-        this.portStatisticsClient = new PortStatisticClientImpl(this);
         this.connectionsClient = new ConnectionClientImpl(this);
         this.metricsClient = new MetricClientImpl(this);
         this.pricingClient = new PricingClientImpl(this);

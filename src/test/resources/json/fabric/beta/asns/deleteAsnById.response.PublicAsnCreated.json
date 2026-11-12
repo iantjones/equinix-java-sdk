@@ -1,0 +1,20 @@
+{
+  "href": "fabric/v4/asns/6db706f8-2a37-4546-a3ed-1df113a84d43",
+  "uuid": "6db706f8-2a37-4546-a3ed-1df113a84d43",
+  "type": "PUBLIC_ASN",
+  "project": {
+    "projectId": "03ed2230-604a-494c-bca2-c042d38d80bc"
+  },
+  "state": "PENDING",
+  "number": 64497,
+  "rirRegion": "RIPE_NCC",
+  "ownershipChallengeDetails": {
+    "type": "RPKI",
+    "message": "eqx-rpki-challenge-2026-04-21T11:20:00Z-64497",
+    "signature": null
+  },
+  "assets": [],
+  "changeLog": {
+    "createdDateTime": "2025-12-01T12:11:22.222351Z"
+  }
+}

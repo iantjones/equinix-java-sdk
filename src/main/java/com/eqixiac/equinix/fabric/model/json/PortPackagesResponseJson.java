@@ -17,6 +17,7 @@
 package com.eqixiac.equinix.fabric.model.json;
 
 import com.eqixiac.equinix.fabric.model.PortPackage;
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -36,6 +37,19 @@ public final class PortPackagesResponseJson {
 
     @JsonProperty("data")
     private List<PortPackageJson> data;
+
+    /** No-arg constructor for the spec's {@code {"data": [...]}} envelope. */
+    public PortPackagesResponseJson() {
+    }
+
+    /**
+     * Accepts the bare array the live {@code GET /fabric/v4/portPackages} returns (checked
+     * 2026-11-11); the spec documents a {@code data} envelope, which the no-arg path still reads.
+     */
+    @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
+    public PortPackagesResponseJson(List<PortPackageJson> packages) {
+        this.data = packages;
+    }
 
     public List<? extends PortPackage> getPackages() {
         return data;

@@ -17,7 +17,7 @@
 /**
  * HTTP response handling for the Equinix Java SDK. Contains
  * {@link com.eqixiac.equinix.core.http.response.EquinixResponse}, which wraps the raw HTTP
- * response (status code, headers and the raw body stream — deserialization happens later in the
+ * response (status code, headers and the raw body stream - deserialization happens later in the
  * response handlers). {@link com.eqixiac.equinix.core.http.response.Pagination} holds page
  * metadata (offset, limit, total), and {@link com.eqixiac.equinix.core.http.response.PaginatedList}
  * provides an iterable view over the loaded results with explicit page loading via

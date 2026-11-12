@@ -1,0 +1,73 @@
+{
+  "data": [
+    {
+      "type": "OC",
+      "bandwidth": 100000,
+      "connectionDestinationType": "COLO",
+      "pathType": "DUAL_DIVERSE",
+      "redundancy": {
+        "priority": "PRIMARY"
+      },
+      "aSide": {
+        "demarcationPoint": {
+          "patchPanelId": "CP:Demarc:1259684",
+          "patchPanelPortA": "10",
+          "patchPanelPortB": "11",
+          "connectorType": "SC"
+        }
+      },
+      "zSide": {
+        "demarcationPoint": {
+          "patchPanelId": "CP:Demarc:1259690",
+          "patchPanelPortA": "20",
+          "patchPanelPortB": "21",
+          "connectorType": "SC"
+        }
+      },
+      "notifications": [
+        {
+          "type": "NOTIFICATION",
+          "emails": [
+            "test@test.com"
+          ],
+          "registeredUsers": [
+            "test"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "OC",
+      "bandwidth": 100000,
+      "connectionDestinationType": "COLO",
+      "pathType": "DUAL_DIVERSE",
+      "redundancy": {
+        "priority": "SECONDARY"
+      },
+      "aSide": {
+        "demarcationPoint": {
+          "patchPanelId": "PP:Demarc:1260379",
+          "patchPanelPortA": "14",
+          "patchPanelPortB": "15",
+          "connectorType": "SC"
+        }
+      },
+      "zSide": {
+        "demarcationPoint": {
+          "patchPanelId": "PP:Demarc:1260385",
+          "patchPanelPortA": "24",
+          "patchPanelPortB": "25",
+          "connectorType": "SC"
+        }
+      },
+      "notifications": [
+        {
+          "type": "NOTIFICATION",
+          "emails": [
+            "test@test.com"
+          ]
+        }
+      ]
+    }
+  ]
+}

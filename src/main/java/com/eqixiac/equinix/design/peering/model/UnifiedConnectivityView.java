@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
  * combining both IX peering (from PeeringDB) and Fabric private connections
  * (from Equinix Fabric service profiles).
  *
- * <p>This is the "one view to rule them all" — for a given ASN, it shows every
+ * <p>This is the "one view to rule them all" - for a given ASN, it shows every
  * way the customer can reach that network through Equinix, at every metro,
  * through both public peering and private connectivity.</p>
  *
@@ -37,7 +37,7 @@ import java.util.stream.Collectors;
  * Fabric-reachable when a Fabric service profile whose name identifies this network publishes
  * that metro (see the matching contract on
  * {@link com.eqixiac.equinix.design.peering.PeeringIntelligence}). It indicates an available
- * private on-ramp that could be ordered — not an existing connection — and when the Fabric
+ * private on-ramp that could be ordered - not an existing connection - and when the Fabric
  * catalog could not be read at all, a result warning marks Fabric availability as not analyzed
  * rather than genuinely absent.</p>
  *

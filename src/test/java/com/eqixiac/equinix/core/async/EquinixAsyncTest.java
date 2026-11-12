@@ -21,6 +21,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -102,20 +103,25 @@ class EquinixAsyncTest {
     }
 
     @Test
-    void awaitAllCollectsResultsInOrder() {
+    void awaitAllCollectsResultsInInputOrderNotCompletionOrder() throws Exception {
         try (EquinixAsync async = EquinixAsync.create()) {
-            AtomicInteger counter = new AtomicInteger();
-            List<CompletableFuture<Integer>> futures = List.of(
-                    async.call(counter::incrementAndGet),
-                    async.call(counter::incrementAndGet),
-                    async.call(counter::incrementAndGet));
+            CountDownLatch othersDone = new CountDownLatch(2);
+            // The first call cannot finish until the other two have, so completion order is
+            // (second, third, first) while the input order is (first, second, third).
+            CompletableFuture<String> first = async.call(() -> {
+                awaitLatch(othersDone);
+                return "first";
+            });
+            CompletableFuture<String> second = async.call(() -> {
+                othersDone.countDown();
+                return "second";
+            });
+            CompletableFuture<String> third = async.call(() -> {
+                othersDone.countDown();
+                return "third";
+            });
 
-            List<Integer> results = EquinixAsync.awaitAll(futures);
-
-            assertEquals(3, results.size());
-            // Order is the iteration order of the input collection, not completion order.
-            assertEquals(List.of(results.get(0), results.get(1), results.get(2)), results);
-            assertEquals(6, results.stream().mapToInt(Integer::intValue).sum());
+            assertEquals(List.of("first", "second", "third"), EquinixAsync.awaitAll(List.of(first, second, third)));
         }
     }
 
@@ -151,24 +157,50 @@ class EquinixAsyncTest {
     }
 
     @Test
-    void closeAwaitsInFlightWork() {
+    void closeAwaitsInFlightWork() throws Exception {
         AtomicBoolean finished = new AtomicBoolean(false);
+        CountDownLatch started = new CountDownLatch(1);
+        CountDownLatch release = new CountDownLatch(1);
         EquinixAsync async = EquinixAsync.create();
 
         // Fire-and-forget: the caller never joins the future, only closes the facade.
         async.run(() -> {
-            try {
-                Thread.sleep(200);
-            } catch (InterruptedException ie) {
-                Thread.currentThread().interrupt();
-            }
+            started.countDown();
+            awaitLatch(release);
             finished.set(true);
         });
+        assertTrue(started.await(10, TimeUnit.SECONDS), "task did not start");
 
-        async.close();
+        Thread closer = new Thread(async::close, "closer");
+        closer.start();
 
+        // close() must block while the task is held. Wait (state-driven, no fixed sleep) until the
+        // closer either parks in awaitTermination or wrongly returns.
+        Thread.State state;
+        while ((state = closer.getState()) != Thread.State.WAITING
+                && state != Thread.State.TIMED_WAITING && state != Thread.State.TERMINATED) {
+            Thread.onSpinWait();
+        }
+        assertFalse(state == Thread.State.TERMINATED || finished.get(),
+                "close() returned while a call was still in flight");
+
+        release.countDown();
+        closer.join(TimeUnit.SECONDS.toMillis(10));
+
+        assertFalse(closer.isAlive(), "close() did not return once the in-flight call finished");
         assertTrue(finished.get(),
                 "close() must await in-flight calls; otherwise daemon virtual threads can be killed mid-flight at JVM exit");
+    }
+
+    private static void awaitLatch(CountDownLatch latch) {
+        try {
+            if (!latch.await(10, TimeUnit.SECONDS)) {
+                throw new IllegalStateException("latch not released");
+            }
+        } catch (InterruptedException ie) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException(ie);
+        }
     }
 
     @Test

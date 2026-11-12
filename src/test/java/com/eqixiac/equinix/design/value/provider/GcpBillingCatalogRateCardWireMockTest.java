@@ -83,7 +83,7 @@ class GcpBillingCatalogRateCardWireMockTest extends WireMockTestBase {
     @Test
     @DisplayName("internet egress selection is deterministic: the standard worldwide SKU wins, not the first, premium, or destination-qualified one")
     void deterministicInternetEgressSelection() {
-        // Catalogue order is premium, China, standard, interconnect — so a naive "first egress SKU"
+        // Catalogue order is premium, China, standard, interconnect - so a naive "first egress SKU"
         // would pick premium ($0.19). The adapter must pick the representative standard worldwide
         // meter ($0.12) regardless of order.
         wireMock.stubFor(get(urlPathEqualTo(PATH))
@@ -149,7 +149,7 @@ class GcpBillingCatalogRateCardWireMockTest extends WireMockTestBase {
                 .orElseThrow();
         assertEquals(0, new BigDecimal("0.1117587090").compareTo(internetRate.getPricePerGb()));
 
-        // The wire: exactly two GETs — page 1 without a token, page 2 echoing the server's
+        // The wire: exactly two GETs - page 1 without a token, page 2 echoing the server's
         // nextPageToken (plus the key and page-size params on both).
         wireMock.verify(1, getRequestedFor(urlPathEqualTo(PATH))
                 .withQueryParam("key", equalTo("test-key"))
@@ -184,7 +184,7 @@ class GcpBillingCatalogRateCardWireMockTest extends WireMockTestBase {
     }
 
     @Test
-    @DisplayName("a mid-pagination failure fails the WHOLE fetch — no answer from a partial catalogue — and is retried")
+    @DisplayName("a mid-pagination failure fails the WHOLE fetch - no answer from a partial catalogue - and is retried")
     void midPaginationFailureFailsWholeFetchAndIsRetried() {
         // Page 1 alone carries the internet SKU, so a partial-catalogue implementation would
         // happily answer the INTERNET lookup. It must not: the "cheapest matching SKU" over a

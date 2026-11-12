@@ -20,6 +20,8 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 
 public enum StreamSubscriptionSinkType {
     DATADOG,
+    /** Dynatrace sink (Fabric product release 2026; spec 4.34.0 {@code StreamSubscriptionSink.type}). */
+    DYNATRACE,
     GOOGLE_PUBSUB,
     PAGERDUTY,
     SERVICENOW,

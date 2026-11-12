@@ -57,4 +57,24 @@ public class EquinixRateLimitException extends EquinixServiceException {
             String correlationId) {
         super(errorMessage, statusCode, path, httpHeaders, exceptionDetails, correlationId);
     }
+
+    /**
+     * Full constructor used by
+     * {@link com.eqixiac.equinix.core.http.ResponseErrorMapper ResponseErrorMapper}, additionally
+     * carrying a truncated snippet of an error body that could not be parsed into details.
+     *
+     * @param errorMessage        a human-readable summary message.
+     * @param statusCode          the HTTP status code returned by the API.
+     * @param path                the request URI that produced the error.
+     * @param httpHeaders         relevant response headers; may be {@code null}.
+     * @param exceptionDetails    structured error details from the response body; may be {@code null}.
+     * @param correlationId       the SDK-generated {@code X-Correlation-Id} of the failed request; may be {@code null}.
+     * @param responseBodySnippet truncated raw body when no details could be parsed; may be {@code null}.
+     */
+    public EquinixRateLimitException(String errorMessage, Integer statusCode, String path,
+            java.util.Map<String, String> httpHeaders,
+            java.util.List<ExceptionDetail> exceptionDetails,
+            String correlationId, String responseBodySnippet) {
+        super(errorMessage, statusCode, path, httpHeaders, exceptionDetails, correlationId, responseBodySnippet);
+    }
 }

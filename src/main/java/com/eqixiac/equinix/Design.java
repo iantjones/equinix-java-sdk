@@ -24,23 +24,21 @@ import com.eqixiac.equinix.design.value.savings.SavingsCalculator;
 import com.eqixiac.equinix.design.value.tco.TcoCalculator;
 
 /**
- * A root-level entry point that gathers the SDK's value-add <em>design</em> capabilities —
+ * A root-level entry point that gathers the SDK's value-add <em>design</em> capabilities - 
  * Metro Optimizer, Deployment Wizard, Peering Intelligence, Savings Calculator, and TCO
- * comparison — in one discoverable place, alongside the API-domain clients ({@link Fabric},
- * {@link NetworkEdge}, …).
+ * comparison - in one discoverable place, alongside the API-domain clients ({@link Fabric},
+ * {@link NetworkEdge}, ...).
  *
  * <p>Unlike those domain clients, {@code Design} is <strong>not</strong> constructed from
  * credentials: it is a thin facade over an already-authenticated {@link FabricGateway}, which
- * it reuses. This is intentional — the design engines run on top of an existing client (its
- * metros, service profiles, prices, …) rather than opening a second connection pool / token.
+ * it reuses. This is intentional - the design engines run on top of an existing client (its
+ * metros, service profiles, prices, ...) rather than opening a second connection pool / token.
  * Construct it over your {@code Fabric}, or obtain one from a shared {@link Equinix} session
  * via {@link Equinix#design()}:</p>
  *
  * <pre>{@code
- * Design design = Design.over(fabric);          // reuses fabric's client — no new transport
- * OptimizationResult result = design.optimizeMetros()
- *         .addWorkload("ML Training").type(WorkloadType.AI_ML_TRAINING).bandwidthMbps(10_000).done()
- *         .optimize();
+ * Design design = Design.over(fabric);          // reuses fabric's client - no new transport
+ * OptimizationResult result = design.optimizeMetros(spec).run();   // spec: a DesignSpec
  * SavingsEstimate savings = design.savingsCalculator()
  *         .egress(50, DataUnit.TERABYTE).fromCloud(CloudProviderType.AWS).inRegion("us-east-1")
  *         .calculate();
@@ -77,6 +75,43 @@ public final class Design {
      */
     public MetroOptimizer.Builder optimizeMetros() {
         return MetroOptimizer.builder(fabric);
+    }
+
+    /**
+     * Begins a metro optimization of a {@link com.eqixiac.equinix.design.spec.DesignSpec}: the
+     * spec-first entry point ({@code MetroOptimizer.forSpec}).
+     *
+     * @param spec the design
+     * @return the optimizer run; call {@code run()}
+     */
+    public MetroOptimizer optimizeMetros(com.eqixiac.equinix.design.spec.DesignSpec spec) {
+        return MetroOptimizer.forSpec(fabric, spec);
+    }
+
+    /**
+     * Begins a resilience analysis of a {@link com.eqixiac.equinix.design.spec.DesignSpec} (read-only): by
+     * default the optimiser's recommended portfolio is built into a design graph and every single failure
+     * and bounded pairs of failures are simulated ({@code ResilienceAnalyzer.forSpec}).
+     *
+     * @param spec the design
+     * @return the analysis; call {@code run()}
+     */
+    public com.eqixiac.equinix.design.resilience.ResilienceAnalyzer resilience(
+            com.eqixiac.equinix.design.spec.DesignSpec spec) {
+        return com.eqixiac.equinix.design.resilience.ResilienceAnalyzer.forSpec(fabric, spec);
+    }
+
+    /**
+     * Begins a Design Decision Record for a {@link com.eqixiac.equinix.design.spec.DesignSpec} (read-only): the
+     * optimiser, resilience analysis, growth and value models and a deployment plan, chained and recorded with
+     * their evidence ({@code DesignDecisionRecorder.forSpec}).
+     *
+     * @param spec the design
+     * @return the recorder; call {@code record()}
+     */
+    public com.eqixiac.equinix.design.record.DesignDecisionRecorder decisionRecord(
+            com.eqixiac.equinix.design.spec.DesignSpec spec) {
+        return com.eqixiac.equinix.design.record.DesignDecisionRecorder.forSpec(fabric, spec);
     }
 
     /**
@@ -130,5 +165,20 @@ public final class Design {
      */
     public TcoCalculator.Builder tcoComparison() {
         return TcoCalculator.builder(fabric);
+    }
+
+    /**
+     * Begins a read-only analysis of an existing estate (findings with priced savings, risks and
+     * hygiene issues). Needs a full {@link Fabric} client, because it reads ports, networks, service
+     * tokens and metrics as well as connections and routers; a run must be scoped.
+     *
+     * @return a {@link com.eqixiac.equinix.design.estate.EstateAnalyzer.Builder} bound to this facade's Fabric client
+     * @throws IllegalStateException when this facade was created over a {@link FabricGateway} that is not a {@link Fabric}
+     */
+    public com.eqixiac.equinix.design.estate.EstateAnalyzer.Builder analyzeEstate() {
+        if (fabric instanceof Fabric fabricClient) {
+            return com.eqixiac.equinix.design.estate.EstateAnalyzer.builder(fabricClient);
+        }
+        throw new IllegalStateException("Estate analysis needs a Fabric client, not a bare FabricGateway");
     }
 }

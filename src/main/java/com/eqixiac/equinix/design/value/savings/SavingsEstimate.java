@@ -17,9 +17,9 @@ import java.util.Optional;
  *
  * <p>All amounts are in {@code getCurrency()}. The {@code *Priced} flags indicate
  * which inputs the rate card could actually resolve; when a flag is {@code false}
- * the corresponding figures are either zero or explicitly partial — the
+ * the corresponding figures are either zero or explicitly partial - the
  * {@code getDisclaimer()} text names the exact component that could not be priced
- * (or was excluded for being in another currency) — and the estimate should be
+ * (or was excluded for being in another currency) - and the estimate should be
  * read as incomplete (see {@code isComplete()}).</p>
  *
  * <p>When the calculator was given a peer cloud, {@code getMulticloudComparison()} carries the
@@ -61,7 +61,7 @@ public class SavingsEstimate {
 
     /**
      * Monthly Equinix interconnect cost (connection, plus Cloud Router when included and
-     * summable). Zero — with the real figure quoted in the disclaimer — when the
+     * summable). Zero - with the real figure quoted in the disclaimer - when the
      * interconnect resolved in a different currency from the egress figures and was
      * therefore excluded rather than mislabelled.
      */
@@ -71,8 +71,17 @@ public class SavingsEstimate {
     BigDecimal equinixSetupCost;
 
     /**
-     * Egress saving net of the Equinix interconnect cost. {@code null} when the two sides
-     * are in different currencies (the subtraction is never fabricated) — guard before
+     * Monthly fee for the cloud provider's own interconnect port/circuit (AWS Direct Connect, Azure
+     * ExpressRoute, Google Cloud Interconnect) at the bundled reference rate, subtracted in
+     * {@code netMonthlySavings}. {@code null} when none is tabulated or its currency differs; the
+     * disclaimer says which.
+     */
+    BigDecimal cloudProviderPortMonthlyCost;
+
+    /**
+     * Egress saving net of the Equinix interconnect cost and the cloud provider's port fee.
+     * {@code null} when the two sides
+     * are in different currencies (the subtraction is never fabricated) - guard before
      * dereferencing.
      */
     BigDecimal netMonthlySavings;
@@ -105,10 +114,24 @@ public class SavingsEstimate {
     /** Whether the Equinix interconnect cost is fully priced (not partial or excluded). */
     boolean equinixPriced;
 
-    /** {@code true} only when every component priced and reconciled to one currency. */
+    /**
+     * {@code true} only when every component (both egress rates, the Fabric connection, the Cloud Router when
+     * requested, and the provider's hosted-connection fee) priced and reconciled to one currency.
+     */
     boolean complete;
 
-    /** Estimate caveats — names any component that could not be priced or was excluded. */
+    /** Every component left out of the figures, each with its reason; empty when {@code complete}. */
+    @Builder.Default
+    java.util.List<String> unpriced = java.util.List.of();
+
+    /** The fingerprint of the spec this estimate was derived from ({@code forSpec}), else {@code null}. */
+    String specFingerprint;
+
+    /** What {@code forSpec} assumed where the spec was silent; empty otherwise. */
+    @Builder.Default
+    java.util.List<String> assumptions = java.util.List.of();
+
+    /** Estimate caveats - names any component that could not be priced or was excluded. */
     String disclaimer;
 
     /**
@@ -234,7 +257,11 @@ public class SavingsEstimate {
         sb.append("| Egress over public internet | ").append(money(internetEgressMonthlyCost, currency)).append(" |\n");
         sb.append("| Egress over private interconnect | ").append(money(privateEgressMonthlyCost, currency)).append(" |\n");
         sb.append("| **Egress saving** | **").append(money(monthlyEgressSavings, currency)).append("** |\n");
-        sb.append("| Equinix interconnect (recurring) | −").append(money(equinixMonthlyCost, currency)).append(" |\n");
+        sb.append("| Equinix interconnect (recurring) | -").append(money(equinixMonthlyCost, currency)).append(" |\n");
+        if (cloudProviderPortMonthlyCost != null) {
+            sb.append("| ").append(provider).append(" interconnect port (reference) | -")
+                    .append(money(cloudProviderPortMonthlyCost, currency)).append(" |\n");
+        }
         sb.append("| **Net monthly saving** | **").append(money(netMonthlySavings, currency)).append("** |\n");
 
         sb.append("\n");
@@ -252,15 +279,17 @@ public class SavingsEstimate {
         }
         appendMulticloudComparison(sb);
         if (!complete) {
-            sb.append("\n> ⚠ Incomplete: ");
-            if (!egressPriced) {
-                sb.append("egress rates were not available from the rate card. ");
+            sb.append("\n> Incomplete: the net figures exclude these components:\n");
+            for (String u : unpriced) {
+                sb.append(">\n> - ").append(u).append("\n");
             }
-            if (!equinixPriced) {
-                sb.append("the Equinix interconnect cost could not be fully priced — "
-                        + "the disclaimer names the missing or excluded component. ");
+        }
+        if (specFingerprint != null) {
+            sb.append("\n_Derived from spec fingerprint `").append(specFingerprint, 0, Math.min(12, specFingerprint.length()))
+                    .append("`_\n");
+            for (String a : assumptions) {
+                sb.append("- Assumed: ").append(a).append("\n");
             }
-            sb.append("\n");
         }
         if (disclaimer != null) {
             sb.append("\n_").append(disclaimer).append("_\n");

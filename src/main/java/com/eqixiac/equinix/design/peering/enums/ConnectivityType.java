@@ -23,7 +23,7 @@ import lombok.Getter;
  *
  * <p>A target ASN may be reachable through IX peering, private Fabric connections,
  * or both. Understanding the available connectivity types is essential for resiliency
- * analysis — relying solely on one type creates a single point of failure.</p>
+ * analysis - relying solely on one type creates a single point of failure.</p>
  *
  * @author ianjones
  * @see com.eqixiac.equinix.design.peering.model.PresenceCell
@@ -46,7 +46,7 @@ public enum ConnectivityType {
     private final String description;
 
     /**
-     * Constructs a connectivity type. Argument order is pinned here — the two
+     * Constructs a connectivity type. Argument order is pinned here - the two
      * parameters are both {@code String}, so never regenerate this constructor
      * from field order.
      *

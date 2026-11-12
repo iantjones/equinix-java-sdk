@@ -83,6 +83,8 @@ class MulticloudLinkExecutionWireMockTest extends WireMockTestBase {
     @BeforeEach
     void resetBeforeEach() {
         resetStubs();
+        stubSingleton(wireMock, "/fabric/v4/connections/[^/]+/routingProtocols/[^/]+",
+                "/json/fabric/routing_protocol_response.json");
         stubFabric();
     }
 
@@ -184,7 +186,7 @@ class MulticloudLinkExecutionWireMockTest extends WireMockTestBase {
         assertTrue(wireMock.getAllServeEvents().isEmpty());
     }
 
-    // ── helpers ──
+    // helpers
 
     /** Method and URL of every request WireMock served, oldest first. */
     private static List<String> journal() {

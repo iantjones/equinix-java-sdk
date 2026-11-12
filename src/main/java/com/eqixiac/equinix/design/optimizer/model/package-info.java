@@ -15,20 +15,20 @@
  */
 
 /**
- * Immutable value types for the Metro Optimization Engine — the request side (sites, provider
+ * Immutable value types for the Metro Optimization Engine - the request side (sites, provider
  * requirements, workload specs, constraints, scoring weights) and the result side (ranked
  * recommendations, scores, topology, latency matrix, risk assessment, cost estimates).
  *
  * <p>Request types are assembled by
  * {@link com.eqixiac.equinix.design.optimizer.MetroOptimizer.Builder} into an
  * {@link com.eqixiac.equinix.design.optimizer.model.OptimizationRequest}; the engine returns an
- * {@link com.eqixiac.equinix.design.optimizer.model.OptimizationResult} whose parts —
+ * {@link com.eqixiac.equinix.design.optimizer.model.OptimizationResult} whose parts - 
  * {@link com.eqixiac.equinix.design.optimizer.model.MetroRecommendation},
  * {@link com.eqixiac.equinix.design.optimizer.model.MetroScore},
  * {@link com.eqixiac.equinix.design.optimizer.model.DeploymentTopology},
  * {@link com.eqixiac.equinix.design.optimizer.model.LatencyMatrix},
  * {@link com.eqixiac.equinix.design.optimizer.model.RiskAssessment},
- * {@link com.eqixiac.equinix.design.optimizer.model.CostEstimate} — are all Lombok
+ * {@link com.eqixiac.equinix.design.optimizer.model.CostEstimate} - are all Lombok
  * {@code @Value} types (get-prefixed accessors, builders, no setters).</p>
  *
  * <p><b>Beta.</b> {@link com.eqixiac.equinix.design.optimizer.model.MulticloudEnvironmentCatalog}

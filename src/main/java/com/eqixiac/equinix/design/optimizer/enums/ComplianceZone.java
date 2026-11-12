@@ -8,18 +8,12 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Data sovereignty and compliance zones that restrict which regions
- * are eligible for workload placement.
+ * Regulatory zones a design must stay within, each allowing a set of Equinix regions.
  *
- * <p><strong>Multi-zone semantics</strong>: a deployment satisfies multiple requested zones when
- * <em>each zone is covered by at least one selected metro</em> (a deployment-level AND, to which
- * every metro contributes the zones its region is allowed by) &mdash; no single metro is expected
- * to sit inside every zone at once. Accordingly the candidate filter keeps any metro that helps
- * satisfy at least one requested zone, the compliance score grades a metro by the fraction of
- * requested zones its region is allowed by, and a requested zone the selected set leaves uncovered
- * is surfaced as a {@code COMPLIANCE_GAP} risk finding.</p>
- *
- * @see com.eqixiac.equinix.design.optimizer.model.OptimizationConstraints
+ * <p>Enforced by the {@code compliance_zones} constraint: every metro of a design must be in a region
+ * that at least one of the requested zones allows. Region granularity is coarse (all of EMEA for
+ * {@code EU_GDPR}); for country-level data sovereignty use {@code DesignConstraints.geoZones}, which
+ * matches the live Fabric geo scopes of each metro.</p>
  */
 @Getter
 public enum ComplianceZone {
@@ -43,7 +37,7 @@ public enum ComplianceZone {
     CHINA_MAINLAND("China mainland data localization", Collections.singletonList(Region.APAC)),
 
     /**
-     * Placeholder zone that allows every region — it constrains nothing and always scores as
+     * Placeholder zone that allows every region - it constrains nothing and always scores as
      * covered. Use it to reserve a zone slot for requirements the built-in constants do not model.
      */
     CUSTOM("Custom compliance zone", Arrays.asList(Region.values()));

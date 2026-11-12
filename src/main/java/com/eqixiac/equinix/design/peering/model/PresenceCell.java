@@ -70,7 +70,7 @@ public class PresenceCell {
 
     /**
      * Returns a compact, fixed-width (4-character) symbol for matrix display. The values are
-     * space-padded for column alignment — compare with {@code trim()} or use
+     * space-padded for column alignment - compare with {@code trim()} or use
      * {@code getConnectivityType()} for logic; do not {@code equals()} against unpadded literals.
      *
      * @return {@code "IX+F"} for both, {@code " IX "} for IX only, {@code "FAB "} for Fabric only,

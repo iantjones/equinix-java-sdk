@@ -43,8 +43,10 @@ public class PricingConnection {
     @JsonProperty("zSide")
     PricingAccessPoint zSide;
 
+    /** One side of a priced connection: {@code {"accessPoint": {...}}}. */
+    @Getter
     @JsonIgnoreProperties(ignoreUnknown = true)
-    protected static class PricingAccessPoint {
+    public static class PricingAccessPoint {
         @JsonProperty("accessPoint")
         private com.eqixiac.equinix.fabric.model.implementation.PricingAccessPoint accessPoint;
     }

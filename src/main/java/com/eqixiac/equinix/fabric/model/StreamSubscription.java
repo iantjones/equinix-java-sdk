@@ -24,7 +24,7 @@ import com.eqixiac.equinix.fabric.model.implementation.StreamSubscriptionOperati
 import com.eqixiac.equinix.fabric.model.implementation.StreamSubscriptionSelector;
 import com.eqixiac.equinix.fabric.model.json.creators.StreamSubscriptionOperator;
 
-public interface StreamSubscription {
+public interface StreamSubscription extends DeletableResource {
 
     String getUuid();
 

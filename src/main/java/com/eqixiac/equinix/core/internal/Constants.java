@@ -43,7 +43,7 @@ import java.util.regex.Pattern;
 public final class Constants {
 
     private Constants() {
-        // static holder — not instantiable
+        // static holder - not instantiable
     }
 
     public static final String DEFAULT_ENCODING = "UTF-8";
@@ -61,7 +61,7 @@ public final class Constants {
     // *Json via convertValue). REQUIRE_HANDLERS_FOR_JAVA8_TIMES is disabled because a source *Json can
     // expose read-only java.time lifecycle getters (createdDate/lastUpdatedDate/deletedDate) that this
     // bare mapper has no serializer for; they are not part of any updater, so they are dropped on the
-    // target — without this, seeding an update() from a fetched resource with a populated timestamp
+    // target - without this, seeding an update() from a fetched resource with a populated timestamp
     // would throw. Actual wire serialization/deserialization uses {@link #mapper()}, not this.
     // Fully configured here at construction; never reconfigured afterwards (thread-safety contract).
     private static final ObjectMapper CONVERTER = new ObjectMapper()
@@ -98,7 +98,7 @@ public final class Constants {
      * The shared object-to-object conversion {@link ObjectMapper} (used to seed updater JSON models
      * from fetched resources via {@code convertValue}; never used for wire traffic).
      *
-     * <p><strong>Do not reconfigure the returned instance</strong> — same contract as {@link #mapper()}.</p>
+     * <p><strong>Do not reconfigure the returned instance</strong> - same contract as {@link #mapper()}.</p>
      *
      * @return the shared, fully configured conversion mapper
      */
@@ -116,14 +116,20 @@ public final class Constants {
     private static ObjectMapper buildObjectMapper() {
         ObjectMapper mapper = new ObjectMapper()
                 // Forward-compatibility for enums: a value the SDK doesn't know maps to the enum's
-                // @JsonEnumDefaultValue when one is declared, otherwise to null — never failing the
+                // @JsonEnumDefaultValue when one is declared, otherwise to null - never failing the
                 // whole response. The Equinix APIs add enum values (states, change types, etc.) over
                 // time; without this a single unrecognized value would crash an otherwise-valid read.
                 .enable(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_USING_DEFAULT_VALUE)
                 .enable(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_AS_NULL)
                 .enable(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
+                // Forward-compatibility for fields, matching the enum rule above: a response field
+                // the SDK does not model is skipped, never failing the whole read. Models relied on
+                // per-class @JsonIgnoreProperties, and the classes that lacked it failed live (Network
+                // Edge device types on "SUB", error bodies with extra keys losing their details;
+                // checked 2026-11-11).
+                .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
                 .disable(SerializationFeature.FAIL_ON_EMPTY_BEANS)
-                // NOTE: USE_STD_BEAN_NAMING was removed — combined with Lombok getters for fields
+                // NOTE: USE_STD_BEAN_NAMING was removed - combined with Lombok getters for fields
                 // like `aEndIbx` (getter getAEndIbx()), it derived a phantom capitalized property
                 // ("AEndIbx") in addition to the @JsonProperty("aEndIbx"), emitting duplicate keys
                 // in request bodies. Default naming derives "aEndIbx", matching the annotation.
@@ -144,7 +150,7 @@ public final class Constants {
     /**
      * Formats a date-time query/body parameter in the API's {@code yyyy-MM-dd'T'HH:mm:ss'Z'} shape.
      *
-     * <p><strong>The input must be UTC wall clock</strong> — which is the SDK-wide convention:
+     * <p><strong>The input must be UTC wall clock</strong> - which is the SDK-wide convention:
      * the core {@code LocalDateTimeDeserializer} parses {@code "...T12:00:00Z"} into a bare
      * {@link java.time.LocalDateTime} of 12:00, so every timestamp the SDK returns is already
      * UTC wall clock and can be formatted here verbatim. The trailing {@code 'Z'} is a literal,
@@ -156,7 +162,24 @@ public final class Constants {
      */
     public static final DateTimeFormatter queryParamFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'");
 
-    public static final DateTimeFormatter DATE_TIME_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd['T'][' ']HH:mm:ss[.SSSSSS][.SSS][.SS][.S][X]");
+    /**
+     * ISO-8601-style wire timestamps: {@code T} or space separator, 0-9 fractional-second digits,
+     * and an optional offset written {@code Z}, {@code +HH}, {@code +HHMM} or {@code +HH:MM}.
+     * (The previous fixed-width fraction pattern rejected 4, 5, 7, 8 and 9 digits, so the spec's own
+     * example {@code 2025-02-04T00:20:54.511118575Z} failed the whole response; it also rejected
+     * {@code +00:00}.) An offset, when present, is applied by
+     * {@code LocalDateTimeDeserializer}, which normalises every value to UTC.
+     */
+    public static final DateTimeFormatter DATE_TIME_FORMAT = new DateTimeFormatterBuilder()
+            .appendPattern("yyyy-MM-dd")
+            .optionalStart().appendLiteral('T').optionalEnd()
+            .optionalStart().appendLiteral(' ').optionalEnd()
+            .appendPattern("HH:mm:ss")
+            .optionalStart().appendFraction(java.time.temporal.ChronoField.NANO_OF_SECOND, 0, 9, true).optionalEnd()
+            .optionalStart().appendOffset("+HH:MM", "Z").optionalEnd()
+            .optionalStart().appendOffset("+HHMM", "Z").optionalEnd()
+            .optionalStart().appendOffset("+HH", "Z").optionalEnd()
+            .toFormatter(Locale.ROOT);
     // Locale is pinned to ENGLISH: the wire emits English day/month/zone names
     // ("Wed Mar 03 2021 14:00:00 GMT"); without an explicit locale the EEE/LLL/zzz text tokens
     // resolve against the JVM default format locale and parsing fails on e.g. de_DE hosts.

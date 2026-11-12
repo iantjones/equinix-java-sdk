@@ -29,6 +29,8 @@ public class RoutingProtocolWrapper extends ResourceImpl<RoutingProtocol> implem
 
     @Delegate(excludes = RoutingProtocolMutability.class)
     private RoutingProtocolJson jsonObject;
+
+    private boolean deleted;
     @Getter
     private final Pageable<RoutingProtocol> serviceClient;
 
@@ -42,8 +44,17 @@ public class RoutingProtocolWrapper extends ResourceImpl<RoutingProtocol> implem
     }
 
     public Boolean delete(String connectionId) {
-        this.jsonObject = ((RoutingProtocolClientImpl)this.serviceClient).delete(connectionId, this.getUuid());
+        RoutingProtocolJson response = ((RoutingProtocolClientImpl)this.serviceClient).delete(connectionId, this.getUuid());
+        if (response != null) {
+            this.jsonObject = response;
+        }
+        this.deleted = true;
         return true;
+    }
+
+    @Override
+    public boolean isDeleted() {
+        return this.deleted;
     }
 
     public void refresh(String connectionId) {

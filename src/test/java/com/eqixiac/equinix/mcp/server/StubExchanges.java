@@ -25,7 +25,7 @@ import java.util.function.Function;
 /**
  * Test doubles for the MCP {@link McpSyncServerExchange}. The real exchange delegates to a live async
  * session; here we subclass it with a {@code null} delegate and override only the two methods the
- * elicitation path touches — {@link McpSyncServerExchange#getClientCapabilities()} and
+ * elicitation path touches - {@link McpSyncServerExchange#getClientCapabilities()} and
  * {@link McpSyncServerExchange#createElicitation}. That lets a handler under test believe it is talking
  * to a client that does (or does not) support elicitation, and answer the prompt however the test wants.
  */

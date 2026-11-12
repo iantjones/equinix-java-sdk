@@ -42,20 +42,20 @@ import static org.junit.jupiter.api.Assertions.*;
  * {@code /v1/projects/{projectId}/oidcProviders}. Exercises the full lifecycle exposed by
  * {@link com.eqixiac.equinix.sts.client.STSOidcProviders}:</p>
  * <ul>
- *   <li>{@code list(...)} — GET (operationId {@code pageOidcProviders}), including the empty-list
+ *   <li>{@code list(...)} - GET (operationId {@code pageOidcProviders}), including the empty-list
  *       case, the {@code includeSuspended}/{@code pageSize} query params and opaque-token
  *       ({@code nextPageToken}) two-page paging.</li>
- *   <li>{@code create(...)} — POST (operationId {@code createOidcProvider}), asserting the request body.</li>
- *   <li>{@code patch(...)} — PATCH (operationId {@code patchOidcProvider}), asserting the request body
+ *   <li>{@code create(...)} - POST (operationId {@code createOidcProvider}), asserting the request body.</li>
+ *   <li>{@code patch(...)} - PATCH (operationId {@code patchOidcProvider}), asserting the request body
  *       including the {@code lastRev} concurrency guard.</li>
- *   <li>{@code delete(...)} — DELETE returning 204 No Content (operationId {@code deleteOidcProvider}).</li>
- *   <li>{@code suspend(...)} / {@code resume(...)} — POST sub-resource actions (operationIds
+ *   <li>{@code delete(...)} - DELETE returning 204 No Content (operationId {@code deleteOidcProvider}).</li>
+ *   <li>{@code suspend(...)} / {@code resume(...)} - POST sub-resource actions (operationIds
  *       {@code suspendOidcProvider} / {@code resumeOidcProvider}).</li>
  *   <li>Error mapping (404 / 409 / 500).</li>
  * </ul>
  *
  * <p>Identifiers here intentionally omit the spec's {@code project:} / {@code idp:} prefixes (the SDK
- * does not enforce those patterns) so that path-segment matching is unambiguous — path parameters are
+ * does not enforce those patterns) so that path-segment matching is unambiguous - path parameters are
  * substituted into the URI verbatim.</p>
  */
 class STSOidcProvidersWireMockTest extends WireMockTestBase {
@@ -164,7 +164,7 @@ class STSOidcProvidersWireMockTest extends WireMockTestBase {
         @DisplayName("500 throws EquinixServerException")
         void serverError() {
             stubErrorInline(wireMock, BASE, 500,
-                    "{\"errorCode\":\"ERR-500\",\"errorMessage\":\"Internal server error\"}");
+                    "{\"error\":{\"errorCode\":\"internal-error\"}}");
 
             assertThrows(EquinixServerException.class, () -> sts.oidcProviders().list(PROJECT_ID));
 

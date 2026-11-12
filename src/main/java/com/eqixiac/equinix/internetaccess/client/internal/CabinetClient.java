@@ -23,7 +23,7 @@ import com.eqixiac.equinix.internetaccess.model.json.CabinetJson;
 
 /**
  * Internal client for the Equinix Internet Access (EIA) v1 product-availability lookup:
- * {@code GET /internetAccess/v1/cabinets} — the cabinets a customer has, optionally narrowed by
+ * {@code GET /internetAccess/v1/cabinets} - the cabinets a customer has, optionally narrowed by
  * cage, IBX and account.
  */
 public interface CabinetClient extends Pageable<Cabinet> {

@@ -34,11 +34,11 @@ import com.eqixiac.equinix.fabric.model.implementation.cloud.CloudProviderType;
 import java.math.BigDecimal;
 
 /**
- * Mirrors the README "Cost &amp; Value Engineering" example verbatim — compiled with the test
+ * Compiles the cost and value example the documentation is built on (docs/design/design-platform.md) - compiled with the test
  * tree so the README can never rot. Update BOTH together.
  *
  * <p>Not a test: no assertions, never invoked by the suite. Its sole job is to fail compilation
- * the moment the cost/value API drifts from what the README's "GlobalPay — Multi-Cloud Egress
+ * the moment the cost/value API drifts from what the README's "GlobalPay - Multi-Cloud Egress
  * Consolidation" worked scenario shows.</p>
  */
 final class ReadmeCostValueShowcase {
@@ -50,11 +50,11 @@ final class ReadmeCostValueShowcase {
      * {@link CustomRateCard} layered over the standard chain, and the 36-month hub TCO with
      * the cabinets / cross-connects / power levers.
      *
-     * @param fabric an authenticated Fabric client (never invoked here — compile-check only)
+     * @param fabric an authenticated Fabric client (never invoked here - compile-check only)
      */
     static void globalPayShowcase(Fabric fabric) {
 
-        // ── Step 1: per-cloud egress economics (standard chain: live → reference) ──
+        // Step 1: per-cloud egress economics (standard chain: live -> reference)
 
         SavingsEstimate aws = fabric.savingsCalculator()
             .egress(40, DataUnit.TERABYTE)
@@ -75,10 +75,10 @@ final class ReadmeCostValueShowcase {
             .calculate();
 
         System.out.println(aws.toMarkdown());
-        System.out.printf("Net monthly savings — AWS %s, Azure %s, GCP %s%n",
+        System.out.printf("Net monthly savings - AWS %s, Azure %s, GCP %s%n",
             aws.getNetMonthlySavings(), azure.getNetMonthlySavings(), gcp.getNetMonthlySavings());
 
-        // ── Step 2: negotiated rates over the standard chain ──
+        // Step 2: negotiated rates over the standard chain
 
         CustomRateCard negotiated = CustomRateCard.builder()
             .currency("USD")
@@ -86,7 +86,7 @@ final class ReadmeCostValueShowcase {
             .connectionRate(ConnectionType.IP_VC, 10_000, MetroCode.DC, Term.MONTH_36,
                             new BigDecimal("300.00"))
             .cloudRouterRate("STANDARD", new BigDecimal("950.00"))
-            // colocation primitives — per cabinet, per cross-connect, per kW:
+            // colocation primitives - per cabinet, per cross-connect, per kW:
             .colocationRate(ColocationItem.CABINET, MetroCode.DC, Term.MONTH_36,
                             new BigDecimal("550.00"), new BigDecimal("500.00"))
             .colocationRate(ColocationItem.CROSS_CONNECT, new BigDecimal("150.00"))
@@ -95,7 +95,7 @@ final class ReadmeCostValueShowcase {
 
         RateCard rates = RateCard.layered(negotiated, RateCard.standardChain(fabric));
 
-        // ── Step 3: the whole hub, over the full term ──
+        // Step 3: the whole hub, over the full term
 
         TcoComparison tco = fabric.tcoComparison()
             .egress(80, DataUnit.TERABYTE)      // consolidated hub: 40 AWS + 25 Azure + 15 GCP
@@ -113,7 +113,7 @@ final class ReadmeCostValueShowcase {
             .rateCard(rates)
             .compare();
 
-        // ── Reading the result ──
+        // Reading the result
 
         CostBreakdown equinix = tco.breakdown(DeploymentArchetype.EQUINIX_INTERCONNECT).orElseThrow();
         equinix.getLineItems().forEach((item, monthly) ->
@@ -128,11 +128,11 @@ final class ReadmeCostValueShowcase {
 
         System.out.println(tco.toMarkdown());
 
-        // Provenance: ask the card itself — every quote carries its source and note.
+        // Provenance: ask the card itself - every quote carries its source and note.
         rates.connection(ConnectionType.IP_VC, 10_000, MetroCode.DC, Term.MONTH_36)
             .ifPresent(q -> System.out.println("connection source: " + q.getSource()));  // CUSTOM
         rates.egress(CloudProviderType.AWS, "us-east-1", EgressPath.PRIVATE, Term.MONTH_36)
             .ifPresent(r -> System.out.println("egress source: " + r.getSource()
-                + " — " + r.getNote()));   // REFERENCE — "Direct Connect DTO, contiguous US"
+                + " - " + r.getNote()));   // REFERENCE - "Direct Connect DTO, contiguous US"
     }
 }

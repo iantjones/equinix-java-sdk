@@ -1,0 +1,18 @@
+{
+  "href": "fabric/v4/asns/3b37813d-f8bf-4152-bf8f-43d661860ba3",
+  "uuid": "3b37813d-f8bf-4152-bf8f-43d661860ba3",
+  "type": "PRIVATE_ASN",
+  "state": "PROVISIONING",
+  "project": {
+    "projectId": "03ed2230-604a-494c-bca2-c042d38d80bc"
+  },
+  "location": {
+    "metroCode": "SV"
+  },
+  "number": null,
+  "range": "16_BIT",
+  "assets": [],
+  "changeLog": {
+    "createdDateTime": "2025-12-01T12:11:22.222351Z"
+  }
+}

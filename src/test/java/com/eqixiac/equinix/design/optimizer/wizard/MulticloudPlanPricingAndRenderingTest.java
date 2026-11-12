@@ -46,9 +46,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * <p>Expected figures for AWS {@code us-east-1} and Google Cloud {@code us-east4} at 10000 Mbps,
  * path tier 1, from the bundled reference data (retrieved 2026-09-21): AWS 12.33 USD/h x 730 h =
  * 9000.90; Google Cloud North America 19.00 USD/h x 730 h = 13870.00; native total 22870.90. The
- * Equinix path under {@code flatRateCard()} is two connections at 500, the reference AWS 10G port
- * 1642.50, the reference Google Cloud 10G port 1676.00, and the Cloud Router at 300 when the flow
- * is its only use: 4618.50. Per-GB: AWS 0.02 + Google Cloud 0.0186 private; 0 + 0 native.</p>
+ * Equinix path under {@code flatRateCard()} is two connections at 500, the reference AWS 10G hosted
+ * connection 1810.40, the reference Google Cloud 10G Partner VLAN attachment 1722.80 (2026-11 bundle), and the Cloud Router at 300 when the flow
+ * is its only use: 4833.20. Per-GB: AWS 0.02 + Google Cloud 0.0186 private; 0 + 0 native.</p>
  */
 @DisplayName("Native multicloud links: pricing, repricing and rendering")
 class MulticloudPlanPricingAndRenderingTest {
@@ -63,7 +63,7 @@ class MulticloudPlanPricingAndRenderingTest {
         return wizard(MulticloudWizardFixtures.awsGcpAtDc(10_000)).plan();
     }
 
-    // ── Pricing ──
+    // Pricing
 
     @Test
     @DisplayName("the link carries the two-sided native quote, the Equinix-path cost for the same flow and the break-even")
@@ -78,16 +78,16 @@ class MulticloudPlanPricingAndRenderingTest {
                 pricing.getNativeQuote().side(CloudProviderType.GOOGLE_CLOUD).orElseThrow().getMonthlyRecurring());
         assertTrue(pricing.isNativePriced());
 
-        assertEquals(new BigDecimal("4618.50"), pricing.getEquinixFixedMonthly());
+        assertEquals(new BigDecimal("4833.20"), pricing.getEquinixFixedMonthly());
         assertEquals("USD", pricing.getEquinixCurrency());
         assertEquals(5, pricing.getEquinixComponents().size(), "two connections, two cloud ports, one Cloud Router");
         assertEquals(new BigDecimal("0.0386"), pricing.getEquinixPerGb());
         assertEquals(0, BigDecimal.ZERO.compareTo(pricing.getNativePerGb()));
 
         BigDecimal expected = MulticloudPathComparison.breakEvenSustainedMbps(new BigDecimal("22870.90"),
-                new BigDecimal("4618.50"), new BigDecimal("0.0386"), BigDecimal.ZERO).orElseThrow();
+                new BigDecimal("4833.20"), new BigDecimal("0.0386"), BigDecimal.ZERO).orElseThrow();
         assertEquals(expected, pricing.getBreakEvenSustainedMbps(), "the value layer's formula, not a second one");
-        assertEquals(new BigDecimal("2878.9"), pricing.getBreakEvenSustainedMbps());
+        assertEquals(new BigDecimal("2845.0"), pricing.getBreakEvenSustainedMbps());
     }
 
     @Test
@@ -96,9 +96,9 @@ class MulticloudPlanPricingAndRenderingTest {
         String recommendation = comparePlan().getMulticloudLinks().get(0).getRecommendation();
 
         assertTrue(recommendation.contains("native USD 22870.90"), recommendation);
-        assertTrue(recommendation.contains("Equinix path USD 4618.50 plus 0.0386 USD per GB"), recommendation);
-        assertTrue(recommendation.contains("Break-even at 2878.9 Mbps sustained, both directions summed "
-                + "(1439.5 Mbps each way"), recommendation);
+        assertTrue(recommendation.contains("Equinix path USD 4833.20 plus 0.0386 USD per GB"), recommendation);
+        assertTrue(recommendation.contains("Break-even at 2845.0 Mbps sustained, both directions summed "
+                + "(1422.5 Mbps each way"), recommendation);
         assertTrue(recommendation.contains("Below that rate the Equinix path costs less per month; above it the "
                 + "native link does."), recommendation);
         assertTrue(recommendation.contains("14% sustained utilization of a 10000 Mbps link"), recommendation);
@@ -113,7 +113,7 @@ class MulticloudPlanPricingAndRenderingTest {
 
         MulticloudLinkPricing pricing = wizard(withSite).plan().getMulticloudLinks().get(0).getPricing();
 
-        assertEquals(new BigDecimal("4318.50"), pricing.getEquinixFixedMonthly(), "4618.50 less the 300 Cloud Router");
+        assertEquals(new BigDecimal("4533.20"), pricing.getEquinixFixedMonthly(), "4833.20 less the 300 Cloud Router");
         assertEquals(4, pricing.getEquinixComponents().size());
         assertTrue(pricing.getNotes().stream().anyMatch(n -> n.startsWith("Cloud Router FCR-DC is not in the Equinix "
                 + "path cost: the request declares user sites") && n.contains("overstates the break-even rate")),
@@ -146,21 +146,22 @@ class MulticloudPlanPricingAndRenderingTest {
     }
 
     @Test
-    @DisplayName("a missing reference port figure withholds the Equinix-path cost instead of under-stating it")
-    void missingPortFigureWithholdsEquinixCost() {
+    @DisplayName("an Oracle leg without an exact hosted tier is priced at the next FastConnect tier up, not withheld")
+    void oracleLegIsPricedAtTheNextFastConnectTier() {
         DeploymentPlan plan = wizard(MulticloudWizardFixtures.twoCloudResult(CloudProviderType.AWS, "AWS", "us-east-1",
                 CloudProviderType.ORACLE_CLOUD, "OCI", "us-ashburn-1", 3000)).plan();
         PlannedMulticloudInterconnect link = plan.getMulticloudLinks().get(0);
 
         assertEquals(5000, link.getCoveringTierMbps(), "3000 Mbps rounds up to Oracle's 5G option");
         assertTrue(link.isRoundedUp());
-        assertNull(link.getPricing().getEquinixFixedMonthly());
-        assertTrue(link.getPricing().getNotes().contains(
-                "Equinix path cost withheld: no reference interconnect-port figure for ORACLE_CLOUD."));
+        // Since the 2026-11 bundle Oracle FastConnect partner rows exist (1, 10, 100 Gbps): 5000 Mbps rounds up
+        // to 10 Gbps, 1.275 USD/h x 730 = 930.75; AWS 5G hosted 1.65 x 730 = 1204.50; two connections at 500
+        // and the 300 Cloud Router: 3435.25.
+        assertEquals(new BigDecimal("3435.25"), link.getPricing().getEquinixFixedMonthly());
         assertNull(link.getPricing().getNativeMonthly(), "neither side publishes a 5000 Mbps price");
     }
 
-    // ── Separation from the Equinix totals ──
+    // Separation from the Equinix totals
 
     @Test
     @DisplayName("PlanPricing reports alternatives separately: the Equinix totals equal those of EQUINIX_ONLY")
@@ -202,7 +203,7 @@ class MulticloudPlanPricingAndRenderingTest {
                 "the Equinix total is the remaining Cloud Router only");
     }
 
-    // ── Currency honesty ──
+    // Currency honesty
 
     @Test
     @DisplayName("sides in different currencies are never summed: the native figure is withheld and the note names both subtotals")
@@ -248,12 +249,12 @@ class MulticloudPlanPricingAndRenderingTest {
         assertEquals("EUR", pricing.getNativeCurrency());
         assertEquals("USD", pricing.getEquinixCurrency());
         assertNull(pricing.getBreakEvenSustainedMbps(), "EUR and USD are not compared");
-        assertTrue(plan.toMarkdown().contains("| €20000.00 | $4618.50 | n/a | ALTERNATIVE |"), plan.toMarkdown());
+        assertTrue(plan.toMarkdown().contains("| €20000.00 | $4833.20 | n/a | ALTERNATIVE |"), plan.toMarkdown());
         assertEquals("EUR", plan.getPricing().getNativeAlternativeCurrency());
         assertEquals("USD", plan.getPricing().getCurrency(), "the Equinix total keeps its own currency");
     }
 
-    // ── reprice ──
+    // reprice
 
     @Test
     @DisplayName("reprice() refreshes the native-link pricing and recommendation against the builder's rate card")
@@ -303,7 +304,7 @@ class MulticloudPlanPricingAndRenderingTest {
         DeploymentPlan repriced = builder.reprice(plan);
 
         MulticloudLinkPricing pricing = repriced.getMulticloudLinks().get(0).getPricing();
-        assertEquals(new BigDecimal("4618.50"), pricing.getEquinixFixedMonthly());
+        assertEquals(new BigDecimal("4833.20"), pricing.getEquinixFixedMonthly());
         assertTrue(pricing.getEquinixComponents().get(0).contains("FCR-DC-to-aws, omitted from the plan"));
         assertEquals(new BigDecimal("22870.90"), repriced.getPricing().getNativeReplacementMonthlyCost());
     }
@@ -348,8 +349,8 @@ class MulticloudPlanPricingAndRenderingTest {
     @Test
     @DisplayName("a reversed crossing (native fee lower, native per-GB higher) is a break-even with the Equinix path cheaper above it")
     void reversedCrossingIsStatedWithItsSense() {
-        // Native 2,000 flat + 0.10 USD/GB; Equinix 4,618.50 flat + 0.0386 USD/GB. The lines cross at
-        // (4,618.50 - 2,000) / (0.10 - 0.0386) = 42,646.6 GB each way = 259.6 Mbps summed; above
+        // Native 2,000 flat + 0.10 USD/GB; Equinix 4,833.20 flat + 0.0386 USD/GB. The lines cross at
+        // (4,833.20 - 2,000) / (0.10 - 0.0386) = 46,143.3 GB each way = 280.9 Mbps summed; above
         // it the Equinix path costs less. The previous text asserted that the native link costs
         // the same or less at every volume.
         RateCard reversed = RateCard.layered(CustomRateCard.builder().currency("USD")
@@ -365,8 +366,8 @@ class MulticloudPlanPricingAndRenderingTest {
         MulticloudLinkPricing pricing = link.getPricing();
 
         assertEquals(new BigDecimal("2000.00"), pricing.getNativeMonthly());
-        assertEquals(new BigDecimal("4618.50"), pricing.getEquinixFixedMonthly());
-        assertEquals(new BigDecimal("259.6"), pricing.getBreakEvenSustainedMbps());
+        assertEquals(new BigDecimal("4833.20"), pricing.getEquinixFixedMonthly());
+        assertEquals(new BigDecimal("280.9"), pricing.getBreakEvenSustainedMbps());
         assertFalse(pricing.isNativeCheaperAboveBreakEven());
         assertTrue(link.getRecommendation().contains("Below that rate the native link costs less per month; above it "
                 + "the Equinix path does."), link.getRecommendation());
@@ -415,7 +416,7 @@ class MulticloudPlanPricingAndRenderingTest {
         org.mockito.Mockito.verify(prices, org.mockito.Mockito.times(4)).list(org.mockito.ArgumentMatchers.any());
     }
 
-    // ── valueRealization() on a plan that depends on a native link ──
+    // valueRealization() on a plan that depends on a native link
 
     @Test
     @DisplayName("valueRealization() nets a REPLACEMENT link's fee and prices native-only clouds at the link's per-GB rate")
@@ -452,7 +453,7 @@ class MulticloudPlanPricingAndRenderingTest {
         String markdown = vr.toMarkdown();
         assertTrue(markdown.contains("| AWS (native link) | 100000 |"), markdown);
         assertTrue(markdown.contains("Native multicloud link fees the plan depends on (billed by the cloud providers): "
-                + "−USD 22870.90/mo"), markdown);
+                + "-USD 22870.90/mo"), markdown);
 
         // The EQUINIX_ONLY plan of the same workload: Fabric PRIVATE rates, no native fee, net 15,020.
         com.eqixiac.equinix.design.optimizer.wizard.model.PlanValueRealization equinixOnly =
@@ -521,7 +522,7 @@ class MulticloudPlanPricingAndRenderingTest {
                 () -> wizard(MulticloudWizardFixtures.awsGcpAtDc(10_000)).multicloudPathTier(6));
     }
 
-    // ── Rendering ──
+    // Rendering
 
     @Test
     @DisplayName("toMarkdown() renders a 'Native multicloud alternatives' section with the table row, recommendation, sources and steps")
@@ -530,7 +531,7 @@ class MulticloudPlanPricingAndRenderingTest {
 
         assertTrue(markdown.contains("## Native multicloud alternatives\n"), markdown);
         assertTrue(markdown.contains("| aws-gcp-DC | AWS us-east-1 <-> GOOGLE_CLOUD us-east4 | GA (as of 2026-09-21) "
-                + "| 10000 Mbps | $22870.90 | $4618.50 | 2878.9 Mbps | ALTERNATIVE |"), markdown);
+                + "| 10000 Mbps | $22870.90 | $4833.20 | 2845.0 Mbps | ALTERNATIVE |"), markdown);
         assertTrue(markdown.contains("- **aws-gcp-DC**: Fixed monthly cost: native USD 22870.90"), markdown);
         assertTrue(markdown.contains("  - Workloads: Replication"), markdown);
         assertTrue(markdown.contains("  - Native link, AWS side: $9000.90 per month (REFERENCE)"), markdown);
@@ -543,7 +544,7 @@ class MulticloudPlanPricingAndRenderingTest {
         assertTrue(markdown.contains("_Native multicloud link charges are billed by the cloud providers and are not "
                 + "included in the table above; see Native multicloud alternatives._"), markdown);
         assertTrue(markdown.contains("| **Total Monthly** | **$1300** |"), "the Equinix total is unchanged");
-        assertTrue(markdown.contains("`plan.execute()` does not create the 1 native multicloud link(s)"), markdown);
+        assertTrue(markdown.contains("Execution does not create the 1 native multicloud link(s)"), markdown);
     }
 
     @Test

@@ -21,7 +21,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.eqixiac.equinix</groupId>
     <artifactId>equinix-sdk-java</artifactId>
-    <version>3.0.0</version>
+    <version>4.0.0</version>
     <packaging>jar</packaging>
 
     <name>Equinix SDK for Java</name>
@@ -51,75 +51,139 @@
     </scm>
 
     <properties>
-        <maven.compiler.source>21</maven.compiler.source>
-        <maven.compiler.target>21</maven.compiler.target>
+        <maven.compiler.release>21</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <jackson.version>2.21.1</jackson.version>
-        <junit-jupiter.version>5.10.3</junit-jupiter.version>
+        <!-- Reproducible builds: fixed entry timestamps in every archive. Bump on release. -->
+        <project.build.outputTimestamp>2026-11-12T00:00:00Z</project.build.outputTimestamp>
+
+        <!-- Dependency versions -->
+        <jackson.version>2.21.8</jackson.version>
+        <junit.version>5.14.4</junit.version>
+        <slf4j.version>2.0.20</slf4j.version>
+        <lombok.version>1.18.48</lombok.version>
+        <mcp.version>2.1.0</mcp.version>
+        <mockito.version>5.24.0</mockito.version>
+        <wiremock.version>3.13.2</wiremock.version>
+
+        <!-- Plugin versions (every default-lifecycle plugin is pinned) -->
+        <plugin.clean.version>3.4.1</plugin.clean.version>
+        <plugin.resources.version>3.3.1</plugin.resources.version>
+        <plugin.compiler.version>3.14.1</plugin.compiler.version>
+        <plugin.surefire.version>3.6.1</plugin.surefire.version>
+        <plugin.jar.version>3.4.2</plugin.jar.version>
+        <plugin.source.version>3.4.0</plugin.source.version>
+        <plugin.javadoc.version>3.12.0</plugin.javadoc.version>
+        <plugin.shade.version>3.6.2</plugin.shade.version>
+        <plugin.install.version>3.1.4</plugin.install.version>
+        <plugin.deploy.version>3.1.4</plugin.deploy.version>
+        <plugin.site.version>3.21.0</plugin.site.version>
+        <plugin.project-info.version>3.9.0</plugin.project-info.version>
+        <plugin.enforcer.version>3.6.2</plugin.enforcer.version>
+        <plugin.extra-enforcer-rules.version>1.11.0</plugin.extra-enforcer-rules.version>
+        <plugin.jacoco.version>0.8.16</plugin.jacoco.version>
+        <plugin.gpg.version>3.2.8</plugin.gpg.version>
+        <plugin.central-publishing.version>0.10.0</plugin.central-publishing.version>
+        <plugin.dependency-check.version>12.2.2</plugin.dependency-check.version>
+        <plugin.wrapper.version>3.3.4</plugin.wrapper.version>
+        <plugin.dependency.version>3.9.0</plugin.dependency.version>
+        <plugin.versions.version>2.25.1</plugin.versions.version>
+
+        <!-- Live tiers: full CRUD and scenarios need -DconfirmDestructive=true as well as the profile. -->
+        <confirmDestructive>false</confirmDestructive>
     </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.fasterxml.jackson</groupId>
+                <artifactId>jackson-bom</artifactId>
+                <version>${jackson.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.junit</groupId>
+                <artifactId>junit-bom</artifactId>
+                <version>${junit.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <dependencies>
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
-            <version>2.0.13</version>
+            <version>${slf4j.version}</version>
         </dependency>
         <!--
           slf4j-simple serves two roles: the test suites' logging backend (runtime scope keeps
           it on the test classpath) and the logging backend bundled into the shaded mcp-server
           jar (the shade plugin bundles compile+runtime artifacts; test scope would leave the
           runnable server jar without a binding). It is <optional> so library consumers never
-          inherit a logging BINDING from this SDK — only the slf4j-api facade above is a real
+          inherit a logging BINDING from this SDK - only the slf4j-api facade above is a real
           transitive dependency. Locked by DependencyHygieneTest.
         -->
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-simple</artifactId>
-            <version>2.0.13</version>
+            <version>${slf4j.version}</version>
             <scope>runtime</scope>
+            <optional>true</optional>
+        </dependency>
+        <!--
+          Azure Service Bus client: the transport behind the Equinix Messaging Gateway (AMQP 1.0).
+          Used ONLY by com.eqixiac.equinix.messaging.transport.servicebus. <optional> so SDK users
+          who do not consume EMG never inherit it (or its Netty/Reactor/proton-j transitives); EMG
+          users add it to their own pom. Pinned to 7.18.0 (built on reactor-core 3.7.x) rather than the
+          latest 7.19.x (reactor-core 3.8.x) because Maven mediation resolves reactor-core to 3.7.0 via
+          the nearer optional mcp-core dependency. Locked by MessagingDependencyHygieneTest.
+        -->
+        <dependency>
+            <groupId>com.azure</groupId>
+            <artifactId>azure-messaging-servicebus</artifactId>
+            <version>7.18.0</version>
             <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
-            <version>${junit-jupiter.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-engine</artifactId>
-            <version>${junit-jupiter.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-params</artifactId>
-            <version>${junit-jupiter.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.junit.platform</groupId>
             <artifactId>junit-platform-launcher</artifactId>
-            <version>1.10.3</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
-            <version>5.23.0</version>
+            <version>${mockito.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-junit-jupiter</artifactId>
-            <version>5.23.0</version>
+            <version>${mockito.version}</version>
             <scope>test</scope>
         </dependency>
+        <!-- 3.5.4 bundled a Jetty 11 with published CVEs; 3.13.x bundles a patched Jetty 11. -->
         <dependency>
             <groupId>org.wiremock</groupId>
             <artifactId>wiremock-standalone</artifactId>
-            <version>3.5.4</version>
+            <version>${wiremock.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -138,35 +202,36 @@
             <artifactId>commons-codec</artifactId>
             <version>1.17.1</version>
         </dependency>
+        <!-- Jackson versions come from the jackson-bom import above (one line for every module). -->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-core</artifactId>
-            <version>${jackson.version}</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-            <version>${jackson.version}</version>
+        </dependency>
+        <!-- YAML form of a DesignSpec (design.spec.DesignSpecIO); same Jackson line as databind. -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.dataformat</groupId>
+            <artifactId>jackson-dataformat-yaml</artifactId>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-annotations</artifactId>
-            <version>2.21</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.datatype</groupId>
             <artifactId>jackson-datatype-jdk8</artifactId>
-            <version>${jackson.version}</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.datatype</groupId>
             <artifactId>jackson-datatype-jsr310</artifactId>
-            <version>${jackson.version}</version>
         </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>1.18.42</version>
+            <version>${lombok.version}</version>
             <scope>provided</scope>
         </dependency>
         <!--
@@ -180,46 +245,184 @@
         <dependency>
             <groupId>io.modelcontextprotocol.sdk</groupId>
             <artifactId>mcp-core</artifactId>
-            <version>2.0.0</version>
+            <version>${mcp.version}</version>
             <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>io.modelcontextprotocol.sdk</groupId>
             <artifactId>mcp-json-jackson2</artifactId>
-            <version>2.0.0</version>
+            <version>${mcp.version}</version>
             <optional>true</optional>
         </dependency>
     </dependencies>
 
     <build>
+        <!--
+          Every plugin the default lifecycle (and this build) uses is pinned here, so a build
+          never depends on the defaults baked into whichever Maven version runs it.
+        -->
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-clean-plugin</artifactId>
+                    <version>${plugin.clean.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-resources-plugin</artifactId>
+                    <version>${plugin.resources.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>${plugin.compiler.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>${plugin.surefire.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-jar-plugin</artifactId>
+                    <version>${plugin.jar.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-install-plugin</artifactId>
+                    <version>${plugin.install.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-deploy-plugin</artifactId>
+                    <version>${plugin.deploy.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-site-plugin</artifactId>
+                    <version>${plugin.site.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-project-info-reports-plugin</artifactId>
+                    <version>${plugin.project-info.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-dependency-plugin</artifactId>
+                    <version>${plugin.dependency.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-wrapper-plugin</artifactId>
+                    <version>${plugin.wrapper.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.owasp</groupId>
+                    <artifactId>dependency-check-maven</artifactId>
+                    <version>${plugin.dependency-check.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>versions-maven-plugin</artifactId>
+                    <version>${plugin.versions.version}</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+
         <plugins>
+            <!--
+              Build-environment and dependency hygiene. Hard failures: Java 21+, Maven 3.9+, and no
+              class shipped by two different artifacts on the compile/runtime classpath.
+              Dependency convergence is reported as a WARNING (the optional MCP and Azure clients
+              legitimately mediate a few transitive versions, e.g. reactor-core).
+            -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <version>${plugin.enforcer.version}</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>extra-enforcer-rules</artifactId>
+                        <version>${plugin.extra-enforcer-rules.version}</version>
+                    </dependency>
+                </dependencies>
+                <executions>
+                    <execution>
+                        <id>enforce-build-environment</id>
+                        <goals><goal>enforce</goal></goals>
+                        <configuration>
+                            <rules>
+                                <requireJavaVersion>
+                                    <version>[21,)</version>
+                                </requireJavaVersion>
+                                <requireMavenVersion>
+                                    <version>[3.9,)</version>
+                                </requireMavenVersion>
+                                <requirePluginVersions>
+                                    <message>Pin every plugin version in pluginManagement.</message>
+                                    <banSnapshots>true</banSnapshots>
+                                </requirePluginVersions>
+                                <banDuplicateClasses>
+                                    <scopes>
+                                        <scope>compile</scope>
+                                        <scope>runtime</scope>
+                                    </scopes>
+                                    <ignoreClasses>
+                                        <ignoreClass>module-info</ignoreClass>
+                                        <ignoreClass>META-INF.versions.*</ignoreClass>
+                                    </ignoreClasses>
+                                    <findAllDuplicates>true</findAllDuplicates>
+                                    <ignoreWhenIdentical>true</ignoreWhenIdentical>
+                                </banDuplicateClasses>
+                            </rules>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>warn-dependency-convergence</id>
+                        <goals><goal>enforce</goal></goals>
+                        <configuration>
+                            <fail>false</fail>
+                            <rules>
+                                <dependencyConvergence/>
+                            </rules>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.13.0</version>
                 <configuration>
                     <release>21</release>
                     <annotationProcessorPaths>
                         <path>
                             <groupId>org.projectlombok</groupId>
                             <artifactId>lombok</artifactId>
-                            <version>1.18.42</version>
+                            <version>${lombok.version}</version>
                         </path>
                     </annotationProcessorPaths>
                 </configuration>
             </plugin>
+            <!--
+              Default suite: everything that is neither a WireMock contract test nor a live tier.
+              Tags: wiremock (-Pwiremock), integration-readonly / -dryrun / -dryrun-existing /
+              -full / -scenario (the live profiles below), mcp-jar-smoke is NOT excluded: the
+              shaded-jar smoke test skips itself unless the jar exists (CI builds it first).
+            -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>3.3.1</version>
                 <configuration>
-                    <excludedGroups>wiremock,integration-readonly,integration-dryrun,integration-full,integration-scenario</excludedGroups>
+                    <excludedGroups>wiremock,integration-readonly,integration-dryrun,integration-dryrun-existing,integration-full,integration-scenario</excludedGroups>
                 </configuration>
             </plugin>
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
-                <version>0.8.13</version>
+                <version>${plugin.jacoco.version}</version>
                 <executions>
                     <execution>
                         <id>prepare-agent</id>
@@ -235,7 +438,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-source-plugin</artifactId>
-                <version>3.0.1</version>
+                <version>${plugin.source.version}</version>
                 <executions>
                     <execution>
                         <id>attach-sources</id>
@@ -247,7 +450,7 @@
             </plugin>
             <!--
               Javadoc reference-integrity gate. The previous <doclint>none</doclint> passed
-              -Xdoclint:none, which disabled EVERY doclint group including 'reference' — so a broken
+              -Xdoclint:none, which disabled EVERY doclint group including 'reference' - so a broken
               {@link} (e.g. to a Lombok-generated getter, which does not exist in the raw source
               javadoc sees) produced ZERO warnings, and the plugin's failOnWarnings default (false)
               meant even emitted warnings never failed `mvn javadoc:javadoc`. Now:
@@ -255,17 +458,17 @@
                   are reported; other doclint groups stay off so the gate is precisely scoped), and
                 - <failOnWarnings>true</failOnWarnings> fails the build on any remaining
                   warning-level output.
-              House rule (see MEMORY / CONTRIBUTING): never {@link} a Lombok-generated getter —
+              House rule (see MEMORY / CONTRIBUTING): never {@link} a Lombok-generated getter - 
               use {@code getX()} instead. This configuration is plugin-level, so it applies both to
               the `javadoc:javadoc` gate goal and the attach-javadocs jar execution.
             -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
-                <version>3.6.3</version>
+                <version>${plugin.javadoc.version}</version>
                 <configuration>
                     <javadocExecutable>${java.home}/bin/javadoc</javadocExecutable>
-                    <source>21</source>
+                    <release>21</release>
                     <doclint>reference</doclint>
                     <failOnWarnings>true</failOnWarnings>
                 </configuration>
@@ -282,22 +485,27 @@
               Runnable embedded MCP server jar (target/${artifactId}-${version}-mcp-server.jar):
               `java -jar` it from Claude Desktop / Claude Code / Cursor / VS Code. Shade attaches
               it as the SECONDARY artifact with classifier 'mcp-server' (shadedArtifactAttached),
-              so the primary library jar and its pom are untouched — createDependencyReducedPom
+              so the primary library jar and its pom are untouched - createDependencyReducedPom
               is explicitly false because the default (true) would rewrite the pom that
               install/deploy publish. The uber jar bundles the SDK plus every compile/runtime
               dependency: the two <optional> io.modelcontextprotocol.sdk artifacts and their
               transitives (reactor-core, networknt json-schema-validator, ...), Jackson,
-              HttpClient, slf4j-api and the <optional> slf4j-simple binding — a project's OWN
+              HttpClient, slf4j-api and the <optional> slf4j-simple binding - a project's OWN
               optional dependencies are on its runtime classpath (optionality only stops
               consumers inheriting them), so shade includes them. Lombok is provided scope and
               is excluded automatically. Jar signature files are stripped (invalid once
               repackaged) and JPMS module descriptors dropped (a multi-module uber jar cannot
               carry any single module-info).
+
+              The optional Azure Service Bus client (Messaging Gateway transport) and everything
+              that reaches the build only through it (Azure core, Netty, reactor-netty, proton-j,
+              MSAL/Nimbus auth) are EXCLUDED: the MCP server never uses messaging, and bundling
+              them would add tens of MB. reactor-core stays (mcp-core needs it).
             -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>3.6.2</version>
+                <version>${plugin.shade.version}</version>
                 <executions>
                     <execution>
                         <id>mcp-server-jar</id>
@@ -309,9 +517,26 @@
                             <shadedArtifactAttached>true</shadedArtifactAttached>
                             <shadedClassifierName>mcp-server</shadedClassifierName>
                             <createDependencyReducedPom>false</createDependencyReducedPom>
+                            <artifactSet>
+                                <excludes>
+                                    <!-- Messaging Gateway transport (optional azure-messaging-servicebus) and
+                                         everything that reaches the build only through it. -->
+                                    <exclude>com.azure:*</exclude>
+                                    <exclude>com.microsoft.azure:*</exclude>
+                                    <exclude>io.netty:*</exclude>
+                                    <exclude>io.projectreactor.netty:*</exclude>
+                                    <exclude>org.apache.qpid:*</exclude>
+                                </excludes>
+                            </artifactSet>
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                     <mainClass>com.eqixiac.equinix.mcp.server.EquinixMcpServerMain</mainClass>
+                                    <!-- EquinixMcpServer.serverVersion() reads Implementation-Version;
+                                         without it the server reports 0.0.0-dev in serverInfo. -->
+                                    <manifestEntries>
+                                        <Implementation-Title>${project.artifactId}</Implementation-Title>
+                                        <Implementation-Version>${project.version}</Implementation-Version>
+                                    </manifestEntries>
                                 </transformer>
                                 <!-- Merge META-INF/services across Jackson/Reactor/etc. -->
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
@@ -333,34 +558,6 @@
                     </execution>
                 </executions>
             </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-gpg-plugin</artifactId>
-                <version>3.2.7</version>
-                <executions>
-                    <execution>
-                        <id>sign-artifacts</id>
-                        <phase>verify</phase>
-                        <goals>
-                            <goal>sign</goal>
-                        </goals>
-                        <configuration>
-                            <keyname>${gpg.keyname}</keyname>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.sonatype.central</groupId>
-                <artifactId>central-publishing-maven-plugin</artifactId>
-                <version>0.10.0</version>
-                <extensions>true</extensions>
-                <configuration>
-                    <publishingServerId>central</publishingServerId>
-                    <autoPublish>true</autoPublish>
-                    <waitUntil>published</waitUntil>
-                </configuration>
-            </plugin>
         </plugins>
     </build>
 
@@ -369,12 +566,54 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-report-plugin</artifactId>
-                <version>3.3.1</version>
+                <version>${plugin.surefire.version}</version>
             </plugin>
         </plugins>
     </reporting>
 
     <profiles>
+        <!--
+            Release: GPG signing and the Central Portal publishing extension. Only `release`
+            needs a signing key, so `mvn verify` / `mvn install` work on any machine.
+                mvn -Prelease deploy -Dgpg.keyname=KEYID
+            scripts/release.ps1 and scripts/release.sh run every CI gate before this.
+        -->
+        <profile>
+            <id>release</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>${plugin.gpg.version}</version>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                                <configuration>
+                                    <keyname>${gpg.keyname}</keyname>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.sonatype.central</groupId>
+                        <artifactId>central-publishing-maven-plugin</artifactId>
+                        <version>${plugin.central-publishing.version}</version>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <publishingServerId>central</publishingServerId>
+                            <autoPublish>true</autoPublish>
+                            <waitUntil>published</waitUntil>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
         <profile>
             <id>wiremock</id>
             <build>
@@ -382,7 +621,6 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
-                        <version>3.3.1</version>
                         <configuration>
                             <groups>wiremock</groups>
                             <excludedGroups combine.self="override"></excludedGroups>
@@ -391,6 +629,24 @@
                 </plugins>
             </build>
         </profile>
+
+        <!--
+            Live tiers. The TAG layer selects what runs; IntegrationTestBase/LiveTierExtension add a
+            runtime gate on top. JUnit @Nested classes inherit the outer class's tags, so each
+            profile EXCLUDES every more-dangerous tag explicitly rather than relying on <groups>.
+
+              integration-readonly         GET / list / search only.
+              integration-dryrun           + dryRun=true CREATES and validate endpoints (leave nothing).
+              integration-dryrun-existing  dryRun=true UPDATES against pre-existing resources only.
+              integration-full             full CRUD; also needs -DconfirmDestructive=true.
+              integration-scenario         multi-step scenarios that create real resources;
+                                           also needs -DconfirmDestructive=true.
+
+            Credentials come from the EQUINIX_ACCESS_KEY / EQUINIX_SECRET_KEY environment
+            variables, never system properties: surefire copies system properties (not environment
+            variables) into the <properties> element of TEST-*.xml. enablePropertiesElement=false
+            drops that element for passing tests as well.
+        -->
         <profile>
             <id>integration-readonly</id>
             <build>
@@ -398,24 +654,13 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
-                        <version>3.3.1</version>
                         <configuration>
                             <groups>integration-readonly</groups>
-                            <excludedGroups combine.self="override"></excludedGroups>
-                            <systemProperties>
-                                <property>
-                                    <name>accessKey</name>
-                                    <value>${auth.access}</value>
-                                </property>
-                                <property>
-                                    <name>secretKey</name>
-                                    <value>${auth.secret}</value>
-                                </property>
-                                <property>
-                                    <name>testMode</name>
-                                    <value>readonly</value>
-                                </property>
-                            </systemProperties>
+                            <excludedGroups>wiremock,integration-dryrun,integration-dryrun-existing,integration-full,integration-scenario</excludedGroups>
+                            <enablePropertiesElement>false</enablePropertiesElement>
+                            <systemPropertyVariables>
+                                <testMode>readonly</testMode>
+                            </systemPropertyVariables>
                         </configuration>
                     </plugin>
                 </plugins>
@@ -428,24 +673,33 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
-                        <version>3.3.1</version>
                         <configuration>
                             <groups>integration-readonly,integration-dryrun</groups>
-                            <excludedGroups combine.self="override"></excludedGroups>
-                            <systemProperties>
-                                <property>
-                                    <name>accessKey</name>
-                                    <value>${auth.access}</value>
-                                </property>
-                                <property>
-                                    <name>secretKey</name>
-                                    <value>${auth.secret}</value>
-                                </property>
-                                <property>
-                                    <name>testMode</name>
-                                    <value>dryrun</value>
-                                </property>
-                            </systemProperties>
+                            <excludedGroups>wiremock,integration-dryrun-existing,integration-full,integration-scenario</excludedGroups>
+                            <enablePropertiesElement>false</enablePropertiesElement>
+                            <systemPropertyVariables>
+                                <testMode>dryrun</testMode>
+                            </systemPropertyVariables>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>integration-dryrun-existing</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <groups>integration-dryrun-existing</groups>
+                            <excludedGroups>wiremock,integration-full,integration-scenario</excludedGroups>
+                            <enablePropertiesElement>false</enablePropertiesElement>
+                            <systemPropertyVariables>
+                                <testMode>dryrun</testMode>
+                                <dryRunExisting>true</dryRunExisting>
+                            </systemPropertyVariables>
                         </configuration>
                     </plugin>
                 </plugins>
@@ -458,28 +712,34 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
-                        <version>3.3.1</version>
                         <configuration>
                             <groups>integration-readonly,integration-dryrun,integration-full</groups>
-                            <excludedGroups combine.self="override"></excludedGroups>
-                            <systemProperties>
-                                <property>
-                                    <name>accessKey</name>
-                                    <value>${auth.access}</value>
-                                </property>
-                                <property>
-                                    <name>secretKey</name>
-                                    <value>${auth.secret}</value>
-                                </property>
-                                <property>
-                                    <name>testMode</name>
-                                    <value>full</value>
-                                </property>
-                                <property>
-                                    <name>confirmDestructive</name>
-                                    <value>${confirm.destructive}</value>
-                                </property>
-                            </systemProperties>
+                            <excludedGroups>wiremock,integration-dryrun-existing,integration-scenario</excludedGroups>
+                            <enablePropertiesElement>false</enablePropertiesElement>
+                            <systemPropertyVariables>
+                                <testMode>full</testMode>
+                                <confirmDestructive>${confirmDestructive}</confirmDestructive>
+                            </systemPropertyVariables>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>integration-scenario</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <groups>integration-scenario</groups>
+                            <excludedGroups>wiremock,integration-dryrun-existing</excludedGroups>
+                            <enablePropertiesElement>false</enablePropertiesElement>
+                            <systemPropertyVariables>
+                                <testMode>full</testMode>
+                                <confirmDestructive>${confirmDestructive}</confirmDestructive>
+                            </systemPropertyVariables>
                         </configuration>
                     </plugin>
                 </plugins>
@@ -487,79 +747,139 @@
         </profile>
 
         <!--
-            Coverage gate. Opt-in (so a partial `mvn test` never false-fails on incomplete
-            coverage data). Intended to run AFTER both test profiles have populated the merged
-            target/jacoco.exec, e.g.:
-                mvn clean test            (default suite -> jacoco.exec)
-                mvn -P wiremock test      (appends the wiremock suite, no clean)
-                mvn -P coverage jacoco:check
-            Thresholds are set just below current combined coverage to catch regressions.
+            Coverage gate, self-contained:   mvn -Pcoverage verify
+            The profile adds a second surefire execution that runs the WireMock suite in the same
+            build (appending to target/jacoco.exec), then writes the combined report and runs
+            jacoco:check at `verify`. Floors sit about one point under the measured combined
+            coverage and only ever move up. Measured 2026-11-12 (1911 default + 1459 WireMock
+            tests): line 87.7%, instruction 89.3%, branch 74.3%; weakest package 35.5% line
+            (internetaccess.model.implementation).
         -->
         <profile>
             <id>coverage</id>
             <build>
                 <plugins>
                     <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>wiremock-tests</id>
+                                <phase>test</phase>
+                                <goals><goal>test</goal></goals>
+                                <configuration>
+                                    <groups>wiremock</groups>
+                                    <excludedGroups combine.self="override"></excludedGroups>
+                                    <reportsDirectory>${project.build.directory}/surefire-reports-wiremock</reportsDirectory>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
                         <groupId>org.jacoco</groupId>
                         <artifactId>jacoco-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>report-combined</id>
+                                <phase>verify</phase>
+                                <goals><goal>report</goal></goals>
+                            </execution>
+                            <execution>
+                                <id>check</id>
+                                <phase>verify</phase>
+                                <goals><goal>check</goal></goals>
+                                <configuration>
+                                    <haltOnFailure>true</haltOnFailure>
+                                    <rules>
+                                        <rule>
+                                            <element>BUNDLE</element>
+                                            <limits>
+                                                <limit>
+                                                    <counter>LINE</counter>
+                                                    <value>COVEREDRATIO</value>
+                                                    <minimum>0.86</minimum>
+                                                </limit>
+                                                <limit>
+                                                    <counter>INSTRUCTION</counter>
+                                                    <value>COVEREDRATIO</value>
+                                                    <minimum>0.88</minimum>
+                                                </limit>
+                                                <limit>
+                                                    <counter>BRANCH</counter>
+                                                    <value>COVEREDRATIO</value>
+                                                    <minimum>0.73</minimum>
+                                                </limit>
+                                            </limits>
+                                        </rule>
+                                        <!--
+                                            Global per-package floor: no Java package may fall
+                                            below this line coverage (combined default + wiremock).
+                                            Was 30%; the weakest package measured 35.5% on 2026-11-12.
+                                        -->
+                                        <rule>
+                                            <element>PACKAGE</element>
+                                            <limits>
+                                                <limit>
+                                                    <counter>LINE</counter>
+                                                    <value>COVEREDRATIO</value>
+                                                    <minimum>0.35</minimum>
+                                                </limit>
+                                            </limits>
+                                        </rule>
+                                        <!--
+                                            Per-package floors on the client-logic packages of the
+                                            IAM and STS domains, so a domain cannot ship with its
+                                            request building / response handling untested again.
+                                        -->
+                                        <rule>
+                                            <element>PACKAGE</element>
+                                            <includes>
+                                                <include>com.eqixiac.equinix.iam.client.implementation</include>
+                                                <include>com.eqixiac.equinix.iam.client.internal.implementation</include>
+                                                <include>com.eqixiac.equinix.sts.client.implementation</include>
+                                                <include>com.eqixiac.equinix.sts.client.internal.implementation</include>
+                                            </includes>
+                                            <limits>
+                                                <limit>
+                                                    <counter>LINE</counter>
+                                                    <value>COVEREDRATIO</value>
+                                                    <minimum>0.70</minimum>
+                                                </limit>
+                                            </limits>
+                                        </rule>
+                                    </rules>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <!--
+            Dependency vulnerability scan (OWASP dependency-check), opt-in:  mvn -Pdependency-check verify
+            Fails on CVSS >= 7. Set NVD_API_KEY in the environment for faster NVD updates (optional).
+        -->
+        <profile>
+            <id>dependency-check</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.owasp</groupId>
+                        <artifactId>dependency-check-maven</artifactId>
+                        <executions>
+                            <execution>
+                                <goals><goal>check</goal></goals>
+                            </execution>
+                        </executions>
                         <configuration>
-                            <rules>
-                                <rule>
-                                    <element>BUNDLE</element>
-                                    <limits>
-                                        <limit>
-                                            <counter>LINE</counter>
-                                            <value>COVEREDRATIO</value>
-                                            <minimum>0.75</minimum>
-                                        </limit>
-                                        <limit>
-                                            <counter>INSTRUCTION</counter>
-                                            <value>COVEREDRATIO</value>
-                                            <minimum>0.75</minimum>
-                                        </limit>
-                                    </limits>
-                                </rule>
-                                <!--
-                                    Global per-package floor: no Java package may fall below 30%
-                                    line coverage (combined default + wiremock execution). The
-                                    weakest package today is ~35%, so this catches a new package
-                                    shipping effectively untested without failing current code.
-                                -->
-                                <rule>
-                                    <element>PACKAGE</element>
-                                    <limits>
-                                        <limit>
-                                            <counter>LINE</counter>
-                                            <value>COVEREDRATIO</value>
-                                            <minimum>0.30</minimum>
-                                        </limit>
-                                    </limits>
-                                </rule>
-                                <!--
-                                    Per-package floors on the client-logic packages of the newest
-                                    domains (IAM, STS), so a domain cannot ship with its request
-                                    building / response handling effectively untested again. The
-                                    model/json packages are intentionally excluded (mostly 1-line
-                                    DTOs whose coverage is incidental).
-                                -->
-                                <rule>
-                                    <element>PACKAGE</element>
-                                    <includes>
-                                        <include>com.eqixiac.equinix.iam.client.implementation</include>
-                                        <include>com.eqixiac.equinix.iam.client.internal.implementation</include>
-                                        <include>com.eqixiac.equinix.sts.client.implementation</include>
-                                        <include>com.eqixiac.equinix.sts.client.internal.implementation</include>
-                                    </includes>
-                                    <limits>
-                                        <limit>
-                                            <counter>LINE</counter>
-                                            <value>COVEREDRATIO</value>
-                                            <minimum>0.70</minimum>
-                                        </limit>
-                                    </limits>
-                                </rule>
-                            </rules>
-                            <haltOnFailure>true</haltOnFailure>
+                            <failBuildOnCVSS>7</failBuildOnCVSS>
+                            <nvdApiKeyEnvironmentVariable>NVD_API_KEY</nvdApiKeyEnvironmentVariable>
+                            <skipTestScope>false</skipTestScope>
+                            <formats>
+                                <format>HTML</format>
+                                <format>JSON</format>
+                            </formats>
                         </configuration>
                     </plugin>
                 </plugins>
@@ -568,9 +888,9 @@
 
         <!--
             Opt-in mutation testing (PIT re-runs the unit suite per mutant, far too slow for every
-            build — but -Ppit IS part of the release checklist, see CONTRIBUTING.md).
+            build - but -Ppit IS part of the release checklist, see CONTRIBUTING.md).
 
-            1) Core report (ungated, informational — the shared transport/serialization engine):
+            1) Core report (ungated, informational - the shared transport/serialization engine):
                 mvn -P pit test-compile org.pitest:pitest-maven:mutationCoverage
                Uses the plugin-level configuration below; report lands in target/pit-reports.
 
@@ -578,8 +898,8 @@
                 mvn -P pit test-compile org.pitest:pitest-maven:mutationCoverage@design-value-gate
                Scoped to com.eqixiac.equinix.design.value.* (the rate-card / TCO / savings money
                math, where a surviving mutant means a silently wrong dollar figure) and killed by
-               the design.* unit tests. mutationThreshold starts at 50 — a floor today's suite
-               passes — and RATCHETS: whenever a measured run reports a comfortably higher kill
+               the design.* unit tests. mutationThreshold starts at 50 - a floor today's suite
+               passes - and RATCHETS: whenever a measured run reports a comfortably higher kill
                rate, raise the threshold to just below it (never lower it). WireMock/integration
                tagged tests are excluded so the gate stays fast and offline-deterministic.
         -->
@@ -629,6 +949,7 @@
                                         <param>integration-readonly</param>
                                         <param>integration-dryrun</param>
                                         <param>integration-full</param>
+                                        <param>integration-dryrun-existing</param>
                                         <param>integration-scenario</param>
                                     </excludedGroups>
                                     <!-- Ratchet: raise (never lower) as measured kill rate grows. -->

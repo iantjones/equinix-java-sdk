@@ -1,0 +1,17 @@
+{
+  "href": "https://api.equinix.com/fabric/v4/appDomains/20f3ef8e-d670-4236-86fa-bb0038adcfc3",
+  "uuid": "20f3ef8e-d670-4236-86fa-bb0038adcfc3",
+  "type": "APP_DOMAIN",
+  "name": "atlassian.net",
+  "description": "Atlassian Domain",
+  "state": "PROVISIONED",
+  "project": {
+    "projectId": "71b55fef-fd2e-402f-ae3c-01d5f00bf2d4"
+  },
+  "changeLog": {
+    "createdBy": "test",
+    "createdDateTime": "2026-06-27T04:20:55.471Z",
+    "updatedBy": "test",
+    "updatedDateTime": "2026-06-28T04:20:55.471Z"
+  }
+}

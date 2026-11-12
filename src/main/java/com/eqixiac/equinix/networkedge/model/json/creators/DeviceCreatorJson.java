@@ -20,7 +20,6 @@ import com.eqixiac.equinix.core.enums.BandwidthUnit;
 import com.eqixiac.equinix.core.enums.MetroCode;
 import com.eqixiac.equinix.networkedge.enums.Connectivity;
 import com.eqixiac.equinix.networkedge.enums.DeviceManagementType;
-import com.eqixiac.equinix.networkedge.enums.IPAssignment;
 import com.eqixiac.equinix.networkedge.enums.LicenseType;
 import com.eqixiac.equinix.networkedge.model.implementation.DeviceVendorConfig;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -124,9 +123,6 @@ public class DeviceCreatorJson {
     @JsonProperty("systemIpAddress")
     private String systemIpAddress;
 
-    @JsonProperty("ipType")
-    private IPAssignment ipType;
-
     @JsonProperty("siteId")
     private String siteId;
 
@@ -224,7 +220,6 @@ public class DeviceCreatorJson {
         this.orderingContact = deviceBuilder.getOrderingContact();
         this.aclDetails = deviceBuilder.getAclDetails();
         this.siteId = deviceBuilder.getSiteId();
-        this.ipType = deviceBuilder.getIpType();
         this.systemIpAddress = deviceBuilder.getSystemIpAddress();
         this.sshInterfaceId = deviceBuilder.getSshInterfaceId();
         this.vendorConfig = deviceBuilder.getVendorConfig();

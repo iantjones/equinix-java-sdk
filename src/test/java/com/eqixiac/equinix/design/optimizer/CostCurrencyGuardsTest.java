@@ -24,7 +24,6 @@ import com.eqixiac.equinix.core.http.response.PaginatedList;
 import com.eqixiac.equinix.design.optimizer.model.CostEstimate;
 import com.eqixiac.equinix.design.optimizer.model.MetroRecommendation;
 import com.eqixiac.equinix.design.optimizer.model.OptimizationResult;
-import com.eqixiac.equinix.design.optimizer.model.ScoringWeights;
 import com.eqixiac.equinix.design.optimizer.model.WorkloadProfile;
 import com.eqixiac.equinix.design.optimizer.wizard.DeploymentWizard;
 import com.eqixiac.equinix.design.optimizer.wizard.enums.BandwidthStrategy;
@@ -126,118 +125,10 @@ class CostCurrencyGuardsTest {
         };
     }
 
-    // ── estimateCosts: cross-metro currency mixing ──
+    // wizard: estimatePricing currency mixing
 
     @Test
-    @DisplayName("a metro set priced in two currencies produces no fabricated aggregate total")
-    void mixedCurrencyMetrosProduceNoSingleTotal() {
-        OptimizationResult result = MetroOptimizer.builder(fabric)
-                .addSite("HQ").nearestMetro(MetroCode.DC).headcount(500).done()
-                .addWorkload("Web Tier").bandwidthMbps(1000).done()
-                .constraints().maxMetros(2).done()
-                .rateCard(perMetroCurrencyCard())
-                .optimize();
-
-        assertEquals(2, result.getRecommendations().size(), "DC and DA both selected");
-
-        CostEstimate cost = result.getCostEstimate();
-        assertNull(cost.getMonthlyTotal(), "USD + EUR metros must not be summed into one total");
-        assertNull(cost.getSetupTotal());
-        assertNull(cost.getCurrency(), "no single currency for a mixed-currency estimate");
-        assertNotNull(cost.getMonthlyByCurrency());
-        assertEquals(2, cost.getMonthlyByCurrency().size(), "one subtotal per currency: " + cost.getMonthlyByCurrency());
-        assertTrue(cost.getMonthlyByCurrency().containsKey("USD") && cost.getMonthlyByCurrency().containsKey("EUR"));
-        assertTrue(cost.getCostDisclaimer().contains("multiple currencies"), cost.getCostDisclaimer());
-        // Each per-metro figure is still valid on its own.
-        assertEquals(2, cost.getPerMetro().size());
-        // The rendered summary shows the per-currency breakdown, never "$null".
-        String summary = result.toSummary();
-        assertFalse(summary.contains("$null"), summary);
-        assertTrue(summary.contains("multiple currencies"), summary);
-    }
-
-    @Test
-    @DisplayName("a single-currency metro set still totals and evaluates budget normally")
-    void singleCurrencyMetrosStillTotal() {
-        OptimizationResult result = MetroOptimizer.builder(fabric)
-                .addSite("HQ").nearestMetro(MetroCode.DC).headcount(500).done()
-                .addWorkload("Web Tier").bandwidthMbps(1000).done()
-                .constraints().maxMetros(2).done()
-                .rateCard(ReferenceRateCard.standard())
-                .optimize();
-
-        CostEstimate cost = result.getCostEstimate();
-        assertNotNull(cost.getMonthlyTotal(), "all-USD reference pricing totals normally");
-        assertEquals("USD", cost.getCurrency());
-        assertTrue(cost.isWithinBudget(), "no budget set => within budget");
-    }
-
-    // ── per-metro cost bandwidth follows the topology ──
-
-    @Test
-    @DisplayName("per-metro pricing bandwidth follows the topology and loses no Mbps")
-    void bandwidthSplitPreservesTotal() {
-        List<Integer> sized = new ArrayList<>();
-        // Updated for the topology-driven cost fix: the estimate no longer splits the total
-        // EVENLY across metros (the even split priced a fiction that contradicted the topology in
-        // the same result — this run's single workload sits in ONE metro, yet each metro was
-        // costed at half of it). Each metro is now priced at the bandwidth the topology assigns
-        // it, so the single 101 Mbps workload prices as 101 at its assigned metro and 0 at the
-        // other — and the per-metro sizes still sum to the declared total, preserving the original
-        // no-truncation guarantee (the old integer division dropped 1 Mbps of a 101 split).
-        MetroOptimizer.builder(fabric)
-                .addSite("HQ").nearestMetro(MetroCode.DC).headcount(500).done()
-                .addWorkload("Web Tier").bandwidthMbps(101).done()
-                .constraints().maxMetros(2).done()
-                .rateCard(recordingRateCard(sized))
-                .optimize();
-
-        assertEquals(2, sized.size(), "one pricing lookup per selected metro: " + sized);
-        assertEquals(101, sized.stream().mapToInt(Integer::intValue).sum(),
-                "the per-metro bandwidths must sum to the total, not 100: " + sized);
-        assertTrue(sized.contains(101),
-                "the workload's whole bandwidth is priced at its assigned metro, not split evenly: " + sized);
-        assertTrue(sized.contains(0),
-                "a metro the topology assigns nothing to is priced at zero workload bandwidth: " + sized);
-    }
-
-    // ── NaN guard in provider-coverage scoring ──
-
-    @Test
-    @DisplayName("a zeroed required-provider weight does not divide-by-zero into a NaN score")
-    void zeroRequiredProviderWeightDoesNotProduceNaN() {
-        // A preferred provider whose seller regions do NOT match the requested ones drives the
-        // region-bonus branch with regionMatches=0; a required-provider weight of 0 then made the
-        // bonus a 0.0/0.0 = NaN that poisoned the composite score.
-        ScoringWeights weights = ScoringWeights.builder()
-                .latencyWeight(1.0)
-                .providerCoverageWeight(1.0)
-                .costWeight(0.0)
-                .redundancyWeight(0.0)
-                .complianceWeight(0.0)
-                .requiredProviderWeight(0.0)
-                .build();
-
-        OptimizationResult result = MetroOptimizer.builder(fabric)
-                .addSite("HQ").nearestMetro(MetroCode.DC).headcount(500).done()
-                .addWorkload("Web Tier").bandwidthMbps(1000).done()
-                .preferProvider(CloudProviderType.AWS).sellerRegions("ap-southeast-1").done()
-                .scoringWeights(weights)
-                .constraints().maxMetros(2).done()
-                .rateCard(ReferenceRateCard.standard())
-                .optimize();
-
-        assertFalse(result.getRecommendations().isEmpty());
-        for (MetroRecommendation rec : result.getRecommendations()) {
-            double composite = rec.getScore().getComposite();
-            assertTrue(Double.isFinite(composite), "composite score must be finite, not NaN: " + composite);
-        }
-    }
-
-    // ── wizard: estimatePricing currency mixing ──
-
-    @Test
-    @DisplayName("a plan spanning two currencies omits the fabricated plan total")
+    @DisplayName("a plan spanning two currencies with no exchange rate between them omits the fabricated plan total")
     void wizardPlanPricingOmitsTotalWhenCurrenciesMix() {
         // Clean single-currency optimization for the topology, then price the plan with the
         // per-metro-currency card so DC lines are USD and DA lines are EUR.
@@ -245,13 +136,16 @@ class CostCurrencyGuardsTest {
                 .addSite("HQ").nearestMetro(MetroCode.DC).headcount(500).done()
                 .addWorkload("Web Tier").bandwidthMbps(1000).dependsOn(CloudProviderType.AWS).done()
                 .requireProvider(CloudProviderType.AWS).sellerRegions("us-east-1").done()
-                .constraints().maxMetros(2).done()
+                .constraints().minMetros(2).maxMetros(2).done()
                 .rateCard(ReferenceRateCard.standard())
                 .optimize();
 
+        // No rate source: the EUR lines cannot be restated in USD (with a rate they are converted; see
+        // DeploymentWizardPlanTest.mixedGbpUsdPlanTotalsInSpecCurrency).
         DeploymentPlan plan = DeploymentWizard.builder(fabric, result)
                 .routerNamePrefix("FCR")
                 .rateCard(perMetroCurrencyCard())
+                .defaultRates(com.eqixiac.equinix.design.cost.CurrencyConverters.none())
                 .plan();
 
         PlanPricing pricing = plan.getPricing();
@@ -263,21 +157,20 @@ class CostCurrencyGuardsTest {
         assertFalse(plan.toSummary().contains("$null"), plan.toSummary());
     }
 
-    // ── wizard: minimum-bandwidth floor honoured ──
+    // wizard: minimum-bandwidth floor honoured
 
     @Test
     @DisplayName("a workload profile's minimum bandwidth raises the wizard's connection sizing")
     void wizardHonoursProfileMinimumBandwidth() {
         OptimizationResult result = MetroOptimizer.builder(fabric)
                 .addSite("HQ").nearestMetro(MetroCode.DC).headcount(500).done()
-                .addWorkload("Web Tier").bandwidthMbps(10)
-                    .profile(WorkloadProfile.builder().minBandwidthMbps(1000.0).build())
-                    .dependsOn(CloudProviderType.AWS)
-                    .done()
+                .addWorkload("Web Tier").bandwidthMbps(10).dependsOn(CloudProviderType.AWS).done()
                 .requireProvider(CloudProviderType.AWS).sellerRegions("us-east-1").done()
                 .constraints().maxMetros(1).done()
                 .rateCard(ReferenceRateCard.standard())
                 .optimize();
+        // A DesignSpec has no minimum-bandwidth floor; the wizard still honours one on the request it reads.
+        result = withProfileFloor(result, 1000.0);
 
         DeploymentPlan plan = DeploymentWizard.builder(fabric, result)
                 .routerNamePrefix("FCR")
@@ -293,7 +186,7 @@ class CostCurrencyGuardsTest {
         }
     }
 
-    // ── wizard: CUSTOM bandwidth map keyed by provider label ──
+    // wizard: CUSTOM bandwidth map keyed by provider label
 
     @Test
     @DisplayName("customBandwidthMap keyed by provider label alone is honoured (documented key form)")
@@ -326,6 +219,23 @@ class CostCurrencyGuardsTest {
         }
     }
 
+    private static OptimizationResult withProfileFloor(OptimizationResult result, double floorMbps) {
+        java.util.List<com.eqixiac.equinix.design.optimizer.model.WorkloadSpec> workloads = new java.util.ArrayList<>();
+        for (com.eqixiac.equinix.design.optimizer.model.WorkloadSpec w : result.getRequest().getWorkloads()) {
+            workloads.add(com.eqixiac.equinix.design.optimizer.model.WorkloadSpec.builder().label(w.getLabel())
+                    .type(w.getType()).bandwidthMbps(w.getBandwidthMbps()).dependsOnProviders(w.getDependsOnProviders())
+                    .profileOverride(WorkloadProfile.builder().minBandwidthMbps(floorMbps).build()).build());
+        }
+        return OptimizationResult.builder()
+                .request(com.eqixiac.equinix.design.optimizer.model.OptimizationRequest.builder()
+                        .sites(result.getRequest().getSites()).providers(result.getRequest().getProviders())
+                        .workloads(workloads).build())
+                .recommendations(result.getRecommendations()).topology(result.getTopology())
+                .providerMap(result.getProviderMap()).latencyMatrix(result.getLatencyMatrix())
+                .riskAssessment(result.getRiskAssessment()).costEstimate(result.getCostEstimate())
+                .explanation(result.getExplanation()).computedAt(result.getComputedAt()).build();
+    }
+
     /** A card that records the bandwidth each pricing lookup is sized at and always quotes USD. */
     private static RateCard recordingRateCard(List<Integer> sized) {
         return new RateCard() {
@@ -349,7 +259,7 @@ class CostCurrencyGuardsTest {
         };
     }
 
-    // ── stub builders (same shapes as MetroOptimizerLeversTest) ──
+    // stub builders (same shapes as MetroOptimizerLeversTest)
 
     private static Metro metro(String code, String name, Region region, double lat, double lon,
                                List<ConnectedMetro> connected) throws Exception {

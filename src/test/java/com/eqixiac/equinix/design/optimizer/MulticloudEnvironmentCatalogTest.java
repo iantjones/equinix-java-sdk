@@ -60,7 +60,7 @@ class MulticloudEnvironmentCatalogTest {
 
     private static final MulticloudEnvironmentCatalog STANDARD = MulticloudEnvironmentCatalog.standard();
 
-    // ── Bundled data: observed provider documentation ──
+    // Bundled data: observed provider documentation
 
     @Test
     @DisplayName("bundled catalog holds the 8 AWS-Google, 4 AWS-Azure and 1 AWS-Oracle pairs listed by AWS on 2026-09-21")
@@ -125,7 +125,7 @@ class MulticloudEnvironmentCatalogTest {
         assertNotNull(STANDARD.disclaimer());
     }
 
-    // ── Lookup rules ──
+    // Lookup rules
 
     @Test
     @DisplayName("find() is order-insensitive and ignores region case and surrounding whitespace")
@@ -169,7 +169,7 @@ class MulticloudEnvironmentCatalogTest {
         assertTrue(sizes.coveringTier(200_000).isEmpty());
     }
 
-    // ── Extension: the bundled catalog goes stale ──
+    // Extension: the bundled catalog goes stale
 
     @Test
     @DisplayName("with() adds a region pair to a new catalog and leaves the original unchanged")
@@ -221,7 +221,7 @@ class MulticloudEnvironmentCatalogTest {
         assertThrows(NullPointerException.class, () -> MulticloudEnvironmentCatalog.of(null));
     }
 
-    // ── Loading ──
+    // Loading
 
     @Test
     @DisplayName("load() reads the documented file format; a missing or unrecognized status loads as UNVERIFIED")
@@ -274,7 +274,7 @@ class MulticloudEnvironmentCatalogTest {
         assertEquals(13, MulticloudEnvironmentCatalog.standard().environments().size());
     }
 
-    // ── MulticloudEnvironment ──
+    // MulticloudEnvironment
 
     @Test
     @DisplayName("MulticloudEnvironment.of() is order-insensitive and validates its arguments")

@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 /**
- * Live smoke test for the OAuth authentication handshake itself — the one
+ * Live smoke test for the OAuth authentication handshake itself - the one
  * call every other integration test depends on. Runs in the readonly tier;
  * skips (like all integration tests) when {@code -DaccessKey/-DsecretKey}
  * are not supplied.

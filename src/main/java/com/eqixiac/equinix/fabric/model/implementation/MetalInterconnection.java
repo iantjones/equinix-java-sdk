@@ -22,7 +22,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 /**
- * Equinix Metal Interconnection reference for use as an access-point target.
+ * Equinix Metal Interconnection reference ({@code AccessPoint.interconnection}), read side only.
+ * Equinix Metal reached end of life on 2026-06-30; spec 4.34.0 still lists the property, so
+ * responses that carry it still deserialize, but the SDK no longer builds requests with it.
  */
 @Getter
 @NoArgsConstructor
@@ -31,8 +33,4 @@ public class MetalInterconnection {
 
     @JsonProperty("uuid")
     private String uuid;
-
-    public MetalInterconnection(String uuid) {
-        this.uuid = uuid;
-    }
 }

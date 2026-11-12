@@ -17,7 +17,7 @@
 /**
  * Classification enums for Peering Intelligence:
  * {@link com.eqixiac.equinix.design.peering.enums.ConnectivityType} (how an ASN is reachable at
- * a metro — IX, Fabric, both, facility-only, none),
+ * a metro - IX, Fabric, both, facility-only, none),
  * {@link com.eqixiac.equinix.design.peering.enums.PeeringPolicy} and
  * {@link com.eqixiac.equinix.design.peering.enums.NetworkType} (parsed from PeeringDB's
  * {@code policy_general} / {@code info_type} fields),

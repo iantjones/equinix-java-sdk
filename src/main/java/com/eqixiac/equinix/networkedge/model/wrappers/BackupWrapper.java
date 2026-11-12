@@ -20,7 +20,6 @@ import com.eqixiac.equinix.core.http.response.Pageable;
 import com.eqixiac.equinix.core.model.ResourceImpl;
 import com.eqixiac.equinix.networkedge.client.internal.implementation.BackupClientImpl;
 import com.eqixiac.equinix.networkedge.model.Backup;
-import com.eqixiac.equinix.networkedge.model.Device;
 import com.eqixiac.equinix.networkedge.model.json.BackupJson;
 import com.eqixiac.equinix.networkedge.model.json.creators.BackupOperator;
 import com.eqixiac.equinix.networkedge.model.json.creators.BackupUpdaterJson;
@@ -54,30 +53,12 @@ public class BackupWrapper extends ResourceImpl<Backup> implements Backup {
         return ((BackupClientImpl)this.serviceClient).restore(this.getUuid(), this.getName());
     }
 
-    @Deprecated
-    public Boolean restoreToDevice(Device device){
-        return restore();
-    }
-
-    /**
-     * {@inheritDoc}
-     *
-     * <p>restoreToDevice. The restore endpoint identifies the target by the backup uuid (this
-     * backup), so the supplied {@code deviceUuid} is ignored; the backup name is sent in the body
-     * as required by the API. Prefer {@link #restore()}.</p>
-     *
-     */
-    @Deprecated
-    public Boolean restoreToDevice(String deviceUuid){
-        return restore();
-    }
-
     public BackupOperator.BackupUpdater update() {
         return new BackupOperator(this.serviceClient).update(this.json);
     }
 
     public Boolean save(BackupUpdaterJson updaterJson) {
-        this.json = ((BackupClientImpl)this.serviceClient).update(this.getUuid(), updaterJson);
+        this.json = WrapperState.keep(this.json, ((BackupClientImpl)this.serviceClient).update(this.getUuid(), updaterJson));
         return true;
     }
 
@@ -86,7 +67,7 @@ public class BackupWrapper extends ResourceImpl<Backup> implements Backup {
     }
 
     public Boolean refresh() {
-        this.json = ((BackupClientImpl)this.serviceClient).refresh(this.getUuid());
+        this.json = WrapperState.keep(this.json, ((BackupClientImpl)this.serviceClient).refresh(this.getUuid()));
         return true;
     }
 }

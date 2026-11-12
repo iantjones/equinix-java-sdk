@@ -16,7 +16,7 @@
 
 /**
  * Internet Access client interfaces for the Equinix Java SDK. Provides typed access to the
- * Equinix Internet Access (EIA) v2 API, which exposes a single operation — creating a service
+ * Equinix Internet Access (EIA) v2 API, which exposes a single operation - creating a service
  * via {@code POST /internetAccess/v2/services}. The service connections, IP blocks and routing
  * configuration (direct, static or BGP) are all supplied as a single nested request body
  * assembled through the service builder.

@@ -34,7 +34,7 @@ import java.util.List;
 /**
  * An IP block (BYOIP / Equinix-owned IPv4 or IPv6 prefix) managed through Fabric.
  */
-public interface IpBlock {
+public interface IpBlock extends DeletableResource {
 
     String getUuid();
 

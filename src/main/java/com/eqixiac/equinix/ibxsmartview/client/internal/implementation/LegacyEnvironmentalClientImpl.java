@@ -37,6 +37,8 @@ public class LegacyEnvironmentalClientImpl extends ClientBase implements LegacyE
     }
 
     public EnvironmentDataJson getCurrent(String accountNo, String ibx, String levelType, String levelValue) {
+        SmartViewArguments.require("environmental v1", "accountNo", accountNo, "ibx", ibx,
+                "levelType", levelType, "levelValue", levelValue);
         Map<String, List<String>> qParams = new HashMap<>();
         ParameterMapper.addAdditionalValue(qParams, "accountNo", accountNo);
         ParameterMapper.addAdditionalValue(qParams, "ibx", ibx);
@@ -46,6 +48,7 @@ public class LegacyEnvironmentalClientImpl extends ClientBase implements LegacyE
     }
 
     public List<EnvironmentDataForArrayJson> listCurrent(String accountNo, String ibx, String levelType) {
+        SmartViewArguments.require("environmental v1", "accountNo", accountNo, "ibx", ibx, "levelType", levelType);
         Map<String, List<String>> qParams = new HashMap<>();
         ParameterMapper.addAdditionalValue(qParams, "accountNo", accountNo);
         ParameterMapper.addAdditionalValue(qParams, "ibx", ibx);
@@ -60,6 +63,9 @@ public class LegacyEnvironmentalClientImpl extends ClientBase implements LegacyE
     public TrendingEnvironmentDataJson getTrending(String accountNo, String ibx, String dataPoint,
                                                    String levelType, String levelValue, String interval,
                                                    String fromDate, String toDate) {
+        SmartViewArguments.require("environmental v1", "accountNo", accountNo, "ibx", ibx, "dataPoint", dataPoint,
+                "levelType", levelType, "levelValue", levelValue, "interval", interval,
+                "fromDate", fromDate, "toDate", toDate);
         Map<String, List<String>> qParams = new HashMap<>();
         ParameterMapper.addAdditionalValue(qParams, "accountNo", accountNo);
         ParameterMapper.addAdditionalValue(qParams, "ibx", ibx);

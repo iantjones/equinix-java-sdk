@@ -1,0 +1,23 @@
+{
+  "pagination": { "offset": 0, "limit": 10, "total": 2 },
+  "data": [
+    {
+      "type": "GAUGE",
+      "name": "equinix.fabric.connection.bandwidth_tx.usage",
+      "unit": "bit/s",
+      "interval": "PT1H",
+      "subject": "/fabric/v4/connections/c0000000-0000-4000-8000-000000000002",
+      "resource": { "uuid": "c0000000-0000-4000-8000-000000000002", "type": "EVPL_VC", "state": "ACTIVE" },
+      "datapoints": []
+    },
+    {
+      "type": "GAUGE",
+      "name": "equinix.fabric.connection.bandwidth_rx.usage",
+      "unit": "bit/s",
+      "interval": "PT1H",
+      "subject": "/fabric/v4/connections/c0000000-0000-4000-8000-000000000002",
+      "resource": { "uuid": "c0000000-0000-4000-8000-000000000002", "type": "EVPL_VC", "state": "ACTIVE" },
+      "datapoints": []
+    }
+  ]
+}

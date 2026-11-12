@@ -32,28 +32,30 @@ public interface LegacyEnvironmentals {
     /**
      * Retrieves the current environmental data for a specific hierarchy level and value.
      *
-     * @param accountNo the Equinix account number
+     * @param accountNo the Equinix account number (required; the service answers HTTP 400 without it)
      * @param ibx the IBX code identifying the data center
      * @param levelType the hierarchy level type (e.g., cage, cabinet)
      * @param levelValue the specific value for the hierarchy level
      * @return the current environmental data
+     * @throws IllegalArgumentException if a parameter the spec marks required is null or blank
      */
     EnvironmentData getCurrent(String accountNo, String ibx, String levelType, String levelValue);
 
     /**
      * Lists current environmental data for all entries at the specified hierarchy level.
      *
-     * @param accountNo the Equinix account number
+     * @param accountNo the Equinix account number (required; the service answers HTTP 400 without it)
      * @param ibx the IBX code identifying the data center
      * @param levelType the hierarchy level type (e.g., cage, cabinet)
      * @return a list of current environmental data entries
+     * @throws IllegalArgumentException if a parameter the spec marks required is null or blank
      */
     List<EnvironmentDataForArray> listCurrent(String accountNo, String ibx, String levelType);
 
     /**
      * Retrieves trending environmental data over a specified time range and interval.
      *
-     * @param accountNo the Equinix account number
+     * @param accountNo the Equinix account number (required; the service answers HTTP 400 without it)
      * @param ibx the IBX code identifying the data center
      * @param dataPoint the environmental data point to trend (e.g., temperature, humidity)
      * @param levelType the hierarchy level type (e.g., cage, cabinet)
@@ -62,6 +64,7 @@ public interface LegacyEnvironmentals {
      * @param fromDate the start date of the trend range
      * @param toDate the end date of the trend range
      * @return the trending environmental data
+     * @throws IllegalArgumentException if a parameter the spec marks required is null or blank
      */
     TrendingEnvironmentData getTrending(String accountNo, String ibx, String dataPoint,
                                         String levelType, String levelValue, String interval,

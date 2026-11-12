@@ -14,6 +14,8 @@ import com.eqixiac.equinix.design.optimizer.wizard.model.PlannedCloudRouter;
 import com.eqixiac.equinix.design.optimizer.wizard.model.PlannedConnection;
 import com.eqixiac.equinix.design.optimizer.wizard.model.PlannedMulticloudInterconnect;
 import com.eqixiac.equinix.design.optimizer.wizard.model.PlannedRoutingProtocol;
+import com.eqixiac.equinix.design.plan.PlanMarker;
+import com.eqixiac.equinix.design.plan.PlanSteps;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -40,20 +42,39 @@ import java.util.Set;
  * </ul>
  *
  * <p>Customer inputs the plan deliberately leaves unresolved (the cloud authorization
- * key, and the DOT1Q VLAN tag when not yet known) become {@code variable} blocks —
- * the authorization key marked {@code sensitive} — referenced from the connection's
+ * key, and the DOT1Q VLAN tag when not yet known) become {@code variable} blocks - 
+ * the authorization key marked {@code sensitive} - referenced from the connection's
  * Z-side, so the generated configuration is complete without ever fabricating or
  * inlining a secret. A BGP routing protocol on a connection that also carries a DIRECT
  * protocol is emitted with {@code depends_on} on the DIRECT resource, because Fabric
  * requires DIRECT to exist before BGP on the same connection. The Fabric-mandated
- * {@code notifications} block is emitted on every Cloud Router and connection —
- * backbone links included — with every recipient the plan carries, and a planned
- * connection's redundancy group/priority becomes a connection-level
- * {@code redundancy} block.</p>
+ * {@code notifications} block is emitted on every Cloud Router and connection - 
+ * backbone links included - with every recipient the plan carries.</p>
+ *
+ * <p><b>Provider schema.</b> Every emitted argument was checked against the {@code equinix/equinix}
+ * provider docs for {@code equinix_fabric_cloud_router}, {@code equinix_fabric_connection} and
+ * {@code equinix_fabric_routing_protocol} (terraform-provider-equinix main, read 2026-11-12; the
+ * exporter emits no {@code equinix_fabric_network}), and {@code TerraformSchemaConformanceTest} keeps
+ * it so:</p>
+ * <ul>
+ *   <li>a Cloud Router always has the required {@code project} block, through a {@code project_id}
+ *       variable when the plan names no project;</li>
+ *   <li>a redundant pair is written the way Fabric assigns groups: the PRIMARY carries only
+ *       {@code priority = "PRIMARY"} and the SECONDARY references the primary's group,
+ *       {@code group = one(equinix_fabric_connection.<primary>.redundancy).group}; the plan's own group
+ *       token is never written;</li>
+ *   <li>an Azure Z-side carries {@code peering_type} (the plan's value, else a validated
+ *       {@code <connection>_peering_type} variable defaulting to {@code PRIVATE});</li>
+ *   <li>a service-provider Z-side carries {@code location { metro_code }}, which the API requires;</li>
+ *   <li>{@code bgp_ipv4.equinix_peer_ip} is not written (read-only in the provider schema);</li>
+ *   <li>a connection carries the plan marker as {@code additional_info} (see {@code PlanMarker}) so
+ *       drift detection finds Terraform-created connections too, plus {@code order { term_length }} and
+ *       {@code project { project_id }} when the plan has them.</li>
+ * </ul>
  *
  * <p><strong>Not emitted:</strong> Equinix provider credentials (supply them via the
  * standard provider configuration), and any physical colocation the wider design may
- * assume — the Equinix Terraform provider has no cabinet or cross-connect resources,
+ * assume - the Equinix Terraform provider has no cabinet or cross-connect resources,
  * so those cannot be expressed in HCL at all.</p>
  *
  * <h2>Native multicloud links</h2>
@@ -129,7 +150,7 @@ public class TerraformExporter {
      *
      * <p>The output is a complete document but not immediately appliable: before
      * {@code terraform apply}, the caller must configure the Equinix provider's credentials and
-     * supply a value for each generated input {@code variable} — the per-connection cloud
+     * supply a value for each generated input {@code variable} - the per-connection cloud
      * authorization key (sensitive) and DOT1Q VLAN tag, exactly the customer inputs
      * {@code DeploymentPlan.getRequiredInputs()} enumerates. The generated header comment
      * repeats this.</p>
@@ -162,13 +183,16 @@ public class TerraformExporter {
         // inputs the plan leaves unresolved (auth key, VLAN tag).
         Map<String, String> authKeyVariables = new LinkedHashMap<>();
         Map<String, String> vlanVariables = new LinkedHashMap<>();
+        Map<String, String> peeringVariables = new LinkedHashMap<>();
         // Every variable name declared in the document, so a native link's variable cannot
         // collide with a connection's.
         List<String> usedVariableNames = new ArrayList<>();
 
-        writeInputVariables(hcl, plan, authKeyVariables, vlanVariables, usedVariableNames);
-        writeCloudRouters(hcl, plan, routerLabels);
-        writeProviderConnections(hcl, plan, routerLabels, connectionLabels, authKeyVariables, vlanVariables);
+        writeInputVariables(hcl, plan, authKeyVariables, vlanVariables, peeringVariables, usedVariableNames);
+        String projectExpression = writeProjectVariable(hcl, plan, usedVariableNames);
+        writeCloudRouters(hcl, plan, routerLabels, projectExpression);
+        writeProviderConnections(hcl, plan, routerLabels, connectionLabels, authKeyVariables, vlanVariables,
+                peeringVariables);
         writeBackboneLinks(hcl, plan, routerLabels, connectionLabels);
         writeRoutingProtocols(hcl, plan, connectionLabels);
         writeMulticloudLinks(hcl, plan, usedVariableNames);
@@ -201,7 +225,7 @@ public class TerraformExporter {
     /**
      * Declares one {@code variable} block per customer input a cloud provider connection still
      * needs at provisioning: the cloud-specific authorization key (marked {@code sensitive},
-     * with a description naming the exact key to gather — e.g. "AWS Account ID (12-digit)"),
+     * with a description naming the exact key to gather - e.g. "AWS Account ID (12-digit)"),
      * and the DOT1Q VLAN tag when the plan does not already carry one. The connection's Z-side
      * references these via {@code var.<name>}, so the export never fabricates or inlines a
      * secret. Emits nothing when no provider connection needs an input.
@@ -209,6 +233,7 @@ public class TerraformExporter {
     private void writeInputVariables(StringBuilder hcl, DeploymentPlan plan,
                                      Map<String, String> authKeyVariables,
                                      Map<String, String> vlanVariables,
+                                     Map<String, String> peeringVariables,
                                      List<String> usedNames) {
         List<PlannedConnection> connections = plan.getProviderConnections();
         if (connections == null || connections.isEmpty()) {
@@ -237,6 +262,22 @@ public class TerraformExporter {
                         "DOT1Q VLAN tag for connection " + conn.getName()));
                 vars.append("}\n\n");
             }
+            if (conn.getZSidePeeringType() == null && resolveCloudType(conn) == CloudProviderType.AZURE) {
+                // Azure ExpressRoute needs a peering type on the Z-side access point (provider schema
+                // z_side.access_point.peering_type); the plan leaves it to the customer, so it is an input.
+                String varName = uniqueName(usedNames, sanitizeLabel(conn.getName()) + "_peering_type");
+                peeringVariables.put(conn.getName(), varName);
+                vars.append("variable \"").append(varName).append("\" {\n");
+                vars.append(rawAttr(1, "type", "string"));
+                vars.append(attr(1, "default", "PRIVATE"));
+                vars.append(attr(1, "description",
+                        "Azure ExpressRoute peering type (PRIVATE or MICROSOFT) for connection " + conn.getName()));
+                vars.append(INDENT).append("validation {\n");
+                vars.append(rawAttr(2, "condition", "contains([\"PRIVATE\", \"MICROSOFT\"], var." + varName + ")"));
+                vars.append(attr(2, "error_message", "Azure peering type must be PRIVATE or MICROSOFT."));
+                vars.append(INDENT).append("}\n");
+                vars.append("}\n\n");
+            }
         }
         if (vars.length() == 0) {
             return;
@@ -249,7 +290,29 @@ public class TerraformExporter {
         hcl.append(vars);
     }
 
-    private void writeCloudRouters(StringBuilder hcl, DeploymentPlan plan, Map<String, String> routerLabels) {
+    /**
+     * The provider schema makes {@code project} a required block on {@code equinix_fabric_cloud_router}.
+     * When the plan names no project, a {@code project_id} variable is declared and referenced instead
+     * of omitting the block. Returns the HCL expression for the project id, or {@code null} when the
+     * plan has no Cloud Router (nothing needs it).
+     */
+    private String writeProjectVariable(StringBuilder hcl, DeploymentPlan plan, List<String> usedNames) {
+        boolean needs = plan.getCloudRouters() != null && plan.getCloudRouters().stream()
+                .anyMatch(cr -> cr.getProjectId() == null);
+        if (!needs) {
+            return null;
+        }
+        String varName = uniqueName(usedNames, "project_id");
+        hcl.append("variable \"").append(varName).append("\" {\n");
+        hcl.append(rawAttr(1, "type", "string"));
+        hcl.append(attr(1, "description", "Equinix project id for the Cloud Routers (the plan names none; "
+                + "the provider requires a project block)"));
+        hcl.append("}\n\n");
+        return "var." + varName;
+    }
+
+    private void writeCloudRouters(StringBuilder hcl, DeploymentPlan plan, Map<String, String> routerLabels,
+                                   String projectExpression) {
         List<PlannedCloudRouter> routers = plan.getCloudRouters();
         if (routers == null || routers.isEmpty()) {
             return;
@@ -278,11 +341,13 @@ public class TerraformExporter {
                 hcl.append(INDENT).append("}\n");
             }
 
+            hcl.append(INDENT).append("project {\n");
             if (cr.getProjectId() != null) {
-                hcl.append(INDENT).append("project {\n");
                 hcl.append(attr(2, "project_id", cr.getProjectId()));
-                hcl.append(INDENT).append("}\n");
+            } else {
+                hcl.append(rawAttr(2, "project_id", projectExpression));
             }
+            hcl.append(INDENT).append("}\n");
 
             writeNotifications(hcl, cr.getNotificationEmails());
 
@@ -294,16 +359,26 @@ public class TerraformExporter {
                                           Map<String, String> routerLabels,
                                           Map<String, String> connectionLabels,
                                           Map<String, String> authKeyVariables,
-                                          Map<String, String> vlanVariables) {
+                                          Map<String, String> vlanVariables,
+                                          Map<String, String> peeringVariables) {
         List<PlannedConnection> connections = plan.getProviderConnections();
         if (connections == null || connections.isEmpty()) {
             return;
         }
 
-        hcl.append("# === Provider Connections ===\n\n");
+        // Labels first, so a SECONDARY can reference its PRIMARY's resource whatever their order.
+        Map<String, String> primaryLabelByGroup = new LinkedHashMap<>();
         for (PlannedConnection conn : connections) {
             String label = uniqueLabel(connectionLabels.values(), "conn", conn.getName());
             connectionLabels.put(conn.getName(), label);
+            if (hasRedundancyGroup(conn) && conn.getRedundancyPriority() != RedundancyPriority.SECONDARY) {
+                primaryLabelByGroup.putIfAbsent(conn.getZSideRedundancyGroup(), label);
+            }
+        }
+
+        hcl.append("# === Provider Connections ===\n\n");
+        for (PlannedConnection conn : connections) {
+            String label = connectionLabels.get(conn.getName());
 
             hcl.append("resource \"equinix_fabric_connection\" \"").append(label).append("\" {\n");
             hcl.append(attr(1, "name", conn.getName()));
@@ -313,7 +388,9 @@ public class TerraformExporter {
             hcl.append(rawAttr(1, "bandwidth", String.valueOf(conn.getBandwidthMbps())));
 
             writeNotifications(hcl, conn.getNotificationEmails());
-            writeRedundancy(hcl, conn);
+            writeRedundancy(hcl, conn, primaryLabelByGroup);
+            writeOrderAndProject(hcl, conn);
+            writeMarker(hcl, plan, conn);
 
             // A-side: the Cloud Router this connection originates from.
             writeASideRouter(hcl, conn.getASideRouterName(), routerLabels);
@@ -325,6 +402,11 @@ public class TerraformExporter {
             String authKeyVariable = authKeyVariables.get(conn.getName());
             if (authKeyVariable != null) {
                 hcl.append(rawAttr(3, "authentication_key", "var." + authKeyVariable));
+            }
+            if (conn.getZSidePeeringType() != null) {
+                hcl.append(attr(3, "peering_type", conn.getZSidePeeringType().name()));
+            } else if (peeringVariables.containsKey(conn.getName())) {
+                hcl.append(rawAttr(3, "peering_type", "var." + peeringVariables.get(conn.getName())));
             }
             if (conn.getZSideServiceProfileUuid() != null) {
                 hcl.append(INDENT).append(INDENT).append(INDENT).append("profile {\n");
@@ -345,12 +427,16 @@ public class TerraformExporter {
                         vlanTag != null ? String.valueOf(vlanTag) : "var." + vlanVariable));
                 hcl.append(INDENT).append(INDENT).append(INDENT).append("}\n");
             }
-            // The provider edge metro the service profile is redeemed in.
+            // The provider edge metro the service profile is redeemed in. The API requires
+            // zSide.accessPoint.location.metroCode on a service-provider connection (live, 2026-11-11).
             MetroId zSideMetro = conn.getZSideMetro() != null ? conn.getZSideMetro() : conn.getASideMetro();
             if (zSideMetro != null) {
                 hcl.append(INDENT).append(INDENT).append(INDENT).append("location {\n");
                 hcl.append(attr(4, "metro_code", String.valueOf(zSideMetro)));
                 hcl.append(INDENT).append(INDENT).append(INDENT).append("}\n");
+            } else {
+                hcl.append(comment(3, "Z-side metro unknown: Fabric requires location.metro_code on a "
+                        + "service-provider connection; add it before applying."));
             }
             if (conn.getZSideSellerRegion() != null) {
                 hcl.append(attr(3, "seller_region", conn.getZSideSellerRegion()));
@@ -387,7 +473,11 @@ public class TerraformExporter {
             // Notifications are mandatory on a Fabric connection; a backbone link's planned
             // connection carries the same notification recipients as a provider connection.
             writeNotifications(hcl, conn != null ? conn.getNotificationEmails() : null);
-            writeRedundancy(hcl, conn);
+            writeRedundancy(hcl, conn, Map.of());
+            if (conn != null) {
+                writeOrderAndProject(hcl, conn);
+                writeMarker(hcl, plan, conn);
+            }
 
             // A-side router.
             String aRouterName = conn != null ? conn.getASideRouterName() : null;
@@ -434,8 +524,8 @@ public class TerraformExporter {
 
     /**
      * Emits the {@code notifications} block Fabric mandates on Cloud Routers and connections,
-     * carrying EVERY recipient the plan lists — {@code emails = ["a@x", "b@x"]} — never just the
-     * first. No-op when the plan carries no email — the attribute cannot be fabricated.
+     * carrying EVERY recipient the plan lists - {@code emails = ["a@x", "b@x"]} - never just the
+     * first. No-op when the plan carries no email - the attribute cannot be fabricated.
      */
     private void writeNotifications(StringBuilder hcl, List<String> emails) {
         if (emails == null || emails.isEmpty()) {
@@ -455,7 +545,7 @@ public class TerraformExporter {
         }
         list.append("]");
         if (first) {
-            return; // every entry was blank — nothing to emit
+            return; // every entry was blank - nothing to emit
         }
         hcl.append(INDENT).append("notifications {\n");
         hcl.append(attr(2, "type", "ALL"));
@@ -464,26 +554,74 @@ public class TerraformExporter {
     }
 
     /**
-     * Emits the connection-level {@code redundancy { group, priority }} block when the planned
-     * connection names a redundancy group, mirroring how the wizard stamps it on the wire body.
-     * A group with no explicit role defaults to {@code PRIMARY} (the same default the execution
-     * path uses) rather than emitting an ambiguous group with no priority.
+     * Emits the connection-level {@code redundancy} block for a planned redundancy group. Fabric assigns
+     * the group id when the PRIMARY is created, so the PRIMARY carries only {@code priority = "PRIMARY"}
+     * and the SECONDARY references the primary's group:
+     * {@code group = one(equinix_fabric_connection.<primary>.redundancy).group} (the form the
+     * {@code equinix/equinix} provider documents; {@code redundancy} is a block set, so it is read with
+     * {@code one(...)} rather than an index). The plan's group token itself is never written: it is not
+     * a Fabric group id. A SECONDARY whose PRIMARY is not in this file gets a comment instead of a group.
      */
-    private void writeRedundancy(StringBuilder hcl, PlannedConnection conn) {
-        if (conn == null) {
-            return;
-        }
-        String group = conn.getZSideRedundancyGroup();
-        if (group == null || group.isBlank()) {
+    private void writeRedundancy(StringBuilder hcl, PlannedConnection conn, Map<String, String> primaryLabelByGroup) {
+        if (conn == null || !hasRedundancyGroup(conn)) {
             return;
         }
         RedundancyPriority priority = conn.getRedundancyPriority() != null
                 ? conn.getRedundancyPriority()
                 : RedundancyPriority.PRIMARY;
         hcl.append(INDENT).append("redundancy {\n");
-        hcl.append(attr(2, "group", group));
         hcl.append(attr(2, "priority", priority.name()));
+        if (priority == RedundancyPriority.SECONDARY) {
+            String primary = primaryLabelByGroup.get(conn.getZSideRedundancyGroup());
+            if (primary != null) {
+                hcl.append(rawAttr(2, "group", "one(equinix_fabric_connection." + primary + ".redundancy).group"));
+            } else {
+                hcl.append(comment(2, "The PRIMARY of redundancy group " + conn.getZSideRedundancyGroup()
+                        + " is not in this configuration: set group to its Fabric redundancy group id."));
+            }
+        }
         hcl.append(INDENT).append("}\n");
+    }
+
+    private static boolean hasRedundancyGroup(PlannedConnection conn) {
+        return conn.getZSideRedundancyGroup() != null && !conn.getZSideRedundancyGroup().isBlank();
+    }
+
+    /** Emits {@code order { term_length }} and {@code project { project_id }} when the plan carries them. */
+    private void writeOrderAndProject(StringBuilder hcl, PlannedConnection conn) {
+        if (conn.getTermLength() != null) {
+            hcl.append(INDENT).append("order {\n");
+            hcl.append(rawAttr(2, "term_length", String.valueOf(conn.getTermLength())));
+            hcl.append(INDENT).append("}\n");
+        }
+        if (conn.getProjectId() != null) {
+            hcl.append(INDENT).append("project {\n");
+            hcl.append(attr(2, "project_id", conn.getProjectId()));
+            hcl.append(INDENT).append("}\n");
+        }
+    }
+
+    /**
+     * Emits the plan marker as the connection's top-level {@code additional_info} (provider schema:
+     * list of maps of string), the same entries the SDK stamps on the wire body, so drift detection
+     * finds connections created by {@code terraform apply} exactly as it finds those the SDK created.
+     */
+    private void writeMarker(StringBuilder hcl, DeploymentPlan plan, PlannedConnection conn) {
+        Map<String, String> marker = PlanMarker.connectionMarker(plan.effectiveDeploymentName(), PlanSteps.keyOf(conn),
+                plan.planId());
+        if (marker.isEmpty()) {
+            return;
+        }
+        StringBuilder list = new StringBuilder("[");
+        boolean first = true;
+        for (Map.Entry<String, String> e : marker.entrySet()) {
+            if (!first) {
+                list.append(", ");
+            }
+            list.append("{ key = ").append(quote(e.getKey())).append(", value = ").append(quote(e.getValue())).append(" }");
+            first = false;
+        }
+        hcl.append(rawAttr(1, "additional_info", list.append("]").toString()));
     }
 
     private void writeRoutingProtocols(StringBuilder hcl, DeploymentPlan plan,
@@ -560,14 +698,12 @@ public class TerraformExporter {
         if (rp.getCustomerAsn() != null) {
             hcl.append(rawAttr(1, "customer_asn", String.valueOf(rp.getCustomerAsn())));
         }
-        if (rp.getCustomerPeerIpv4() != null || rp.getEquinixPeerIpv4() != null) {
+        // bgp_ipv4.customer_peer_ip is the block's only required argument; equinix_peer_ip is
+        // read-only in the provider schema (Fabric derives it from the DIRECT interface), so it is
+        // never written.
+        if (rp.getCustomerPeerIpv4() != null) {
             hcl.append(INDENT).append("bgp_ipv4 {\n");
-            if (rp.getCustomerPeerIpv4() != null) {
-                hcl.append(attr(2, "customer_peer_ip", rp.getCustomerPeerIpv4()));
-            }
-            if (rp.getEquinixPeerIpv4() != null) {
-                hcl.append(attr(2, "equinix_peer_ip", rp.getEquinixPeerIpv4()));
-            }
+            hcl.append(attr(2, "customer_peer_ip", rp.getCustomerPeerIpv4()));
             hcl.append(rawAttr(2, "enabled", "true"));
             hcl.append(INDENT).append("}\n");
         }
@@ -953,7 +1089,7 @@ public class TerraformExporter {
     /**
      * The plan's enumerated input requirement for this connection, when the plan carries one
      * (the wizard populates {@code requiredInputs} per provider connection). {@code null} for a
-     * hand-built plan without requirements — the exporter then derives the need from the
+     * hand-built plan without requirements - the exporter then derives the need from the
      * connection's resolved cloud type.
      */
     private ConnectionInputRequirement requirementFor(DeploymentPlan plan, PlannedConnection conn) {

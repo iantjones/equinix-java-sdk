@@ -16,7 +16,7 @@
 
 /**
  * IAM client interfaces for the Equinix Java SDK. Provides typed access to the Equinix Identity
- * and Access Management API (Access v1) — roles, role assignments, project-scoped access policies
+ * and Access Management API (Access v1) - roles, role assignments, project-scoped access policies
  * and their grants, permission sets, principal policies, policy masks, effective permissions, and
  * policy-authoring discovery (resource types, actions, action sets, resource type actions and the
  * service policy schema).

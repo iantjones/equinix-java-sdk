@@ -46,7 +46,7 @@ import com.eqixiac.equinix.ibxsmartview.client.implementation.SystemAlertsImpl;
  * offers typed access to current and legacy sensor data, power readings, location
  * hierarchy information, and asset management.</p>
  *
- * <p>All resource accessors use lazy initialization — internal clients are created on first access
+ * <p>All resource accessors use lazy initialization - internal clients are created on first access
  * and reused for subsequent calls.</p>
  *
  * <h3>Quick Start</h3>

@@ -1,0 +1,11 @@
+{
+  "type": "PUBLIC_ASN",
+  "project": {
+    "projectId": "03ed2230-604a-494c-bca2-c042d38d80bc"
+  },
+  "number": 64497,
+  "rirRegion": "RIPE_NCC",
+  "ownershipChallengeDetails": {
+    "type": "RPKI"
+  }
+}

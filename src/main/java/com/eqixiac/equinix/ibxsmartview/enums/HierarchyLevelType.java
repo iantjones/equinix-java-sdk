@@ -23,7 +23,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 /**
  * Level of a node in the SmartView location hierarchy (spec schema {@code HierarchyNode}, property
  * {@code levelType}). Wire values are lowercase; {@link #UNKNOWN} is a read-side fallback for
- * values added after this SDK release — never send it.
+ * values added after this SDK release - never send it.
  */
 public enum HierarchyLevelType implements APIParam {
     IBX("ibx"),

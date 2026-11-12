@@ -204,6 +204,9 @@ public class CloudRouterOperator extends ResourceImpl<CloudRouter> {
          * @return this updater
          */
         public CloudRouterUpdater changePackage(GatewayPackageCode packageCode) {
+            if (packageCode == null || packageCode == GatewayPackageCode.UNKNOWN) {
+                throw new IllegalArgumentException("packageCode must be LAB, BASIC, STANDARD, ADVANCED or PREMIUM");
+            }
             operations.add(PatchOperation.replace("/package/code", packageCode));
             return this;
         }
@@ -216,6 +219,9 @@ public class CloudRouterOperator extends ResourceImpl<CloudRouter> {
          * @return this updater
          */
         public CloudRouterUpdater termLength(Integer termLength) {
+            if (termLength == null || termLength < 1) {
+                throw new IllegalArgumentException("termLength must be a positive number of months");
+            }
             operations.add(PatchOperation.replace("/order/termLength", termLength));
             return this;
         }

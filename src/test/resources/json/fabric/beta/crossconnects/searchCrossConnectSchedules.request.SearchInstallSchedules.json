@@ -1,0 +1,46 @@
+{
+  "filter": {
+    "and": [
+      {
+        "property": "/type",
+        "operator": "=",
+        "values": [
+          "XC_INSTALL_SCHEDULE"
+        ]
+      },
+      {
+        "property": "/code",
+        "operator": "IN",
+        "values": [
+          "EXPEDITE",
+          "FLEXIBLE",
+          "STANDARD"
+        ]
+      },
+      {
+        "property": "/aSide/location/ibxCode",
+        "operator": "=",
+        "values": [
+          "SV11"
+        ]
+      },
+      {
+        "property": "/zSide/location/ibxCode",
+        "operator": "=",
+        "values": [
+          "SV11"
+        ]
+      }
+    ]
+  },
+  "pagination": {
+    "offset": 0,
+    "limit": 20
+  },
+  "sort": [
+    {
+      "direction": "DESC",
+      "property": "/startDateTime"
+    }
+  ]
+}

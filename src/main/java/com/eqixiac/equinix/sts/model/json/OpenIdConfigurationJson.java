@@ -17,6 +17,7 @@
 package com.eqixiac.equinix.sts.model.json;
 
 import com.eqixiac.equinix.sts.model.OpenIdConfiguration;
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
@@ -35,20 +36,26 @@ public class OpenIdConfigurationJson implements OpenIdConfiguration {
     private String issuer;
 
     @JsonProperty("jwksUri")
+    @JsonAlias("jwks_uri")
     private String jwksUri;
 
     @JsonProperty("tokenEndpoint")
+    @JsonAlias("token_endpoint")
     private String tokenEndpoint;
 
     @JsonProperty("claimsSupported")
+    @JsonAlias("claims_supported")
     private List<String> claimsSupported;
 
     @JsonProperty("responseTypesSupported")
+    @JsonAlias("response_types_supported")
     private List<String> responseTypesSupported;
 
     @JsonProperty("subjectTypesSupported")
+    @JsonAlias("subject_types_supported")
     private List<String> subjectTypesSupported;
 
     @JsonProperty("idTokenSigningAlgValuesSupported")
+    @JsonAlias("id_token_signing_alg_values_supported")
     private List<String> idTokenSigningAlgValuesSupported;
 }

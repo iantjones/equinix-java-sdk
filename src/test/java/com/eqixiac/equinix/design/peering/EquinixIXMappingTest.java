@@ -16,10 +16,10 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Tests {@link EquinixIXMapping} — the live, IBX-name-driven PeeringDB&rarr;metro bridge (no hardcoded
+ * Tests {@link EquinixIXMapping} - the live, IBX-name-driven PeeringDB&rarr;metro bridge (no hardcoded
  * city table). Each Equinix facility name carries its IBX code (e.g. {@code LA4}); the bridge reads
  * that code, looks it up in the live IBX&rarr;metro map, and seeds a city&rarr;metro map through which
- * coordinate-less IXes resolve — so city aliases work without any static lookup.
+ * coordinate-less IXes resolve - so city aliases work without any static lookup.
  */
 @DisplayName("Equinix IX Mapping (live, IBX-name driven)")
 class EquinixIXMappingTest {
@@ -77,11 +77,11 @@ class EquinixIXMappingTest {
     }
 
     @Test
-    @DisplayName("IXes resolve via the facility-derived city bridge — aliases included")
+    @DisplayName("IXes resolve via the facility-derived city bridge - aliases included")
     void ixesViaCityBridge() throws Exception {
         EquinixIXMapping m = built();
         // "San Jose" never appears as a metro name, yet resolves to SV because the SV5 facility there
-        // seeded the city bridge — no hardcoded alias needed.
+        // seeded the city bridge - no hardcoded alias needed.
         assertEquals(MetroId.of("SV"), m.metroForIx(10));
         assertEquals(MetroId.of("LA"), m.metroForIx(11));
         assertNull(m.metroForIx(12), "an IX whose city has no Equinix facility is unmapped");
@@ -110,5 +110,31 @@ class EquinixIXMappingTest {
         assertTrue(m.metrosWithFacilities().contains(MetroId.of("DC")));
         assertTrue(m.metrosWithIx().contains(MetroId.of("LA")));
         assertTrue(m.metrosWithIx().contains(MetroId.of("SV")));
+    }
+
+    @Test
+    @DisplayName("resolves live PeeringDB facility names when Fabric /metros carries no IBX list")
+    void resolvesFromLiveMetroCodesWithoutIbxList() throws Exception {
+        // The live /fabric/v4/metros response has no "ibxs" field (2026-11-11), so the IBX map is
+        // empty and resolution must rest on the live metro codes. Names are verbatim PeeringDB
+        // facility names for org 2 (Equinix).
+        java.util.List<MetroId> live = java.util.List.of(MetroId.of("DC"), MetroId.of("SV"),
+                MetroId.of("CH"), MetroId.of("DA"), MetroId.of("LA"));
+        EquinixIXMapping mapping = new EquinixIXMapping(Map.of(), live);
+        Map<Integer, PeeringDbFacility> facs = new LinkedHashMap<>();
+        facs.put(1, fac(1, "Equinix DC1-DC15,DC21-DC22 - Ashburn", "Ashburn"));
+        facs.put(6, fac(6, "Equinix SV1/SV5/SV10 - Silicon Valley, San Jose", "San Jose"));
+        facs.put(7, fac(7, "Equinix CH1/CH2/CH4 - Chicago", "Chicago"));
+        facs.put(99, fac(99, "Equinix ZZ9 - Nowhere", "Nowhere"));
+        mapping.mapFacilities(facs);
+        Map<Integer, PeeringDbIx> ixes = new LinkedHashMap<>();
+        ixes.put(1, ix(1, "Ashburn"));
+        mapping.mapIxes(ixes);
+
+        assertEquals(MetroId.of("DC"), mapping.metroForFacility(1));
+        assertEquals(MetroId.of("SV"), mapping.metroForFacility(6));
+        assertEquals(MetroId.of("CH"), mapping.metroForFacility(7));
+        assertNull(mapping.metroForFacility(99), "a prefix that is not a live metro stays unresolved");
+        assertEquals(MetroId.of("DC"), mapping.metroForIx(1), "IXes resolve through the facility city bridge");
     }
 }

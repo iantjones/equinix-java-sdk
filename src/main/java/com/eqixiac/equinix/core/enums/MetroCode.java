@@ -109,7 +109,7 @@ public enum MetroCode implements APIParam {
     /**
      * Resolves a wire metro code (e.g. {@code "SV"}) to its enum constant, if this enum lists it.
      * The lookup is case-insensitive and trims surrounding whitespace. The {@link #UNKNOWN} sentinel
-     * is never returned as a match — a code that does not name a known metro yields
+     * is never returned as a match - a code that does not name a known metro yields
      * {@link Optional#empty()}.
      *
      * @param code the metro code as returned by the API

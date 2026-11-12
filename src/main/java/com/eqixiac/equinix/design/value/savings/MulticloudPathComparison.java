@@ -173,11 +173,14 @@ public class MulticloudPathComparison {
      * both directions; divide by two for the rate in each direction. One month is
      * {@value MulticloudLinkQuote#HOURS_PER_MONTH} hours and one GB is 10<sup>9</sup> bytes.</p>
      *
-     * <p>Worked example from cited list prices (retrieved 2026-09-21): native 10 Gbps =
-     * (12.33 + 19.00) USD/h x 730 h = 22,870.90 USD; per-GB path fixed = AWS Direct Connect
-     * 10G port 2.25 USD/h x 730 h + Google Cross-Cloud Interconnect 10G 5.60 USD/h x 730 h =
-     * 5,730.50 USD; per-GB 0.02 + 0.02 USD; native per-GB 0. Then g* = 17,140.40 / 0.04 =
-     * 428,510 GB each way = 1,304.4 Mbps each way = 2,608.9 Mbps in total.</p>
+     * <p>Worked example with the figures the calculator uses for AWS us-east-1 to Google Cloud us-east4 at
+     * 10 Gbps, path tier 1, on the bundled reference data alone (no Cloud Router): native =
+     * (12.33 + 19.00) USD/h x 730 h = 22,870.90 USD (multicloud bundle, retrieved 2026-09-21); Equinix path
+     * fixed = two reference 10G Fabric connections 2 x 350 + AWS Direct Connect 10G hosted connection
+     * 2.48 USD/h x 730 h = 1,810.40 + Google Cloud 10G Partner Interconnect VLAN attachment 2.36 USD/h x 730 h =
+     * 1,722.80, total 4,233.20 USD (reference bundle, retrieved 2026-11-12); Equinix per-GB 0.02 + 0.0186 =
+     * 0.0386 USD; native per-GB 0. Then g* = (22,870.90 - 4,233.20) / 0.0386 = 482,842 GB each way =
+     * 1,469.9 Mbps each way = 2,939.7 Mbps in total (the figure {@code MulticloudSavingsTest} asserts).</p>
      *
      * <p>The two cost lines cross when the fixed-cost difference and the per-GB difference have
      * the same sign. Both positive is the usual case: the native path is cheaper above

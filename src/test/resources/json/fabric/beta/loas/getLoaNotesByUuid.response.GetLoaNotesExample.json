@@ -1,0 +1,18 @@
+{
+  "data": [
+    {
+      "type": "ISSUER",
+      "href": "https://api.equinix.com/fabric/v4/loas/7c-5b93-4e6a-a218-6c7d9e3f45b1/notes/e41f485e-3094-42de-8797-0ef19a51df79",
+      "uuid": "e41f485e-3094-42de-8797-0ef19a51df79",
+      "comments": "test note from issuer",
+      "createdDateTime": "2026-07-24T06:50:46Z"
+    },
+    {
+      "type": "REQUESTOR",
+      "href": "https://api.equinix.com/fabric/v4/loas/7c-5b93-4e6a-a218-6c7d9e3f45b1/notes/a41f485e-3094-42de-8797-0ef19a51df81",
+      "uuid": "a41f485e-3094-42de-8797-0ef19a51df81",
+      "comments": "test note from requestor",
+      "createdDateTime": "2026-07-25T06:50:46Z"
+    }
+  ]
+}

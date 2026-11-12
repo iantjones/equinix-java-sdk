@@ -1,0 +1,295 @@
+{
+  "status": "Beta",
+  "unit": "gCO2e/kWh",
+  "method": "location-based: national annual average carbon intensity of electricity generation",
+  "source": "Ember (2026), Yearly Electricity Data, with processing by Our World in Data (carbon-intensity-electricity)",
+  "sourceUrl": "https://ourworldindata.org/grapher/carbon-intensity-electricity",
+  "licence": "CC BY 4.0",
+  "retrieved": "2026-11-12",
+  "notes": [
+    "Country-level figures: every metro in a country gets the same value, so metros within one country cannot be told apart.",
+    "Location-based: renewable energy purchases by a data centre operator are not reflected.",
+    "Each entry states the year it describes; the latest year published per country is used."
+  ],
+  "countries": {
+    "AE": {
+      "gramsCo2ePerKwh": 467.51,
+      "year": 2024,
+      "name": "United Arab Emirates"
+    },
+    "AR": {
+      "gramsCo2ePerKwh": 346.0,
+      "year": 2025,
+      "name": "Argentina"
+    },
+    "AT": {
+      "gramsCo2ePerKwh": 116.91,
+      "year": 2025,
+      "name": "Austria"
+    },
+    "AU": {
+      "gramsCo2ePerKwh": 525.18,
+      "year": 2025,
+      "name": "Australia"
+    },
+    "BE": {
+      "gramsCo2ePerKwh": 149.82,
+      "year": 2025,
+      "name": "Belgium"
+    },
+    "BG": {
+      "gramsCo2ePerKwh": 275.55,
+      "year": 2025,
+      "name": "Bulgaria"
+    },
+    "BR": {
+      "gramsCo2ePerKwh": 109.95,
+      "year": 2025,
+      "name": "Brazil"
+    },
+    "CA": {
+      "gramsCo2ePerKwh": 190.72,
+      "year": 2025,
+      "name": "Canada"
+    },
+    "CH": {
+      "gramsCo2ePerKwh": 39.22,
+      "year": 2025,
+      "name": "Switzerland"
+    },
+    "CI": {
+      "gramsCo2ePerKwh": 405.01,
+      "year": 2024,
+      "name": "Cote d'Ivoire"
+    },
+    "CL": {
+      "gramsCo2ePerKwh": 289.49,
+      "year": 2025,
+      "name": "Chile"
+    },
+    "CN": {
+      "gramsCo2ePerKwh": 525.34,
+      "year": 2025,
+      "name": "China"
+    },
+    "CO": {
+      "gramsCo2ePerKwh": 186.81,
+      "year": 2025,
+      "name": "Colombia"
+    },
+    "CZ": {
+      "gramsCo2ePerKwh": 401.46,
+      "year": 2025,
+      "name": "Czechia"
+    },
+    "DE": {
+      "gramsCo2ePerKwh": 329.65,
+      "year": 2025,
+      "name": "Germany"
+    },
+    "DK": {
+      "gramsCo2ePerKwh": 114.41,
+      "year": 2025,
+      "name": "Denmark"
+    },
+    "EG": {
+      "gramsCo2ePerKwh": 563.23,
+      "year": 2025,
+      "name": "Egypt"
+    },
+    "ES": {
+      "gramsCo2ePerKwh": 153.6,
+      "year": 2025,
+      "name": "Spain"
+    },
+    "FI": {
+      "gramsCo2ePerKwh": 57.47,
+      "year": 2025,
+      "name": "Finland"
+    },
+    "FR": {
+      "gramsCo2ePerKwh": 41.44,
+      "year": 2025,
+      "name": "France"
+    },
+    "GB": {
+      "gramsCo2ePerKwh": 217.41,
+      "year": 2025,
+      "name": "United Kingdom"
+    },
+    "GH": {
+      "gramsCo2ePerKwh": 468.89,
+      "year": 2024,
+      "name": "Ghana"
+    },
+    "GR": {
+      "gramsCo2ePerKwh": 315.09,
+      "year": 2025,
+      "name": "Greece"
+    },
+    "HU": {
+      "gramsCo2ePerKwh": 163.02,
+      "year": 2025,
+      "name": "Hungary"
+    },
+    "ID": {
+      "gramsCo2ePerKwh": 680.25,
+      "year": 2024,
+      "name": "Indonesia"
+    },
+    "IE": {
+      "gramsCo2ePerKwh": 256.54,
+      "year": 2025,
+      "name": "Ireland"
+    },
+    "IN": {
+      "gramsCo2ePerKwh": 670.13,
+      "year": 2025,
+      "name": "India"
+    },
+    "IT": {
+      "gramsCo2ePerKwh": 284.78,
+      "year": 2025,
+      "name": "Italy"
+    },
+    "JP": {
+      "gramsCo2ePerKwh": 477.26,
+      "year": 2025,
+      "name": "Japan"
+    },
+    "KE": {
+      "gramsCo2ePerKwh": 95.44,
+      "year": 2025,
+      "name": "Kenya"
+    },
+    "KR": {
+      "gramsCo2ePerKwh": 417.06,
+      "year": 2025,
+      "name": "South Korea"
+    },
+    "LU": {
+      "gramsCo2ePerKwh": 123.38,
+      "year": 2025,
+      "name": "Luxembourg"
+    },
+    "MX": {
+      "gramsCo2ePerKwh": 474.02,
+      "year": 2025,
+      "name": "Mexico"
+    },
+    "MY": {
+      "gramsCo2ePerKwh": 601.97,
+      "year": 2025,
+      "name": "Malaysia"
+    },
+    "NG": {
+      "gramsCo2ePerKwh": 455.71,
+      "year": 2025,
+      "name": "Nigeria"
+    },
+    "NL": {
+      "gramsCo2ePerKwh": 253.56,
+      "year": 2025,
+      "name": "Netherlands"
+    },
+    "NO": {
+      "gramsCo2ePerKwh": 28.11,
+      "year": 2025,
+      "name": "Norway"
+    },
+    "NZ": {
+      "gramsCo2ePerKwh": 92.76,
+      "year": 2025,
+      "name": "New Zealand"
+    },
+    "OM": {
+      "gramsCo2ePerKwh": 544.47,
+      "year": 2025,
+      "name": "Oman"
+    },
+    "PE": {
+      "gramsCo2ePerKwh": 238.25,
+      "year": 2025,
+      "name": "Peru"
+    },
+    "PH": {
+      "gramsCo2ePerKwh": 588.29,
+      "year": 2025,
+      "name": "Philippines"
+    },
+    "PL": {
+      "gramsCo2ePerKwh": 588.6,
+      "year": 2025,
+      "name": "Poland"
+    },
+    "PT": {
+      "gramsCo2ePerKwh": 127.91,
+      "year": 2025,
+      "name": "Portugal"
+    },
+    "RO": {
+      "gramsCo2ePerKwh": 250.75,
+      "year": 2025,
+      "name": "Romania"
+    },
+    "SA": {
+      "gramsCo2ePerKwh": 691.95,
+      "year": 2024,
+      "name": "Saudi Arabia"
+    },
+    "SE": {
+      "gramsCo2ePerKwh": 35.26,
+      "year": 2025,
+      "name": "Sweden"
+    },
+    "SG": {
+      "gramsCo2ePerKwh": 497.09,
+      "year": 2025,
+      "name": "Singapore"
+    },
+    "TH": {
+      "gramsCo2ePerKwh": 545.74,
+      "year": 2025,
+      "name": "Thailand"
+    },
+    "TR": {
+      "gramsCo2ePerKwh": 474.74,
+      "year": 2025,
+      "name": "Turkey"
+    },
+    "TW": {
+      "gramsCo2ePerKwh": 633.21,
+      "year": 2025,
+      "name": "Taiwan"
+    },
+    "US": {
+      "gramsCo2ePerKwh": 384.4,
+      "year": 2025,
+      "name": "United States"
+    },
+    "VN": {
+      "gramsCo2ePerKwh": 460.73,
+      "year": 2025,
+      "name": "Vietnam"
+    },
+    "ZA": {
+      "gramsCo2ePerKwh": 699.29,
+      "year": 2025,
+      "name": "South Africa"
+    }
+  },
+  "metroOverrides": {
+    "HK": {
+      "gramsCo2ePerKwh": 675.48,
+      "year": 2024,
+      "name": "Hong Kong",
+      "reason": "the Fabric catalogue lists Hong Kong under country CN; the Hong Kong figure is used"
+    },
+    "LG": {
+      "gramsCo2ePerKwh": 455.71,
+      "year": 2025,
+      "name": "Nigeria",
+      "reason": "the Fabric catalogue lists Lagos with no country; the Nigeria figure is used"
+    }
+  }
+}

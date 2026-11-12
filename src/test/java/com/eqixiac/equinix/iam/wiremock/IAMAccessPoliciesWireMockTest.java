@@ -149,7 +149,7 @@ class IAMAccessPoliciesWireMockTest extends WireMockTestBase {
         @DisplayName("404 throws EquinixNotFoundException")
         void notFound() {
             stubErrorInline(wireMock, "/v1/projects/.*/accessPolicies/.*",
-                    404, "[{\"errorCode\":\"ERR-404\",\"errorMessage\":\"Access policy not found\"}]");
+                    404, "{\"error\":{\"errorCode\":\"access-policy-not-found\"}}");
 
             assertThrows(EquinixNotFoundException.class,
                     () -> iam.accessPolicies().getByUuid(PROJECT_ID, "accesspolicy:missing"));
@@ -187,7 +187,7 @@ class IAMAccessPoliciesWireMockTest extends WireMockTestBase {
         @DisplayName("409 throws EquinixConflictException")
         void conflict() {
             stubErrorInline(wireMock, COLLECTION,
-                    409, "[{\"errorCode\":\"ERR-409\",\"errorMessage\":\"Access policy already exists\"}]");
+                    409, "{\"error\":{\"errorCode\":\"access-policy-already-exists\"}}");
 
             assertThrows(EquinixConflictException.class,
                     () -> iam.accessPolicies().create(PROJECT_ID,
@@ -276,7 +276,7 @@ class IAMAccessPoliciesWireMockTest extends WireMockTestBase {
         @DisplayName("404 throws EquinixNotFoundException")
         void notFound() {
             stubErrorInline(wireMock, "/v1/projects/.*/accessPolicies/.*",
-                    404, "[{\"errorCode\":\"ERR-404\",\"errorMessage\":\"Access policy not found\"}]");
+                    404, "{\"error\":{\"errorCode\":\"access-policy-not-found\"}}");
 
             assertThrows(EquinixNotFoundException.class,
                     () -> iam.accessPolicies().delete(PROJECT_ID, "accesspolicy:missing", "rev-1"));
@@ -355,7 +355,7 @@ class IAMAccessPoliciesWireMockTest extends WireMockTestBase {
         @DisplayName("404 throws EquinixNotFoundException")
         void notFound() {
             stubErrorInline(wireMock, "/v1/projects/.*/accessPolicies/.*/grants/.*",
-                    404, "[{\"errorCode\":\"ERR-404\",\"errorMessage\":\"Grant not found\"}]");
+                    404, "{\"error\":{\"errorCode\":\"grant-not-found\"}}");
 
             assertThrows(EquinixNotFoundException.class,
                     () -> iam.accessPolicies().removeGrant(PROJECT_ID, POLICY_ID, "grant:missing"));

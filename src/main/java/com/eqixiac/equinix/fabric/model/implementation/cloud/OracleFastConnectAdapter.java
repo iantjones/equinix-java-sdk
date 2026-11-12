@@ -43,7 +43,8 @@ import lombok.Getter;
  *     vc,
  *     vc.getId(),                            // OCID of the virtual circuit
  *     vc.getRegion(),                        // e.g., "us-ashburn-1"
- *     "equinix-oracle-profile-uuid"          // Equinix service profile for Oracle
+ *     "equinix-oracle-profile-uuid",          // Equinix service profile for Oracle
+ *     "SV"                                   // Equinix metro of the provider port
  * );
  *
  * Connection conn = fabric.connections()
@@ -61,7 +62,8 @@ import lombok.Getter;
  * OracleFastConnectAdapter<?> adapter = OracleFastConnectAdapter.of(
  *     "ocid1.virtualcircuit.oc1...",           // Virtual circuit OCID
  *     "us-ashburn-1",                           // Region
- *     "equinix-oracle-profile-uuid"             // Equinix service profile
+ *     "equinix-oracle-profile-uuid",             // Equinix service profile
+ *     "SV"                                   // Equinix metro of the provider port
  * );
  * }</pre>
  *
@@ -76,6 +78,7 @@ public class OracleFastConnectAdapter<T> implements CloudProviderConnectionAdapt
     private final String authenticationKey;
     private final String sellerRegion;
     private final String serviceProfileUuid;
+    private final String metroCode;
 
     /**
      * Creates an adapter wrapping an Oracle Cloud FastConnect SDK object.
@@ -84,12 +87,15 @@ public class OracleFastConnectAdapter<T> implements CloudProviderConnectionAdapt
      * @param virtualCircuitOcid    the OCID of the Oracle virtual circuit
      * @param ociRegion             the OCI region (e.g., {@code "us-ashburn-1"})
      * @param serviceProfileUuid    the Equinix Fabric service profile UUID for Oracle FastConnect
+     * @param metroCode          the Equinix metro the provider is reached in, e.g. {@code "SV"}; required,
+     *                           sent as {@code zSide.accessPoint.location.metroCode}
      */
-    public OracleFastConnectAdapter(T source, String virtualCircuitOcid, String ociRegion, String serviceProfileUuid) {
+    public OracleFastConnectAdapter(T source, String virtualCircuitOcid, String ociRegion, String serviceProfileUuid, String metroCode) {
         this.source = source;
         this.authenticationKey = virtualCircuitOcid;
         this.sellerRegion = ociRegion;
         this.serviceProfileUuid = serviceProfileUuid;
+        this.metroCode = AdapterArguments.requireMetro(metroCode);
     }
 
     /**
@@ -98,10 +104,12 @@ public class OracleFastConnectAdapter<T> implements CloudProviderConnectionAdapt
      * @param virtualCircuitOcid    the OCID of the Oracle virtual circuit
      * @param ociRegion             the OCI region
      * @param serviceProfileUuid    the Equinix Fabric service profile UUID for Oracle FastConnect
+     * @param metroCode          the Equinix metro the provider is reached in, e.g. {@code "SV"}; required,
+     *                           sent as {@code zSide.accessPoint.location.metroCode}
      * @return a new adapter configured for Oracle FastConnect
      */
-    public static OracleFastConnectAdapter<Void> of(String virtualCircuitOcid, String ociRegion, String serviceProfileUuid) {
-        return new OracleFastConnectAdapter<>(null, virtualCircuitOcid, ociRegion, serviceProfileUuid);
+    public static OracleFastConnectAdapter<Void> of(String virtualCircuitOcid, String ociRegion, String serviceProfileUuid, String metroCode) {
+        return new OracleFastConnectAdapter<>(null, virtualCircuitOcid, ociRegion, serviceProfileUuid, metroCode);
     }
 
     @Override

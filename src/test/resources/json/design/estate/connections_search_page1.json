@@ -1,0 +1,41 @@
+{ "pagination": { "offset": 0, "limit": 2, "total": 3, "next": "/search?offset=2&limit=2" }, "data": [
+    {
+      "href": "https://api.equinix.com/fabric/v4/connections/c0000000-0000-4000-8000-000000000001",
+      "uuid": "c0000000-0000-4000-8000-000000000001",
+      "name": "synthetic-connection-1",
+      "type": "EVPL_VC",
+      "state": "ACTIVE",
+      "direction": "OUTGOING",
+      "isRemote": false,
+      "bandwidth": 1000,
+      "account": { "accountNumber": 100, "orgId": 1, "globalOrgId": "g" },
+      "project": { "projectId": "aaaaaaaa-0000-4000-8000-000000000001" },
+      "order": { "billingTier": "Up to 1 G", "isBillable": true, "termLength": 1 },
+      "operation": { "equinixStatus": "PROVISIONED", "providerStatus": "AVAILABLE", "lockEnabled": false },
+      "redundancy": { "group": "g1", "priority": "PRIMARY" },
+      "notifications": [ { "type": "ALL", "emails": [ "noc@example.com" ] } ],
+      "changeLog": { "createdBy": "synthetic", "createdDateTime": "2025-01-01T00:00:00Z", "updatedDateTime": "2025-01-01T00:00:00Z" },
+      "aSide": { "accessPoint": { "type": "COLO", "port": { "uuid": "p0000000-0000-4000-8000-000000000001", "name": "synthetic-port-1" }, "location": { "metroCode": "DC" }, "linkProtocol": { "type": "DOT1Q", "vlanTag": 100 } } },
+      "zSide": { "accessPoint": { "type": "SP", "profile": { "uuid": "sp000000-0000-4000-8000-0000000000a1", "name": "AWS Direct Connect", "type": "L2_PROFILE" }, "location": { "metroCode": "DC" } } }
+    }
+,
+    {
+      "href": "https://api.equinix.com/fabric/v4/connections/c0000000-0000-4000-8000-000000000009",
+      "uuid": "c0000000-0000-4000-8000-000000000009",
+      "name": "someone-elses",
+      "type": "EVPL_VC",
+      "state": "ACTIVE",
+      "direction": "OUTGOING",
+      "isRemote": false,
+      "bandwidth": 50,
+      "account": { "accountNumber": 100, "orgId": 1, "globalOrgId": "g" },
+      "project": { "projectId": "bbbbbbbb-0000-4000-8000-000000000002" },
+      "order": { "billingTier": "Up to 1 G", "isBillable": true, "termLength": 1 },
+      "operation": { "equinixStatus": "PROVISIONED", "providerStatus": "AVAILABLE", "lockEnabled": false },
+      "redundancy": { "group": "g9", "priority": "PRIMARY" },
+      "notifications": [ { "type": "ALL", "emails": [ "noc@example.com" ] } ],
+      "changeLog": { "createdBy": "synthetic", "createdDateTime": "2025-01-01T00:00:00Z", "updatedDateTime": "2025-01-01T00:00:00Z" },
+      "aSide": { "accessPoint": { "type": "COLO", "port": { "uuid": "p0000000-0000-4000-8000-000000000001", "name": "synthetic-port-1" }, "location": { "metroCode": "DC" }, "linkProtocol": { "type": "DOT1Q", "vlanTag": 100 } } },
+      "zSide": { "accessPoint": { "type": "SP", "profile": { "uuid": "sp000000-0000-4000-8000-0000000000a1", "name": "AWS Direct Connect", "type": "L2_PROFILE" }, "location": { "metroCode": "DC" } } }
+    }
+] }

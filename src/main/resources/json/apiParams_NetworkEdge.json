@@ -27,6 +27,10 @@
           },
           "CreatePublicKey": {
             "httpMethod": "POST"
+          },
+          "DeletePublicKey": {
+            "httpMethod": "DELETE",
+            "requestUri": "{$uuid}"
           }
         }
       },

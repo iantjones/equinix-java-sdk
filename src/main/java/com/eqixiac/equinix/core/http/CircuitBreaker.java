@@ -17,6 +17,10 @@
 package com.eqixiac.equinix.core.http;
 
 import com.eqixiac.equinix.core.exception.CircuitOpenException;
+import com.eqixiac.equinix.core.internal.MonotonicClock;
+
+import java.time.Clock;
+import java.util.Objects;
 
 /**
  * A simple, opt-in consecutive-failure circuit breaker for the SDK's request execution path.
@@ -27,26 +31,28 @@ import com.eqixiac.equinix.core.exception.CircuitOpenException;
  * {@link RetryPolicy}:</p>
  *
  * <ul>
- *   <li><b>CLOSED</b> (normal): requests flow through. Each <em>service failure</em> — a 5xx
- *       response or a transport {@code IOException} — increments a consecutive-failure counter;
+ *   <li><b>CLOSED</b> (normal): requests flow through. Each <em>service failure</em> - a 5xx
+ *       response or a transport {@code IOException} - increments a consecutive-failure counter;
  *       any completed HTTP exchange with a status below 500 resets it. Once the counter reaches
  *       {@code failureThreshold}, the breaker opens.</li>
  *   <li><b>OPEN</b>: every request is rejected immediately with a {@link CircuitOpenException}
  *       (no HTTP exchange happens) until {@code openCooldownMillis} elapses. Outcomes reported by
- *       <em>straggler</em> requests — attempts admitted before the circuit opened that complete
- *       afterwards — are ignored: a straggler success must not snap the circuit shut (that would
+ *       <em>straggler</em> requests - attempts admitted before the circuit opened that complete
+ *       afterwards - are ignored: a straggler success must not snap the circuit shut (that would
  *       bypass the cooldown and the half-open probe) and a straggler failure must not extend the
  *       cooldown.</li>
  *   <li><b>HALF_OPEN</b>: after the cooldown, a single probe request is admitted (further requests
- *       are rejected while the probe is pending — a probe slot expires after another cooldown, so
+ *       are rejected while the probe is pending - a probe slot expires after another cooldown, so
  *       a probe that dies without reporting cannot wedge the breaker). Only the probe's completion
  *       moves the breaker on: a successful probe closes it; a failed probe re-opens it for another
  *       cooldown.</li>
  * </ul>
  *
- * <p>Client-side errors (4xx) are deliberately <em>not</em> counted as failures — they indicate the
+ * <p>Client-side errors (4xx) are deliberately <em>not</em> counted as failures - they indicate the
  * service is up and answering. Rate limiting (429) is likewise left to {@link RetryPolicy}'s
- * backoff. Instances are thread-safe and may be shared by all requests of a client (which is
+ * backoff. Cooldowns are measured on an injectable {@link Clock} (a monotonic clock by default, see
+ * {@link #CircuitBreaker(int, long, Clock)}), so tests can advance time instead of sleeping.
+ * Instances are thread-safe and may be shared by all requests of a client (which is
  * exactly how the SDK uses them).</p>
  *
  * @author ianjones
@@ -64,8 +70,9 @@ public final class CircuitBreaker {
 
     private State state = State.CLOSED;
     private int consecutiveFailures = 0;
-    private long openedAtNanos;
-    private long probeStartedAtNanos;
+    private final Clock clock;
+    private long openedAtMillis;
+    private long probeStartedAtMillis;
 
     /**
      * Creates a breaker that opens after {@code failureThreshold} consecutive service failures and
@@ -75,6 +82,20 @@ public final class CircuitBreaker {
      * @param openCooldownMillis how long the circuit stays open before a probe is admitted (must be &gt;= 1)
      */
     public CircuitBreaker(int failureThreshold, long openCooldownMillis) {
+        this(failureThreshold, openCooldownMillis, MonotonicClock.get());
+    }
+
+    /**
+     * Creates a breaker that measures its cooldowns on the given clock. Only differences between
+     * {@link Clock#millis()} readings are used, so any clock (including a fixed or manually
+     * advanced test clock) works.
+     *
+     * @param failureThreshold number of consecutive failures that opens the circuit (must be &gt;= 1)
+     * @param openCooldownMillis how long the circuit stays open before a probe is admitted (must be &gt;= 1)
+     * @param clock the time source for cooldowns (must not be {@code null})
+     */
+    public CircuitBreaker(int failureThreshold, long openCooldownMillis, Clock clock) {
+        this.clock = Objects.requireNonNull(clock, "clock");
         if (failureThreshold < 1) {
             throw new IllegalArgumentException("failureThreshold must be >= 1, was: " + failureThreshold);
         }
@@ -92,12 +113,12 @@ public final class CircuitBreaker {
      * @throws CircuitOpenException if the request must not be sent
      */
     public synchronized void acquire() throws CircuitOpenException {
-        long now = System.nanoTime();
+        long now = clock.millis();
         switch (state) {
             case CLOSED:
                 return;
             case OPEN: {
-                long remaining = remainingMillis(now, openedAtNanos);
+                long remaining = remainingMillis(now, openedAtMillis);
                 if (remaining > 0) {
                     throw new CircuitOpenException(
                             "Circuit breaker is open after " + consecutiveFailures
@@ -105,12 +126,12 @@ public final class CircuitBreaker {
                             remaining);
                 }
                 state = State.HALF_OPEN;
-                probeStartedAtNanos = now;
+                probeStartedAtMillis = now;
                 return;
             }
             case HALF_OPEN:
             default: {
-                long remaining = remainingMillis(now, probeStartedAtNanos);
+                long remaining = remainingMillis(now, probeStartedAtMillis);
                 if (remaining > 0) {
                     throw new CircuitOpenException(
                             "Circuit breaker is half-open with a probe request pending; "
@@ -119,7 +140,7 @@ public final class CircuitBreaker {
                 }
                 // The previous probe never reported back (e.g. died mid-flight); its slot has
                 // expired, so this caller becomes the new probe.
-                probeStartedAtNanos = now;
+                probeStartedAtMillis = now;
             }
         }
     }
@@ -127,7 +148,7 @@ public final class CircuitBreaker {
     /**
      * Records a healthy outcome (any completed HTTP exchange with status &lt; 500). In CLOSED this
      * resets the consecutive-failure count; in HALF_OPEN it is the probe's success and closes the
-     * circuit. In OPEN it is ignored — it can only come from a straggler request admitted before
+     * circuit. In OPEN it is ignored - it can only come from a straggler request admitted before
      * the circuit opened, and closing on it would bypass the cooldown and the half-open probe.
      */
     public synchronized void recordSuccess() {
@@ -150,7 +171,7 @@ public final class CircuitBreaker {
     /**
      * Records a service failure (5xx response or transport {@code IOException}). In CLOSED this
      * opens the circuit once the consecutive-failure count reaches the threshold; in HALF_OPEN it
-     * is the probe's failure and re-opens the circuit for a fresh cooldown. In OPEN it is ignored —
+     * is the probe's failure and re-opens the circuit for a fresh cooldown. In OPEN it is ignored - 
      * a straggler's late failure must not keep extending the cooldown.
      */
     public synchronized void recordFailure() {
@@ -159,7 +180,7 @@ public final class CircuitBreaker {
                 consecutiveFailures++;
                 if (consecutiveFailures >= failureThreshold) {
                     state = State.OPEN;
-                    openedAtNanos = System.nanoTime();
+                    openedAtMillis = clock.millis();
                 }
                 return;
             case OPEN:
@@ -170,7 +191,7 @@ public final class CircuitBreaker {
                 // The probe failed: re-open for another full cooldown.
                 consecutiveFailures++;
                 state = State.OPEN;
-                openedAtNanos = System.nanoTime();
+                openedAtMillis = clock.millis();
         }
     }
 
@@ -184,8 +205,7 @@ public final class CircuitBreaker {
         return state;
     }
 
-    private long remainingMillis(long nowNanos, long sinceNanos) {
-        long elapsedMillis = (nowNanos - sinceNanos) / 1_000_000L;
-        return openCooldownMillis - elapsedMillis;
+    private long remainingMillis(long nowMillis, long sinceMillis) {
+        return openCooldownMillis - (nowMillis - sinceMillis);
     }
 }

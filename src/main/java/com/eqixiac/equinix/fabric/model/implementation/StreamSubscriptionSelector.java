@@ -26,7 +26,7 @@ import java.util.List;
  * Event or metric selector for a stream subscription, expressed as include/except
  * expression lists (e.g. {@code equinix.fabric.connection.*}).
  *
- * <p>Prefer the {@code include(...)}/{@code except(...)} static factories — the two
+ * <p>Prefer the {@code include(...)}/{@code except(...)} static factories - the two
  * constructor parameters are identically-typed {@code List<String>}s with opposite
  * semantics, so a positional swap silently inverts the subscription filter.</p>
  */

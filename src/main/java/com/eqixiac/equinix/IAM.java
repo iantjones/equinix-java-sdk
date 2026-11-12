@@ -19,6 +19,7 @@ package com.eqixiac.equinix;
 import com.eqixiac.equinix.core.auth.EquinixCredentials;
 import com.eqixiac.equinix.core.auth.EquinixCredentialsProvider;
 import com.eqixiac.equinix.core.auth.EquinixStaticCredentialsProvider;
+import com.eqixiac.equinix.core.auth.BearerTokenProvider;
 import com.eqixiac.equinix.iam.client.IAMAccessPolicies;
 import com.eqixiac.equinix.iam.client.implementation.IAMConfigImpl;
 import com.eqixiac.equinix.iam.client.IAMEffectivePermissions;
@@ -40,46 +41,61 @@ import com.eqixiac.equinix.iam.client.implementation.IAMRolesImpl;
 
 /**
  * The primary entry point for accessing the Equinix Identity and Access Management (IAM) API
- * (Access v1) — Equinix's attribute-based access control (ABAC) and role-based access control
+ * (Access v1) - Equinix's attribute-based access control (ABAC) and role-based access control
  * (RBAC) plane.
  *
  * <p>IAM lets you describe <em>who</em> can do <em>what</em> across Equinix services through
  * several cooperating resource families:</p>
  *
  * <ul>
- *   <li>{@link #roles()} / {@link #roleAssignments()} — the RBAC layer: pre-defined roles and
+ *   <li>{@link #roles()} / {@link #roleAssignments()} - the RBAC layer: pre-defined roles and
  *       the assignment of a role to a principal within a scope.</li>
- *   <li>{@link #accessPolicies()} — project-scoped ABAC access policies, including their
+ *   <li>{@link #accessPolicies()} - project-scoped ABAC access policies, including their
  *       {@code grants} (which principals/groups/projects the policy is granted to).</li>
- *   <li>{@link #permissionSets()} — named, reusable permission sets within a project.</li>
- *   <li>{@link #principalPolicies()} — per-principal policies within a governance domain.</li>
- *   <li>{@link #policyMasks()} — project-scoped masks controlling which managed policies and
+ *   <li>{@link #permissionSets()} - named, reusable permission sets within a project.</li>
+ *   <li>{@link #principalPolicies()} - per-principal policies within a governance domain.</li>
+ *   <li>{@link #policyMasks()} - project-scoped masks controlling which managed policies and
  *       permission sets are available.</li>
- *   <li>{@link #effectivePermissions()} — the computed effective permissions a principal holds
+ *   <li>{@link #effectivePermissions()} - the computed effective permissions a principal holds
  *       within a project for a service.</li>
- *   <li>{@link #resourceTypes()} — discovery of resource types, actions, action sets, resource
+ *   <li>{@link #resourceTypes()} - discovery of resource types, actions, action sets, resource
  *       type actions and a service's policy schema.</li>
  * </ul>
  *
- * <p>Each accessor uses lazy initialization — the internal client is created on first access and
+ * <p>Each accessor uses lazy initialization - the internal client is created on first access and
  * reused for subsequent calls.</p>
  *
  * <h3>Service host</h3>
- * <p>The Access v1 OpenAPI specification declares its own service host
- * ({@code https://access.eqix.equinix.com}). This SDK, however, routes every domain — IAM included
- * — through the unified Equinix API gateway ({@code https://api.equinix.com}) configured on the
- * shared {@link EquinixClient}, which fronts the per-service hosts and exposes the same paths. The
- * relative request URIs in {@code apiParams_IAM.json} are therefore resolved against that single
- * gateway host rather than the spec's per-service {@code access.eqix.equinix.com} server. This is
- * the intended SDK-wide design; no per-domain host override is provided.</p>
+ * <p>IAM requests go to the Access service's own host, {@code https://access.eqix.equinix.com},
+ * declared as the {@code hostName} of the IAM functional area in {@code apiParams_IAM.json}. The
+ * unified gateway {@code https://api.equinix.com} answers 404 for these paths. The OAuth
+ * client-credentials login still goes to {@code api.equinix.com}, and the resulting bearer token is
+ * sent to the Access host. Override the host with
+ * {@code getEquinixClient().setDomainEndPoint("IAM", ...)}.</p>
+ *
+ * <h3>Tokens for project-scoped endpoints</h3>
+ * <p>Organization-level calls such as {@link #roles()}{@code .list()} work with the
+ * client-credentials token. The project-scoped endpoints ({@code /v1/projects/{projectId}/...}:
+ * access policies, permission sets, principal policies, policy masks, effective permissions,
+ * project roles and resource types) accept only an STS-issued <b>access-policy</b> token (live,
+ * 2026-11-11). Build an {@code IAM} for them with {@link #IAM(BearerTokenProvider)}.</p>
+ *
+ * <h3>Project identifiers</h3>
+ * <p>Two formats exist. IAM paths take the spec's {@code ProjectId}, {@code project:<id>} (for
+ * example {@code project:abc-123}); the bare Resource Manager project UUID that {@link Projects}
+ * returns fails the service's project-id format check. {@link com.eqixiac.equinix.iam.client.ProjectIds#of(String)}
+ * converts either form to the {@code project:} form.</p>
  *
  * <h3>Quick Start</h3>
  * <pre>{@code
  * BasicEquinixCredentials credentials = new BasicEquinixCredentials("clientId", "clientSecret");
  * IAM iam = new IAM(credentials);
- *
  * RoleList roles = iam.roles().list();
- * AccessPolicy policy = iam.accessPolicies().getByUuid("project:abc-123", "accesspolicy:my-policy");
+ *
+ * // Project-scoped: an STS access-policy token, refreshed by the supplier.
+ * IAM projectIam = new IAM(() -> myTokenCache.currentAccessPolicyToken());
+ * AccessPolicy policy = projectIam.accessPolicies()
+ *     .getByUuid(ProjectIds.of(projectUuid), "accesspolicy:my-policy");
  * }</pre>
  *
  * @author ianjones
@@ -177,6 +193,33 @@ public final class IAM extends EquinixClient {
     }
 
     /**
+     * Creates an IAM client that sends caller-supplied bearer tokens instead of logging in with
+     * client credentials. Use it for the project-scoped endpoints, which need an STS access-policy
+     * token ({@code BearerTokenProvider.of(token)}, or {@code BearerTokenProvider.from(...)} to
+     * refresh it). No Equinix client id or secret is used.
+     *
+     * @param tokenProvider supplies the access-policy token
+     */
+    public IAM(BearerTokenProvider tokenProvider) {
+        this(tokenProvider, EquinixConfig.defaults());
+    }
+
+    /**
+     * Creates an IAM client that sends caller-supplied bearer tokens, with explicit
+     * {@link EquinixConfig} options.
+     *
+     * @param tokenProvider supplies the access-policy token
+     * @param config the construction-time options
+     */
+    public IAM(BearerTokenProvider tokenProvider, EquinixConfig config) {
+        super(tokenProvider, config);
+
+        equinixClient.appendApiParams("json/apiParams_IAM.json");
+
+        this.iamConfig = new IAMConfigImpl(equinixClient);
+    }
+
+    /**
      * Package-private constructor for {@link Equinix} sessions: builds this domain client over a
      * shared core client (one OAuth token + connection pool across domains).
      */
@@ -200,7 +243,7 @@ public final class IAM extends EquinixClient {
     }
 
     /**
-     * Returns the client for IAM role assignments — associating a principal with a role in a scope
+     * Returns the client for IAM role assignments - associating a principal with a role in a scope
      * ({@code /v1/roleAssignments}).
      *
      * @return the {@link IAMRoleAssignments} client
@@ -278,7 +321,7 @@ public final class IAM extends EquinixClient {
     }
 
     /**
-     * Returns the client for IAM policy-authoring discovery — resource types, actions, action sets,
+     * Returns the client for IAM policy-authoring discovery - resource types, actions, action sets,
      * resource type actions and the service policy schema
      * ({@code /v1/projects/{projectId}/resourceTypes} and friends).
      *

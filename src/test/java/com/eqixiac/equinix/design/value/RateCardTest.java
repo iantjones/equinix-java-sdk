@@ -106,7 +106,7 @@ class RateCardTest {
 
     @Test
     void customRateCard_nullTypeRateIsAWildcardReachableFromConcreteTypeLookups() {
-        // A rate declared with a null ConnectionType means "any type" — a lookup for a concrete
+        // A rate declared with a null ConnectionType means "any type" - a lookup for a concrete
         // type must find it (it was stored under the ANY key, which concrete-type lookups never
         // probed before, leaving the wildcard unreachable).
         CustomRateCard card = CustomRateCard.builder()
@@ -130,7 +130,7 @@ class RateCardTest {
     @Test
     void customRateCard_concreteTypeRateWinsOverNullTypeWildcard() {
         // A typed entry is more specific than the any-type wildcard, so it wins for its own type
-        // — even when it is metro/term-agnostic and the wildcard is not probed first.
+        // - even when it is metro/term-agnostic and the wildcard is not probed first.
         CustomRateCard card = CustomRateCard.builder()
                 .connectionRate(null, 1_000, new BigDecimal("275.00"))
                 .connectionRate(ConnectionType.EVPL_VC, 1_000, new BigDecimal("250.00"))
@@ -171,7 +171,7 @@ class RateCardTest {
         // primary has the exact 1000 Mbps rate
         assertEquals(new BigDecimal("250.00"),
                 layered.connection(ConnectionType.EVPL_VC, 1_000, null, Term.MONTH_12).orElseThrow().getMonthlyRecurring());
-        // primary cannot price 5000 Mbps (no default) → falls through to the fallback card
+        // primary cannot price 5000 Mbps (no default) -> falls through to the fallback card
         assertEquals(new BigDecimal("999.00"),
                 layered.connection(ConnectionType.EVPL_VC, 5_000, null, Term.MONTH_12).orElseThrow().getMonthlyRecurring());
         assertEquals(PriceSource.COMPOSITE, layered.source());

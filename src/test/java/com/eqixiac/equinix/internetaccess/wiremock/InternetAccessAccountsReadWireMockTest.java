@@ -49,7 +49,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * WireMock-backed tests for the Equinix Internet Access (EIA) v1 Accounts read surface — the
+ * WireMock-backed tests for the Equinix Internet Access (EIA) v1 Accounts read surface - the
  * {@code AccountsV1} group in {@code apiParams_InternetAccess.json}. Covers the project-narrowed
  * {@code list(operationalUnitsIbx, projectId)} overload (adding the {@code project.projectId} query
  * parameter, absent from the single-arg overload) and the single-account
@@ -209,7 +209,7 @@ class InternetAccessAccountsReadWireMockTest extends WireMockTestBase {
     }
 
     /**
-     * v1 error mapping — the first error-status coverage anywhere on the internetaccess v1 read
+     * v1 error mapping - the first error-status coverage anywhere on the internetaccess v1 read
      * surface. The v1 error payload is a JSON array of {@code {"errorCode", "errorMessage"}}
      * objects, same envelope the shared {@code ResponseErrorMapper} parses for v2.
      */

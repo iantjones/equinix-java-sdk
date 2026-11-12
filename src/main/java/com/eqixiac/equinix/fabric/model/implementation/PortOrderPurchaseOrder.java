@@ -25,11 +25,10 @@ import lombok.NoArgsConstructor;
 
 /**
  * Purchase order information associated with a port order (the Fabric v4
- * {@code PortOrderPurchaseOrder} schema). {@code type} and the deprecated
- * {@code selectionType} take the values {@code EXEMPTION}, {@code EXISTING},
- * {@code NEW} or {@code BLANKET}.
+ * {@code PortOrderPurchaseOrder} schema). {@code type} takes the values {@code EXEMPTION}, {@code EXISTING},
+ * {@code NEW} or {@code BLANKET}. The spec-deprecated {@code selectionType} is no longer modelled.
  *
- * <p>Prefer {@code builder()} over the positional constructor — five {@code String}
+ * <p>Prefer {@code builder()} over the positional constructor - five {@code String}
  * parameters plus two identically-typed enum parameters make positional construction
  * transposition-prone.</p>
  *
@@ -55,20 +54,12 @@ public class PortOrderPurchaseOrder {
     @JsonProperty("attachmentId")
     private String attachmentId;
 
-    /**
-     * @deprecated the API marks {@code selectionType} deprecated; use {@code getType()} instead.
-     */
-    @Deprecated
-    @JsonProperty("selectionType")
-    private PortPurchaseOrderType selectionType;
-
     @JsonProperty("type")
     private PortPurchaseOrderType type;
 
     /**
      * Explicit constructor replacing the Lombok-generated {@code @AllArgsConstructor}: the
-     * argument order is pinned here in code (five same-typed {@code String} parameters and
-     * two identically-typed {@link PortPurchaseOrderType} parameters) rather than by field
+     * argument order is pinned here in code (five same-typed {@code String} parameters) rather than by field
      * declaration order.
      *
      * @param number        the purchase order number
@@ -76,19 +67,16 @@ public class PortOrderPurchaseOrder {
      * @param startDate     the purchase order start date
      * @param endDate       the purchase order end date
      * @param attachmentId  the purchase order attachment id
-     * @param selectionType the deprecated selection type (prefer {@code type})
      * @param type          the purchase order type
      */
     @Builder
     public PortOrderPurchaseOrder(String number, String amount, String startDate, String endDate,
-                                  String attachmentId, PortPurchaseOrderType selectionType,
-                                  PortPurchaseOrderType type) {
+                                  String attachmentId, PortPurchaseOrderType type) {
         this.number = number;
         this.amount = amount;
         this.startDate = startDate;
         this.endDate = endDate;
         this.attachmentId = attachmentId;
-        this.selectionType = selectionType;
         this.type = type;
     }
 }

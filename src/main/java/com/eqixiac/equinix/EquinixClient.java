@@ -16,6 +16,7 @@
 
 package com.eqixiac.equinix;
 
+import com.eqixiac.equinix.core.auth.BearerTokenProvider;
 import com.eqixiac.equinix.core.auth.EquinixCredentials;
 import com.eqixiac.equinix.core.auth.EquinixCredentialsProvider;
 import com.eqixiac.equinix.core.auth.EquinixStaticCredentialsProvider;
@@ -33,11 +34,19 @@ import java.io.IOException;
  *
  * <p>This class provides common functionality shared by all domain clients including
  * OAuth2 authentication, HTTP client management, and resource lifecycle. Domain-specific
- * entry points ({@link Fabric}, {@link NetworkEdge}, {@link CustomerPortal}, etc.) extend
+ * entry points ({@link Fabric}, {@link NetworkEdge}, {@link Operations}, etc.) extend
  * this class and add their own resource accessors.</p>
  *
- * <p>Authentication is handled automatically on the first API call using OAuth2 client
- * credentials. The client can also be explicitly authenticated using {@link #authenticate()}.
+ * <p>Authentication is handled automatically on the first API call, using OAuth2 client
+ * credentials or, for the {@link BearerTokenProvider} constructors, a token the caller supplies
+ * (for example an STS-issued access-policy token, which IAM project-scoped endpoints require). The
+ * client can also be explicitly authenticated using {@link #authenticate()}. An HTTP 401 on an
+ * authenticated call discards the token, obtains a new one once and replays the call once.
+ *
+ * <p><b>Hook for domain entry points:</b> a domain class offers bearer-token construction by
+ * delegating to {@link #EquinixClient(BearerTokenProvider)} or
+ * {@link #EquinixClient(BearerTokenProvider, EquinixConfig)}, for example
+ * {@code public IAM(BearerTokenProvider p) { super(p); appendApiParams(); }}.</p>
  * Implements {@link Closeable} to properly release HTTP connections when the client is no
  * longer needed.</p>
  *
@@ -51,14 +60,14 @@ import java.io.IOException;
  *
  * // Use try-with-resources for proper cleanup
  * try (Fabric fabric = new Fabric(credentials)) {
- *     PaginatedList<Port> ports = fabric.ports().list();
+ *     List<Port> ports = fabric.ports().list();
  * }
  * }</pre>
  *
  * @author ianjones
  * @see Fabric
  * @see NetworkEdge
- * @see CustomerPortal
+ * @see Operations
  * @see IBXSmartView
  * @see InternetAccess
  * @see Projects
@@ -161,9 +170,38 @@ public class EquinixClient implements Closeable {
      * @param config the construction-time options
      */
     public EquinixClient(EquinixCredentialsProvider credentialsProvider, EquinixConfig config) {
-        this.equinixClient = new com.eqixiac.equinix.core.client.EquinixClient(credentialsProvider, config.isSandbox());
+        this(new com.eqixiac.equinix.core.client.EquinixClient(credentialsProvider, config.isSandbox()), config, true);
+    }
+
+    /**
+     * Creates a new Equinix client that signs every request with tokens from the given provider
+     * instead of OAuth2 client credentials (see {@link BearerTokenProvider}).
+     *
+     * @param bearerTokenProvider supplies the bearer tokens
+     */
+    public EquinixClient(BearerTokenProvider bearerTokenProvider) {
+        this(bearerTokenProvider, EquinixConfig.defaults());
+    }
+
+    /**
+     * Creates a new Equinix client over a bearer-token provider with explicit {@link EquinixConfig}
+     * options.
+     *
+     * @param bearerTokenProvider supplies the bearer tokens
+     * @param config the construction-time options
+     */
+    public EquinixClient(BearerTokenProvider bearerTokenProvider, EquinixConfig config) {
+        this(new com.eqixiac.equinix.core.client.EquinixClient(bearerTokenProvider, config.isSandbox()), config, true);
+    }
+
+    /**
+     * Shared body of the owning constructors: this client owns {@code ownedCore} and closes it.
+     */
+    private EquinixClient(com.eqixiac.equinix.core.client.EquinixClient ownedCore, EquinixConfig config,
+                          boolean ownsCore) {
+        this.equinixClient = ownedCore;
         this.coreConfig = new CoreConfigImpl(equinixClient);
-        this.ownsCore = true;
+        this.ownsCore = ownsCore;
         this.autoLoadMetros = config.isAutoLoadMetros();
         this.peeringDbApiKey = config.getPeeringDbApiKey();
         this.enrichMetroRegistry = config.isEnrichMetroRegistry();
@@ -179,7 +217,7 @@ public class EquinixClient implements Closeable {
     /**
      * Creates a domain client over an existing, shared core client (e.g. one owned by an
      * {@link Equinix} session) so several domains share a single OAuth token and connection
-     * pool. The shared core is <em>not</em> closed by this client's {@link #close()} — its
+     * pool. The shared core is <em>not</em> closed by this client's {@link #close()} - its
      * owner (the session) closes it. Package-private: used by {@link Equinix}.
      *
      * @param sharedCore the core client to share
@@ -207,8 +245,8 @@ public class EquinixClient implements Closeable {
     }
 
     /**
-     * Explicitly performs OAuth2 authentication using the configured client credentials.
-     * Stores the resulting access token for subsequent API calls. This is optional —
+     * Explicitly obtains a token from the configured source (an OAuth2 client-credentials mint,
+     * or the {@link BearerTokenProvider}) and stores it for subsequent API calls. This is optional - 
      * authentication occurs automatically on the first API call if not called explicitly.
      *
      * @throws EquinixClientException if authentication fails due to invalid credentials or network errors

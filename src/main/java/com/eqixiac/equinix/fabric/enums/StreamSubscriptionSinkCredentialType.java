@@ -26,6 +26,8 @@ public enum StreamSubscriptionSinkCredentialType {
     INTEGRATION_KEY,
     API_KEY,
     USERNAME_PASSWORD,
+    /** API token credential, sent as {@code apiToken} (used by the Dynatrace sink; spec 4.34.0). */
+    API_TOKEN,
     UNKNOWN;
 
     @JsonCreator

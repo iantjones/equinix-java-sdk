@@ -26,6 +26,7 @@ import com.eqixiac.equinix.fabric.model.implementation.EiaServiceBilling;
 import com.eqixiac.equinix.fabric.model.implementation.EiaServiceChange;
 import com.eqixiac.equinix.fabric.model.implementation.EiaServiceLocation;
 import com.eqixiac.equinix.fabric.model.implementation.EiaServiceOrder;
+import com.eqixiac.equinix.fabric.model.implementation.EiaRoutingProtocol;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -83,4 +84,7 @@ public class EiaServiceJson {
 
     @JsonProperty("order")
     private EiaServiceOrder order;
+
+    @JsonProperty("routingProtocol")
+    private EiaRoutingProtocol routingProtocol;
 }

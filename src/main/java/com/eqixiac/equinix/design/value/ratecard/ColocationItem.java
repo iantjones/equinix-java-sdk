@@ -1,7 +1,7 @@
 package com.eqixiac.equinix.design.value.ratecard;
 
 /**
- * An Equinix colocation cost primitive that a {@link RateCard} can price — alongside the
+ * An Equinix colocation cost primitive that a {@link RateCard} can price - alongside the
  * interconnection rates (connection / cloud router / egress). These let a caller supply their own
  * colocation rates (e.g. a negotiated cabinet or cross-connect rate), so a colocation-vs-cloud
  * comparison covers the physical-infrastructure costs Equinix sells, not just the interconnect.

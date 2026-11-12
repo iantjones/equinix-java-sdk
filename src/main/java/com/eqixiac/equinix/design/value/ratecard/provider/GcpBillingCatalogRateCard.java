@@ -54,8 +54,8 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * <p>Internet-egress selection is <em>deterministic</em>: many egress SKUs contain the word
  * "egress", so a match must carry the "internet" marker (not merely "not-interconnect"), and when
- * several qualify the adapter prefers the representative base rate — the standard, worldwide meter
- * over the pricier Premium-Tier and destination-qualified (China/Australia) variants — rather than
+ * several qualify the adapter prefers the representative base rate - the standard, worldwide meter
+ * over the pricier Premium-Tier and destination-qualified (China/Australia) variants - rather than
  * whichever happened to appear first in the catalogue.</p>
  *
  * <p>GCP meters egress <em>per gibibyte</em> ({@code GiBy}), but the savings engine multiplies the
@@ -64,12 +64,12 @@ import java.util.concurrent.ConcurrentHashMap;
  * yielding a slightly lower per-GB number; the returned note records the original per-GiB figure.</p>
  *
  * <p>This is an opt-in, pluggable source intended for a
- * {@link RateCard#layered(RateCard...)} chain. It is fault-tolerant — a missing key,
+ * {@link RateCard#layered(RateCard...)} chain. It is fault-tolerant - a missing key,
  * network error, or unrecognised response yields no rate rather than an exception.
  * The SKU catalogue is fetched once (following pagination) on first <em>success</em> and
- * cached for the adapter's lifetime; a failed fetch — including a failure on any page of
+ * cached for the adapter's lifetime; a failed fetch - including a failure on any page of
  * the pagination, which would otherwise leave a partial catalogue and a wrong "cheapest
- * SKU" — is never memoized, so the next lookup retries.</p>
+ * SKU" - is never memoized, so the next lookup retries.</p>
  */
 @Slf4j
 public final class GcpBillingCatalogRateCard implements RateCard {
@@ -81,7 +81,7 @@ public final class GcpBillingCatalogRateCard implements RateCard {
     public static final String DEFAULT_ENDPOINT = "https://cloudbilling.googleapis.com";
 
     /**
-     * The Cloud Billing Catalog service id of <em>Compute Engine</em> — the service that owns
+     * The Cloud Billing Catalog service id of <em>Compute Engine</em> - the service that owns
      * GCP's network-egress SKUs, and therefore the one whose SKU list this adapter fetches.
      */
     public static final String COMPUTE_ENGINE_SERVICE = "6F81-5844-456A";
@@ -121,7 +121,7 @@ public final class GcpBillingCatalogRateCard implements RateCard {
     }
 
     /**
-     * Creates an adapter against a custom endpoint root — for a proxy or testing.
+     * Creates an adapter against a custom endpoint root - for a proxy or testing.
      *
      * @param apiKey   a Google API key authorised for the Cloud Billing Catalog API
      * @param endpoint the endpoint root (e.g. {@code https://cloudbilling.googleapis.com})
@@ -161,7 +161,7 @@ public final class GcpBillingCatalogRateCard implements RateCard {
         // holding a bin lock.
         List<JsonNode> catalogue = skus();
         if (catalogue == null) {
-            // Catalogue fetch failure: yield no rate but do NOT cache it — the next call retries.
+            // Catalogue fetch failure: yield no rate but do NOT cache it - the next call retries.
             return Optional.empty();
         }
         Optional<EgressRate> resolved = resolve(catalogue, region, path);
@@ -175,7 +175,7 @@ public final class GcpBillingCatalogRateCard implements RateCard {
     }
 
     private static Optional<EgressRate> resolve(List<JsonNode> catalogue, String region, EgressPath path) {
-        // Deterministic pick across ALL matching SKUs — never "the first one in catalogue order".
+        // Deterministic pick across ALL matching SKUs - never "the first one in catalogue order".
         // Higher representativeness score wins; ties break to the lower per-GiB rate, then to the
         // lexicographically-lower skuId, so the choice is stable regardless of catalogue ordering.
         JsonNode chosen = null;
@@ -203,7 +203,7 @@ public final class GcpBillingCatalogRateCard implements RateCard {
         if (chosen == null) {
             return Optional.empty();
         }
-        // $/GiB → $/GB: GCP meters per gibibyte, the engine costs per decimal gigabyte.
+        // $/GiB -> $/GB: GCP meters per gibibyte, the engine costs per decimal gigabyte.
         BigDecimal perGb = chosenPerGib.divide(GIB_PER_GB, PRICE_SCALE, RoundingMode.HALF_UP);
         return Optional.of(EgressRate.of(perGb, USD, PriceSource.PROVIDER_API)
                 .withNote("GCP Billing Catalog: " + chosen.path("description").asText("egress")
@@ -231,7 +231,7 @@ public final class GcpBillingCatalogRateCard implements RateCard {
      * Ranks how representative a matching SKU is of the headline egress rate, so a deterministic
      * winner can be chosen. Only meaningful for {@link EgressPath#INTERNET}, where several variants
      * (Premium-Tier, China/Australia destinations) coexist with the standard worldwide meter; the
-     * standard one scores highest. {@link EgressPath#PRIVATE} SKUs all score equally (0) — their
+     * standard one scores highest. {@link EgressPath#PRIVATE} SKUs all score equally (0) - their
      * winner is decided by the price/skuId tie-break.
      */
     private static int representativeScore(JsonNode sku, EgressPath path) {
@@ -317,7 +317,7 @@ public final class GcpBillingCatalogRateCard implements RateCard {
     }
 
     /**
-     * Fetches every catalogue page. A failed page — the first or a mid-pagination one — fails the
+     * Fetches every catalogue page. A failed page - the first or a mid-pagination one - fails the
      * <em>whole</em> fetch ({@code null}): selecting the "cheapest matching SKU" over a partial
      * catalogue would be a wrong number labelled authoritative. If the {@link #MAX_PAGES} safety
      * cap trips while the server still advertises a next page, the truncation is logged loudly and

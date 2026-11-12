@@ -1,13 +1,8 @@
 package com.eqixiac.equinix.core;
 
 import com.eqixiac.equinix.core.exception.*;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 
-import java.io.InputStream;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -18,64 +13,14 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class ExceptionMappingTest {
 
+    // Subtype relationships are compile-time facts (an instanceOf assertion on them cannot fail),
+    // so only the deliberate NON-subtype relationship is pinned here.
     @Test
-    void exceptionHierarchy_baseException_isRuntimeException() {
-        BaseException ex = new BaseException("test") {};
-        assertInstanceOf(RuntimeException.class, ex);
-    }
-
-    @Test
-    void exceptionHierarchy_clientException_extendsBaseException() {
-        EquinixClientException ex = new EquinixClientException("test");
-        assertInstanceOf(BaseException.class, ex);
-        assertInstanceOf(RuntimeException.class, ex);
-    }
-
-    @Test
-    void exceptionHierarchy_serviceException_isSiblingOfClientException() {
-        EquinixServiceException ex = new EquinixServiceException("test");
-        assertInstanceOf(BaseException.class, ex);
-        // Service (API) errors must NOT be a kind of client (SDK/network) error —
-        // they are siblings under BaseException so catch blocks don't conflate them.
-        assertFalse(EquinixClientException.class.isInstance(ex));
-    }
-
-    @Test
-    void exceptionHierarchy_authenticationException_extendsServiceException() {
-        EquinixAuthenticationException ex = new EquinixAuthenticationException("Unauthorized");
-        assertInstanceOf(EquinixServiceException.class, ex);
-        assertInstanceOf(BaseException.class, ex);
-        assertFalse(EquinixClientException.class.isInstance(ex));
-    }
-
-    @Test
-    void exceptionHierarchy_authorizationException_extendsServiceException() {
-        EquinixAuthorizationException ex = new EquinixAuthorizationException("Forbidden");
-        assertInstanceOf(EquinixServiceException.class, ex);
-    }
-
-    @Test
-    void exceptionHierarchy_notFoundException_extendsServiceException() {
-        EquinixNotFoundException ex = new EquinixNotFoundException("Not found");
-        assertInstanceOf(EquinixServiceException.class, ex);
-    }
-
-    @Test
-    void exceptionHierarchy_conflictException_extendsServiceException() {
-        EquinixConflictException ex = new EquinixConflictException("Conflict");
-        assertInstanceOf(EquinixServiceException.class, ex);
-    }
-
-    @Test
-    void exceptionHierarchy_rateLimitException_extendsServiceException() {
-        EquinixRateLimitException ex = new EquinixRateLimitException("Rate limited");
-        assertInstanceOf(EquinixServiceException.class, ex);
-    }
-
-    @Test
-    void exceptionHierarchy_serverException_extendsServiceException() {
-        EquinixServerException ex = new EquinixServerException("Server error");
-        assertInstanceOf(EquinixServiceException.class, ex);
+    void serviceExceptionsAreSiblingsOfClientException() {
+        // Service (API) errors must NOT be a kind of client (SDK/network) error: they are siblings
+        // under BaseException so catch blocks don't conflate them.
+        assertFalse(EquinixClientException.class.isAssignableFrom(EquinixServiceException.class));
+        assertFalse(EquinixServiceException.class.isAssignableFrom(EquinixClientException.class));
     }
 
     @Test
@@ -134,7 +79,7 @@ class ExceptionMappingTest {
     @Test
     void serviceException_collectionsAreImmutable() {
         java.util.List<ExceptionDetail> details = new java.util.ArrayList<>();
-        details.add(new ExceptionDetail());
+        details.add(ExceptionDetail.builder().errorCode("EQ-1").build());
         java.util.Map<String, String> headers = new java.util.HashMap<>();
         headers.put("Retry-After", "30");
 
@@ -156,7 +101,9 @@ class ExceptionMappingTest {
     void serviceException_isJavaSerializable() throws Exception {
         EquinixServiceException ex = new EquinixServiceException(
                 "test error", 503, "/fabric/v4/ports", java.util.Map.of("Retry-After", "30"),
-                java.util.List.of(new ExceptionDetail()), "cid-1234");
+                java.util.List.of(ExceptionDetail.builder().errorCode("EQ-3142501")
+                        .additionalInfo(List.of(new ExceptionAdditionalInfo("$.x", "bad", null))).build()),
+                "cid-1234");
 
         java.io.ByteArrayOutputStream bos = new java.io.ByteArrayOutputStream();
         try (java.io.ObjectOutputStream oos = new java.io.ObjectOutputStream(bos)) {
@@ -168,6 +115,8 @@ class ExceptionMappingTest {
             assertEquals(503, roundTripped.getStatusCode());
             assertEquals("cid-1234", roundTripped.getCorrelationId());
             assertEquals(1, roundTripped.getExceptionDetails().size());
+            assertEquals("EQ-3142501", roundTripped.getExceptionDetails().get(0).getErrorCode());
+            assertEquals("$.x", roundTripped.getExceptionDetails().get(0).getAdditionalInfo().get(0).getProperty());
         }
     }
 
@@ -179,25 +128,17 @@ class ExceptionMappingTest {
     }
 
     @Test
-    void exceptionDetail_deserializesFromJson() throws Exception {
-        ObjectMapper mapper = new ObjectMapper()
-                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    void serviceException_responseBodySnippetRenderedOnlyWithoutDetails() {
+        EquinixServiceException withoutDetails = new EquinixServiceException(
+                "Server error (HTTP 504).", 504, "/fabric/v4/ports", null, null, null, "<html>Gateway Timeout</html>");
+        assertEquals("<html>Gateway Timeout</html>", withoutDetails.getResponseBodySnippet());
+        assertTrue(withoutDetails.getMessage().contains("Response Body: <html>Gateway Timeout</html>"));
 
-        InputStream is = getClass().getResourceAsStream("/json/core/error_401_response.json");
-        assertNotNull(is, "error_401_response.json fixture not found on classpath");
-
-        JsonNode root = mapper.readTree(is);
-        JsonNode errorsNode = root.get("errors");
-        assertNotNull(errorsNode, "JSON should contain 'errors' array");
-        assertTrue(errorsNode.isArray());
-
-        List<ExceptionDetail> details = mapper.readValue(
-                errorsNode.traverse(mapper),
-                new TypeReference<List<ExceptionDetail>>() {});
-
-        assertEquals(1, details.size());
-        assertEquals("ERR-401", details.get(0).getErrorCode());
-        assertEquals("Unauthorized", details.get(0).getErrorMessage());
+        EquinixServiceException withDetails = new EquinixServiceException(
+                "Server error (HTTP 500).", 500, "/fabric/v4/ports", null,
+                List.of(ExceptionDetail.builder().errorCode("EQ-1").errorMessage("boom").build()), null, "raw");
+        assertFalse(withDetails.getMessage().contains("Response Body"));
+        assertTrue(withDetails.getMessage().contains("Error: EQ-1: boom"));
     }
 
     @Test

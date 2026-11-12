@@ -18,7 +18,6 @@ package com.eqixiac.equinix.fabric.model;
 
 import com.eqixiac.equinix.fabric.enums.GatewayPackageCode;
 import com.eqixiac.equinix.fabric.enums.GatewayPackageType;
-import com.eqixiac.equinix.fabric.enums.NatType;
 import com.eqixiac.equinix.fabric.model.implementation.ChangeLog;
 
 public interface GatewayPackage {
@@ -35,19 +34,28 @@ public interface GatewayPackage {
 
      Integer getTotalIPv6RoutesMax();
 
-     Integer getStaticIPv4RoutesMax();
-
-     Integer getStaticIPv6RoutesMax();
-
-     Integer getNaclsMax();
-
-     Integer getNaclRulesMax();
-
-     Boolean getHaSupported();
-
      Boolean getRouteFilterSupported();
 
-     NatType getNatType();
+     /**
+      * Maximum number of virtual connections ({@code vcCountMax}).
+      *
+      * @return the limit, or {@code null}
+      */
+     Integer getVcCountMax();
+
+     /**
+      * Maximum number of Cloud Routers ({@code crCountMax}).
+      *
+      * @return the limit, or {@code null}
+      */
+     Integer getCrCountMax();
+
+     /**
+      * Maximum virtual-connection bandwidth in Mbps ({@code vcBandwidthMax}).
+      *
+      * @return the limit, or {@code null}
+      */
+     Integer getVcBandwidthMax();
 
      ChangeLog getChangeLog();
 }

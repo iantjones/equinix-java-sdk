@@ -1,0 +1,30 @@
+{
+  "data": [
+    {
+      "href": "https://api.equinix.com/fabric/v4/crossConnects/46bb1a31-c28f-4197-8b10-06e0e03d0743/services/e41f485e-3094-42de-8797-0ef19a51df79",
+      "uuid": "e41f485e-3094-42de-8797-0ef19a51df79",
+      "type": "XC_LINK_LIGHT_VERIFICATION",
+      "state": "PENDING",
+      "changeLog": {
+        "createdBy": "testuser",
+        "createdDateTime": "2026-02-28T07:21:39Z"
+      }
+    },
+    {
+      "href": "https://api.equinix.com/fabric/v4/crossConnects/46bb1a31-c28f-4197-8b10-06e0e03d0743/services/a11f485e-3094-42de-8797-0ef19a51df79",
+      "uuid": "a11f485e-3094-42de-8797-0ef19a51df79",
+      "type": "XC_PATCH_EQUIPMENT",
+      "state": "PENDING",
+      "device": {
+        "cabinetUniqueSpaceId": "SV2:00:000000:0100",
+        "port": 32,
+        "connectorType": "SC"
+      },
+      "description": "additional notes for patch equipment",
+      "changeLog": {
+        "createdBy": "testuser",
+        "createdDateTime": "2026-02-28T07:21:39Z"
+      }
+    }
+  ]
+}

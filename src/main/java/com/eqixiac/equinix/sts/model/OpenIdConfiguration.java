@@ -37,7 +37,13 @@ public interface OpenIdConfiguration {
     String getJwksUri();
 
     /**
-     * @return the token endpoint URI
+     * Returns the token endpoint the discovery document advertises.
+     *
+     * <p>Live (2026-11-11) this is {@code https://sts.eqix.equinix.com/use/token}, not the spec's
+     * {@code /v1/token} that {@code STS.tokens().generate(...)} posts to. Both paths accept the
+     * same RFC 8693 exchange and return the same {@code {"error","error_description"}} errors.</p>
+     *
+     * @return the token endpoint URI, read from {@code token_endpoint}
      */
     String getTokenEndpoint();
 

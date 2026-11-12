@@ -44,6 +44,19 @@ public class PublicKeyJson {
     public static class NestedList {
         @JsonProperty("data")
         private List<PublicKeyJson> data;
+
+        /** For the spec's {@code {"data": [...]}} envelope. */
+        public NestedList() {
+        }
+
+        /**
+         * Accepts the bare array the live {@code GET /ne/v1/publicKeys} returns (checked
+         * 2026-11-11); the spec's {@code GetPublicKeysResponse} documents an envelope.
+         */
+        @com.fasterxml.jackson.annotation.JsonCreator(mode = com.fasterxml.jackson.annotation.JsonCreator.Mode.DELEGATING)
+        public NestedList(List<PublicKeyJson> keys) {
+            this.data = keys;
+        }
     }
 
     @JsonProperty("uuid")
@@ -57,4 +70,26 @@ public class PublicKeyJson {
 
     @JsonProperty("keyType")
     private KeyType keyType;
+
+    /** Project of the key; returned live (2026-11-11), not in the spec. */
+    @JsonProperty("projectId")
+    private String projectId;
+
+    /**
+     * Builds a key from known values, for a create whose response carried no body.
+     *
+     * @param uuid     the key id
+     * @param keyName  the key name
+     * @param keyValue the key value
+     * @param keyType  the key type, or {@code null}
+     * @return the key
+     */
+    public static PublicKeyJson of(String uuid, String keyName, String keyValue, KeyType keyType) {
+        PublicKeyJson json = new PublicKeyJson();
+        json.uuid = uuid;
+        json.keyName = keyName;
+        json.keyValue = keyValue;
+        json.keyType = keyType;
+        return json;
+    }
 }

@@ -217,9 +217,10 @@ class ProviderEnvironmentDeserializationTest {
     class EnumDrift {
 
         @Test
-        @DisplayName("XF_IC, IC_ROUTER, GW_VC and IPX_VC parse to their constants, not UNKNOWN")
+        @DisplayName("IC, IC_ROUTER, GW_VC and IPX_VC parse to their constants; the removed XF_IC reads as UNKNOWN")
         void catalogValuesParse() {
-            assertEquals(AccessPointType.XF_IC, AccessPointType.fromString("XF_IC"));
+            assertEquals(AccessPointType.IC, AccessPointType.fromString("IC"));
+            assertEquals(AccessPointType.UNKNOWN, AccessPointType.fromString("XF_IC"));
             assertEquals(CloudRouterType.IC_ROUTER, CloudRouterType.fromString("IC_ROUTER"));
             assertEquals(ConnectionType.GW_VC, ConnectionType.fromString("GW_VC"));
             assertEquals(ConnectionType.IPX_VC, ConnectionType.fromString("IPX_VC"));
@@ -228,7 +229,7 @@ class ProviderEnvironmentDeserializationTest {
         @Test
         @DisplayName("the new constants serialize as their catalog literals")
         void catalogValuesSerialize() throws Exception {
-            assertEquals("\"XF_IC\"", MAPPER.writeValueAsString(AccessPointType.XF_IC));
+            assertEquals("\"IC\"", MAPPER.writeValueAsString(AccessPointType.IC));
             assertEquals("\"IC_ROUTER\"", MAPPER.writeValueAsString(CloudRouterType.IC_ROUTER));
             assertEquals("\"GW_VC\"", MAPPER.writeValueAsString(ConnectionType.GW_VC));
             assertEquals("\"IPX_VC\"", MAPPER.writeValueAsString(ConnectionType.IPX_VC));
@@ -240,7 +241,7 @@ class ProviderEnvironmentDeserializationTest {
             assertEquals(ConnectionType.IC_VC, ConnectionType.fromString("IC_VC"));
             assertEquals(ConnectionType.VD_CHAIN_VC, ConnectionType.fromString("VD_CHAIN_VC"));
             assertEquals(AccessPointType.CHAINGROUP, AccessPointType.fromString("CHAINGROUP"));
-            assertEquals(AccessPointType.CX_PORT, AccessPointType.fromString("CX_PORT"));
+            assertEquals(AccessPointType.UNKNOWN, AccessPointType.fromString("CX_PORT"));
         }
 
         @Test
@@ -269,11 +270,15 @@ class ProviderEnvironmentDeserializationTest {
         }
 
         @Test
-        @DisplayName("an access point of type XF_IC maps to the constant")
-        void xfIcAccessPoint() throws Exception {
-            AccessPoint accessPoint = MAPPER.readValue("{\"type\":\"XF_IC\"}", AccessPoint.class);
+        @DisplayName("an IC access point reads its interconnect reference (live shape 2026-11-11)")
+        void icAccessPoint() throws Exception {
+            AccessPoint accessPoint = MAPPER.readValue(
+                    "{\"type\":\"IC\",\"interconnect\":{\"name\":\"IC-1\",\"uuid\":\"u-1\"},\"router\":{\"uuid\":\"r-1\"}}",
+                    AccessPoint.class);
 
-            assertEquals(AccessPointType.XF_IC, accessPoint.getType());
+            assertEquals(AccessPointType.IC, accessPoint.getType());
+            assertEquals("u-1", accessPoint.getInterconnect().getUuid());
+            assertEquals("IC-1", accessPoint.getInterconnect().getName());
         }
     }
 }

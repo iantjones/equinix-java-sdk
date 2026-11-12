@@ -30,11 +30,11 @@ public class PriceQuote {
     /** The currency both amounts are expressed in. */
     Currency currency;
 
-    /** Where this quote came from — see {@link PriceSource} for the trust spectrum. */
+    /** Where this quote came from - see {@link PriceSource} for the trust spectrum. */
     PriceSource source;
 
     /**
-     * Optional human-readable provenance detail — e.g. the Equinix price code, a
+     * Optional human-readable provenance detail - e.g. the Equinix price code, a
      * {@code "STANDARD substituted for PREMIUM"} label, or an {@code EXTRAPOLATED}
      * tag on a figure derived beyond the tabulated data. Engines surface it in
      * reports so a substituted or extrapolated figure is never mistaken for an
@@ -75,7 +75,7 @@ public class PriceQuote {
 
     /**
      * Creates a genuinely-free quote (zero MRC and NRC). This asserts a known price of
-     * zero — distinct from a rate card returning {@link java.util.Optional#empty()},
+     * zero - distinct from a rate card returning {@link java.util.Optional#empty()},
      * which means the item could not be priced at all.
      *
      * @param currency the currency
@@ -125,7 +125,7 @@ public class PriceQuote {
     }
 
     /**
-     * Sums this quote with another. Both must share the same currency — this class never
+     * Sums this quote with another. Both must share the same currency - this class never
      * fabricates an FX conversion. The resulting source is preserved when both quotes
      * agree, otherwise it is reported as {@link PriceSource#COMPOSITE}. The per-quote
      * notes are <em>dropped</em> on aggregation (a merged note would misattribute

@@ -182,7 +182,7 @@ class MulticloudDesignToolsTest {
         return values;
     }
 
-    // ── design_compare_cloud_to_cloud ───────────────────────────────────────
+    // design_compare_cloud_to_cloud
 
     @Nested
     @DisplayName("design_compare_cloud_to_cloud")
@@ -521,7 +521,7 @@ class MulticloudDesignToolsTest {
         }
     }
 
-    // ── design_list_multicloud_environments ─────────────────────────────────
+    // design_list_multicloud_environments
 
     @Nested
     @DisplayName("design_list_multicloud_environments")
@@ -634,18 +634,19 @@ class MulticloudDesignToolsTest {
         }
     }
 
-    // ── design_plan_deployment: cloud_to_cloud_strategy ─────────────────────
+    // design_plan_deployment: cloud_to_cloud_strategy
 
     @Nested
     @DisplayName("design_plan_deployment cloud-to-cloud flows")
     class PlanDeployment {
 
         private static final String TWO_CLOUD_PLAN = """
-                {"optimization": {
-                    "workloads": [{"label": "Replication", "type": "general_compute", "bandwidth_mbps": 10000,
-                                   "requires_clouds": ["aws", "gcp"]}],
-                    "require_clouds": ["aws", "gcp"],
-                    "constraints": {"max_metros": 1}},
+                {"spec": {"name": "replication",
+                    "clouds": [{"id": "aws", "provider": "AWS", "region": "us-east-1"},
+                               {"id": "gcp", "provider": "GOOGLE_CLOUD", "region": "us-east4"}],
+                    "workloads": [{"label": "Replication", "type": "GENERAL_COMPUTE", "bandwidthMbps": 10000,
+                                   "clouds": ["aws", "gcp"]}],
+                    "constraints": {"maxMetros": 1}},
                  "deployment": {"notifications": ["noc@example.com"]%s}}""";
 
         private ObjectNode plan(String extraDeploymentFields) throws Exception {
@@ -770,13 +771,15 @@ class MulticloudDesignToolsTest {
         @DisplayName("a single-cloud plan is unchanged: no native keys anywhere in the payload")
         void singleCloudPlanUnchanged() throws Exception {
             ObjectNode payload = call("design_plan_deployment", """
-                    {"optimization": {
-                        "workloads": [{"label": "Web Tier", "type": "general_compute", "bandwidth_mbps": 1000}],
-                        "require_clouds": ["aws"],
-                        "constraints": {"max_metros": 1}},
-                     "deployment": {"notifications": ["noc@example.com"]}}""");
+                    {"spec": {"name": "single",
+                        "clouds": [{"id": "aws", "provider": "AWS", "region": "us-east-1"}],
+                        "workloads": [{"label": "Web Tier", "bandwidthMbps": 1000, "clouds": ["aws"]}],
+                        "constraints": {"maxMetros": 1}},
+                     "deployment": {"notifications": ["noc@example.com"]}, "detail": "standard"}""");
             assertFalse(payload.has("native_multicloud_links"));
-            assertFalse(payload.toString().contains("native_"), "no native_* key leaks into a single-cloud plan");
+            payload.remove("plan_document");
+            assertFalse(payload.toString().contains("native_multicloud_link"),
+                    "no native link key leaks into a single-cloud plan");
         }
 
         @Test
@@ -788,11 +791,9 @@ class MulticloudDesignToolsTest {
             assertEquals(List.of("equinix_only", "native_when_available", "native_only", "compare"),
                     strategy.get("enum"));
             String description = String.valueOf(strategy.get("description"));
-            assertTrue(description.contains("Default compare"), description);
-            assertTrue(description.contains("never provisions"), description);
-            assertTrue(description.contains("REPLACEMENT arises only through the SDK"), description);
-            assertTrue(planTool.getDescription().contains("CLOUD-TO-CLOUD FLOWS (Beta)"));
-            assertTrue(planTool.getDescription().contains("never part of pricing.monthly_total"));
+            assertTrue(description.contains("compare (default"), description);
+            assertTrue(description.contains("never provisioned"), description);
+            assertTrue(description.startsWith("Beta."), description);
         }
 
         @Test
@@ -821,8 +822,8 @@ class MulticloudDesignToolsTest {
                     .cloudRouters(List.of()).providerConnections(List.of(connection)).backboneLinks(List.of())
                     .multicloudLinks(List.of(link)).valid(true).build();
 
-            DesignToolFactory.ProfileChoices choices =
-                    DesignToolFactory.applyProfileChoices(plan, context, StubExchanges.accepts("sp-alt"));
+            PlanTools.ProfileChoices choices =
+                    PlanTools.applyProfileChoices(plan, context, StubExchanges.accepts("sp-alt"));
 
             assertTrue(choices.changed());
             assertEquals("sp-alt", choices.plan().getProviderConnections().get(0).getZSideServiceProfileUuid());
@@ -831,7 +832,7 @@ class MulticloudDesignToolsTest {
         }
     }
 
-    // ── design_estimate_tco: peer cloud ─────────────────────────────────────
+    // design_estimate_tco: peer cloud
 
     @Nested
     @DisplayName("design_estimate_tco with a peer cloud")
@@ -840,13 +841,12 @@ class MulticloudDesignToolsTest {
         @Test
         @DisplayName("peer_cloud makes the comparison two-sided and adds the native archetype with provenance")
         void peerCloud() throws Exception {
-            ObjectNode payload = call("design_estimate_tco", """
-                    {"monthly_egress_gb": 328500, "cloud": "aws", "region": "us-east-1",
-                     "peer_cloud": "gcp", "peer_region": "us-east4", "bandwidth_mbps": 10000, "metro_code": "DC"}""");
+            ObjectNode payload = call("design_estimate_tco", tcoSpec(328500, 10000,
+                    "\"portfolio\": [\"DC\"], \"peer_cloud_id\": \"gcp\""));
 
             JsonNode nativeBreakdown = null;
             for (JsonNode b : payload.get("breakdowns")) {
-                if ("NATIVE_MULTICLOUD_INTERCONNECT".equals(b.get("archetype").asText())) {
+                if ("native_multicloud_interconnect".equals(b.get("archetype").asText())) {
                     nativeBreakdown = b;
                 }
             }
@@ -864,45 +864,51 @@ class MulticloudDesignToolsTest {
         @Test
         @DisplayName("an unpriced native side leaves the archetype partially priced, and it is never the recommendation")
         void partiallyPricedNativeIsNotRecommended() throws Exception {
-            ObjectNode payload = call("design_estimate_tco", """
-                    {"monthly_egress_gb": 1000, "cloud": "aws", "region": "us-east-1",
-                     "peer_cloud": "gcp", "peer_region": "us-east4", "bandwidth_mbps": 1000}""");
+            ObjectNode payload = call("design_estimate_tco", tcoSpec(1000, 1000, "\"peer_cloud_id\": \"gcp\""));
             for (JsonNode b : payload.get("breakdowns")) {
-                if ("NATIVE_MULTICLOUD_INTERCONNECT".equals(b.get("archetype").asText())) {
+                if ("native_multicloud_interconnect".equals(b.get("archetype").asText())) {
                     assertFalse(b.get("fully_priced").asBoolean(), "AWS publishes no 1 Gbps rate: " + b);
                     assertTrue(b.get("note").asText().contains("AWS"), b.get("note").asText());
                 }
             }
-            assertFalse("NATIVE_MULTICLOUD_INTERCONNECT".equals(payload.get("recommended_archetype").asText()));
+            assertFalse("native_multicloud_interconnect".equals(payload.get("recommended_archetype").asText()));
         }
 
         @Test
         @DisplayName("without peer_cloud the payload carries no cloud-to-cloud keys, and the dependent inputs are rejected by name")
         void singleCloudUnchangedAndLeversValidated() throws Exception {
-            ObjectNode single = call("design_estimate_tco", """
-                    {"monthly_egress_gb": 50000, "cloud": "aws", "region": "us-east-1", "bandwidth_mbps": 1000}""");
+            ObjectNode single = call("design_estimate_tco", tcoSpec(50000, 1000, null));
             assertFalse(single.has("traffic_note"));
             for (JsonNode b : single.get("breakdowns")) {
                 assertFalse(b.has("provenance"), "a single-cloud breakdown is unchanged: " + b);
-                assertFalse("NATIVE_MULTICLOUD_INTERCONNECT".equals(b.get("archetype").asText()));
+                assertFalse("native_multicloud_interconnect".equals(b.get("archetype").asText()));
             }
 
-            String base = "{\"monthly_egress_gb\": 1000, \"cloud\": \"aws\", \"region\": \"us-east-1\"";
-            assertTrue(rejected("design_estimate_tco", base + ", \"path_tier\": 2}")
-                    .getMessage().contains("'path_tier' requires 'peer_cloud'"));
-            assertTrue(rejected("design_estimate_tco", base + ", \"peer_region\": \"us-east4\"}")
-                    .getMessage().contains("'peer_region' requires 'peer_cloud'"));
+            assertTrue(rejected("design_estimate_tco", tcoSpec(1000, 1000, "\"path_tier\": 2"))
+                    .getMessage().contains("'path_tier' requires 'peer_cloud_id'"));
             assertTrue(rejected("design_estimate_tco",
-                    base + ", \"archetypes\": [\"native_multicloud_interconnect\"]}")
-                    .getMessage().contains("requires 'peer_cloud'"));
-            assertTrue(rejected("design_estimate_tco", base + ", \"peer_cloud\": \"aws\"}")
-                    .getMessage().contains("'peer_cloud' must differ from 'cloud'"));
-            assertTrue(rejected("design_estimate_tco", base + ", \"peer_cloud\": \"gcp\", \"path_tier\": 6}")
+                    tcoSpec(1000, 1000, "\"archetypes\": [\"native_multicloud_interconnect\"]"))
+                    .getMessage().contains("requires 'peer_cloud_id'"));
+            assertTrue(rejected("design_estimate_tco", tcoSpec(1000, 1000, "\"peer_cloud_id\": \"aws\""))
+                    .getMessage().contains("different provider"));
+            assertTrue(rejected("design_estimate_tco", tcoSpec(1000, 1000, "\"peer_cloud_id\": \"nope\""))
+                    .getMessage().contains("Declared clouds"));
+            assertTrue(rejected("design_estimate_tco", tcoSpec(1000, 1000,
+                    "\"peer_cloud_id\": \"gcp\", \"path_tier\": 6"))
                     .getMessage().contains("'path_tier' must be between 1 and 5"));
         }
     }
 
-    // ── fixtures ────────────────────────────────────────────────────────────
+    // fixtures
+
+    /** A spec with an AWS us-east-1 cloud (the egress volume) and a Google us-east4 peer, one sized workload. */
+    private static String tcoSpec(int egressGb, int mbps, String extra) {
+        return "{\"spec\": {\"name\": \"tco\", \"clouds\": ["
+                + "{\"id\": \"aws\", \"provider\": \"AWS\", \"region\": \"us-east-1\", \"monthlyEgressGb\": "
+                + egressGb + "}, {\"id\": \"gcp\", \"provider\": \"GOOGLE_CLOUD\", \"region\": \"us-east4\"}], "
+                + "\"workloads\": [{\"label\": \"w\", \"bandwidthMbps\": " + mbps + ", \"clouds\": [\"aws\"]}]}"
+                + (extra == null ? "" : ", " + extra) + "}";
+    }
 
     /** A live card that answers internet and private egress for its own provider only. */
     private static RateCard cannedEgressCard(CloudProviderType owner) {

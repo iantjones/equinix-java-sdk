@@ -1,0 +1,14 @@
+{
+  "href": "https://api.equinix.com/fabric/v4/loas/29cc7878-54e3-4e1a-8651-87a61354bac2/actions/30cc7878-54e3-4e1a-8651-87a61354bad4",
+  "uuid": "30cc7878-54e3-4e1a-8651-87a61354bad4",
+  "type": "LOA_COPY_LINK",
+  "state": "COMPLETED",
+  "data": {
+    "portalUrl": "https://portal.equinix.com/fabric/loa/inventory/issuer/29cc7878-54e3-4e1a-8651-87a61354bac2/authorize"
+  },
+  "changeLog": {
+    "createdDateTime": "2026-06-24T06:50:46Z",
+    "createdBy": "user",
+    "createdByEmail": "user@org1.com"
+  }
+}

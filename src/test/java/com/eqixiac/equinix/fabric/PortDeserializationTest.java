@@ -78,11 +78,6 @@ class PortDeserializationTest {
     }
 
     @Test
-    void settings_isDeserialized() {
-        assertNotNull(port.getSettings());
-    }
-
-    @Test
     void location_isDeserialized() {
         assertNotNull(port.getLocation());
     }

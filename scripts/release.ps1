@@ -1,462 +1,140 @@
 <#
 .SYNOPSIS
-    Builds, tags, and publishes an Equinix Java SDK release.
+    Builds, verifies, tags and publishes an Equinix Java SDK release.
 
 .DESCRIPTION
-    This script automates the full release workflow:
-    1. Validates prerequisites (Java, Maven, Git, GitHub CLI)
-    2. Runs unit tests
-    3. Builds the SDK JARs (compiled, sources, javadoc)
-    4. Creates a Git tag
-    5. Creates a GitHub Release with attached JARs
-    6. Optionally deploys to Maven Central via Sonatype Central Portal
+    Runs the SAME gates as CI before anything is tagged or deployed:
+      1. Preconditions: clean git tree, tag not taken, pom version == release version,
+         and a "## [<version>]" section in CHANGELOG.md.
+      2. ./mvnw clean verify -Pcoverage   default suite + WireMock suite + JaCoCo gate
+                                          + javadoc jar (doclint) + sources jar + shaded MCP jar
+      3. ./mvnw javadoc:javadoc           javadoc reference gate
+      4. Shaded MCP server jar smoke test (-Dmcp.server.jar.required=true)
+      5. git tag + push, GitHub release with the jars (optional)
+      6. ./mvnw -Prelease deploy -DskipTests   GPG signing + Central Portal (optional)
+      7. Next development version (X.Y.Z+1-SNAPSHOT), committed and pushed (optional)
 
-    IMPORTANT: Commit and push all changes to Git BEFORE running this script.
-    The script does NOT commit or push on your behalf.
+    POSIX equivalent: scripts/release.sh. Commit and push everything BEFORE running.
 
 .PARAMETER Version
-    The release version (e.g., "1.1.0"). If not provided, reads from pom.xml.
-
+    Release version (e.g. "4.0.0"). Defaults to the pom version without -SNAPSHOT.
 .PARAMETER GpgKeyId
-    The GPG key ID for Maven Central signing. Required only for Maven Central deploy.
-
-.PARAMETER SkipTests
-    Skip running tests before building. Default: false.
-
+    GPG key id; required with -DeployMavenCentral.
 .PARAMETER SkipGitHub
-    Skip creating the GitHub release. Default: false.
-
+    Do not create the GitHub release.
 .PARAMETER DeployMavenCentral
-    Deploy to Maven Central via Sonatype Central Portal. Default: false.
-
+    Deploy to Maven Central (Sonatype Central Portal, autoPublish) with the release profile.
+.PARAMETER SkipNextSnapshot
+    Do not bump the pom to the next -SNAPSHOT version afterwards.
 .PARAMETER DryRun
-    Show what would be done without executing. Default: false.
+    Run the checks and the gates, but do not tag, release, deploy or bump.
 
 .EXAMPLE
-    # Build and create GitHub release (most common usage)
-    .\scripts\release.ps1 -Version "1.1.0"
-
+    .\scripts\release.ps1 -Version 4.0.0 -DryRun
 .EXAMPLE
-    # Build, create GitHub release, AND deploy to Maven Central
-    .\scripts\release.ps1 -Version "1.1.0" -DeployMavenCentral -GpgKeyId "BCD92FFA"
-
-.EXAMPLE
-    # Preview what would happen without doing anything
-    .\scripts\release.ps1 -Version "1.1.0" -DryRun
+    .\scripts\release.ps1 -Version 4.0.0 -DeployMavenCentral -GpgKeyId BCD92FFA
 #>
-
 [CmdletBinding()]
 param(
-    [Parameter(Position = 0)]
-    [string]$Version,
-
+    [Parameter(Position = 0)][string]$Version,
     [string]$GpgKeyId,
-
-    [switch]$SkipTests,
-
     [switch]$SkipGitHub,
-
     [switch]$DeployMavenCentral,
-
+    [switch]$SkipNextSnapshot,
     [switch]$DryRun
 )
 
-$ErrorActionPreference = "Continue"
+$ErrorActionPreference = "Stop"
 $ProjectRoot = Split-Path -Parent $PSScriptRoot
+$OnWindows = ($env:OS -eq "Windows_NT")
+$Mvn = if ($OnWindows) { Join-Path $ProjectRoot "mvnw.cmd" } else { Join-Path $ProjectRoot "mvnw" }
 
-# ============================================================================
-# Helper Functions
-# ============================================================================
-
-function Write-Step {
-    param([string]$Message)
-    Write-Host "`n========================================" -ForegroundColor Cyan
-    Write-Host "  $Message" -ForegroundColor Cyan
-    Write-Host "========================================" -ForegroundColor Cyan
+function Step([string]$m) { Write-Host "`n=== $m ===" -ForegroundColor Cyan }
+function Ok([string]$m) { Write-Host "  [OK] $m" -ForegroundColor Green }
+function Die([string]$m) { Write-Host "  [FAIL] $m" -ForegroundColor Red; exit 1 }
+function Mvn([string[]]$a) {
+    Write-Host "  > mvnw $($a -join ' ')" -ForegroundColor DarkGray
+    & $Mvn -B -ntp @a
+    if ($LASTEXITCODE -ne 0) { Die "mvnw $($a -join ' ') failed" }
 }
-
-function Write-Success {
-    param([string]$Message)
-    Write-Host "  [OK] $Message" -ForegroundColor Green
-}
-
-function Write-Warning {
-    param([string]$Message)
-    Write-Host "  [WARN] $Message" -ForegroundColor Yellow
-}
-
-function Write-Fail {
-    param([string]$Message)
-    Write-Host "  [FAIL] $Message" -ForegroundColor Red
-}
-
-function Test-Command {
-    param([string]$Command)
-    $null = Get-Command $Command -ErrorAction SilentlyContinue
-    return $?
-}
-
-# ============================================================================
-# Step 1: Validate Prerequisites
-# ============================================================================
-
-Write-Step "Validating Prerequisites"
-
-# Java
-if (Test-Command "java") {
-    $javaVersion = & java -version 2>&1 | Out-String | ForEach-Object { $_.Trim().Split("`n")[0] }
-    Write-Success "Java: $javaVersion"
-} else {
-    Write-Fail "Java not found. Install JDK 14+ and add to PATH."
-    exit 1
-}
-
-# Maven
-if (Test-Command "mvn") {
-    $mvnVersion = & mvn --version 2>&1 | Out-String | ForEach-Object { $_.Trim().Split("`n")[0] }
-    Write-Success "Maven: $mvnVersion"
-} else {
-    Write-Fail "Maven not found. Install Maven 3.6+ and add to PATH."
-    exit 1
-}
-
-# Git
-if (Test-Command "git") {
-    $gitVersion = & git --version 2>&1 | Out-String | ForEach-Object { $_.Trim() }
-    Write-Success "Git: $gitVersion"
-} else {
-    Write-Fail "Git not found. Install Git and add to PATH."
-    exit 1
-}
-
-# GitHub CLI (optional but needed for GitHub releases)
-$hasGhCli = Test-Command "gh"
-if ($hasGhCli) {
-    $ghVersion = & gh --version 2>&1 | Out-String | ForEach-Object { $_.Trim().Split("`n")[0] }
-    Write-Success "GitHub CLI: $ghVersion"
-} else {
-    Write-Warning "GitHub CLI (gh) not found."
-    Write-Host "         Install from: https://cli.github.com/" -ForegroundColor Yellow
-    Write-Host "         Or: winget install --id GitHub.cli" -ForegroundColor Yellow
-    Write-Host "         GitHub release step will be skipped." -ForegroundColor Yellow
-    if (-not $SkipGitHub) {
-        $SkipGitHub = $true
-    }
-}
-
-# GPG (optional, needed for Maven Central)
-if ($DeployMavenCentral) {
-    if (Test-Command "gpg") {
-        Write-Success "GPG: Available"
-    } else {
-        Write-Fail "GPG not found. Required for Maven Central signing."
-        Write-Host "         Install from: https://gnupg.org/download/" -ForegroundColor Red
-        exit 1
-    }
-    if (-not $GpgKeyId) {
-        Write-Fail "-GpgKeyId is required for Maven Central deployment."
-        Write-Host "         List keys with: gpg --list-keys" -ForegroundColor Red
-        exit 1
-    }
-}
-
-# ============================================================================
-# Step 2: Determine Version
-# ============================================================================
-
-Write-Step "Determining Version"
 
 Push-Location $ProjectRoot
 try {
-    if (-not $Version) {
-        # Read version from pom.xml
-        [xml]$pom = Get-Content "$ProjectRoot\pom.xml"
-        $pomVersion = $pom.project.version
-        if ($pomVersion -match "-SNAPSHOT$") {
-            $Version = $pomVersion -replace "-SNAPSHOT$", ""
-            Write-Host "  POM version: $pomVersion" -ForegroundColor White
-            Write-Host "  Release version will be: $Version" -ForegroundColor White
-        } else {
-            $Version = $pomVersion
-        }
-    }
+    Step "Preconditions"
+    foreach ($c in @("java", "git")) { if (-not (Get-Command $c -ErrorAction SilentlyContinue)) { Die "$c not found on PATH" } }
+    if (-not (Test-Path $Mvn)) { Die "Maven wrapper $Mvn not found" }
 
+    [xml]$pom = Get-Content (Join-Path $ProjectRoot "pom.xml")
+    $pomVersion = $pom.project.version
+    if (-not $Version) { $Version = $pomVersion -replace "-SNAPSHOT$", "" }
+    if ($pomVersion -ne $Version) { Die "pom.xml version is $pomVersion; set it to $Version and commit first" }
     $TagName = "v$Version"
-    $ArtifactId = "equinix-sdk-java"
-    $JarName = "$ArtifactId-$Version.jar"
-    $SourcesJar = "$ArtifactId-$Version-sources.jar"
-    $JavadocJar = "$ArtifactId-$Version-javadoc.jar"
+    Ok "Release version $Version (tag $TagName)"
 
-    Write-Success "Release version: $Version"
-    Write-Success "Git tag: $TagName"
-    Write-Success "Artifacts: $JarName, $SourcesJar, $JavadocJar"
+    $status = & git status --porcelain
+    if ($status) { Write-Host $status -ForegroundColor Yellow; Die "Working tree is not clean; commit or stash first" }
+    Ok "Working tree clean"
 
-    # Check if tag already exists
-    $existingTag = & git tag -l $TagName 2>&1
-    if ($existingTag -eq $TagName) {
-        Write-Fail "Tag $TagName already exists. Choose a different version or delete the existing tag."
-        exit 1
+    if (& git tag -l $TagName) { Die "Tag $TagName already exists" }
+    Ok "Tag $TagName is free"
+
+    $changelog = Get-Content (Join-Path $ProjectRoot "CHANGELOG.md") -Raw
+    if ($changelog -notmatch "(?m)^## \[$([regex]::Escape($Version))\]") { Die "CHANGELOG.md has no '## [$Version]' section" }
+    Ok "CHANGELOG.md has a [$Version] section"
+
+    if ($DeployMavenCentral) {
+        if (-not (Get-Command gpg -ErrorAction SilentlyContinue)) { Die "gpg not found (needed for -DeployMavenCentral)" }
+        if (-not $GpgKeyId) { Die "-GpgKeyId is required with -DeployMavenCentral" }
     }
+    $hasGh = [bool](Get-Command gh -ErrorAction SilentlyContinue)
+    if (-not $hasGh -and -not $SkipGitHub) { Write-Host "  [WARN] gh not found; GitHub release skipped" -ForegroundColor Yellow; $SkipGitHub = $true }
 
-    # Check for uncommitted changes
-    $gitStatus = & git status --porcelain 2>&1
-    if ($gitStatus) {
-        Write-Fail "Working directory has uncommitted changes."
-        Write-Host "  Please commit and push all changes before running this script." -ForegroundColor Red
-        Write-Host "" -ForegroundColor Red
-        Write-Host $gitStatus -ForegroundColor Yellow
-        $proceed = Read-Host "  Continue anyway? (y/N)"
-        if ($proceed -ne "y" -and $proceed -ne "Y") {
-            Write-Host "  Aborted." -ForegroundColor Red
-            exit 0
-        }
-    }
+    Step "CI gates"
+    Mvn @("clean", "verify", "-Pcoverage")
+    Ok "Default + WireMock suites, coverage gate, javadoc/sources/server jars"
+    Mvn @("javadoc:javadoc")
+    Ok "Javadoc reference gate"
+    Mvn @("test", "-Dtest=ShadedJarSmokeTest", "-Dsurefire.failIfNoSpecifiedTests=false", "-Dmcp.server.jar.required=true")
+    Ok "Shaded MCP server jar smoke test"
 
-    if ($DryRun) {
-        Write-Host "`n  === DRY RUN MODE === (no changes will be made)" -ForegroundColor Magenta
-    }
+    $jars = @("equinix-sdk-java-$Version.jar", "equinix-sdk-java-$Version-sources.jar",
+              "equinix-sdk-java-$Version-javadoc.jar", "equinix-sdk-java-$Version-mcp-server.jar")
+    foreach ($j in $jars) { if (-not (Test-Path (Join-Path "target" $j))) { Die "Missing target/$j" } }
+    Ok "Artifacts: $($jars -join ', ')"
 
-    # ============================================================================
-    # Step 3: Update POM Version (remove -SNAPSHOT if needed)
-    # ============================================================================
+    if ($DryRun) { Step "Dry run: gates passed; nothing tagged, released or deployed"; exit 0 }
 
-    Write-Step "Checking POM Version"
-
-    [xml]$pom = Get-Content "$ProjectRoot\pom.xml"
-    $currentVersion = $pom.project.version
-
-    if ($currentVersion -ne $Version) {
-        Write-Host "  Updating version: $currentVersion -> $Version" -ForegroundColor White
-        if (-not $DryRun) {
-            & mvn versions:set "-DnewVersion=$Version" -q 2>&1 | Out-Null
-            & mvn versions:commit -q 2>&1 | Out-Null
-            Write-Success "POM version updated to $Version"
-            Write-Warning "POM was updated. You should commit this change before proceeding."
-            $proceed = Read-Host "  Continue? (y/N)"
-            if ($proceed -ne "y" -and $proceed -ne "Y") {
-                Write-Host "  Aborted. Commit the POM change and re-run." -ForegroundColor Red
-                exit 0
-            }
-        } else {
-            Write-Host "  [DRY RUN] Would update POM version to $Version" -ForegroundColor Magenta
-        }
-    } else {
-        Write-Success "POM version already at $Version"
-    }
-
-    # ============================================================================
-    # Step 4: Run Tests
-    # ============================================================================
-
-    if (-not $SkipTests) {
-        Write-Step "Running Unit Tests"
-        if (-not $DryRun) {
-            & mvn test -q
-            if ($LASTEXITCODE -ne 0) {
-                Write-Fail "Tests failed. Fix test failures before releasing."
-                exit 1
-            }
-            Write-Success "All tests passed"
-        } else {
-            Write-Host "  [DRY RUN] Would run: mvn test" -ForegroundColor Magenta
-        }
-    } else {
-        Write-Host "`n  Skipping tests (-SkipTests)" -ForegroundColor Yellow
-    }
-
-    # ============================================================================
-    # Step 5: Build JARs
-    # ============================================================================
-
-    Write-Step "Building Release JARs"
-
-    if (-not $DryRun) {
-        & mvn clean package -DskipTests -q
-        if ($LASTEXITCODE -ne 0) {
-            Write-Fail "Build failed."
-            exit 1
-        }
-
-        # Verify all 3 JARs exist
-        $jarPath = "$ProjectRoot\target\$JarName"
-        $sourcesPath = "$ProjectRoot\target\$SourcesJar"
-        $javadocPath = "$ProjectRoot\target\$JavadocJar"
-
-        if (Test-Path $jarPath) { Write-Success "Built: $JarName ($('{0:N1} MB' -f ((Get-Item $jarPath).Length / 1MB)))" }
-        else { Write-Fail "Missing: $jarPath"; exit 1 }
-
-        if (Test-Path $sourcesPath) { Write-Success "Built: $SourcesJar ($('{0:N1} MB' -f ((Get-Item $sourcesPath).Length / 1MB)))" }
-        else { Write-Fail "Missing: $sourcesPath"; exit 1 }
-
-        if (Test-Path $javadocPath) { Write-Success "Built: $JavadocJar ($('{0:N1} MB' -f ((Get-Item $javadocPath).Length / 1MB)))" }
-        else { Write-Fail "Missing: $javadocPath"; exit 1 }
-    } else {
-        Write-Host "  [DRY RUN] Would run: mvn clean package -DskipTests" -ForegroundColor Magenta
-    }
-
-    # ============================================================================
-    # Step 6: Git Tag
-    # ============================================================================
-
-    Write-Step "Creating Git Tag"
-
-    if (-not $DryRun) {
-        & git tag -a $TagName -m "Release $Version"
-        Write-Success "Created tag: $TagName"
-
-        Write-Host "  Pushing tag to remote..." -ForegroundColor White
-        & git push origin $TagName
-        Write-Success "Pushed tag to remote"
-    } else {
-        Write-Host "  [DRY RUN] Would create and push tag: $TagName" -ForegroundColor Magenta
-    }
-
-    # ============================================================================
-    # Step 7: GitHub Release
-    # ============================================================================
+    Step "Tag"
+    & git tag -a $TagName -m "Release $Version"; if ($LASTEXITCODE -ne 0) { Die "git tag failed" }
+    & git push origin $TagName; if ($LASTEXITCODE -ne 0) { Die "git push of $TagName failed" }
+    Ok "Pushed $TagName"
 
     if (-not $SkipGitHub) {
-        Write-Step "Creating GitHub Release"
-
-        $releaseNotes = @"
-## Equinix Java SDK $Version
-
-### Highlights
-- 7 API domains: Fabric, Network Edge, Customer Portal, IBX SmartView, Internet Access, Projects, Messaging
-- 58 resource types with 310+ API methods
-- Cloud provider SDK interoperability (AWS Direct Connect, Azure ExpressRoute, Google Cloud Interconnect, Oracle FastConnect)
-- Fluent builder pattern with Dry Run validation
-- Automatic pagination, OAuth2 authentication, typed exception hierarchy
-
-### Installation
-
-**Maven:**
-``````xml
-<dependency>
-    <groupId>com.eqixiac.equinix</groupId>
-    <artifactId>equinix-sdk-java</artifactId>
-    <version>$Version</version>
-</dependency>
-``````
-
-**Manual:** Download the JAR files attached to this release.
-
-### Artifacts
-- ``$JarName`` - Compiled SDK
-- ``$SourcesJar`` - Source code
-- ``$JavadocJar`` - Javadoc documentation
-"@
-
-        if (-not $DryRun) {
-            & gh release create $TagName `
-                "$ProjectRoot\target\$JarName" `
-                "$ProjectRoot\target\$SourcesJar" `
-                "$ProjectRoot\target\$JavadocJar" `
-                --title "Equinix Java SDK $Version" `
-                --notes $releaseNotes
-
-            if ($LASTEXITCODE -eq 0) {
-                Write-Success "GitHub Release created: $TagName"
-                $releaseUrl = & gh release view $TagName --json url -q .url 2>&1
-                Write-Host "`n  Release URL: $releaseUrl" -ForegroundColor Green
-            } else {
-                Write-Fail "GitHub Release creation failed. You can create it manually at:"
-                Write-Host "  https://github.com/iantjones/equinix-java-sdk/releases/new" -ForegroundColor Yellow
-            }
-        } else {
-            Write-Host "  [DRY RUN] Would create GitHub release $TagName with 3 JAR attachments" -ForegroundColor Magenta
-        }
-    } else {
-        Write-Host "`n  Skipping GitHub release" -ForegroundColor Yellow
+        Step "GitHub release"
+        $notes = "Equinix Java SDK $Version. See CHANGELOG.md for the full list of changes."
+        & gh release create $TagName @($jars | ForEach-Object { Join-Path "target" $_ }) --title "Equinix Java SDK $Version" --notes $notes
+        if ($LASTEXITCODE -ne 0) { Die "gh release create failed" }
+        Ok "GitHub release $TagName"
     }
-
-    # ============================================================================
-    # Step 8: Maven Central Deploy (Optional)
-    # ============================================================================
 
     if ($DeployMavenCentral) {
-        Write-Step "Deploying to Maven Central"
-
-        Write-Host "  Publishing via Sonatype Central Portal." -ForegroundColor White
-        Write-Host "  Ensure ~/.m2/settings.xml has your Central Portal token." -ForegroundColor White
-        Write-Host "  A GPG passphrase popup may appear - enter your passphrase." -ForegroundColor White
-
-        if (-not $DryRun) {
-            & mvn clean deploy -DskipTests "-Dgpg.keyname=$GpgKeyId"
-            if ($LASTEXITCODE -eq 0) {
-                Write-Success "Published to Maven Central!"
-                Write-Host ""
-                Write-Host "  Artifacts will be available on Maven Central within ~30 minutes:" -ForegroundColor Green
-                Write-Host "  https://central.sonatype.com/artifact/com.eqixiac.equinix/equinix-sdk-java/$Version" -ForegroundColor Green
-                Write-Host ""
-                Write-Host "  Maven dependency:" -ForegroundColor Green
-                Write-Host "  <dependency>" -ForegroundColor White
-                Write-Host "      <groupId>com.eqixiac.equinix</groupId>" -ForegroundColor White
-                Write-Host "      <artifactId>equinix-sdk-java</artifactId>" -ForegroundColor White
-                Write-Host "      <version>$Version</version>" -ForegroundColor White
-                Write-Host "  </dependency>" -ForegroundColor White
-            } else {
-                Write-Fail "Maven Central deployment failed."
-                Write-Host "  Check your Central Portal token in ~/.m2/settings.xml" -ForegroundColor Red
-                Write-Host "  Check your GPG key: gpg --list-keys" -ForegroundColor Red
-                Write-Host "  View deployment status: https://central.sonatype.com/publishing" -ForegroundColor Yellow
-            }
-        } else {
-            Write-Host "  [DRY RUN] Would run: mvn clean deploy -DskipTests -Dgpg.keyname=$GpgKeyId" -ForegroundColor Magenta
-        }
+        Step "Maven Central"
+        Write-Host "  Uses the 'central' server token from ~/.m2/settings.xml." -ForegroundColor White
+        Mvn @("-Prelease", "deploy", "-DskipTests", "-Dgpg.keyname=$GpgKeyId")
+        Ok "Published com.eqixiac.equinix:equinix-sdk-java:$Version"
     }
 
-    # ============================================================================
-    # Done
-    # ============================================================================
-
-    # ============================================================================
-    # Step 9: Prepare Next Development Version
-    # ============================================================================
-
-    Write-Step "Preparing Next Development Version"
-
-    $versionParts = $Version.Split(".")
-    if ($versionParts.Length -ge 3) {
-        $versionParts[2] = [string]([int]$versionParts[2] + 1)
-    } elseif ($versionParts.Length -eq 2) {
-        $versionParts += "1"
-    } else {
-        $versionParts = @($Version, "0", "1")
-    }
-    $nextVersion = ($versionParts -join ".") + "-SNAPSHOT"
-
-    Write-Host "  Next development version: $nextVersion" -ForegroundColor White
-
-    if (-not $DryRun) {
-        & mvn versions:set "-DnewVersion=$nextVersion" -q 2>&1 | Out-Null
-        & mvn versions:commit -q 2>&1 | Out-Null
+    if (-not $SkipNextSnapshot) {
+        Step "Next development version"
+        $p = $Version.Split(".")
+        $next = "$($p[0]).$($p[1]).$([int]$p[2] + 1)-SNAPSHOT"
+        Mvn @("versions:set", "-DnewVersion=$next", "-DgenerateBackupPoms=false")
         & git add pom.xml
-        & git commit -m "Prepare next development version $nextVersion"
+        & git commit -m "Prepare next development version $next"
         & git push
-        Write-Success "POM updated to $nextVersion and pushed"
-    } else {
-        Write-Host "  [DRY RUN] Would update POM to $nextVersion, commit, and push" -ForegroundColor Magenta
+        Ok "pom.xml now $next"
     }
-
-    # ============================================================================
-    # Done
-    # ============================================================================
-
-    Write-Host "`n" -NoNewline
-    Write-Step "Release Complete!"
-    Write-Host ""
-    Write-Host "  Version:    $Version" -ForegroundColor Green
-    Write-Host "  Tag:        $TagName" -ForegroundColor Green
-    if (-not $SkipGitHub -and $hasGhCli) {
-        Write-Host "  GitHub:     https://github.com/iantjones/equinix-java-sdk/releases/tag/$TagName" -ForegroundColor Green
-    }
-    if ($DeployMavenCentral) {
-        Write-Host "  Maven:      com.eqixiac.equinix:equinix-sdk-java:$Version" -ForegroundColor Green
-        Write-Host "  Portal:     https://central.sonatype.com/artifact/com.eqixiac.equinix/equinix-sdk-java" -ForegroundColor Green
-    }
-    Write-Host ""
-
+    Step "Release $Version complete"
 } finally {
     Pop-Location
 }

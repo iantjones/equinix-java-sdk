@@ -40,7 +40,7 @@ class FabricNetworkScenarioTest extends IntegrationTestBase {
         if (fabric != null) fabric.close();
     }
 
-    // ── Network Lifecycle ───────────────────────────────────────────────
+    // Network Lifecycle
 
     @Test
     @Order(1)
@@ -119,7 +119,7 @@ class FabricNetworkScenarioTest extends IntegrationTestBase {
         assertTrue(found, "Test network should appear in search results");
     }
 
-    // ── PrecisionTime Lifecycle ─────────────────────────────────────────
+    // PrecisionTime Lifecycle
 
     @Test
     @Order(5)

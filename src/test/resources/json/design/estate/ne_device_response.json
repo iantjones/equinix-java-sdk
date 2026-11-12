@@ -1,0 +1,11 @@
+{
+  "uuid": "d0000000-0000-4000-8000-000000000001",
+  "name": "synthetic-device",
+  "deviceTypeCode": "C8000V",
+  "status": "PROVISIONED",
+  "metroCode": "DC",
+  "metroName": "Ashburn",
+  "accountNumber": "100",
+  "termLength": 12,
+  "createdDate": "2025-01-01T00:00:00Z"
+}

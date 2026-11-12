@@ -25,13 +25,13 @@ import com.eqixiac.equinix.fabric.model.implementation.cloud.CloudProviderType;
 import com.eqixiac.equinix.fabric.model.json.creators.ConnectionOperator;
 
 /**
- * Assembles a <em>complete</em> Fabric connection body from a {@link PlannedConnection} — both
- * endpoints, encapsulation, and cloud authorization — so a live dry-run or a real create sends the
+ * Assembles a <em>complete</em> Fabric connection body from a {@link PlannedConnection} - both
+ * endpoints, encapsulation, and cloud authorization - so a live dry-run or a real create sends the
  * whole request the API needs, not the endpoint-less name + bandwidth shell that Fabric rejects with
  * {@code EQ-3142501 "Null value for aSide access point"}.
  *
  * <p>A provider connection is <strong>Cloud&nbsp;Router&nbsp;&rarr;&nbsp;service&nbsp;profile</strong>:
- * its A-side is the Fabric Cloud Router (by uuid — the thing that does not exist at PLAN time, so its
+ * its A-side is the Fabric Cloud Router (by uuid - the thing that does not exist at PLAN time, so its
  * uuid is passed in by the caller once the router is real), and its Z-side is the cloud provider,
  * carrying the service-profile uuid, the customer authorization key, the seller region and (for Azure)
  * the peering type, all read off the planned connection. A backbone link is
@@ -50,7 +50,7 @@ public final class ConnectionBodies {
      * A human-readable label for the cloud-specific authorization key a connection to the given
      * provider requires. Backed by the documented per-provider key semantics
      * (see {@link CloudProviderConnectionAdapter#getAuthenticationKey()}), it works with nothing but
-     * the provider type — no catalog fetch and no customer resources — so it is safe to show a
+     * the provider type - no catalog fetch and no customer resources - so it is safe to show a
      * brand-new customer exactly what to gather.
      *
      * @param type the cloud provider type; {@code null} tolerated
@@ -93,8 +93,8 @@ public final class ConnectionBodies {
     /**
      * Builds a cloud-provider Z-side adapter from a planned connection's resolved provider fields
      * (service-profile uuid, authorization key, seller region, and Azure peering type). Uniform
-     * across every provider — the typed reference adapters differ only in these same fields plus the
-     * provider type and (Azure) peering, all of which this carries — so IBM and Alibaba, which have
+     * across every provider - the typed reference adapters differ only in these same fields plus the
+     * provider type and (Azure) peering, all of which this carries - so IBM and Alibaba, which have
      * no dedicated adapter, still send their authorization key and seller region.
      *
      * @param connection the planned provider connection
@@ -116,12 +116,32 @@ public final class ConnectionBodies {
      */
     public static ConnectionOperator.ConnectionBuilder providerBody(
             Connections connections, PlannedConnection connection, String aSideRouterUuid) {
+        return providerBody(connections, connection, aSideRouterUuid, null);
+    }
+
+    /**
+     * As {@link #providerBody(Connections, PlannedConnection, String)}, with the redundancy group
+     * Fabric assigned to the PRIMARY of this connection's group. Fabric assigns the group id when the
+     * primary is created; a SECONDARY must send that id (spec {@code ConnectionRedundancy.group}; the
+     * Terraform provider documents the same: use the primary's {@code redundancy.0.group}). The plan's
+     * own {@code zSideRedundancyGroup} is only an SDK-side token pairing the two and is never sent.
+     *
+     * @param connections         the Fabric connections client
+     * @param connection          the planned provider connection
+     * @param aSideRouterUuid     the real Cloud Router uuid to use as the A-side
+     * @param liveRedundancyGroup the primary's live group id (required for a SECONDARY; ignored otherwise)
+     * @return an un-terminated builder; chain {@code .dryRun().create()} or {@code .create()}
+     */
+    public static ConnectionOperator.ConnectionBuilder providerBody(
+            Connections connections, PlannedConnection connection, String aSideRouterUuid,
+            String liveRedundancyGroup) {
         ConnectionOperator.ConnectionBuilder builder = connections.define(connection.getConnectionType())
                 .name(connection.getName())
                 .bandwidth(connection.getBandwidthMbps())
                 .aSideAccessPointCloudRouter(aSideRouterUuid)
                 .zSideCloudProvider(cloudAdapter(connection), linkProtocol(connection.getZSideVlanTag()));
-        return withNotification(withRedundancy(builder, connection), connection);
+        return withProject(withNotification(withRedundancy(builder, connection, liveRedundancyGroup), connection),
+                connection);
     }
 
     /**
@@ -135,12 +155,29 @@ public final class ConnectionBodies {
      */
     public static ConnectionOperator.ConnectionBuilder providerBodyOnPort(
             Connections connections, PlannedConnection connection, String aSidePortUuid) {
+        return providerBodyOnPort(connections, connection, aSidePortUuid, null);
+    }
+
+    /**
+     * As {@link #providerBodyOnPort(Connections, PlannedConnection, String)}, with the primary's live
+     * redundancy group (see {@link #providerBody(Connections, PlannedConnection, String, String)}).
+     *
+     * @param connections         the Fabric connections client
+     * @param connection          the planned provider connection
+     * @param aSidePortUuid       the existing customer port uuid to use as the A-side
+     * @param liveRedundancyGroup the primary's live group id (required for a SECONDARY; ignored otherwise)
+     * @return an un-terminated builder; chain {@code .dryRun().create()} or {@code .create()}
+     */
+    public static ConnectionOperator.ConnectionBuilder providerBodyOnPort(
+            Connections connections, PlannedConnection connection, String aSidePortUuid,
+            String liveRedundancyGroup) {
         ConnectionOperator.ConnectionBuilder builder = connections.define(connection.getConnectionType())
                 .name(connection.getName())
                 .bandwidth(connection.getBandwidthMbps())
                 .aSideAccessPointPort(aSidePortUuid, linkProtocol(connection.getZSideVlanTag()))
                 .zSideCloudProvider(cloudAdapter(connection), linkProtocol(connection.getZSideVlanTag()));
-        return withNotification(withRedundancy(builder, connection), connection);
+        return withProject(withNotification(withRedundancy(builder, connection, liveRedundancyGroup), connection),
+                connection);
     }
 
     /**
@@ -160,7 +197,7 @@ public final class ConnectionBodies {
                 .bandwidth(connection.getBandwidthMbps())
                 .aSideAccessPointCloudRouter(aSideRouterUuid)
                 .zSideAccessPointCloudRouter(zSideRouterUuid);
-        return withNotification(builder, connection);
+        return withProject(withNotification(builder, connection), connection);
     }
 
     private static ConnectionOperator.ConnectionBuilder withNotification(
@@ -178,14 +215,14 @@ public final class ConnectionBodies {
     }
 
     /**
-     * Stamps connection-level redundancy when the planned connection names a redundancy group, so a
-     * primary + diverse-secondary VC pair to the same cloud is expressed on the wire instead of being
-     * silently dropped. A connection with no group is left standalone (the common case). When a group is
-     * set but no priority is given, {@link RedundancyPriority#PRIMARY} is the documented default rather
-     * than sending an ambiguous group with no role.
+     * Stamps connection-level redundancy when the planned connection names a redundancy group. A
+     * PRIMARY (also the default when no priority is given) sends only {@code priority}: Fabric assigns
+     * the group. A SECONDARY sends {@code priority} and the primary's live group id; when that id is
+     * not known (a plan-time dry-run before the primary exists) only the priority is sent. The plan's
+     * group token itself is never sent: it is not a Fabric group id.
      */
     private static ConnectionOperator.ConnectionBuilder withRedundancy(
-            ConnectionOperator.ConnectionBuilder builder, PlannedConnection connection) {
+            ConnectionOperator.ConnectionBuilder builder, PlannedConnection connection, String liveGroup) {
         String group = connection.getZSideRedundancyGroup();
         if (group == null || group.isBlank()) {
             return builder;
@@ -193,15 +230,19 @@ public final class ConnectionBodies {
         RedundancyPriority priority = connection.getRedundancyPriority() != null
                 ? connection.getRedundancyPriority()
                 : RedundancyPriority.PRIMARY;
-        builder.redundancy(group, priority);
+        builder.redundancy(priority == RedundancyPriority.SECONDARY ? liveGroup : null, priority);
         return builder;
     }
 
-    /**
-     * A cloud VC requires DOT1Q encapsulation with a VLAN tag. When the caller has not yet supplied a
-     * VLAN (a to-be-gathered customer input), a tagless DOT1Q is built so the request shape is still
-     * DOT1Q; the API surfaces the missing tag rather than the SDK guessing one.
-     */
+    /** Stamps the planned project, when there is one, so the connection lands next to its routers. */
+    private static ConnectionOperator.ConnectionBuilder withProject(
+            ConnectionOperator.ConnectionBuilder builder, PlannedConnection connection) {
+        if (connection.getProjectId() != null && !connection.getProjectId().isBlank()) {
+            builder.project(connection.getProjectId());
+        }
+        return builder;
+    }
+
     private static LinkProtocol linkProtocol(Integer vlanTag) {
         return vlanTag != null
                 ? LinkProtocol.dot1q().vlanTag(vlanTag).create()
@@ -250,6 +291,19 @@ public final class ConnectionBodies {
         @Override
         public PeeringType getPreferredPeeringType() {
             return connection.getZSidePeeringType();
+        }
+
+        /**
+         * The provider metro: Fabric rejects a service-provider z-side without location.metroCode
+         * (HTTP 400 EQ-3142501). Uses the planned z-side metro, else the a-side metro (a provider
+         * connection is planned in the metro of its Cloud Router or port).
+         */
+        @Override
+        public String getMetroCode() {
+            if (connection.getZSideMetro() != null) {
+                return connection.getZSideMetro().code();
+            }
+            return connection.getASideMetro() != null ? connection.getASideMetro().code() : null;
         }
     }
 }

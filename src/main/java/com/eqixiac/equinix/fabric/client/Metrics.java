@@ -19,15 +19,20 @@ package com.eqixiac.equinix.fabric.client;
 import com.eqixiac.equinix.core.http.response.PaginatedFilteredList;
 import com.eqixiac.equinix.fabric.model.Metric;
 import com.eqixiac.equinix.fabric.model.implementation.filter.FilterPropertyList;
+import com.eqixiac.equinix.fabric.model.implementation.filter.MetricQuery;
 import com.eqixiac.equinix.fabric.model.implementation.sort.SortPropertyList;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * Client interface for the Equinix Fabric Metrics API. Provides a filtered search over
- * time-series metrics for Fabric assets (connections, ports, and more), superseding the
- * deprecated per-asset {@code /stats} statistics endpoints.
+ * Client interface for the Equinix Fabric Metrics API ({@code POST /fabric/v4/metrics/search}).
+ * It replaces the per-asset {@code GET /{asset}/{id}/metrics} and the {@code /ports/{id}/stats} and
+ * {@code /connections/{id}/stats} statistics endpoints, which spec 4.34.0 deprecates and this SDK
+ * no longer calls.
+ *
+ * <p>The search requires exactly one {@code /subject} and at least one {@code /name}
+ * (live-verified 2026-11-11). Build the filter with {@link MetricQuery}, or use the typed helpers.</p>
  *
  * @author ianjones
  * @see com.eqixiac.equinix.fabric.model.Metric
@@ -35,28 +40,55 @@ import java.util.List;
 public interface Metrics {
 
     /**
-     * Searches for metrics using an empty filter.
+     * Searches metrics with a filter built by a {@link MetricQuery}.
      *
+     * @param query the query (one subject, at least one metric name)
      * @return a paginated, filtered list of matching metrics
      */
-    PaginatedFilteredList<Metric> search();
+    PaginatedFilteredList<Metric> search(MetricQuery query);
 
     /**
-     * Searches for metrics matching the specified filter criteria.
+     * Searches metrics with a hand-built filter.
      *
-     * @param filter the filter criteria to apply (for example metric {@code /name} and {@code /subject})
+     * @param filter the filter; it must contain one {@code /subject} and a {@code /name} expression
+     * @param sort the sort criteria, or {@code null}
      * @return a paginated, filtered list of matching metrics
-     */
-    PaginatedFilteredList<Metric> search(FilterPropertyList filter);
-
-    /**
-     * Searches for metrics matching the specified filter and sort criteria.
-     *
-     * @param filter the filter criteria to apply
-     * @param sort the sort criteria to apply
-     * @return a paginated, filtered list of matching metrics
+     * @throws IllegalArgumentException when the filter lacks the required expressions
      */
     PaginatedFilteredList<Metric> search(FilterPropertyList filter, SortPropertyList sort);
+
+    /**
+     * Returns every page of the named metrics of one connection over a time range.
+     *
+     * @param connectionUuid the connection uuid
+     * @param fromDateTime start of the range, UTC wall clock
+     * @param toDateTime end of the range, UTC wall clock
+     * @param names the metric names, for example {@code equinix.fabric.connection.bandwidth_tx.usage}
+     * @return the metrics
+     */
+    List<Metric> forConnection(String connectionUuid, LocalDateTime fromDateTime, LocalDateTime toDateTime, String... names);
+
+    /**
+     * Returns every page of the named metrics of one port over a time range.
+     *
+     * @param portUuid the port uuid
+     * @param fromDateTime start of the range, UTC wall clock
+     * @param toDateTime end of the range, UTC wall clock
+     * @param names the metric names, for example {@code equinix.fabric.port.bandwidth_rx.usage}
+     * @return the metrics
+     */
+    List<Metric> forPort(String portUuid, LocalDateTime fromDateTime, LocalDateTime toDateTime, String... names);
+
+    /**
+     * Returns every page of the named metrics of one metro over a time range.
+     *
+     * @param metroCode the metro code, for example {@code SV}
+     * @param fromDateTime start of the range, UTC wall clock
+     * @param toDateTime end of the range, UTC wall clock
+     * @param names the metric names, for example {@code equinix.fabric.metro.sv_dc.latency}
+     * @return the metrics
+     */
+    List<Metric> forMetro(String metroCode, LocalDateTime fromDateTime, LocalDateTime toDateTime, String... names);
 
     /**
      * Retrieves metrics by wildcard metric name ({@code GET /fabric/v4/metrics}). Only the wildcard
@@ -68,19 +100,4 @@ public interface Metrics {
      * @return the list of matching metrics
      */
     List<Metric> getMetricsByName(String name, String value);
-
-    /**
-     * Retrieves metrics for a specific asset ({@code GET /fabric/v4/{asset}/{assetId}/metrics}).
-     *
-     * <p>UTC contract: {@code LocalDateTime} inputs are UTC wall clock (matching every timestamp
-     * the SDK returns); use {@code LocalDateTime.now(ZoneOffset.UTC)} for the current time.</p>
-     *
-     * @param asset the asset type, one of {@code ports}, {@code connections}, or {@code metros}
-     * @param assetId the asset uuid
-     * @param name the metric name to retrieve (for example {@code equinix.fabric.port.bandwidth_rx.usage})
-     * @param fromDateTime the start of the metrics time range as UTC wall clock, or {@code null}
-     * @param toDateTime the end of the metrics time range as UTC wall clock, or {@code null}
-     * @return the list of matching metrics for the asset
-     */
-    List<Metric> getMetricsByAssetId(String asset, String assetId, String name, LocalDateTime fromDateTime, LocalDateTime toDateTime);
 }

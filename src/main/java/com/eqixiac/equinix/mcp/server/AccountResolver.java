@@ -16,7 +16,7 @@
 
 package com.eqixiac.equinix.mcp.server;
 
-import com.eqixiac.equinix.customerportal.model.BillingAccount;
+import com.eqixiac.equinix.operations.model.BillingAccount;
 import io.modelcontextprotocol.server.McpSyncServerExchange;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,9 +28,9 @@ import java.util.Map;
 
 /**
  * Resolves the Equinix billing <em>account number</em> a planned deployment should be stamped with,
- * from the authenticated identity — so an agent need not know, or guess, an account number.
+ * from the authenticated identity - so an agent need not know, or guess, an account number.
  *
- * <p>Reads the accounts the credentials can see through the Customer Portal Billing&nbsp;v1 API
+ * <p>Reads the accounts the credentials can see through the Billing&nbsp;v1 API
  * ({@code billingAccounts().summaries()}) and decides:</p>
  * <ul>
  *   <li><strong>exactly one</strong> visible account &rarr; {@link Kind#RESOLVED}, that account;</li>
@@ -39,7 +39,7 @@ import java.util.Map;
  *       {@link Kind#CHOICE_REQUIRED} naming every candidate so the agent can re-call with an explicit
  *       {@code account_number};</li>
  *   <li><strong>none</strong>, or the lookup <strong>fails</strong> (not entitled, throttled, offline)
- *       &rarr; {@link Kind#UNRESOLVED} with an honest reason — <em>never</em> a fabricated number.</li>
+ *       &rarr; {@link Kind#UNRESOLVED} with an honest reason - <em>never</em> a fabricated number.</li>
  * </ul>
  *
  * <p>This resolver deliberately lives in the MCP server module rather than the design module: it is the
@@ -56,7 +56,7 @@ final class AccountResolver {
     /**
      * Resolves the account number for a plan.
      *
-     * @param ctx the server context (Customer Portal access + elicitation timeout)
+     * @param ctx the server context (operations access + elicitation timeout)
      * @param exchange the live client exchange, for the multi-account prompt (may be {@code null})
      * @return the resolution
      */
@@ -83,7 +83,7 @@ final class AccountResolver {
                     "the single billing account visible to the authenticated credentials");
         }
 
-        // More than one account — a genuine decision only the user can make.
+        // More than one account - a genuine decision only the user can make.
         List<ElicitationSupport.Option> options = new ArrayList<>(accounts.size());
         for (Account account : accounts) {
             options.add(new ElicitationSupport.Option(account.number(), account.label(), account.detail()));
@@ -105,12 +105,14 @@ final class AccountResolver {
 
     private static List<Account> distinctAccounts(ServerContext ctx) {
         Map<String, Account> byNumber = new LinkedHashMap<>();
-        for (BillingAccount account : ctx.customerPortal().billingAccounts().summaries().loadAll()) {
+        for (BillingAccount account : ctx.operations().billingAccounts().summaries().loadAll()) {
             String number = account.getAccountNumber();
             if (number == null || number.isBlank()) {
                 continue;
             }
-            byNumber.putIfAbsent(number.trim(), new Account(number.trim(), account.getAccountName()));
+            // Account names are remote text and are shown in an elicitation prompt: sanitised here.
+            byNumber.putIfAbsent(number.trim(), new Account(UntrustedText.sanitize(number.trim(), 64),
+                    UntrustedText.sanitize(account.getAccountName(), 200)));
         }
         return new ArrayList<>(byNumber.values());
     }
@@ -130,10 +132,10 @@ final class AccountResolver {
         /** A concrete account number was resolved and applied to the plan. */
         RESOLVED,
 
-        /** Several accounts exist and the user did not (or could not) pick — the agent must choose. */
+        /** Several accounts exist and the user did not (or could not) pick - the agent must choose. */
         CHOICE_REQUIRED,
 
-        /** No account number could be resolved — and none was fabricated. */
+        /** No account number could be resolved - and none was fabricated. */
         UNRESOLVED
     }
 

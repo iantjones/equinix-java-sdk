@@ -1,0 +1,23 @@
+{
+  "filter": {
+    "and": [
+      {
+        "property": "/state",
+        "operator": "=",
+        "values": [
+          "PROVISIONED"
+        ]
+      }
+    ]
+  },
+  "pagination": {
+    "offset": 0,
+    "limit": 20
+  },
+  "sort": [
+    {
+      "direction": "DESC",
+      "property": "/changeLog/updatedDateTime"
+    }
+  ]
+}

@@ -30,7 +30,7 @@ import com.eqixiac.equinix.fabric.model.json.creators.NetworkOperator;
 
 import java.util.List;
 
-public interface Network {
+public interface Network extends DeletableResource {
 
     String getUuid();
 

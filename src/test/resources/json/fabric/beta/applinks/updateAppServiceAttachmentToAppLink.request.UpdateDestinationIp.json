@@ -1,0 +1,7 @@
+[
+  {
+    "op": "replace",
+    "path": "/destinationIp",
+    "value": "10.10.1.120"
+  }
+]

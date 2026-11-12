@@ -93,6 +93,47 @@ final class Schemas {
         return schema;
     }
 
+    /**
+     * Adds keywords to a schema ({@code minimum}, {@code maximum}, {@code minItems}, {@code default}, ...).
+     *
+     * @param schema        the schema to extend (modified and returned)
+     * @param keywordsValues alternating keyword, value
+     * @return {@code schema}
+     */
+    static Map<String, Object> with(Map<String, Object> schema, Object... keywordsValues) {
+        if (keywordsValues.length % 2 != 0) {
+            throw new IllegalArgumentException("with() takes alternating keyword/value pairs");
+        }
+        for (int i = 0; i < keywordsValues.length; i += 2) {
+            schema.put((String) keywordsValues[i], keywordsValues[i + 1]);
+        }
+        return schema;
+    }
+
+    /** A value that may be an object or a string (a document given inline or as JSON/YAML text). */
+    static Map<String, Object> objectOrString(String description) {
+        Map<String, Object> schema = new LinkedHashMap<>();
+        schema.put("type", new ArrayList<>(List.of("object", "string")));
+        schema.put("description", description);
+        return schema;
+    }
+
+    /** An object whose property values all follow {@code valueSchema} (a JSON map). */
+    static Map<String, Object> mapOf(String description, Map<String, Object> valueSchema) {
+        Map<String, Object> schema = leaf("object", description);
+        schema.put("additionalProperties", valueSchema);
+        return schema;
+    }
+
+    /** The {@code detail} argument shared by the design tools. */
+    static Map<String, Object> detail(String defaultLevel, String whatEachLevelAdds) {
+        return with(stringEnum("How much to return. summary: the decision-relevant fields and short capped lists. "
+                        + "standard: adds the supporting detail. full: adds every list up to a hard cap and the "
+                        + "Markdown report. " + whatEachLevelAdds + " Lists that are cut say how many entries were "
+                        + "omitted. Default " + defaultLevel + ".", "summary", "standard", "full"),
+                "default", defaultLevel);
+    }
+
     private static Map<String, Object> leaf(String type, String description) {
         Map<String, Object> schema = new LinkedHashMap<>();
         schema.put("type", type);

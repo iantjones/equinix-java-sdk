@@ -29,6 +29,8 @@ public class NetworkWrapper extends ResourceImpl<Network> implements Network {
 
     @Delegate(excludes = NetworkMutability.class)
     private NetworkJson jsonObject;
+
+    private boolean deleted;
     @Getter
     private final Pageable<Network> serviceClient;
 
@@ -42,8 +44,17 @@ public class NetworkWrapper extends ResourceImpl<Network> implements Network {
     }
 
     public Boolean delete() {
-        this.jsonObject = ((NetworkClientImpl)this.serviceClient).delete(this.getUuid());
+        NetworkJson response = ((NetworkClientImpl)this.serviceClient).delete(this.getUuid());
+        if (response != null) {
+            this.jsonObject = response;
+        }
+        this.deleted = true;
         return true;
+    }
+
+    @Override
+    public boolean isDeleted() {
+        return this.deleted;
     }
 
     public void refresh() {

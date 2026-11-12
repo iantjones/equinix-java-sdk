@@ -21,33 +21,33 @@
  *
  * <h2>Module map</h2>
  * <ul>
- *   <li>{@code design.optimizer} — <b>placement</b>: scores and ranks Equinix metros against
- *       sites, workloads, providers, and constraints ({@code MetroOptimizer} →
+ *   <li>{@code design.optimizer} - <b>placement</b>: scores and ranks Equinix metros against
+ *       sites, workloads, providers, and constraints ({@code MetroOptimizer} ->
  *       {@code OptimizationResult}).</li>
- *   <li>{@code design.optimizer.wizard} — <b>plan &amp; execute</b>: turns an
+ *   <li>{@code design.optimizer.wizard} - <b>plan &amp; execute</b>: turns an
  *       {@code OptimizationResult} into a validated {@code DeploymentPlan} (Cloud Routers,
  *       connections, backbone links, routing protocols) that can be dry-run, executed, and
  *       rolled back.</li>
- *   <li>{@code design.value} — <b>pricing and TCO</b>: layered {@code RateCard}s (live Equinix,
+ *   <li>{@code design.value} - <b>pricing and TCO</b>: layered {@code RateCard}s (live Equinix,
  *       custom, reference, cloud-provider adapters), egress savings, and total-cost-of-ownership
  *       comparison.</li>
- *   <li>{@code design.peering} — <b>PeeringDB intelligence</b>: IX/facility presence matrices,
+ *   <li>{@code design.peering} - <b>PeeringDB intelligence</b>: IX/facility presence matrices,
  *       Fabric on-ramp cross-referencing, resiliency and blast-radius analysis, peering
  *       opportunities.</li>
- *   <li>{@code design.geo} — <b>latency physics</b>: speed-of-light-in-fibre latency floors and
+ *   <li>{@code design.geo} - <b>latency physics</b>: speed-of-light-in-fibre latency floors and
  *       haversine distances between IBXes, metros, and raw coordinates.</li>
- *   <li>{@code design.export} — <b>export</b>: Terraform HCL and Mermaid topology diagrams from
+ *   <li>{@code design.export} - <b>export</b>: Terraform HCL and Mermaid topology diagrams from
  *       plans and results.</li>
  * </ul>
  *
- * <p>A typical flow is optimizer → wizard → export, with {@code design.value} pricing feeding
+ * <p>A typical flow is optimizer -> wizard -> export, with {@code design.value} pricing feeding
  * both the optimizer's cost dimension and the wizard's plan pricing, and {@code design.geo}
  * supplying the distance/latency estimates used throughout.</p>
  *
  * <h2>Composition boundary</h2>
- * <p>Every engine runs over {@link com.eqixiac.equinix.FabricGateway} — the narrow capability
+ * <p>Every engine runs over {@link com.eqixiac.equinix.FabricGateway} - the narrow capability
  * view of the Fabric client (metros, service profiles, cloud routers, connections, routing
- * protocols, prices) — never over the full concrete client. Enter through
+ * protocols, prices) - never over the full concrete client. Enter through
  * {@link com.eqixiac.equinix.Design#over(com.eqixiac.equinix.FabricGateway)}, the equivalent
  * accessors on {@link com.eqixiac.equinix.Fabric} ({@code optimizeMetros()},
  * {@code deploymentWizard(...)}, {@code peeringIntelligence()}, {@code savingsCalculator()},

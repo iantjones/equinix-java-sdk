@@ -110,10 +110,9 @@ public class CloudRoutersImpl implements CloudRouters {
         return this.serviceClient.validateRoutingProtocol(routerId, filter);
     }
 
-    public PaginatedList<CloudRouterCommand> commands(String routerId) {
+    public List<CloudRouterCommand> commands(String routerId) {
         Page<CloudRouterCommandJson> responsePage = this.commandsClient.list(routerId);
-        PaginatedList<CloudRouterCommand> commandList = ResponseHandler.mapPaginatedList(responsePage.getItems(), this.commandsClient, (json, client) -> json);
-        return new PaginatedList<>(commandList, this.commandsClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
+        return responsePage.getItems() == null ? List.of() : List.copyOf(responsePage.getItems());
     }
 
     public CloudRouterCommand getCommand(String routerId, String commandId) {

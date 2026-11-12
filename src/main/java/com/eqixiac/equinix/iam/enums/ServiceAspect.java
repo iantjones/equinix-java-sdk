@@ -24,7 +24,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
  * One of the three API aspects of a service action (IAM access v1 spec schema
  * {@code ServiceAspect}). Wire values are prefixed (e.g. {@code aspect:use}), so constants map to
  * the spec spelling via {@code getValue()}. {@link #UNKNOWN} is a read-side fallback for values
- * added after this SDK release — never send it.
+ * added after this SDK release - never send it.
  */
 public enum ServiceAspect implements APIParam {
     USE("aspect:use"),

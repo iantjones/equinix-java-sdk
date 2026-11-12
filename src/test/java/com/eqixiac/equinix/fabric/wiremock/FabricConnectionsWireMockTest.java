@@ -122,6 +122,31 @@ class FabricConnectionsWireMockTest extends WireMockTestBase {
         }
 
         @Test
+        @DisplayName("vlanTag/vlanTags patch the side's linkProtocol tags; out-of-range tags are rejected")
+        void savePatchesVlanTags() {
+            stubSingleton(wireMock, "/fabric/v4/connections/3a58dd05-f46d-4b1d-a154-2e85c396ea85",
+                    "/json/fabric/connection_response.json");
+            wireMock.stubFor(patch(urlPathMatching("/fabric/v4/connections/.*"))
+                    .willReturn(okJson(loadFixture("/json/fabric/connection_response.json"))));
+            Connection connection = fabric.connections().getByUuid("3a58dd05-f46d-4b1d-a154-2e85c396ea85");
+
+            connection.update()
+                    .vlanTag(com.eqixiac.equinix.fabric.enums.Side.A_Side, 1201)
+                    .vlanTags(com.eqixiac.equinix.fabric.enums.Side.Z_Side, 300, 40)
+                    .dryRun()
+                    .save();
+
+            wireMock.verify(patchRequestedFor(urlPathEqualTo("/fabric/v4/connections/3a58dd05-f46d-4b1d-a154-2e85c396ea85"))
+                    .withQueryParam("dryRun", equalTo("true"))
+                    .withRequestBody(equalToJson("[{\"op\":\"replace\",\"path\":\"/aSide/accessPoint/linkProtocol/vlanTag\",\"value\":1201},"
+                            + "{\"op\":\"replace\",\"path\":\"/zSide/accessPoint/linkProtocol/vlanSTag\",\"value\":300},"
+                            + "{\"op\":\"replace\",\"path\":\"/zSide/accessPoint/linkProtocol/vlanCTag\",\"value\":40}]")));
+            assertThrows(IllegalArgumentException.class, () -> connection.update()
+                    .vlanTag(com.eqixiac.equinix.fabric.enums.Side.A_Side, 5000));
+            assertThrows(IllegalArgumentException.class, () -> connection.update().termLength(0));
+        }
+
+        @Test
         @DisplayName("save() with no changes throws and makes no request")
         void emptyUpdateThrows() {
             stubSingleton(wireMock, "/fabric/v4/connections/3a58dd05-f46d-4b1d-a154-2e85c396ea85",
@@ -154,7 +179,7 @@ class FabricConnectionsWireMockTest extends WireMockTestBase {
             assertEquals("3a58dd05-f46d-4b1d-a154-2e85c396ea85", simulated.getUuid());
             assertEquals("Renamed-Connection", simulated.getName());
 
-            // Regression lock: the dry run MUST carry dryRun=true on the wire — if a future
+            // Regression lock: the dry run MUST carry dryRun=true on the wire - if a future
             // change drops the parameter, this "verification" becomes a REAL mutation.
             wireMock.verify(patchRequestedFor(urlPathEqualTo("/fabric/v4/connections/3a58dd05-f46d-4b1d-a154-2e85c396ea85"))
                     .withQueryParam("dryRun", equalTo("true"))
@@ -199,7 +224,7 @@ class FabricConnectionsWireMockTest extends WireMockTestBase {
                     .aSideAccessPointPort("c791f8cb-5cc9-cc90-8ce0-306a5c00a4ee",
                             LinkProtocol.dot1q().vlanTag(1001).create())
                     .zSideAccessPointServiceProfile("20d32a80-0d61-4333-bc03-4b2d446794a0",
-                            LinkProtocol.dot1q().vlanTag(1002).create())
+                            LinkProtocol.dot1q().vlanTag(1002).create(), "SV")
                     .notification("ops@example.com")
                     .create();
 
@@ -322,7 +347,7 @@ class FabricConnectionsWireMockTest extends WireMockTestBase {
                     .bandwidth(100)
                     .aSideAccessPointPort("c791f8cb-5cc9-cc90-8ce0-306a5c00a4ee",
                             LinkProtocol.dot1q().vlanTag(1001).create())
-                    .zSideCloudProvider(AwsDirectConnectAdapter.of("123456789012", "us-east-1", PROFILE),
+                    .zSideCloudProvider(AwsDirectConnectAdapter.of("123456789012", "us-east-1", PROFILE, "SV"),
                             LinkProtocol.dot1q().vlanTag(1002).create())
                     .create();
 
@@ -331,6 +356,43 @@ class FabricConnectionsWireMockTest extends WireMockTestBase {
                     .withRequestBody(matchingJsonPath("$.zSide.accessPoint.sellerRegion", equalTo("us-east-1")))
                     .withRequestBody(notContaining("activationKey"))
                     .withRequestBody(notContaining("\"environment\"")));
+        }
+
+        @Test
+        @DisplayName("zSideCloudProvider(adapter, linkProtocol, metro) sends zSide.accessPoint.location.metroCode")
+        void cloudProviderWithMetroSendsLocation() {
+            fabric.connections()
+                    .define(ConnectionType.EVPL_VC)
+                    .name("AWS-Connection")
+                    .bandwidth(100)
+                    .aSideAccessPointPort("c791f8cb-5cc9-cc90-8ce0-306a5c00a4ee",
+                            LinkProtocol.dot1q().vlanTag(1001).create())
+                    .zSideCloudProvider(AwsDirectConnectAdapter.of("123456789012", "us-east-1", PROFILE, "SV"),
+                            LinkProtocol.dot1q().vlanTag(1002).create(), "DC")
+                    .create();
+
+            wireMock.verify(postRequestedFor(urlPathEqualTo(URL))
+                    .withRequestBody(matchingJsonPath("$.zSide.accessPoint.type", equalTo("SP")))
+                    .withRequestBody(matchingJsonPath("$.zSide.accessPoint.location.metroCode", equalTo("DC")))
+                    .withRequestBody(matchingJsonPath("$.zSide.accessPoint.profile.uuid", equalTo(PROFILE))));
+        }
+
+        @Test
+        @DisplayName("zSideAccessPointServiceProfile(uuid, linkProtocol, metro) sends location.metroCode; omitted otherwise")
+        void serviceProfileWithMetroSendsLocation() {
+            fabric.connections()
+                    .define(ConnectionType.EVPL_VC)
+                    .name("SP-Connection")
+                    .bandwidth(50)
+                    .aSideAccessPointPort("c791f8cb-5cc9-cc90-8ce0-306a5c00a4ee",
+                            LinkProtocol.dot1q().vlanTag(1001).create())
+                    .zSideAccessPointServiceProfile(PROFILE, LinkProtocol.dot1q().vlanTag(1002).create(), "SV")
+                    .create();
+
+            wireMock.verify(postRequestedFor(urlPathEqualTo(URL))
+                    .withRequestBody(matchingJsonPath("$.zSide.accessPoint.location.metroCode", equalTo("SV"))));
+            wireMock.verify(0, postRequestedFor(urlPathEqualTo(URL))
+                    .withRequestBody(matchingJsonPath("$.aSide.accessPoint.location")));
         }
 
         @Test
@@ -343,6 +405,7 @@ class FabricConnectionsWireMockTest extends WireMockTestBase {
                 public Void getSource() { return null; }
                 public CloudProviderType getProviderType() { return CloudProviderType.AWS; }
                 @Override public String getActivationKey() { return "key_here"; }
+                @Override public String getMetroCode() { return "SV"; }
             };
 
             fabric.connections()
@@ -356,6 +419,46 @@ class FabricConnectionsWireMockTest extends WireMockTestBase {
             wireMock.verify(postRequestedFor(urlPathEqualTo(URL))
                     .withRequestBody(matchingJsonPath("$.zSide.accessPoint.activationKey", equalTo("key_here")))
                     .withRequestBody(matchingJsonPath("$.zSide.accessPoint.authenticationKey", equalTo("123456789012"))));
+        }
+
+        @Test
+        @DisplayName("a custom adapter without a metro is rejected on the metro-less paths, accepted with an explicit metro")
+        void adapterWithoutMetro() {
+            CloudProviderConnectionAdapter<Void> adapter = new CloudProviderConnectionAdapter<>() {
+                public String getServiceProfileUuid() { return PROFILE; }
+                public String getAuthenticationKey() { return "k"; }
+                public String getSellerRegion() { return "us-west-1"; }
+                public Void getSource() { return null; }
+                public CloudProviderType getProviderType() { return CloudProviderType.OTHER; }
+            };
+            assertThrows(IllegalArgumentException.class, () -> fabric.connections().define(ConnectionType.EVPL_VC)
+                    .zSideCloudProvider(adapter));
+            assertThrows(IllegalArgumentException.class, () -> fabric.connections().define(ConnectionType.EVPL_VC)
+                    .zSideCloudProvider(adapter, null));
+            assertThrows(IllegalArgumentException.class, () -> fabric.connections().define(ConnectionType.EVPL_VC)
+                    .zSideAccessPointServiceProfile(PROFILE, null, " "));
+
+            fabric.connections().define(ConnectionType.EVPL_VC).name("x").bandwidth(50)
+                    .aSideAccessPointPort("c791f8cb-5cc9-cc90-8ce0-306a5c00a4ee", LinkProtocol.dot1q().vlanTag(1001).create())
+                    .zSideCloudProvider(adapter, null, "DA")
+                    .create();
+            wireMock.verify(postRequestedFor(urlPathEqualTo(URL))
+                    .withRequestBody(matchingJsonPath("$.zSide.accessPoint.location.metroCode", equalTo("DA")))
+                    .withRequestBody(notContaining("\"linkProtocol\":null")));
+        }
+
+        @Test
+        @DisplayName("an Azure adapter sends peeringType and metro but no sellerRegion (spec Azure examples)")
+        void azureSendsNoSellerRegion() {
+            fabric.connections().define(ConnectionType.EVPL_VC).name("az").bandwidth(50)
+                    .aSideAccessPointPort("c791f8cb-5cc9-cc90-8ce0-306a5c00a4ee", LinkProtocol.dot1q().vlanTag(1001).create())
+                    .zSideCloudProvider(com.eqixiac.equinix.fabric.model.implementation.cloud.AzureExpressRouteAdapter.of(
+                            "xxx-xxx-xxx", PROFILE, com.eqixiac.equinix.fabric.enums.PeeringType.PRIVATE, "SV"))
+                    .create();
+            wireMock.verify(postRequestedFor(urlPathEqualTo(URL))
+                    .withRequestBody(matchingJsonPath("$.zSide.accessPoint.peeringType", equalTo("PRIVATE")))
+                    .withRequestBody(matchingJsonPath("$.zSide.accessPoint.location.metroCode", equalTo("SV")))
+                    .withRequestBody(notContaining("sellerRegion")));
         }
 
         @Test

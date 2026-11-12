@@ -21,6 +21,7 @@ import com.eqixiac.equinix.fabric.enums.ServiceTokenState;
 import com.eqixiac.equinix.fabric.enums.ServiceTokenType;
 import com.eqixiac.equinix.fabric.model.Project;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import lombok.Getter;
@@ -54,15 +55,6 @@ public class ServiceToken {
     @JsonProperty("description")
     private String description;
 
-    /**
-     * Information about the side of the connection the token issuer is on. Deprecated in the spec.
-     */
-    @JsonProperty("issuerSide")
-    private String issuerSide;
-
-    @JsonProperty("expiry")
-    private Integer expiry;
-
     @JsonDeserialize(using = LocalDateTimeDeserializer.class)
     @JsonProperty("expirationDateTime")
     private LocalDateTime expirationDateTime;
@@ -79,6 +71,9 @@ public class ServiceToken {
     @JsonProperty("project")
     private Project project;
 
+    // The Fabric v4 ServiceToken schema spells it "changelog" (lowercase l); keep the camelCase
+    // name readable too.
     @JsonProperty("changeLog")
+    @JsonAlias("changelog")
     private ChangeLog changeLog;
 }

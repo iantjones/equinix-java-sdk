@@ -35,8 +35,6 @@ import org.junit.jupiter.api.*;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -47,7 +45,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * <p>The live tier proves spec-vs-reality: every safe operation the SDK exposes for
  * {@code network-edgev1.yaml} is called against the real API, and the response is
  * deserialized into the SDK's models. A read that fails for any reason other than an
- * entitlement gap (401/403) fails the test — see
+ * entitlement gap (401/403) fails the test - see
  * {@code IntegrationTestBase.requireEntitled(String, String, String, String, ApiCall)}.
  *
  * <p>Two tiers of tests are provided here:
@@ -62,16 +60,14 @@ import static org.junit.jupiter.api.Assertions.*;
  *
  * <h3>Usage</h3>
  * <pre>
- * mvn test -Pintegration-readonly -DaccessKey=ID -DsecretKey=SECRET
- * mvn test -Pintegration-dryrun   -DaccessKey=ID -DsecretKey=SECRET -DtestMode=dryrun
+ * EQUINIX_ACCESS_KEY=ID EQUINIX_SECRET_KEY=SECRET mvn test -Pintegration-readonly
+ * EQUINIX_ACCESS_KEY=ID EQUINIX_SECRET_KEY=SECRET mvn test -Pintegration-dryrun -DtestMode=dryrun
  * </pre>
  */
 @Tag("integration-readonly")
 @DisplayName("Network Edge Integration Tests")
 class NetworkEdgeIntegrationTest extends IntegrationTestBase {
 
-    private static final DateTimeFormatter STATS_WINDOW_FORMAT =
-            DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'").withZone(ZoneOffset.UTC);
 
     static NetworkEdge networkEdge;
 
@@ -89,7 +85,7 @@ class NetworkEdgeIntegrationTest extends IntegrationTestBase {
         networkEdge.authenticate();
     }
 
-    // ── Live discovery helpers ─────────────────────────────────────────
+    // Live discovery helpers
 
     /** Lists devices once (getVirtualDevices) and caches the result. */
     static PaginatedList<Device> devicesList() {
@@ -192,9 +188,7 @@ class NetworkEdgeIntegrationTest extends IntegrationTestBase {
         }
     }
 
-    // ════════════════════════════════════════════════════════════════════
     //  READONLY TESTS - Safe GET/list operations
-    // ════════════════════════════════════════════════════════════════════
 
     /**
      * Setup/provisioning reads: metros, accounts, agreements, terms, pricing,
@@ -270,7 +264,7 @@ class NetworkEdgeIntegrationTest extends IntegrationTestBase {
                 terms = requireEntitled("NetworkEdge", "getVendorsTerms", "VendorTerms", "GET",
                         () -> networkEdge.setup().getVendorsTerms(pkg, license));
             } catch (EquinixNotFoundException e) {
-                // Not every vendor package/license combination publishes terms — data dependence.
+                // Not every vendor package/license combination publishes terms - data dependence.
                 terms = Assumptions.abort("No vendor terms published for " + pkg + "/" + license
                         + ": " + e.getMessage());
             }
@@ -405,18 +399,18 @@ class NetworkEdgeIntegrationTest extends IntegrationTestBase {
         @Test
         @DisplayName("allowedInterfaces_list - Allowed interfaces for a device type (getAllowedInterfaces)")
         void allowedInterfaces_list() {
-            PaginatedList<DeviceType> types = deviceTypesList();
-            Assumptions.assumeTrue(types.size() > 0, "No device types in the catalog; skipping");
-            DeviceType type = types.get(0);
-            DeviceManagementType managementType =
-                    (type.getDeviceManagementTypes() != null && type.getDeviceManagementTypes().getSelfConfigured() != null)
-                            ? DeviceManagementType.SELF_CONFIGURED
-                            : DeviceManagementType.EQUINIX_CONFIGURED;
+            // Use the (device type, management type) of a LIVE device: an arbitrary catalog entry
+            // (the first one was VSRX / SELF-CONFIGURED) answers 404 when the combination is not
+            // orderable for this account (live, 2026-11-11).
+            Device device = requireDevice();
+            Assumptions.assumeTrue(device.getDeviceTypeCode() != null && device.getDeviceManagementType() != null,
+                    "First device has no deviceTypeCode/deviceManagementType; skipping allowed interfaces");
 
-            AllowedInterfaceResponse response = requireEntitled(
+            AllowedInterfaceResponse response = skipWhen(
                     "NetworkEdge", "listAllowedInterfaces", "AllowedInterface", "GET",
+                    status(404), "no allowed-interface profile for this device type / management type",
                     () -> networkEdge.devices().listAllowedInterfaces(
-                            RequestBuilder.allowedInterfaces(type.getDeviceTypeCode(), managementType)));
+                            RequestBuilder.allowedInterfaces(device.getDeviceTypeCode(), device.getDeviceManagementType())));
             assertNotNull(response);
             if (response.getInterfaceProfiles() != null && !response.getInterfaceProfiles().isEmpty()) {
                 response.getInterfaceProfiles().get(0).getCount();
@@ -452,12 +446,15 @@ class NetworkEdgeIntegrationTest extends IntegrationTestBase {
             NetworkInterface nic = interfaces.get(0);
             Assumptions.assumeTrue(nic.getId() != null, "First interface has no id; skipping stats");
 
-            Instant now = Instant.now();
-            String start = STATS_WINDOW_FORMAT.format(now.minus(Duration.ofDays(1)));
-            String end = STATS_WINDOW_FORMAT.format(now);
+            Instant end = Instant.now();
+            Instant start = end.minus(Duration.ofDays(1));
 
-            InterfaceStats stats = requireEntitled(
+            // The service answers HTTP 400 "No interfaces found" for device types whose interfaces
+            // carry no statistics (VYOS-ROUTER_NEMO, live 2026-11-11); recorded as SKIPPED.
+            InterfaceStats stats = skipWhen(
                     "NetworkEdge", "getInterfaceStatistics", "InterfaceStats", "GET",
+                    statusWithText("No interface", 400),
+                    "interface statistics are not available for this device's interfaces",
                     () -> networkEdge.devices().getInterfaceStatistics(device.getUuid(), nic.getId(), start, end));
             assertNotNull(stats);
             if (stats.getStats() != null) {
@@ -534,7 +531,12 @@ class NetworkEdgeIntegrationTest extends IntegrationTestBase {
                     "No provisioned self-configured device to ping; skipping");
             final Device target = pingable;
 
-            Boolean reachable = requireEntitled("NetworkEdge", "ping", "Device", "GET", target::ping);
+            // Ping is also limited by device type and package: a VYOS-ROUTER_NEMO STD device answers
+            // HTTP 400 "Ping not supported" (live, 2026-11-11). That is a property of the chosen
+            // device, not an SDK defect, so it is recorded as SKIPPED with the service's reason.
+            Boolean reachable = skipWhen("NetworkEdge", "ping", "Device", "GET",
+                    statusWithText("not supported", 400),
+                    "ping is not supported for this device type/package", target::ping);
             assertNotNull(reachable);
         }
 
@@ -550,7 +552,7 @@ class NetworkEdgeIntegrationTest extends IntegrationTestBase {
                 images = requireEntitled("NetworkEdge", "listDownloadableImages", "DownloadableImage", "GET",
                         () -> networkEdge.devices().listDownloadableImages(deviceTypeCode));
             } catch (EquinixNotFoundException e) {
-                // Not every device type publishes downloadable images — data dependence.
+                // Not every device type publishes downloadable images - data dependence.
                 images = Assumptions.abort("No downloadable images for device type " + deviceTypeCode
                         + ": " + e.getMessage());
             }
@@ -729,9 +731,7 @@ class NetworkEdgeIntegrationTest extends IntegrationTestBase {
         }
     }
 
-    // ════════════════════════════════════════════════════════════════════
     //  DRYRUN TESTS - Documented validation-only calls; no real mutations
-    // ════════════════════════════════════════════════════════════════════
 
     /**
      * Validation-only operations. The restore feasibility analysis is a dedicated

@@ -22,6 +22,7 @@ import com.eqixiac.equinix.core.exception.EquinixNotFoundException;
 import com.eqixiac.equinix.core.exception.EquinixServerException;
 import com.eqixiac.equinix.core.exception.EquinixServiceException;
 import com.eqixiac.equinix.sts.enums.TokenType;
+import com.eqixiac.equinix.sts.model.StsScope;
 import com.eqixiac.equinix.sts.model.StsToken;
 import com.eqixiac.equinix.sts.model.json.GrantedAccessPolicyPage;
 import com.eqixiac.equinix.sts.model.json.creators.ListPoliciesGrantedRequest;
@@ -51,12 +52,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * WireMock-based contract tests for the STS pre-auth token operations exposed by
  * {@code sts.tokens()} ({@link com.eqixiac.equinix.sts.client.STSTokens}).
  *
- * <p>The keystone is the RFC&nbsp;8693 token exchange — {@code POST /v1/token}, operationId
- * {@code generateStsToken} — which (per stsv1) consumes
- * {@code application/x-www-form-urlencoded}. These tests assert the form body carries the
- * {@code grantType}/{@code subjectToken}/{@code subjectTokenType}/{@code scope} fields and that the
- * {@code TokenResponse} parses into an {@link StsToken}. The companion JSON operation —
- * {@code POST /v1/accessPoliciesGranted} ({@code listAccessPoliciesGranted}) — is covered for a
+ * <p>The keystone is the RFC&nbsp;8693 token exchange - {@code POST /v1/token}, operationId
+ * {@code generateStsToken} - which (per stsv1) consumes
+ * {@code application/x-www-form-urlencoded}. These tests assert the form body carries the RFC 8693
+ * {@code grant_type}/{@code subject_token}/{@code subject_token_type}/{@code scope} fields and that the
+ * {@code TokenResponse} parses into an {@link StsToken}. The companion JSON operation - 
+ * {@code POST /v1/accessPoliciesGranted} ({@code listAccessPoliciesGranted}) - is covered for a
  * populated page, an empty page and pagination.</p>
  */
 class STSTokensWireMockTest extends WireMockTestBase {
@@ -90,7 +91,7 @@ class STSTokensWireMockTest extends WireMockTestBase {
     }
 
     @Nested
-    @DisplayName("generate() — RFC 8693 token exchange")
+    @DisplayName("generate() - RFC 8693 token exchange")
     class Generate {
 
         @Test
@@ -103,7 +104,7 @@ class STSTokensWireMockTest extends WireMockTestBase {
                     .grantType(GRANT_TYPE)
                     .subjectToken(SUBJECT_TOKEN)
                     .subjectTokenType(SUBJECT_TOKEN_TYPE)
-                    .scope("accesspolicy:abc-123:idp:example-policy"));
+                    .scope(StsScope.projectPolicies("project:abc-123")));
 
             assertNotNull(token);
             assertEquals("eyJhbGciOiJFUzI1NiJ9.eyJzdWIiOiJzdHMtdGVzdCJ9.signature", token.getAccessToken());
@@ -111,14 +112,33 @@ class STSTokensWireMockTest extends WireMockTestBase {
             assertEquals(TokenType.BEARER, token.getTokenType());
             assertEquals(3600, token.getExpiresIn());
 
-            // Body is application/x-www-form-urlencoded — assert each RFC 8693 field is present
+            // Body is application/x-www-form-urlencoded - assert each RFC 8693 field is present
             // (values are URL-encoded, so match the unambiguous field=value substrings).
             wireMock.verify(postRequestedFor(urlPathEqualTo(TOKEN_PATH))
                     .withHeader("Content-Type", containing("application/x-www-form-urlencoded"))
-                    .withRequestBody(containing("grantType=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Atoken-exchange"))
-                    .withRequestBody(containing("subjectToken=header.payload.signature"))
-                    .withRequestBody(containing("subjectTokenType=urn%3Aietf%3Aparams%3Aoauth%3Atoken-type%3Aid_token"))
-                    .withRequestBody(containing("scope=accesspolicy")));
+                    .withRequestBody(containing("grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Atoken-exchange"))
+                    .withRequestBody(containing("subject_token=header.payload.signature"))
+                    .withRequestBody(containing("subject_token_type=urn%3Aietf%3Aparams%3Aoauth%3Atoken-type%3Aid_token"))
+                    .withRequestBody(containing("scope=projectpolicies%3Aabc-123")));
+        }
+
+        @Test
+        @DisplayName("is sent without a bearer header and parses an RFC 8693 snake_case response")
+        void unauthenticatedAndSnakeCaseResponse() {
+            wireMock.stubFor(post(urlPathEqualTo(TOKEN_PATH)).willReturn(okJson(
+                    "{\"access_token\":\"at-1\",\"issued_token_type\":\"urn:ietf:params:oauth:token-type:access_token\","
+                            + "\"token_type\":\"Bearer\",\"expires_in\":900}")));
+
+            StsToken token = sts.tokens().generate(new TokenRequest()
+                    .grantType(GRANT_TYPE)
+                    .subjectToken(SUBJECT_TOKEN)
+                    .subjectTokenType(SUBJECT_TOKEN_TYPE));
+
+            assertEquals("at-1", token.getAccessToken());
+            assertEquals("urn:ietf:params:oauth:token-type:access_token", token.getIssuedTokenType());
+            assertEquals(TokenType.BEARER, token.getTokenType());
+            assertEquals(900, token.getExpiresIn());
+            wireMock.verify(postRequestedFor(urlPathEqualTo(TOKEN_PATH)).withoutHeader("Authorization"));
         }
 
         @Test
@@ -127,7 +147,7 @@ class STSTokensWireMockTest extends WireMockTestBase {
             wireMock.stubFor(post(urlPathEqualTo(TOKEN_PATH))
                     .willReturn(okJson(loadFixture("/json/sts/token_response.json"))));
 
-            // No scope set — it must not appear in the encoded body.
+            // No scope set - it must not appear in the encoded body.
             sts.tokens().generate(new TokenRequest()
                     .grantType(GRANT_TYPE)
                     .subjectToken(SUBJECT_TOKEN)
@@ -135,9 +155,9 @@ class STSTokensWireMockTest extends WireMockTestBase {
 
             // The three set fields are present...
             wireMock.verify(postRequestedFor(urlPathEqualTo(TOKEN_PATH))
-                    .withRequestBody(containing("grantType="))
-                    .withRequestBody(containing("subjectToken="))
-                    .withRequestBody(containing("subjectTokenType=")));
+                    .withRequestBody(containing("grant_type="))
+                    .withRequestBody(containing("subject_token="))
+                    .withRequestBody(containing("subject_token_type=")));
 
             // ...and the unset scope field is not emitted at all.
             wireMock.verify(0, postRequestedFor(urlPathEqualTo(TOKEN_PATH))
@@ -148,7 +168,8 @@ class STSTokensWireMockTest extends WireMockTestBase {
         @DisplayName("400 (invalid_request) throws EquinixServiceException")
         void invalidRequestMapsToServiceException() {
             stubErrorInline(wireMock, TOKEN_PATH, 400,
-                    "{\"error\":\"invalid_request\",\"errorDescription\":\"subjectToken is required\"}");
+                    // Live shape (2026-11-11): RFC 6749 snake_case error_description; the spec says errorDescription.
+                    "{\"error\":\"invalid_scope\",\"error_description\":\"invalid scope value; scope must be an access policy ERN or a string of the form \\\"roleassignments:<org-id>\\\" or \\\"projectpolicies:<project-id>\\\" or \\\"principalpolicy:<project-id>\\\"\"}");
 
             EquinixServiceException ex = assertThrows(EquinixServiceException.class,
                     () -> sts.tokens().generate(new TokenRequest().grantType(GRANT_TYPE)));

@@ -34,8 +34,8 @@ import java.util.List;
  * Canonical-form JSON and its SHA-256, the binding between a proposal and its confirm token.
  *
  * <p>Canonicalization sorts object keys recursively and serializes compactly, so two specs
- * that differ only in key order or whitespace hash identically, while any change to a value —
- * a bandwidth, a UUID, an email — produces a different hash and therefore a different
+ * that differ only in key order or whitespace hash identically, while any change to a value - 
+ * a bandwidth, a UUID, an email - produces a different hash and therefore a different
  * proposal. Array order is significant (it is significant to the API too).</p>
  */
 final class SpecHash {

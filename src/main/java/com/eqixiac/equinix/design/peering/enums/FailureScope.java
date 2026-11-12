@@ -46,7 +46,7 @@ public enum FailureScope {
     private final String description;
 
     /**
-     * Constructs a failure scope. Argument order is pinned here — the two
+     * Constructs a failure scope. Argument order is pinned here - the two
      * parameters are both {@code String}, so never regenerate this constructor
      * from field order.
      *

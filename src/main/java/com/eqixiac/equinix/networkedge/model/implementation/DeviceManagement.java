@@ -50,9 +50,18 @@ public class DeviceManagement {
     @JsonProperty("defaultAcls")
     private DefaultACL defaultAcls;
 
+    /**
+     * License options keyed by license type. The fields were package-private with no
+     * {@code @JsonProperty}, so Jackson saw no properties and failed on the live {@code "SUB"} key
+     * ({@code GET /ne/v1/deviceTypes}, checked 2026-11-11).
+     */
     @Getter
-    static class LicenseOptions {
-            LicenseOption SUB;
-            LicenseOption BYOL;
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
+    public static class LicenseOptions {
+        @JsonProperty("SUB")
+        private LicenseOption sub;
+
+        @JsonProperty("BYOL")
+        private LicenseOption byol;
     }
 }

@@ -1,0 +1,28 @@
+{
+  "href": "https://api.equinix.com/fabric/v4/appSubscriptions/20f3ef8e-d670-4236-86fa-bb0038adcfc3",
+  "uuid": "20f3ef8e-d670-4236-86fa-bb0038adcfc3",
+  "type": "APP_SUBSCRIPTION",
+  "source": {
+    "appLink": {
+      "uuid": "e32c9c7a-0149-4582-8345-192b82aef972"
+    },
+    "ipSubnets": [
+      "192.168.100.0/24"
+    ]
+  },
+  "target": {
+    "appService": {
+      "uuid": "e18c15f4-c8aa-4c18-9e35-a7e9b288201d"
+    },
+    "geoScope": "GLOBAL",
+    "prioritization": "LATENCY"
+  },
+  "state": "PROVISIONING",
+  "project": {
+    "projectId": "71b55fef-fd2e-402f-ae3c-01d5f00bf2d4"
+  },
+  "changeLog": {
+    "createdBy": "test",
+    "createdDateTime": "2026-06-27T04:20:55.471Z"
+  }
+}

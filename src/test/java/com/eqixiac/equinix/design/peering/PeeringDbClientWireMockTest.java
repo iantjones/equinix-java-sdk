@@ -38,7 +38,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Exercises the real {@link PeeringDbClient} HTTP + Jackson-parsing paths against a WireMock
- * stub of the PeeringDB REST API — the catalog load, per-ASN queries, Equinix-ID filtering,
+ * stub of the PeeringDB REST API - the catalog load, per-ASN queries, Equinix-ID filtering,
  * the cached accessors, and the not-loaded guard. These paths were previously never executed:
  * every other peering test either overrides the client wholesale or deserializes fixtures
  * directly, so the client's own {@code executeGet}/{@code getList}/{@code loadEquinixCatalog}
@@ -47,10 +47,10 @@ import static org.junit.jupiter.api.Assertions.*;
  *
  * <p>The client is pointed at WireMock via the package-external {@link PeeringDbClient#withBaseUrl}
  * test seam (see the {@code sdkChangeNeeded} note in the engagement); no Equinix OAuth is
- * involved — PeeringDB is an independent public API, so the base class's token stub is unused
+ * involved - PeeringDB is an independent public API, so the base class's token stub is unused
  * here.</p>
  */
-@DisplayName("PeeringDbClient — real HTTP/parsing against a stubbed PeeringDB")
+@DisplayName("PeeringDbClient - real HTTP/parsing against a stubbed PeeringDB")
 class PeeringDbClientWireMockTest extends WireMockTestBase {
 
     private static final long AWS = 16509L;
@@ -78,8 +78,9 @@ class PeeringDbClientWireMockTest extends WireMockTestBase {
         wireMock.stubFor(get(urlPathEqualTo("/api/netixlan"))
                 .withQueryParam("asn", equalTo("16509"))
                 .willReturn(okJson(loadFixture("/json/peering/peeringdb_netixlan_16509_response.json"))));
+        // PeeringDB filters netfac by net_id only (asn= is ignored); AS16509 is net id 1234 here.
         wireMock.stubFor(get(urlPathEqualTo("/api/netfac"))
-                .withQueryParam("asn", equalTo("16509"))
+                .withQueryParam("net_id", equalTo("1234"))
                 .willReturn(okJson(loadFixture("/json/peering/peeringdb_netfac_16509_response.json"))));
     }
 
@@ -144,6 +145,24 @@ class PeeringDbClientWireMockTest extends WireMockTestBase {
     }
 
     @Test
+    @DisplayName("getNetFacs filters by net_id and drops rows for any other network")
+    void getNetFacsIgnoresOtherNetworks() throws IOException {
+        // Live PeeringDB returns unrelated rows for netfac?asn=; even on the net_id path the
+        // client keeps only rows for the resolved network.
+        wireMock.stubFor(get(urlPathEqualTo("/api/net")).withQueryParam("asn", equalTo("15169"))
+                .willReturn(okJson("{\"data\":[{\"id\":433,\"asn\":15169,\"name\":\"Google LLC\"}]}")));
+        wireMock.stubFor(get(urlPathEqualTo("/api/netfac")).withQueryParam("net_id", equalTo("433"))
+                .willReturn(okJson("{\"data\":[{\"fac_id\":1,\"net_id\":433,\"local_asn\":15169},"
+                        + "{\"fac_id\":2,\"net_id\":2,\"local_asn\":20940}]}")));
+
+        List<PeeringDbNetFac> facs = client().getNetFacs(15169L);
+
+        assertEquals(1, facs.size());
+        assertEquals(433, facs.get(0).getNetId());
+        wireMock.verify(0, getRequestedFor(urlPathEqualTo("/api/netfac")).withQueryParam("asn", equalTo("15169")));
+    }
+
+    @Test
     @DisplayName("getNetwork returns null when /net has an empty data array")
     void getNetworkNullOnEmpty() throws IOException {
         wireMock.stubFor(get(urlPathEqualTo("/api/net"))
@@ -158,7 +177,7 @@ class PeeringDbClientWireMockTest extends WireMockTestBase {
         stubAsn16509();
         List<PeeringDbNetIxlan> all = client().getNetIxlans(AWS);
 
-        // All three rows — including the non-Equinix ix_id 999 — come back unfiltered.
+        // All three rows - including the non-Equinix ix_id 999 - come back unfiltered.
         assertEquals(3, all.size());
         assertEquals(100, all.get(0).getIxId());
         assertEquals(100000, all.get(0).getSpeed());
@@ -237,7 +256,7 @@ class PeeringDbClientWireMockTest extends WireMockTestBase {
         assertThrows(IllegalStateException.class, () -> client.getEquinixIx(100));
         assertThrows(IllegalStateException.class, () -> client.getEquinixFacility(200));
 
-        // getEquinixOrg is the one Equinix accessor that does NOT guard — it returns null until loaded.
+        // getEquinixOrg is the one Equinix accessor that does NOT guard - it returns null until loaded.
         assertNull(client.getEquinixOrg());
     }
 

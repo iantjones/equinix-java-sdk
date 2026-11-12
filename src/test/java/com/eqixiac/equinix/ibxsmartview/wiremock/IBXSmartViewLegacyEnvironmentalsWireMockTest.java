@@ -160,9 +160,9 @@ class IBXSmartViewLegacyEnvironmentalsWireMockTest extends WireMockTestBase {
     class Errors {
 
         static final String ERROR_404 =
-                "[{\"errorCode\":\"ERR-404\",\"errorMessage\":\"No environment data found\"}]";
+                "{\"payLoad\":\"No environment data found\",\"status\":{\"type\":\"ERROR\",\"errorList\":\"\",\"error\":{\"code\":3001,\"msg\":\"INVALID_INPUT\"}}}";
         static final String ERROR_500 =
-                "[{\"errorCode\":\"ERR-500\",\"errorMessage\":\"Internal server error\"}]";
+                "{\"payLoad\":\"Internal server error\",\"status\":{\"type\":\"ERROR\",\"errorList\":\"\",\"error\":{\"code\":3001,\"msg\":\"INVALID_INPUT\"}}}";
 
         @Test
         @DisplayName("404 on getCurrent throws EquinixNotFoundException")

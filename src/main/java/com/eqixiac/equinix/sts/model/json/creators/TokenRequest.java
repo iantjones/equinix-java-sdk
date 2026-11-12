@@ -18,6 +18,7 @@ package com.eqixiac.equinix.sts.model.json.creators;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import com.eqixiac.equinix.sts.model.StsScope;
 import lombok.Getter;
 
 /**
@@ -26,8 +27,12 @@ import lombok.Getter;
  *
  * <p>Unlike the other request bodies in the SDK, this endpoint consumes
  * {@code application/x-www-form-urlencoded}, so this type exposes its fields as a name/value map
- * via {@link #toFormFields()} (using the spec's property names {@code grantType}, {@code scope},
- * {@code subjectToken}, {@code subjectTokenType}) rather than being JSON-serialized.</p>
+ * via {@link #toFormFields()} rather than being JSON-serialized.</p>
+ *
+ * <p>The form field names are the RFC&nbsp;8693 ones ({@code grant_type}, {@code scope},
+ * {@code subject_token}, {@code subject_token_type}). The STS v1 spec's {@code TokenRequest}
+ * schema lists camelCase names, but the live service answers {@code unsupported_grant_type} to
+ * {@code grantType} and only parses the RFC names (probed 2026-11-11).</p>
  */
 @Getter
 public class TokenRequest {
@@ -55,11 +60,26 @@ public class TokenRequest {
     /**
      * Sets the requested scope for the access token.
      *
+     * <p>The service accepts only an access-policy ERN, {@code roleassignments:<org-id>},
+     * {@code projectpolicies:<project-id>} or {@code principalpolicy:<project-id>} (live,
+     * 2026-11-11); prefer {@link #scope(StsScope)}.</p>
+     *
      * @param scope the requested scope
      * @return this request for chaining
      */
     public TokenRequest scope(String scope) {
         this.scope = scope;
+        return this;
+    }
+
+    /**
+     * Sets the requested scope from a typed {@link StsScope}.
+     *
+     * @param scope the requested scope
+     * @return this request for chaining
+     */
+    public TokenRequest scope(StsScope scope) {
+        this.scope = scope == null ? null : scope.getValue();
         return this;
     }
 
@@ -94,16 +114,16 @@ public class TokenRequest {
     public Map<String, String> toFormFields() {
         Map<String, String> fields = new LinkedHashMap<>();
         if (grantType != null) {
-            fields.put("grantType", grantType);
+            fields.put("grant_type", grantType);
         }
         if (scope != null) {
             fields.put("scope", scope);
         }
         if (subjectToken != null) {
-            fields.put("subjectToken", subjectToken);
+            fields.put("subject_token", subjectToken);
         }
         if (subjectTokenType != null) {
-            fields.put("subjectTokenType", subjectTokenType);
+            fields.put("subject_token_type", subjectTokenType);
         }
         return fields;
     }

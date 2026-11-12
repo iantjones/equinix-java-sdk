@@ -19,14 +19,14 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Offline (WireMock) scenario for the multi-domain session guarantee: one {@link Equinix}
- * session serves Fabric, NetworkEdge, and InternetAccess in a single flow over the SHARED core —
+ * session serves Fabric, NetworkEdge, and InternetAccess in a single flow over the SHARED core - 
  * exactly one OAuth token is fetched, and every domain call rides that same bearer token.
  *
  * <p>{@code EquinixSessionWireMockTest} proves token sharing across repeated calls within one
  * domain; this scenario proves it across three different domains, which is the seam a real
  * multi-product user exercises (inventory sweep: connections + devices + EIA availability).</p>
  */
-@DisplayName("Equinix session — three domains, one shared core, one OAuth token")
+@DisplayName("Equinix session - three domains, one shared core, one OAuth token")
 class EquinixSessionMultiDomainScenarioTest extends WireMockTestBase {
 
     private static final String BEARER = "Bearer test-token-abc123";

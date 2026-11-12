@@ -41,9 +41,6 @@ public class ServiceTokenCreatorJson {
     @JsonProperty("description")
     private String description;
 
-    @JsonProperty("expiry")
-    private Integer expiry;
-
     @JsonProperty("expirationDateTime")
     private String expirationDateTime;
 
@@ -65,9 +62,6 @@ public class ServiceTokenCreatorJson {
 
         @JsonProperty("type")
         private ConnectionType type;
-
-        @JsonProperty("issuerSide")
-        private Side issuerSide;
 
         @JsonProperty("allowRemoteConnection")
         private Boolean allowRemoteConnection;
@@ -101,10 +95,6 @@ public class ServiceTokenCreatorJson {
 
         @JsonProperty("type")
         private AccessPointType type;
-
-        /** Deprecated in the spec but still accepted. */
-        @JsonProperty("hideAssetInfo")
-        private Boolean hideAssetInfo;
 
         @JsonProperty("port")
         private PortSummary port;
@@ -200,7 +190,6 @@ public class ServiceTokenCreatorJson {
         this.type = serviceTokenBuilder.getServiceTokenType();
         this.name = serviceTokenBuilder.getName();
         this.description = serviceTokenBuilder.getDescription();
-        this.expiry = serviceTokenBuilder.getExpiry();
 
         if (serviceTokenBuilder.getExpirationDateTime() != null) {
             this.expirationDateTime = serviceTokenBuilder.getExpirationDateTime().format(Constants.queryParamFormatter);
@@ -212,7 +201,6 @@ public class ServiceTokenCreatorJson {
 
         AccessPointSelector accessPointSelector = new AccessPointSelector();
         accessPointSelector.type = serviceTokenBuilder.getAccessPointType();
-        accessPointSelector.hideAssetInfo = serviceTokenBuilder.getHideAssetInfo();
 
         if (serviceTokenBuilder.getPortUuid() != null) {
             accessPointSelector.port = new PortSummary(serviceTokenBuilder.getPortUuid());
@@ -242,13 +230,12 @@ public class ServiceTokenCreatorJson {
         connection.setAllowRemoteConnection(serviceTokenBuilder.getAllowRemoteConnection());
         connection.setAllowCustomBandwidth(serviceTokenBuilder.getAllowCustomBandwidth());
         connection.setBandwidthLimit(serviceTokenBuilder.getBandwidthLimit());
-        connection.setIssuerSide(serviceTokenBuilder.getIssuerSide());
         connection.setSupportedBandwidths(serviceTokenBuilder.getSupportedBandwidths());
 
-        if(serviceTokenBuilder.getIssuerSide() == Side.A_Side) {
+        if(serviceTokenBuilder.getTokenSide() == Side.A_Side) {
             connection.setASide(connectionConfig);
         }
-        else if(serviceTokenBuilder.getIssuerSide() == Side.Z_Side) {
+        else if(serviceTokenBuilder.getTokenSide() == Side.Z_Side) {
             connection.setZSide(connectionConfig);
         }
 

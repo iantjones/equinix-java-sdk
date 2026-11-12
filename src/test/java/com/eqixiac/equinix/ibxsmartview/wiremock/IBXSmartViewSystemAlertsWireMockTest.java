@@ -233,7 +233,7 @@ class IBXSmartViewSystemAlertsWireMockTest extends WireMockTestBase {
         void getSearchAdvancesFromServerClampedPagination() {
             // Caller requests limit=500; the server clamps to 100 and says so in the response
             // pagination. Page 2 must be requested at offset=100 (server offset + server limit),
-            // NOT offset=500 — the old caller-side advance skipped records 100..499.
+            // NOT offset=500 - the old caller-side advance skipped records 100..499.
             wireMock.stubFor(get(urlPathEqualTo(SEARCH_PATH))
                     .withQueryParam("offset", equalTo("0"))
                     .willReturn(okJson(PAGE_1)));

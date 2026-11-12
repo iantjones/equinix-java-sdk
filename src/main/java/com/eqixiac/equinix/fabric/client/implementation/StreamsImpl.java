@@ -19,6 +19,9 @@ package com.eqixiac.equinix.fabric.client.implementation;
 import com.eqixiac.equinix.core.http.ResponseHandler;
 import com.eqixiac.equinix.core.http.response.Page;
 import com.eqixiac.equinix.core.http.response.PaginatedList;
+import com.eqixiac.equinix.core.http.response.PaginatedFilteredList;
+import com.eqixiac.equinix.fabric.model.implementation.filter.FilterPropertyList;
+import com.eqixiac.equinix.fabric.model.implementation.sort.SortPropertyList;
 import com.eqixiac.equinix.fabric.client.Streams;
 import com.eqixiac.equinix.fabric.client.internal.StreamClient;
 import com.eqixiac.equinix.fabric.model.Stream;
@@ -45,5 +48,11 @@ public class StreamsImpl implements Streams {
 
     public StreamOperator.StreamBuilder define() {
         return new StreamOperator(this.serviceClient).create();
+    }
+
+    @Override
+    public PaginatedFilteredList<Stream> search(FilterPropertyList filter, SortPropertyList sort) {
+        Page<StreamJson> page = this.serviceClient.search(filter, sort);
+        return ResponseHandler.toPaginatedFilteredList(page, this.serviceClient, StreamWrapper::new);
     }
 }

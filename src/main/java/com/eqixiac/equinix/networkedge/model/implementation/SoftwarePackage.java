@@ -37,7 +37,7 @@ public class SoftwarePackage implements APIParam {
 
     /**
      * The software package code. The spec ({@code SoftwarePackage.packageCode}) declares this as an
-     * open string (e.g. {@code SEC}) — vendor package codes are not limited to a fixed enum, so it
+     * open string (e.g. {@code SEC}) - vendor package codes are not limited to a fixed enum, so it
      * is modelled as a {@code String} rather than the request-side {@code PackageCode} enum.
      */
     @JsonProperty("packageCode")

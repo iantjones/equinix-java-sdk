@@ -37,8 +37,8 @@ import java.util.Objects;
  * String cidr       = network.toCidr();   // "203.0.113.0/24"
  * }</pre>
  *
- * <p>{@link #parse(String)} accepts <em>literals only</em> — a strict IPv4 dotted-quad or an
- * IPv6 address — and never performs a DNS lookup. Hostnames, legacy {@code inet_addr}
+ * <p>{@link #parse(String)} accepts <em>literals only</em> - a strict IPv4 dotted-quad or an
+ * IPv6 address - and never performs a DNS lookup. Hostnames, legacy {@code inet_addr}
  * shorthand (e.g. {@code "203.0.113"}) and malformed addresses are rejected with an
  * {@link EquinixClientException}.</p>
  *
@@ -60,10 +60,10 @@ public final class IPAddress {
      * Parses a literal IPv4/IPv6 address, optionally in CIDR form (e.g. {@code "203.0.113.0/24"}).
      *
      * <p>Validation is strict and purely local: IPv4 must be a full dotted-quad (four decimal
-     * octets, each 0–255) and IPv6 must be a valid RFC 4291 literal (including {@code ::}
+     * octets, each 0-255) and IPv6 must be a valid RFC 4291 literal (including {@code ::}
      * compression and embedded IPv4 forms). No DNS resolution is ever attempted, so a hostname
      * such as {@code "example.com"} fails immediately. When a {@code /<prefixLength>} suffix is
-     * present it must be within {@code 0–32} for IPv4 or {@code 0–128} for IPv6.</p>
+     * present it must be within {@code 0-32} for IPv4 or {@code 0-128} for IPv6.</p>
      *
      * @param value the literal IP address, optionally suffixed with {@code /<prefixLength>}
      * @return a populated {@link IPAddress}
@@ -103,7 +103,7 @@ public final class IPAddress {
         }
 
         try {
-            // The literal form is fully validated above, so getByName parses it locally —
+            // The literal form is fully validated above, so getByName parses it locally - 
             // it cannot fall through to a DNS lookup.
             return new IPAddress(InetAddress.getByName(host), subnet);
         } catch (UnknownHostException uhe) {
@@ -112,7 +112,7 @@ public final class IPAddress {
     }
 
     /**
-     * Strict dotted-quad check: exactly four decimal octets, each 1–3 digits and 0–255.
+     * Strict dotted-quad check: exactly four decimal octets, each 1-3 digits and 0-255.
      * Rejects legacy {@code inet_addr} shorthand such as {@code "203.0.113"}.
      */
     private static boolean isValidIPv4Literal(String host) {
@@ -144,7 +144,7 @@ public final class IPAddress {
     }
 
     /**
-     * RFC 4291 IPv6 literal check: up to eight 1–4 digit hex groups, at most one {@code ::}
+     * RFC 4291 IPv6 literal check: up to eight 1-4 digit hex groups, at most one {@code ::}
      * compression, optionally ending in an embedded IPv4 dotted-quad. Zone indices
      * ({@code %eth0}) and bracketed forms are rejected.
      */

@@ -55,7 +55,7 @@ public class PowerEventClientImpl extends ResourceClientBase<PowerEvent, PowerEv
         return json;
     }
 
-    // GET /dcim/v3/powerEvents/search — operationId getPowerEvents
+    // GET /dcim/v3/powerEvents/search - operationId getPowerEvents
     //
     // PowerEventsPaginatedResponse returns its pagination fields (items/limit/offset/totalCount) at
     // the TOP LEVEL rather than under a nested 'pagination' object, so the response cannot be
@@ -82,7 +82,7 @@ public class PowerEventClientImpl extends ResourceClientBase<PowerEvent, PowerEv
     }
 
     // Deserializes the flat PowerEventsPaginatedResponse and synthesizes a core Page (mapping
-    // totalCount → Pagination.total). Shared by the initial getPowerEvents call and the paging
+    // totalCount -> Pagination.total). Shared by the initial getPowerEvents call and the paging
     // nextPage override so subsequent pages keep a non-null Pagination instead of NPE-ing.
     private Page<PowerEventJson> flatPowerEventsPage(EquinixRequest<PowerEvent> request, EquinixResponse<PowerEvent> response) {
         // Re-target deserialization at the flat response holder before reading the body.
@@ -114,17 +114,17 @@ public class PowerEventClientImpl extends ResourceClientBase<PowerEvent, PowerEv
         return Constants.mapper().convertValue(values, Pagination.class);
     }
 
-    // POST /dcim/v3/powerEvents/configurations — operationId createPowerAlertConfiguration
+    // POST /dcim/v3/powerEvents/configurations - operationId createPowerAlertConfiguration
     public PowerAlertConfigurationCreateResponseJson createPowerAlertConfiguration(PowerAlertConfigurationCreatorJson creatorJson) {
         return postAs("CreatePowerAlertConfiguration", creatorJson, PowerAlertConfigurationCreateResponseJson.class);
     }
 
-    // PUT /dcim/v3/powerEvents/configurations — operationId updatePowerAlertConfiguration
+    // PUT /dcim/v3/powerEvents/configurations - operationId updatePowerAlertConfiguration
     public void updatePowerAlertConfiguration(PowerAlertConfigurationUpdateJson updateJson) {
         voidOp("UpdatePowerAlertConfiguration", RequestType.SINGLE, null, null, updateJson);
     }
 
-    // GET /dcim/v3/powerEvents/configurations/search — operationId searchAlertConfigurations
+    // GET /dcim/v3/powerEvents/configurations/search - operationId searchAlertConfigurations
     public Page<PowerAlertConfigurationJson> searchAlertConfigurations(List<String> ibx, List<String> state, int offset, int limit) {
         Map<String, List<String>> qParams = new HashMap<>();
         if (ibx != null && !ibx.isEmpty()) {
@@ -143,7 +143,7 @@ public class PowerEventClientImpl extends ResourceClientBase<PowerEvent, PowerEv
     /**
      * Returns a {@link Pageable} dedicated to paging power alert configurations. Unlike power events,
      * AlertPaginatedResponse uses the standard nested {@code data}/{@code pagination} shape, so paging
-     * just needs the standard handler — but with {@code PowerAlertConfigurationJson} as the item type
+     * just needs the standard handler - but with {@code PowerAlertConfigurationJson} as the item type
      * and an identity wrap. Reusing this client's own {@link #nextPage(PaginatedRequest)} (which is
      * typed for PowerEvent/PowerEventJson) would ClassCastException on the deserialized configurations,
      * so configuration paging is given its own pageable here.
@@ -159,17 +159,17 @@ public class PowerEventClientImpl extends ResourceClientBase<PowerEvent, PowerEv
         };
     }
 
-    // PUT /dcim/v3/powerEvents/configurations/{alertConfigurationUid}/pause — operationId pauseAlertConfiguration
+    // PUT /dcim/v3/powerEvents/configurations/{alertConfigurationUid}/pause - operationId pauseAlertConfiguration
     public void pauseAlertConfiguration(String alertConfigurationUid) {
         voidOp("PauseAlertConfiguration", RequestType.SINGLE, Map.of("alertConfigurationUid", alertConfigurationUid), null, null);
     }
 
-    // PUT /dcim/v3/powerEvents/configurations/{alertConfigurationUid}/resume — operationId resumeAlertConfiguration
+    // PUT /dcim/v3/powerEvents/configurations/{alertConfigurationUid}/resume - operationId resumeAlertConfiguration
     public void resumeAlertConfiguration(String alertConfigurationUid) {
         voidOp("ResumeAlertConfiguration", RequestType.SINGLE, Map.of("alertConfigurationUid", alertConfigurationUid), null, null);
     }
 
-    // DELETE /dcim/v3/powerEvents/configurations/{alertConfigurationUid} — operationId deleteAlertConfiguration
+    // DELETE /dcim/v3/powerEvents/configurations/{alertConfigurationUid} - operationId deleteAlertConfiguration
     public void deleteAlertConfiguration(String alertConfigurationUid) {
         voidOp("DeleteAlertConfiguration", RequestType.SINGLE, Map.of("alertConfigurationUid", alertConfigurationUid), null, null);
     }

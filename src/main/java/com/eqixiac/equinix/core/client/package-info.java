@@ -19,7 +19,7 @@
  * {@link com.eqixiac.equinix.core.client.Config} holder (a concrete class that domain
  * {@code *ConfigImpl} configuration classes extend), and the
  * {@link com.eqixiac.equinix.core.client.EquinixClient} transport client that the domain facades
- * hold by composition — it manages HTTP communication, the OAuth token lifecycle, and the merged
+ * hold by composition - it manages HTTP communication, the OAuth token lifecycle, and the merged
  * apiParams catalogue. The {@link com.eqixiac.equinix.core.client.ClientBase} provides
  * request-building utilities, and {@link com.eqixiac.equinix.core.client.ResourceClientBase} adds
  * CRUD + pagination helpers for internal client implementations.

@@ -26,7 +26,7 @@ import lombok.NoArgsConstructor;
  * EPT (Precision Time) service network information (the Fabric v4 {@code ipv4} schema):
  * the primary and secondary timing-server addresses, network mask and default gateway.
  *
- * <p>Prefer {@code builder()} over the positional constructor — all four parameters are
+ * <p>Prefer {@code builder()} over the positional constructor - all four parameters are
  * {@code String}s, so builder construction is self-documenting and transposition-proof.</p>
  *
  * @author ianjones

@@ -22,7 +22,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 /**
  * Type of a contact detail entry on an Equinix Internet Access (EIA) order contact (spec schema
  * {@code ContactItemDetails}, property {@code type}). {@link #UNKNOWN} is a read-side fallback for
- * values added after this SDK release — never send it.
+ * values added after this SDK release - never send it.
  */
 public enum ContactDetailType implements APIParam {
     EMAIL,

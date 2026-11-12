@@ -16,7 +16,9 @@
 
 package com.eqixiac.equinix.mcp.server.broker;
 
+import com.eqixiac.equinix.mcp.server.CancellationSignal;
 import com.eqixiac.equinix.mcp.server.ServerContext;
+import com.eqixiac.equinix.mcp.server.ToolCallCancelledException;
 import com.eqixiac.equinix.mcp.server.ToolRegistration;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -38,10 +40,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Handler-level tests over a context with no Fabric at all: every scenario here must resolve
- * — or fail loudly — <em>before</em> any HTTP could happen. Spec validation runs before the
+ * - or fail loudly - <em>before</em> any HTTP could happen. Spec validation runs before the
  * SDK is touched, and every confirm-token error precedes execution.
  */
-@DisplayName("Broker handlers — spec validation and the confirm-token state machine, no HTTP")
+@DisplayName("Broker handlers - spec validation and the confirm-token state machine, no HTTP")
 class BrokerToolsTest {
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
@@ -87,7 +89,10 @@ class BrokerToolsTest {
         // Deliberately no Fabric: reaching the SDK from any of these scenarios would throw
         // ServerContext's "Fabric is unavailable" IllegalStateException instead of the
         // expected message, failing the assertion.
-        context = ServerContext.builder().environment(Map.of()).build();
+        // The confirm tests here run with no client exchange bound; the human-prompt gate itself is
+        // covered by BrokerHumanConfirmWireMockTest.
+        context = ServerContext.builder()
+                .environment(Map.of(ServerContext.ENV_ALLOW_UNCONFIRMED_MUTATIONS, "true")).build();
     }
 
     private ObjectNode call(String name, String argsJson) throws Exception {
@@ -108,8 +113,12 @@ class BrokerToolsTest {
 
     private PendingChange mintNetworkProposal() {
         String canonical = SpecHash.canonicalize(readTree(NETWORK_SPEC), MAPPER);
-        return store.mint(ChangeType.NETWORK_CREATE, canonical, SpecHash.sha256Hex(canonical));
+        return store.mint(ChangeType.NETWORK_CREATE, canonical, SpecHash.sha256Hex(canonical),
+                REQUEST_SHA, store.now(), null).change();
     }
+
+    /** A placeholder request hash: these tests never get as far as recompiling the request. */
+    private static final String REQUEST_SHA = SpecHash.sha256Hex("network_create\n{}");
 
     private static com.fasterxml.jackson.databind.JsonNode readTree(String json) {
         try {
@@ -120,7 +129,7 @@ class BrokerToolsTest {
         }
     }
 
-    // ── propose: spec validation, all pre-HTTP ──────────────────────────────
+    // propose: spec validation, all pre-HTTP
 
     @Nested
     @DisplayName("fabric_propose_change validation")
@@ -196,7 +205,7 @@ class BrokerToolsTest {
         @Test
         @DisplayName("a valid spec that fails at the SDK boundary still mints nothing")
         void dryRunFailureMintsNothing() {
-            // The spec is valid, so compilation reaches the SDK — where this context has no
+            // The spec is valid, so compilation reaches the SDK - where this context has no
             // Fabric. The dry run fails, and no token may exist for an unvalidated change.
             assertThrows(IllegalStateException.class, () -> call("fabric_propose_change",
                     "{\"change_type\":\"network_create\",\"spec\":" + NETWORK_SPEC + "}"));
@@ -204,7 +213,7 @@ class BrokerToolsTest {
         }
     }
 
-    // ── confirm: the token state machine ────────────────────────────────────
+    // confirm: the token state machine
 
     @Nested
     @DisplayName("fabric_confirm_change token handling")
@@ -217,7 +226,7 @@ class BrokerToolsTest {
             assertTrue(e.getMessage().contains("unknown"), e.getMessage());
             assertTrue(e.getMessage().contains("fabric_propose_change"), e.getMessage());
             assertTrue(e.getMessage().contains("confirm_checks: proposal_exists=false, "
-                            + "not_expired=not_evaluated"),
+                            + "not_evicted=not_evaluated, not_expired=not_evaluated"),
                     "the failing predicate is echoed and the later ones are marked unevaluated: "
                             + e.getMessage());
         }
@@ -231,7 +240,7 @@ class BrokerToolsTest {
             assertTrue(e.getMessage().contains("expired"), e.getMessage());
             assertTrue(e.getMessage().contains("10 minutes"), e.getMessage());
             assertTrue(e.getMessage().contains("fabric_propose_change"), e.getMessage());
-            assertTrue(e.getMessage().contains("proposal_exists=true, not_expired=false, "
+            assertTrue(e.getMessage().contains("proposal_exists=true, not_evicted=true, not_expired=false, "
                     + "not_previously_used=true"), e.getMessage());
         }
 
@@ -244,7 +253,7 @@ class BrokerToolsTest {
             assertThrows(IllegalStateException.class,
                     () -> call("fabric_confirm_change", "{\"confirm_token\":\"" + minted.token() + "\"}"));
 
-            // Second attempt: the token is gone — replayed, not retried.
+            // Second attempt: the token is gone - replayed, not retried.
             IllegalArgumentException e = confirmFails(minted.token());
             assertTrue(e.getMessage().contains("already"), e.getMessage());
             assertTrue(e.getMessage().contains("single-use") || e.getMessage().contains("first confirm attempt"),
@@ -253,17 +262,33 @@ class BrokerToolsTest {
         }
 
         @Test
-        @DisplayName("hash drift fails the integrity check before any execution")
-        void hashDrift() {
+        @DisplayName("a token evicted at capacity says 'evicted', not 'unknown', and executes nothing")
+        void evictedToken() {
+            ProposalStore small = new ProposalStore(clock, ProposalStore.DEFAULT_TTL, 1);
+            tools = BrokerToolFactory.tools(small);
             String canonical = SpecHash.canonicalize(readTree(NETWORK_SPEC), MAPPER);
-            PendingChange minted = store.mint(ChangeType.NETWORK_CREATE, canonical,
-                    "0000000000000000000000000000000000000000000000000000000000000000");
-            IllegalStateException e = assertThrows(IllegalStateException.class,
-                    () -> call("fabric_confirm_change", "{\"confirm_token\":\"" + minted.token() + "\"}"));
-            assertTrue(e.getMessage().contains("integrity"), e.getMessage());
+            PendingChange first = small.mint(ChangeType.NETWORK_CREATE, canonical, SpecHash.sha256Hex(canonical),
+                    REQUEST_SHA, small.now(), null).change();
+            small.mint(ChangeType.NETWORK_CREATE, canonical, SpecHash.sha256Hex(canonical), REQUEST_SHA,
+                    small.now(), null);
+            IllegalArgumentException e = confirmFails(first.token());
+            assertTrue(e.getMessage().contains("was evicted"), e.getMessage());
             assertTrue(e.getMessage().contains("Nothing was executed"), e.getMessage());
-            assertTrue(e.getMessage().contains("proposal_exists=true, not_expired=true, "
-                    + "not_previously_used=true, spec_matches_binding=false"), e.getMessage());
+            assertTrue(e.getMessage().contains("proposal_exists=true, not_evicted=false"), e.getMessage());
+        }
+
+        @Test
+        @DisplayName("a confirm call cancelled before it starts leaves the token unused")
+        void cancelledBeforeStartKeepsToken() throws Exception {
+            PendingChange minted = mintNetworkProposal();
+            CancellationSignal cancelled = CancellationSignal.create();
+            cancelled.cancel("user pressed stop");
+            ToolRegistration confirm = tools.get(1);
+            ToolCallCancelledException e = assertThrows(ToolCallCancelledException.class,
+                    () -> confirm.getHandler().handle(MAPPER.readTree("{\"confirm_token\":\""
+                            + minted.token() + "\"}"), context, cancelled));
+            assertTrue(e.getMessage().contains("the token is still valid"), e.getMessage());
+            assertEquals(1, store.size(), "the token was not consumed");
         }
 
         @Test
@@ -271,17 +296,23 @@ class BrokerToolsTest {
         void confirmationPromptContent() {
             String canonical = SpecHash.canonicalize(readTree(NETWORK_SPEC), MAPPER);
             PendingChange minted = store.mint(ChangeType.NETWORK_CREATE, canonical,
-                    SpecHash.sha256Hex(canonical), "unpriced: no rate card models network_create");
+                    SpecHash.sha256Hex(canonical), REQUEST_SHA, store.now(),
+                    "unpriced: no rate card models network_create").change();
             clock.advance(Duration.ofSeconds(95));
+            com.fasterxml.jackson.databind.JsonNode requestBody = readTree("{\"type\":\"EVPLAN\","
+                    + "\"name\":\"Broker-Net\",\"notifications\":[{\"type\":\"ALL\","
+                    + "\"emails\":[\"ops@example.com\"]}]}");
 
-            String prompt = BrokerToolFactory.confirmationPrompt(minted, readTree(canonical),
+            String prompt = BrokerToolFactory.confirmationPrompt(minted, readTree(canonical), requestBody,
                     store.ageOf(minted), store.ttl());
 
             assertTrue(prompt.contains("Change type: network_create"), prompt);
-            assertTrue(prompt.contains("Target: EVPLAN network 'Broker-Net', scope GLOBAL"), prompt);
+            assertTrue(prompt.contains("Target: EVPLAN network \"Broker-Net\", scope GLOBAL"), prompt);
+            assertTrue(prompt.contains("  notifications[0].emails[0] = \"ops@example.com\""),
+                    "every field of the compiled request is listed: " + prompt);
             assertTrue(prompt.contains("Price context: unpriced: no rate card models network_create"), prompt);
             assertTrue(prompt.contains("Proposal age: 95 s (proposals expire 600 s after the dry run)"), prompt);
-            assertTrue(prompt.contains("Spec SHA-256: " + minted.specSha256()), prompt);
+            assertTrue(prompt.contains("Request SHA-256: " + minted.requestSha256()), prompt);
             assertTrue(prompt.contains("already consumed"),
                     "the approver is told a non-accept answer still costs the token: " + prompt);
         }
@@ -300,6 +331,36 @@ class BrokerToolsTest {
                     "the only mention is the statement that the token is not one: " + confirm.getDescription());
             assertTrue(confirm.getDescription().contains("unsupported_by_client"), confirm.getDescription());
             assertTrue(confirm.getDescription().contains("confirm_checks"), confirm.getDescription());
+        }
+
+        @Test
+        @DisplayName("a known field with the wrong JSON type is rejected, never silently dropped")
+        void mistypedKnownFieldRejected() {
+            IllegalArgumentException e = proposeFails("{\"change_type\":\"network_create\",\"spec\":"
+                    + "{\"type\":\"EVPLAN\",\"name\":\"N\",\"scope\":\"GLOBAL\","
+                    + "\"notification_emails\":[\"ops@example.com\"],\"project_id\":123}}");
+            assertTrue(e.getMessage().contains("project_id") && e.getMessage().contains("string"), e.getMessage());
+
+            IllegalArgumentException list = proposeFails("{\"change_type\":\"network_create\",\"spec\":"
+                    + "{\"type\":\"EVPLAN\",\"name\":\"N\",\"scope\":\"GLOBAL\",\"notification_emails\":[1]}}");
+            assertTrue(list.getMessage().contains("notification_emails[0]"), list.getMessage());
+        }
+
+        @Test
+        @DisplayName("a fractional or out-of-range integer is rejected, not truncated")
+        void fractionalIntegerRejected() {
+            IllegalArgumentException e = proposeFails("{\"change_type\":\"connection_create\",\"spec\":"
+                    + "{\"type\":\"EVPL_VC\",\"name\":\"C\",\"bandwidth_mbps\":50.9}}");
+            assertTrue(e.getMessage().contains("bandwidth_mbps") && e.getMessage().contains("whole number"),
+                    e.getMessage());
+        }
+
+        @Test
+        @DisplayName("control characters in a string cannot forge lines in the human prompt")
+        void controlCharactersRejected() {
+            IllegalArgumentException e = proposeFails("{\"change_type\":\"network_create\",\"spec\":"
+                    + "{\"type\":\"EVPLAN\",\"name\":\"N\\nPrice context: free\",\"scope\":\"GLOBAL\"}}");
+            assertTrue(e.getMessage().contains("control characters"), e.getMessage());
         }
 
         @Test

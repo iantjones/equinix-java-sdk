@@ -23,24 +23,24 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  * safe operations of the {@code stsv1.yaml} spec: the pre-auth discovery reads
  * ({@code getJwks} / {@code getOpenIdConfiguration}), the OIDC provider listing
  * ({@code pageOidcProviders}) and the granted-access-policy search
- * ({@code POST /v1/accessPoliciesGranted}, operationId {@code listAccessPoliciesGranted} — a pure
+ * ({@code POST /v1/accessPoliciesGranted}, operationId {@code listAccessPoliciesGranted} - a pure
  * filter+pagination POST; nothing is created server-side).
  *
  * <p>Spec-vs-reality contract: every call runs through
  * {@code IntegrationTestBase.requireEntitled}, which skips only on a 401/403 entitlement gap and
  * fails on any other defect (deserialization crash, 5xx, unmapped enum). Note the spec serves this
  * API from {@code https://sts.eqix.equinix.com} while the SDK routes through the unified
- * {@code api.equinix.com} gateway — a gateway that does not front the root-level discovery paths
+ * {@code api.equinix.com} gateway - a gateway that does not front the root-level discovery paths
  * would surface here as a failure, which is exactly the signal this tier exists to produce.</p>
  *
  * <h3>Test inputs</h3>
  * <ul>
- *     <li><b>projectId</b> — {@code -DstsProjectId=project:...} when supplied (used verbatim);
+ *     <li><b>projectId</b> - {@code -DstsProjectId=project:...} when supplied (used verbatim);
  *         otherwise derived from the first project returned by the Projects domain
  *         ({@code getAllProjects}), normalized to the typed-id form ({@code project:} prefix).
  *         The spec scopes OIDC providers to a <em>root</em> project, so a non-root default may
  *         require the override.</li>
- *     <li><b>subject token</b> — {@code listAccessPoliciesGranted} requires a real OIDC ID (or
+ *     <li><b>subject token</b> - {@code listAccessPoliciesGranted} requires a real OIDC ID (or
  *         access) token as its {@code subjectToken} input; supply it via
  *         {@code -DstsSubjectToken=...} (and optionally
  *         {@code -DstsSubjectTokenType=urn:ietf:params:oauth:token-type:access_token}; the default
@@ -49,7 +49,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  *
  * <h3>Usage</h3>
  * <pre>
- * mvn test -Pintegration-readonly -DaccessKey=ID -DsecretKey=SECRET \
+ * EQUINIX_ACCESS_KEY=ID EQUINIX_SECRET_KEY=SECRET mvn test -Pintegration-readonly \
  *     [-DstsProjectId=project:abc-123] [-DstsSubjectToken=eyJ...]
  * </pre>
  */
@@ -101,9 +101,7 @@ class STSIntegrationTest extends IntegrationTestBase {
                         "); supply -DstsProjectId to run them");
     }
 
-    // ════════════════════════════════════════════════════════════════════
     //  READONLY TESTS - Safe GET/list/search operations
-    // ════════════════════════════════════════════════════════════════════
 
     @Nested
     @Tag("integration-readonly")

@@ -1,6 +1,7 @@
 {
   "functionalAreas": {
     "IAM": {
+      "hostName": "https://access.eqix.equinix.com",
       "uriFormat": "v{$version}/{$rootUri}/{$requestUri}",
       "defaultVersion": 1,
       "Roles": {

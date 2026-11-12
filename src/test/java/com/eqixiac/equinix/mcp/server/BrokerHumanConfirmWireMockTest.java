@@ -64,7 +64,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * exchange ({@code ServerContext.withExchange}) and the exchange test doubles are package-private
  * to it. The broker is reached only through its public seam.</p>
  */
-@DisplayName("Safe Mutation Broker — human confirmation at confirm time (wire proofs)")
+@DisplayName("Safe Mutation Broker - human confirmation at confirm time (wire proofs)")
 class BrokerHumanConfirmWireMockTest extends WireMockTestBase {
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
@@ -80,7 +80,7 @@ class BrokerHumanConfirmWireMockTest extends WireMockTestBase {
                "a_side": {"port_uuid": "c791f8cb-5cc9-cc90-8ce0-306a5c00a4ee",
                           "link_protocol": {"type": "dot1q", "vlan_tag": 1001}},
                "z_side": {"service_profile_uuid": "20d32a80-0d61-4333-bc03-4b2d446794a0",
-                          "link_protocol": {"type": "dot1q", "vlan_tag": 1002}}}}""";
+                          "link_protocol": {"type": "dot1q", "vlan_tag": 1002}, "metro_code": "SV"}}}""";
 
     /** A mutable clock, so the prompt's proposal age is an exact figure. */
     private static final class SteppingClock extends Clock {
@@ -166,8 +166,8 @@ class BrokerHumanConfirmWireMockTest extends WireMockTestBase {
     private static void assertAllChecksPassed(ObjectNode payload) {
         JsonNode checks = payload.get("confirm_checks");
         assertNotNull(checks, "every confirm result echoes the redemption predicates: " + payload);
-        for (String predicate : List.of("proposal_exists", "not_expired", "not_previously_used",
-                "spec_matches_binding")) {
+        for (String predicate : List.of("proposal_exists", "not_evicted", "not_expired", "not_previously_used",
+                "request_matches_binding")) {
             assertTrue(checks.get(predicate).asBoolean(), predicate + " in " + checks);
         }
     }
@@ -225,14 +225,17 @@ class BrokerHumanConfirmWireMockTest extends WireMockTestBase {
 
         String prompt = seen.get().message();
         assertTrue(prompt.contains("Change type: connection_create"), prompt);
-        assertTrue(prompt.contains("EVPL_VC connection 'Broker-EVPL', 1000 Mbps"), prompt);
+        assertTrue(prompt.contains("EVPL_VC connection \"Broker-EVPL\", 1000 Mbps"), prompt);
+        assertTrue(prompt.contains("Every field of the request that will be sent:"), prompt);
+        assertTrue(prompt.contains("aSide.accessPoint.port.uuid = \"c791f8cb-5cc9-cc90-8ce0-306a5c00a4ee\""),
+                "the compiled request body is listed field by field: " + prompt);
         assertTrue(prompt.contains("A-side port_uuid=c791f8cb-5cc9-cc90-8ce0-306a5c00a4ee"), prompt);
         assertTrue(prompt.contains("Z-side service_profile_uuid=20d32a80-0d61-4333-bc03-4b2d446794a0"), prompt);
         // Live Equinix pricing is unstubbed, so the layered chain reports the bundled reference figure.
         assertTrue(prompt.contains("Price context: USD ") && prompt.contains("(REFERENCE)"), prompt);
         assertTrue(prompt.contains("not a quote"), prompt);
         assertTrue(prompt.contains("Proposal age: 42 s (proposals expire 600 s after the dry run)"), prompt);
-        assertTrue(prompt.contains("Spec SHA-256: " + payload.get("spec_sha256").asText()), prompt);
+        assertTrue(prompt.contains("Request SHA-256: " + payload.get("request_sha256").asText()), prompt);
         verifyRealCreates(1);
     }
 
@@ -291,10 +294,27 @@ class BrokerHumanConfirmWireMockTest extends WireMockTestBase {
     }
 
     @Test
-    @DisplayName("a client without elicitation keeps the earlier flow and the result says no human check ran")
-    void unsupportedClientExecutesAndSaysSo() throws Exception {
+    @DisplayName("a client without elicitation fails closed by default: nothing is executed")
+    void unsupportedClientFailsClosedByDefault() throws Exception {
         // StubExchanges.unsupported() fails the test if a prompt is ever sent.
-        ObjectNode declaredNothing = confirm(context, StubExchanges.unsupported(), propose());
+        String token = propose();
+        ObjectNode declaredNothing = confirm(context, StubExchanges.unsupported(), token);
+        assertNotExecuted(declaredNothing, "unsupported_by_client", token);
+        assertTrue(declaredNothing.get("note").asText().contains("EQUINIX_MCP_ALLOW_UNCONFIRMED_MUTATIONS"),
+                declaredNothing.toString());
+
+        // No exchange bound at all (a direct handler call) is the same case.
+        String second = propose();
+        assertNotExecuted(confirm(context, null, second), "unsupported_by_client", second);
+        verifyRealCreates(0);
+    }
+
+    @Test
+    @DisplayName("with EQUINIX_MCP_ALLOW_UNCONFIRMED_MUTATIONS=true a client without elicitation executes and says so")
+    void unsupportedClientExecutesWhenOperatorOptsIn() throws Exception {
+        ServerContext optedIn = ServerContext.builder().fabric(fabric)
+                .environment(Map.of(ServerContext.ENV_ALLOW_UNCONFIRMED_MUTATIONS, "true")).build();
+        ObjectNode declaredNothing = confirm(optedIn, StubExchanges.unsupported(), propose());
         assertEquals("executed", declaredNothing.get("phase").asText());
         assertTrue(declaredNothing.get("executed").asBoolean());
         JsonNode confirmation = declaredNothing.get("human_confirmation");
@@ -303,10 +323,95 @@ class BrokerHumanConfirmWireMockTest extends WireMockTestBase {
                 confirmation.toString());
         assertAllChecksPassed(declaredNothing);
         verifyRealCreates(1);
+    }
 
-        // No exchange bound at all (a direct handler call) is the same case.
-        ObjectNode noExchange = confirm(context, null, propose());
-        assertEquals("unsupported_by_client", noExchange.get("human_confirmation").get("status").asText());
-        verifyRealCreates(2);
+    private ObjectNode confirmCancellable(ServerContext ctx, McpSyncServerExchange exchange, String token,
+                                          CancellationSignal signal) throws Exception {
+        JsonNode args = MAPPER.readTree("{\"confirm_token\":\"" + token + "\"}");
+        return ctx.withCall(exchange, signal,
+                () -> tool("fabric_confirm_change").getHandler().handle(args, ctx, signal));
+    }
+
+    @Test
+    @DisplayName("an accept that arrives after the TTL executes nothing (TTL re-checked after the prompt)")
+    void acceptAfterTtlExecutesNothing() throws Exception {
+        String token = propose();
+        McpSyncServerExchange slowHuman = StubExchanges.stub(StubExchanges.elicitationCapable(), request -> {
+            clock.advance(ProposalStore.DEFAULT_TTL.plusSeconds(1));
+            return new McpSchema.ElicitResult(McpSchema.ElicitResult.Action.ACCEPT,
+                    Map.of(ElicitationSupport.CONFIRM_FIELD, true));
+        });
+        ObjectNode payload = confirm(context, slowHuman, token);
+        assertEquals("not_executed", payload.get("phase").asText(), payload.toString());
+        assertEquals("accepted", payload.get("human_confirmation").get("status").asText());
+        assertFalse(payload.get("confirm_checks").get("not_expired").asBoolean(), payload.toString());
+        assertTrue(payload.get("note").asText().contains("TTL elapsed"), payload.toString());
+        verifyRealCreates(0);
+    }
+
+    @Test
+    @Timeout(20)
+    @DisplayName("notifications/cancelled during the prompt abandons it and sends no create")
+    void cancelDuringPromptSendsNothing() throws Exception {
+        String token = propose();
+        CancellationSignal signal = CancellationSignal.create();
+        java.util.concurrent.CountDownLatch prompted = new java.util.concurrent.CountDownLatch(1);
+        McpSyncServerExchange waiting = StubExchanges.stub(StubExchanges.elicitationCapable(), request -> {
+            prompted.countDown();
+            try {
+                Thread.sleep(60_000);
+            }
+            catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+            return new McpSchema.ElicitResult(McpSchema.ElicitResult.Action.ACCEPT,
+                    Map.of(ElicitationSupport.CONFIRM_FIELD, true));
+        });
+        Thread canceller = new Thread(() -> {
+            try {
+                prompted.await();
+            }
+            catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+            signal.cancel("user pressed stop");
+        });
+        canceller.start();
+        ObjectNode payload = confirmCancellable(context, waiting, token, signal);
+        canceller.join();
+
+        assertEquals("not_executed", payload.get("phase").asText(), payload.toString());
+        assertEquals("call_cancelled", payload.get("human_confirmation").get("status").asText());
+        assertFalse(payload.get("cancellation").get("requested_after_send").asBoolean());
+        verifyRealCreates(0);
+    }
+
+    @Test
+    @Timeout(20)
+    @DisplayName("a cancel after the create was sent cannot undo it: the result says it executed")
+    void cancelAfterSendReportsExecution() throws Exception {
+        // The real create answers slowly, so the cancel lands while it is in flight.
+        wireMock.stubFor(post(urlPathEqualTo(CONNECTIONS))
+                .withQueryParam("dryRun", absent())
+                .willReturn(aResponse().withStatus(201).withFixedDelay(1500)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody(loadFixture("/json/fabric/connection_response.json"))));
+        String token = propose();
+        CancellationSignal signal = CancellationSignal.create();
+        Thread canceller = new Thread(() -> {
+            long deadline = System.currentTimeMillis() + 10_000;
+            while (System.currentTimeMillis() < deadline && wireMock.findAll(postRequestedFor(urlPathEqualTo(CONNECTIONS))
+                    .withQueryParam("dryRun", absent())).isEmpty()) {
+                Thread.onSpinWait();
+            }
+            signal.cancel("too late");
+        });
+        canceller.start();
+        ObjectNode payload = confirmCancellable(context, StubExchanges.confirms(true), token, signal);
+        canceller.join();
+
+        assertEquals("executed", payload.get("phase").asText(), payload.toString());
+        assertTrue(payload.get("cancellation").get("requested_after_send").asBoolean(), payload.toString());
+        verifyRealCreates(1);
     }
 }

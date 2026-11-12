@@ -22,7 +22,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 /**
  * A-side access point type of an Equinix Internet Access (EIA) v1 connection (spec schema
  * {@code AccessPointType}): colocation ({@code COLO}) or virtual device ({@code VD}).
- * {@link #UNKNOWN} is a read-side fallback for values added after this SDK release — never send it.
+ * {@link #UNKNOWN} is a read-side fallback for values added after this SDK release - never send it.
  */
 public enum AccessPointType implements APIParam {
     COLO,

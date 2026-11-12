@@ -104,7 +104,7 @@ class ParameterMapperTest {
         // Regression: an API-sourced timestamp (e.g. changeLog.getCreatedDateTime()) passed back
         // into a query (e.g. getStatistics) must hit the wire with the SAME instant. The core
         // deserializer parses "...T12:00:00Z" into bare LocalDateTime 12:00 (UTC wall clock), so
-        // re-serialization must be verbatim — independent of the JVM's default zone.
+        // re-serialization must be verbatim - independent of the JVM's default zone.
         TimeZone original = TimeZone.getDefault();
         try {
             TimeZone.setDefault(TimeZone.getTimeZone("Etc/GMT-5")); // fixed non-UTC zone, no DST

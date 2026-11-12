@@ -29,6 +29,8 @@ public class RouteFilterWrapper extends ResourceImpl<RouteFilter> implements Rou
 
     @Delegate(excludes = RouteFilterMutability.class)
     private RouteFilterJson jsonObject;
+
+    private boolean deleted;
     @Getter
     private final Pageable<RouteFilter> serviceClient;
 
@@ -42,8 +44,17 @@ public class RouteFilterWrapper extends ResourceImpl<RouteFilter> implements Rou
     }
 
     public Boolean delete() {
-        this.jsonObject = ((RouteFilterClientImpl)this.serviceClient).delete(this.getUuid());
+        RouteFilterJson response = ((RouteFilterClientImpl)this.serviceClient).delete(this.getUuid());
+        if (response != null) {
+            this.jsonObject = response;
+        }
+        this.deleted = true;
         return true;
+    }
+
+    @Override
+    public boolean isDeleted() {
+        return this.deleted;
     }
 
     public void refresh() {

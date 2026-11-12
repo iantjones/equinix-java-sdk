@@ -38,6 +38,9 @@ import com.eqixiac.equinix.fabric.model.wrappers.PrecisionTimeWrapper;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import com.eqixiac.equinix.core.model.FilteredSortedPaginatedPost;
+import com.eqixiac.equinix.fabric.model.implementation.filter.FilterPropertyList;
+import com.eqixiac.equinix.fabric.model.implementation.sort.SortPropertyList;
 
 public class PrecisionTimeClientImpl extends ResourceClientBase<PrecisionTime, PrecisionTimeJson> implements PrecisionTimeClient<PrecisionTime> {
 
@@ -50,8 +53,9 @@ public class PrecisionTimeClientImpl extends ResourceClientBase<PrecisionTime, P
         return new PrecisionTimeWrapper(json, this);
     }
 
-    public Page<PrecisionTimeJson> list() {
-        return listPage("GetTimeServices");
+    public Page<PrecisionTimeJson> search(FilterPropertyList filter, SortPropertyList sort) {
+        // POST /fabric/v4/timeServices/search. The spec has no GET collection endpoint.
+        return searchPage("SearchTimeServices", new FilteredSortedPaginatedPost<>(filter, sort));
     }
 
     public PrecisionTimeJson getByUuid(String uuid) {

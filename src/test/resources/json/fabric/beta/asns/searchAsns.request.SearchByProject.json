@@ -1,0 +1,23 @@
+{
+  "pagination": {
+    "offset": 0,
+    "limit": 25
+  },
+  "filter": {
+    "and": [
+      {
+        "property": "/project/projectId",
+        "operator": "=",
+        "values": [
+          "03ed2230-604a-494c-bca2-c042d38d80bc"
+        ]
+      }
+    ]
+  },
+  "sort": [
+    {
+      "direction": "DESC",
+      "property": "/changeLog/createdDateTime"
+    }
+  ]
+}

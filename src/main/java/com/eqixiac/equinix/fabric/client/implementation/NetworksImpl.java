@@ -73,10 +73,10 @@ public class NetworksImpl implements Networks {
         return new NetworkOperator(this.serviceClient).create(networkType);
     }
 
-    public PaginatedList<Connection> getConnections(String networkId) {
+    public List<Connection> getConnections(String networkId) {
         Page<ConnectionJson> responsePage = this.serviceClient.getConnections(networkId);
-        PaginatedList<Connection> connectionList = ResponseHandler.mapPaginatedList(responsePage.getItems(), this.connectionClient, ConnectionWrapper::new);
-        return new PaginatedList<>(connectionList, this.connectionClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
+        return responsePage.getItems() == null ? List.of() : responsePage.getItems().stream()
+                .map(json -> (Connection) new ConnectionWrapper(json, this.connectionClient)).toList();
     }
 
     public List<Change> getChanges(String uuid) {

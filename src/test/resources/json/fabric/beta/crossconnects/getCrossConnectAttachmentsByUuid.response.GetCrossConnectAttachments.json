@@ -1,0 +1,28 @@
+{
+  "data": [
+    {
+      "href": "https://api.equinix.com/fabric/v4/crossConnects/46bb1a31-c28f-4197-8b10-06e0e03d0743/attachments/e41f485e-3094-42de-8797-0ef19a51df79",
+      "uuid": "e41f485e-3094-42de-8797-0ef19a51df79",
+      "type": "ATTACHMENT",
+      "source": "CUSTOMER",
+      "attachmentId": "a11f485e-3094-42de-8797-0ef19a51df79",
+      "downloadHref": "https://api.equinix.com/ecp/attachments/a11f485e-3094-42de-8797-0ef19a51df79",
+      "changeLog": {
+        "createdBy": "123",
+        "createdDateTime": "2026-02-28T07:21:39Z"
+      }
+    },
+    {
+      "href": "https://api.equinix.com/fabric/v4/crossConnects/46bb1a31-c28f-4197-8b10-06e0e03d0743/attachments/a41f485e-3094-42de-8797-0ef19a51df81",
+      "uuid": "a41f485e-3094-42de-8797-0ef19a51df81",
+      "type": "ATTACHMENT",
+      "source": "EQUINIX",
+      "attachmentId": "b21f485e-3094-42de-8797-0ef19a51df80",
+      "downloadHref": "https://api.equinix.com/ecp/attachments/b21f485e-3094-42de-8797-0ef19a51df80",
+      "changeLog": {
+        "createdBy": "EQUINIX",
+        "createdDateTime": "2026-02-27T07:21:39Z"
+      }
+    }
+  ]
+}

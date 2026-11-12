@@ -1,0 +1,1932 @@
+{
+    "openapi": "3.0.0",
+    "x-eqx-api-linter-skip-rules": [
+        3,
+        24
+    ],
+    "info": {
+        "version": "2.0",
+        "title": "Billing APIs",
+        "description": "The Billing API allows users to view summarized and detailed versions of invoices and credit memos. Users can filter the responses based on date range, account numbers, and transaction IDs. The user's permission is applied to retrieve the invoice summary, and invoice details will be from the past 12 months.",
+        "termsOfService": "https://www.equinix.com/about/legal/terms",
+        "contact": {
+            "name": "Equinix API Support",
+            "url": "https://docs.equinix.com/api-support.htm"
+        }
+    },
+    "tags": [
+        {
+            "name": "Billing Invoices",
+            "description": "Billing Invoices"
+        }
+    ],
+    "servers": [
+        {
+            "url": "https://api.equinix.com"
+        },
+        {
+            "url": "https://sandboxapi.equinix.com"
+        }
+    ],
+    "paths": {
+        "/v2/invoices": {
+            "get": {
+                "tags": [
+                    "Billing Invoices"
+                ],
+                "summary": "Retrieve billing summary",
+                "operationId": "Retrieve billing summary",
+                "description": "This method retrieves a summary invoice or credit memo information based on date range, account number or transactions ID for a user with billing viewing permission.",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "startDate",
+                        "in": "query",
+                        "description": "Start date of invoice in `YYYY-MM-DD` format",
+                        "example": "2021-09-17",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "endDate",
+                        "in": "query",
+                        "description": "End date of invoice in `YYYY-MM-DD` format",
+                        "example": "2021-10-17",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "accountNumbers",
+                        "in": "query",
+                        "description": "List of accounts to be filtered",
+                        "required": false,
+                        "style": "form",
+                        "explode": false,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    {
+                        "name": "transactionIds",
+                        "in": "query",
+                        "description": "List of transactions to be filtered",
+                        "required": false,
+                        "style": "form",
+                        "explode": false,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    {
+                        "name": "offset",
+                        "in": "query",
+                        "description": "Use offset to control the number of records to be skipped in the response.",
+                        "required": false,
+                        "style": "form",
+                        "explode": false,
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Use limit to restrict the number of records in the response.",
+                        "required": false,
+                        "style": "form",
+                        "explode": false,
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 200,
+                            "default": 10
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Ok",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/invoiceSummaryResponse"
+                                },
+                                "example": {
+                                    "data": [
+                                        {
+                                            "transactionId": "100000000001",
+                                            "transactionType": "INVOICE",
+                                            "transactionDate": "2021-01-15",
+                                            "customerDetails": {
+                                                "accountName": "Acme Corporation",
+                                                "accountNumber": "100000",
+                                                "address": {
+                                                    "addressLine1": "Company address",
+                                                    "city": "City",
+                                                    "countryCode": "ES",
+                                                    "zipCode": "000000"
+                                                },
+                                                "region": "EMEA"
+                                            },
+                                            "billingPurchaseOrder": "900000001",
+                                            "billingCycle": "1st of the month",
+                                            "billingContacts": {
+                                                "firstName": "John"
+                                            },
+                                            "paymentDueDate": "2021-02-14",
+                                            "paymentTerms": "Net 30",
+                                            "currencyCode": "EUR",
+                                            "totalRecurringAmount": 0,
+                                            "totalNonRecurringAmount": 4638.94,
+                                            "totalAmount": 5613.12,
+                                            "totalAdjustment": 0,
+                                            "vatNumber": "VAT Number",
+                                            "paymentInstructions": {
+                                                "electronic": {
+                                                    "bankName": "Bank Name",
+                                                    "payeeName": "Equinix",
+                                                    "payeeAccountNumber": "001100011",
+                                                    "bankCode": "ES000000000000000001",
+                                                    "swiftCode": "CODE"
+                                                }
+                                            },
+                                            "taxInfo": [
+                                                {
+                                                    "description": "VAT at 21% on 4638.94",
+                                                    "value": 974.18
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "transactionId": "100000000003",
+                                            "transactionType": "CREDIT_MEMO",
+                                            "transactionDate": "2021-01-14",
+                                            "customerDetails": {
+                                                "accountName": "Company Name",
+                                                "accountNumber": "100000",
+                                                "accountContact": "Attn: Accounts Payable",
+                                                "address": {
+                                                    "addressLine1": "Company address",
+                                                    "city": "City",
+                                                    "countryCode": "ES",
+                                                    "zipCode": "000000"
+                                                },
+                                                "region": "EMEA"
+                                            },
+                                            "billingPurchaseOrder": "00000000",
+                                            "billingCycle": "1st of every month",
+                                            "billingContacts": {
+                                                "firstName": "John"
+                                            },
+                                            "currencyCode": "EUR",
+                                            "totalRecurringAmount": -75519,
+                                            "totalNonRecurringAmount": 0,
+                                            "totalAmount": -90622.8,
+                                            "totalAdjustment": 0,
+                                            "vatNumber": "VAT",
+                                            "taxInfo": [
+                                                {
+                                                    "description": "VAT at 20% on -75519",
+                                                    "value": -15103.8
+                                                }
+                                            ]
+                                        }
+                                    ],
+                                    "pagination": {
+                                        "offset": 0,
+                                        "limit": 10,
+                                        "total": 3,
+                                        "next": "/invoices?limit=10&offset=0"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "allOf": [
+                                            {
+                                                "$ref": "#/components/schemas/Error"
+                                            }
+                                        ]
+                                    }
+                                },
+                                "example": [
+                                    {
+                                        "errorCode": "EQ-2086010",
+                                        "errorMessage": "One or more properties are invalid",
+                                        "correlationId": "210407001942756",
+                                        "additionalInfo": [
+                                            {
+                                                "property": "startDate",
+                                                "reason": "Start date should be less than 1 year."
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "allOf": [
+                                            {
+                                                "$ref": "#/components/schemas/Error"
+                                            }
+                                        ]
+                                    }
+                                },
+                                "example": [
+                                    {
+                                        "errorCode": "EQ-2086005",
+                                        "errorMessage": "Unable to access or locate given invoice. Please ensure you have appropriate permissions.",
+                                        "correlationId": "99740129126918",
+                                        "additionalInfo": [
+                                            {
+                                                "property": "accountNumbers",
+                                                "reason": "No invoice found. Please ensure you are using a valid account number or have the appropriate permissions to view billing information."
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "allOf": [
+                                            {
+                                                "$ref": "#/components/schemas/Error"
+                                            }
+                                        ]
+                                    }
+                                },
+                                "example": [
+                                    {
+                                        "errorCode": "EQ-2086101",
+                                        "errorMessage": "The server has encountered an unexpected error. We apologize for the inconvenience. Please try again later.",
+                                        "correlationId": "99740129126918"
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v2/invoices/details": {
+            "get": {
+                "tags": [
+                    "Billing Invoices"
+                ],
+                "summary": "Retrieve billing details",
+                "operationId": "Retrieve billing details",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "This method retrieves detailed invoice or credit memo information based on date range, account number or transactions ID for a user with billing viewing permission.",
+                "parameters": [
+                    {
+                        "name": "startDate",
+                        "in": "query",
+                        "description": "Start date of invoice in `YYYY-MM-DD` format",
+                        "example": "2021-09-17",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "endDate",
+                        "in": "query",
+                        "description": "End date of invoice in `YYYY-MM-DD` format",
+                        "example": "2021-10-17",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "accountNumbers",
+                        "in": "query",
+                        "description": "List of accounts to be filtered",
+                        "required": false,
+                        "style": "form",
+                        "explode": false,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    {
+                        "name": "transactionIds",
+                        "in": "query",
+                        "description": "List of transactions to be filtered",
+                        "required": false,
+                        "style": "form",
+                        "explode": false,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    {
+                        "name": "offset",
+                        "in": "query",
+                        "description": "Use offset to control the number of records to be skipped in the response.",
+                        "required": false,
+                        "style": "form",
+                        "explode": false,
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Use limit to restrict the number of records in the response.",
+                        "required": false,
+                        "style": "form",
+                        "explode": false,
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 200,
+                            "default": 10
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Ok",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/invoiceResponse"
+                                },
+                                "example": {
+                                    "data": [
+                                        {
+                                            "transactionId": "100000000001",
+                                            "businessLegalEntity": "01-Equinix",
+                                            "region": "EMEA",
+                                            "countryCode": "ES",
+                                            "transactionType": "INVOICE",
+                                            "transactionDate": "2021-01-15",
+                                            "orderId": "1-12345696782012",
+                                            "channel": "PORTAL",
+                                            "subChannel": "ECP",
+                                            "lineNumber": "3",
+                                            "subLineNumber": "1",
+                                            "customerDetails": {
+                                                "accountName": "Acme Corporation",
+                                                "accountNumber": "100000",
+                                                "legalEntity": "Acme Corporation",
+                                                "region": "EMEA",
+                                                "countryCode": "ES"
+                                            },
+                                            "purchaseOrderNumber": "1000000000",
+                                            "billingAgreementId": "1-1000000000",
+                                            "customerReferenceId": "Customer Reference Number",
+                                            "ibxs": [
+                                                "AM1"
+                                            ],
+                                            "contacts": [
+                                                {
+                                                    "firstName": "John",
+                                                    "type": "BOOKED_BY"
+                                                },
+                                                {
+                                                    "firstName": "Jane",
+                                                    "type": "BILLING_ANALYST"
+                                                }
+                                            ],
+                                            "orderBookedDate": "2020-09-15T00:00:00.000Z",
+                                            "activityType": "CREDIT_MRC",
+                                            "productName": "Cross Connect",
+                                            "productCategory": "Espace",
+                                            "productDescription": "Private Cage ( 900 kVA-Draw Cap / Metered Power )",
+                                            "productCode": "CAG00001",
+                                            "detailedDescription": "( Location: 00000 / S/N: 00000-123456789 )",
+                                            "ibxDescription": "Data Center - AM1",
+                                            "quantity": -1,
+                                            "unitOfMeasure": "kVA",
+                                            "unitPrice": 75519,
+                                            "frequency": "MONTHLY",
+                                            "currencyCode": "EUR",
+                                            "localCurrencyCode": "EUR",
+                                            "nonRecurringAmount": 0,
+                                            "recurringAmount": -75519,
+                                            "adjustment": 0,
+                                            "taxAmount": -15103.8,
+                                            "totalAmount": -90622.8,
+                                            "additionalInfo": [
+                                                {
+                                                    "key": "SERIAL_NUMBER",
+                                                    "value": "00000-123456789"
+                                                },
+                                                {
+                                                    "key": "SPACE_ID",
+                                                    "value": "AM1:01:000000"
+                                                },
+                                                {
+                                                    "key": "FIRST_PRICE_INCREASE",
+                                                    "value": 12
+                                                },
+                                                {
+                                                    "key": "PRICE_INCREASE_PERCENTAGE",
+                                                    "value": 5
+                                                }
+                                            ],
+                                            "termsOfUse": [
+                                                {
+                                                    "value": 36,
+                                                    "type": "INITIAL_TERM",
+                                                    "period": "MONTHS"
+                                                },
+                                                {
+                                                    "value": 12,
+                                                    "type": "RENEWAL_TERM",
+                                                    "period": "MONTHS"
+                                                }
+                                            ]
+                                        }
+                                    ],
+                                    "pagination": {
+                                        "offset": 0,
+                                        "limit": 1,
+                                        "total": 3,
+                                        "next": "/invoices/details?limit=1&offset=1"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "allOf": [
+                                            {
+                                                "$ref": "#/components/schemas/Error"
+                                            }
+                                        ]
+                                    }
+                                },
+                                "example": [
+                                    {
+                                        "errorCode": "EQ-2086010",
+                                        "errorMessage": "One or more properties are invalid",
+                                        "correlationId": "210407001942756",
+                                        "additionalInfo": [
+                                            {
+                                                "property": "startDate",
+                                                "reason": "Start date should be less than 1 year."
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "allOf": [
+                                            {
+                                                "$ref": "#/components/schemas/Error"
+                                            }
+                                        ]
+                                    }
+                                },
+                                "example": [
+                                    {
+                                        "errorCode": "EQ-2086005",
+                                        "errorMessage": "Unable to access or locate given invoice. Please ensure you have appropriate permissions.",
+                                        "correlationId": "99740129126918",
+                                        "additionalInfo": [
+                                            {
+                                                "property": "accountNumbers",
+                                                "reason": "No invoice found. Please ensure you are using a valid account number or have the appropriate permissions to view billing information."
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "allOf": [
+                                            {
+                                                "$ref": "#/components/schemas/Error"
+                                            }
+                                        ]
+                                    }
+                                },
+                                "example": [
+                                    {
+                                        "errorCode": "EQ-2086101",
+                                        "errorMessage": "The server has encountered an unexpected error. We apologize for the inconvenience. Please try again later.",
+                                        "correlationId": "99740129126918"
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "securitySchemes": {
+            "BearerAuth": {
+                "type": "http",
+                "scheme": "bearer",
+                "bearerFormat": "JWT"
+            }
+        },
+        "schemas": {
+            "Error": {
+                "title": "Error Info",
+                "type": "array",
+                "items": {
+                    "title": "Error details",
+                    "type": "object",
+                    "properties": {
+                        "errorCode": {
+                            "type": "string",
+                            "example": "EQ-20YYXXX"
+                        },
+                        "errorMessage": {
+                            "type": "string",
+                            "example": "Error message"
+                        },
+                        "details": {
+                            "type": "string",
+                            "example": "Error details"
+                        },
+                        "correlationId": {
+                            "type": "string",
+                            "example": "Correlation ID to trace the error back"
+                        },
+                        "help": {
+                            "type": "string",
+                            "example": "URL to a help page for the corresponding errorCode"
+                        },
+                        "additionalInfo": {
+                            "title": "Error details",
+                            "type": "object",
+                            "properties": {
+                                "property": {
+                                    "type": "string",
+                                    "example": "id"
+                                },
+                                "reason": {
+                                    "type": "string",
+                                    "example": "missing id"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "startDateTime": {
+                "type": "string",
+                "format": "date"
+            },
+            "endDateTime": {
+                "type": "string",
+                "format": "date"
+            },
+            "currencyCode": {
+                "title": "Currency Code",
+                "description": "`ISO-4217` currency code",
+                "type": "string",
+                "enum": [
+                    "AED",
+                    "AFN",
+                    "ALL",
+                    "AMD",
+                    "ANG",
+                    "AOA",
+                    "ARS",
+                    "AUD",
+                    "AWG",
+                    "AZN",
+                    "BAM",
+                    "BBD",
+                    "BDT",
+                    "BGN",
+                    "BHD",
+                    "BIF",
+                    "BMD",
+                    "BND",
+                    "BOB",
+                    "BOV",
+                    "BRL",
+                    "BSD",
+                    "BTN",
+                    "BWP",
+                    "BYN",
+                    "BZD",
+                    "CAD",
+                    "CDF",
+                    "CHE",
+                    "CHF",
+                    "CHW",
+                    "CLF",
+                    "CLP",
+                    "CNY",
+                    "COP",
+                    "COU",
+                    "CRC",
+                    "CUC",
+                    "CUP",
+                    "CVE",
+                    "CZK",
+                    "DJF",
+                    "DKK",
+                    "DOP",
+                    "DZD",
+                    "EGP",
+                    "ERN",
+                    "ETB",
+                    "EUR",
+                    "FJD",
+                    "FKP",
+                    "GBP",
+                    "GEL",
+                    "GHS",
+                    "GIP",
+                    "GMD",
+                    "GNF",
+                    "GTQ",
+                    "GYD",
+                    "HKD",
+                    "HNL",
+                    "HRK",
+                    "HTG",
+                    "HUF",
+                    "IDR",
+                    "ILS",
+                    "INR",
+                    "IQD",
+                    "IRR",
+                    "ISK",
+                    "JMD",
+                    "JOD",
+                    "JPY",
+                    "KES",
+                    "KGS",
+                    "KHR",
+                    "KMF",
+                    "KPW",
+                    "KRW",
+                    "KWD",
+                    "KYD",
+                    "KZT",
+                    "LAK",
+                    "LBP",
+                    "LKR",
+                    "LRD",
+                    "LSL",
+                    "LYD",
+                    "MAD",
+                    "MDL",
+                    "MGA",
+                    "MKD",
+                    "MMK",
+                    "MNT",
+                    "MOP",
+                    "MRU",
+                    "MUR",
+                    "MVR",
+                    "MWK",
+                    "MXN",
+                    "MXV",
+                    "MYR",
+                    "MZN",
+                    "NAD",
+                    "NGN",
+                    "NIO",
+                    "NOK",
+                    "NPR",
+                    "NZD",
+                    "OMR",
+                    "PAB",
+                    "PEN",
+                    "PGK",
+                    "PHP",
+                    "PKR",
+                    "PLN",
+                    "PYG",
+                    "QAR",
+                    "RON",
+                    "RSD",
+                    "RUB",
+                    "RWF",
+                    "SAR",
+                    "SBD",
+                    "SCR",
+                    "SDG",
+                    "SEK",
+                    "SGD",
+                    "SHP",
+                    "SLL",
+                    "SOS",
+                    "SRD",
+                    "SSP",
+                    "STN",
+                    "SVC",
+                    "SYP",
+                    "SZL",
+                    "THB",
+                    "TJS",
+                    "TMT",
+                    "TND",
+                    "TOP",
+                    "TRY",
+                    "TTD",
+                    "TWD",
+                    "TZS",
+                    "UAH",
+                    "UGX",
+                    "USD",
+                    "USN",
+                    "UYI",
+                    "UYU",
+                    "UYW",
+                    "UZS",
+                    "VES",
+                    "VND",
+                    "VUV",
+                    "WST",
+                    "XAF",
+                    "XAG",
+                    "XAU",
+                    "XBA",
+                    "XBB",
+                    "XBC",
+                    "XBD",
+                    "XCD",
+                    "XDR",
+                    "XOF",
+                    "XPD",
+                    "XPF",
+                    "XPT",
+                    "XSU",
+                    "XTS",
+                    "XUA",
+                    "XXX",
+                    "YER",
+                    "ZAR",
+                    "ZMW",
+                    "ZWL"
+                ]
+            },
+            "countryCode": {
+                "type": "string",
+                "description": "`ISO-3166 ALPHA-2` Country code. Country code of customer legal entity.",
+                "enum": [
+                    "AX",
+                    "AF",
+                    "AL",
+                    "DZ",
+                    "AS",
+                    "AD",
+                    "AO",
+                    "AI",
+                    "AQ",
+                    "AG",
+                    "AR",
+                    "AM",
+                    "AW",
+                    "AU",
+                    "AT",
+                    "AZ",
+                    "BS",
+                    "BH",
+                    "BD",
+                    "BB",
+                    "BY",
+                    "BE",
+                    "BZ",
+                    "BJ",
+                    "BM",
+                    "BT",
+                    "BO",
+                    "BA",
+                    "BW",
+                    "BV",
+                    "BR",
+                    "IO",
+                    "BN",
+                    "BG",
+                    "BF",
+                    "BI",
+                    "KH",
+                    "CM",
+                    "CA",
+                    "CV",
+                    "KY",
+                    "CF",
+                    "TD",
+                    "CL",
+                    "CN",
+                    "CX",
+                    "CC",
+                    "CO",
+                    "KM",
+                    "CD",
+                    "CG",
+                    "CK",
+                    "CR",
+                    "CI",
+                    "HR",
+                    "CU",
+                    "CY",
+                    "CZ",
+                    "DK",
+                    "DJ",
+                    "DM",
+                    "DO",
+                    "EC",
+                    "EG",
+                    "SV",
+                    "GQ",
+                    "ER",
+                    "EE",
+                    "ET",
+                    "FK",
+                    "FO",
+                    "FJ",
+                    "FI",
+                    "FR",
+                    "GF",
+                    "PF",
+                    "TF",
+                    "GA",
+                    "GM",
+                    "GE",
+                    "DE",
+                    "GH",
+                    "GI",
+                    "GR",
+                    "GL",
+                    "GD",
+                    "GP",
+                    "GU",
+                    "GT",
+                    "GN",
+                    "GW",
+                    "GY",
+                    "HT",
+                    "HM",
+                    "HN",
+                    "HK",
+                    "HU",
+                    "IS",
+                    "IN",
+                    "ID",
+                    "IR",
+                    "IQ",
+                    "IE",
+                    "IL",
+                    "IT",
+                    "JM",
+                    "JP",
+                    "JO",
+                    "KZ",
+                    "KE",
+                    "KI",
+                    "KP",
+                    "KR",
+                    "KW",
+                    "KG",
+                    "LA",
+                    "LV",
+                    "LB",
+                    "LS",
+                    "LR",
+                    "LY",
+                    "LI",
+                    "LT",
+                    "LU",
+                    "MO",
+                    "MK",
+                    "MG",
+                    "MW",
+                    "MY",
+                    "MV",
+                    "ML",
+                    "MT",
+                    "MH",
+                    "MQ",
+                    "MR",
+                    "MU",
+                    "YT",
+                    "MX",
+                    "FM",
+                    "MD",
+                    "MC",
+                    "MN",
+                    "MS",
+                    "MA",
+                    "MZ",
+                    "MM",
+                    "NA",
+                    "NR",
+                    "NP",
+                    "NL",
+                    "AN",
+                    "NC",
+                    "NZ",
+                    "NI",
+                    "NE",
+                    "NG",
+                    "NU",
+                    "NF",
+                    "MP",
+                    "NO",
+                    "OM",
+                    "PK",
+                    "PW",
+                    "PS",
+                    "PA",
+                    "PG",
+                    "PY",
+                    "PE",
+                    "PH",
+                    "PN",
+                    "PL",
+                    "PT",
+                    "PR",
+                    "QA",
+                    "RE",
+                    "RO",
+                    "RU",
+                    "RW",
+                    "SH",
+                    "KN",
+                    "LC",
+                    "PM",
+                    "VC",
+                    "WS",
+                    "SM",
+                    "ST",
+                    "SA",
+                    "SN",
+                    "CS",
+                    "SC",
+                    "SL",
+                    "SG",
+                    "SK",
+                    "SI",
+                    "SB",
+                    "SO",
+                    "ZA",
+                    "GS",
+                    "ES",
+                    "LK",
+                    "SD",
+                    "SR",
+                    "SJ",
+                    "SZ",
+                    "SE",
+                    "CH",
+                    "SY",
+                    "TW",
+                    "TJ",
+                    "TZ",
+                    "TH",
+                    "TL",
+                    "TG",
+                    "TK",
+                    "TO",
+                    "TT",
+                    "TN",
+                    "TR",
+                    "TM",
+                    "TC",
+                    "TV",
+                    "UG",
+                    "UA",
+                    "AE",
+                    "GB",
+                    "US",
+                    "UM",
+                    "UY",
+                    "UZ",
+                    "VU",
+                    "VA",
+                    "VE",
+                    "VN",
+                    "VG",
+                    "VI",
+                    "WF",
+                    "EH",
+                    "YE",
+                    "ZM",
+                    "ZW"
+                ],
+                "example": "US"
+            },
+            "invoiceSearch": {
+                "type": "object",
+                "properties": {
+                    "filters": {
+                        "type": "object",
+                        "properties": {
+                            "dateRange": {
+                                "type": "object",
+                                "properties": {
+                                    "startDateTime": {
+                                        "$ref": "#/components/schemas/startDateTime"
+                                    },
+                                    "endDateTime": {
+                                        "$ref": "#/components/schemas/endDateTime"
+                                    }
+                                }
+                            },
+                            "accountNumbers": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                }
+                            },
+                            "transactionIds": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                }
+                            },
+                            "productCodes": {
+                                "deprecated": true,
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "accountNumber": {
+                "type": "string",
+                "description": "Customer account number",
+                "example": "123456"
+            },
+            "accountName": {
+                "type": "string",
+                "description": "Customer account name",
+                "example": "Account name"
+            },
+            "invoiceResponse": {
+                "type": "object",
+                "properties": {
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/invoiceItems"
+                        }
+                    },
+                    "pagination": {
+                        "$ref": "#/components/schemas/pagination"
+                    }
+                }
+            },
+            "invoiceResponseSearch": {
+                "type": "object",
+                "properties": {
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/invoiceItems"
+                        }
+                    },
+                    "pagination": {
+                        "$ref": "#/components/schemas/paginationSearch"
+                    }
+                }
+            },
+            "transactionDate": {
+                "type": "string",
+                "description": "Date of transaction in `YYYY-MM-DD` format",
+                "example": "2020-11-19",
+                "format": "date"
+            },
+            "invoiceItems": {
+                "type": "object",
+                "properties": {
+                    "transactionId": {
+                        "description": "Unique identifier for a specific transaction. A transaction type can be an `INVOICE` or `CREDIT_MEMO`. ",
+                        "type": "string",
+                        "example": "100210235267"
+                    },
+                    "businessLegalEntity": {
+                        "type": "string",
+                        "description": "Name of the Equinix entity that issued billing document",
+                        "example": "0100-EQUINIX INC"
+                    },
+                    "region": {
+                        "type": "string",
+                        "description": "Region of the Equinix legal entity",
+                        "enum": [
+                            "APAC",
+                            "AMER",
+                            "EMEA"
+                        ],
+                        "example": "EMEA"
+                    },
+                    "countryCode": {
+                        "type": "string",
+                        "description": "Country code of the Equinix legal entity. This is not to be confused with the customer legal entity’s countryCode",
+                        "example": "ES"
+                    },
+                    "transactionType": {
+                        "type": "string",
+                        "description": "Type of transaction. Can be of `CREDIT_MEMO` or `INVOICE` ",
+                        "enum": [
+                            "CREDIT_MEMO",
+                            "INVOICE"
+                        ],
+                        "example": "INVOICE"
+                    },
+                    "transactionDate": {
+                        "$ref": "#/components/schemas/transactionDate"
+                    },
+                    "orderId": {
+                        "description": "Unique identifier of the order",
+                        "example": "1-180737113821",
+                        "type": "string"
+                    },
+                    "channel": {
+                        "description": "Type of channel used to place the order",
+                        "type": "string",
+                        "enum": [
+                            "API",
+                            "PORTAL",
+                            "MOBILE",
+                            "OFFLINE",
+                            "OTHER"
+                        ],
+                        "example": "PORTAL"
+                    },
+                    "subChannel": {
+                        "description": "Type of sub-channel used to place the order",
+                        "type": "string",
+                        "enum": [
+                            "QUOTE",
+                            "IX",
+                            "ECX",
+                            "ECP",
+                            "CSC",
+                            "NRC_CHARGE_UPLOAD"
+                        ],
+                        "example": "ECP"
+                    },
+                    "lineNumber": {
+                        "type": "string",
+                        "description": "Line number for line item.",
+                        "example": 131210068800
+                    },
+                    "subLineNumber": {
+                        "type": "string",
+                        "description": "Sub-line number for line item.",
+                        "example": 2
+                    },
+                    "customerDetails": {
+                        "allOf": [
+                            {
+                                "properties": {
+                                    "legalEntity": {
+                                        "type": "string",
+                                        "description": "Name of customer legal entity",
+                                        "example": "Company Corporation Ltd"
+                                    },
+                                    "countryCode": {
+                                        "$ref": "#/components/schemas/countryCode"
+                                    }
+                                }
+                            },
+                            {
+                                "$ref": "#/components/schemas/customerDetails"
+                            }
+                        ]
+                    },
+                    "purchaseOrderNumber": {
+                        "type": "string",
+                        "description": "Purchase order number",
+                        "example": "SAU-87110-CC"
+                    },
+                    "billingAgreementId": {
+                        "type": "string",
+                        "description": "Billing Agreement Number.",
+                        "example": "1-123456789101"
+                    },
+                    "customerReferenceId": {
+                        "type": "string",
+                        "description": "Customer Reference Identifier / External Reference Identifier",
+                        "example": "048837d6-4cd8-401f-ba41-a4ac015c3f3e"
+                    },
+                    "priorAdjustmentReference": {
+                        "type": "string",
+                        "description": "Prior Adjustment Invoice Id or Credit Memo Id"
+                    },
+                    "ibxs": {
+                        "type": "array",
+                        "description": "Equinix datacenter location code",
+                        "example": "AM1",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "recurringStartDate": {
+                        "type": "string",
+                        "description": "This refers to the start date of `totalRecurringAmount` in `YYYY-MM-DD` format",
+                        "example": "2020-12-01T00:00:00.000Z",
+                        "format": "date"
+                    },
+                    "recurringEndDate": {
+                        "type": "string",
+                        "description": "This refers to the end date of `totalRecurringAmount` in `YYYY-MM-DD` format",
+                        "example": "2020-12-31T00:00:00.000Z",
+                        "format": "date"
+                    },
+                    "contacts": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "firstName": {
+                                    "type": "string",
+                                    "description": "First name of contact",
+                                    "example": "John"
+                                },
+                                "lastName": {
+                                    "type": "string",
+                                    "description": "Last name of contact",
+                                    "example": "Doe"
+                                },
+                                "type": {
+                                    "type": "string",
+                                    "enum": [
+                                        "BOOKED_BY",
+                                        "BILLING_ANALYST"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "orderBookedDate": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "activityType": {
+                        "type": "string",
+                        "enum": [
+                            "CREDIT_MRC",
+                            "CREDIT_NRC",
+                            "ONE_TIME_CHARGE",
+                            "RECURRING_CHARGE",
+                            "PRIOR_RECURRING_CHARGE",
+                            "ADJUSTMENT_CHARGE",
+                            "DEINSTALL"
+                        ]
+                    },
+                    "productCategory": {
+                        "type": "string",
+                        "description": "Name of product category.",
+                        "example": "Interconnection"
+                    },
+                    "productDescription": {
+                        "type": "string",
+                        "description": "Description of the product.",
+                        "example": "Cross Connect - Single-Mode Fiber"
+                    },
+                    "productCode": {
+                        "type": "string",
+                        "description": "Product catalog code.",
+                        "example": "CC0001"
+                    },
+                    "productName": {
+                        "type": "string",
+                        "description": "Product name.",
+                        "example": "Cross Connect"
+                    },
+                    "detailedDescription": {
+                        "type": "string",
+                        "example": "Location: 000733 SN: 20281678-A CID: CH LZXX184890 TQW  EQUINIX"
+                    },
+                    "ibxDescription": {
+                        "type": "string",
+                        "example": "Chicago IBX - CH1"
+                    },
+                    "quantity": {
+                        "type": "number",
+                        "description": "The total amount of quantity bought. To be used with `unitOfMeasure`",
+                        "example": 10
+                    },
+                    "unitOfMeasure": {
+                        "type": "string",
+                        "description": "Metric of `quantity` ",
+                        "example": "KVA"
+                    },
+                    "unitPrice": {
+                        "type": "number",
+                        "description": "The unit price of product / service",
+                        "example": 90
+                    },
+                    "frequency": {
+                        "type": "string",
+                        "description": "The period of recurring charges",
+                        "enum": [
+                            "MONTHLY",
+                            "QUARTERLY",
+                            "YEARLY"
+                        ],
+                        "example": "MONTHLY"
+                    },
+                    "currencyCode": {
+                        "$ref": "#/components/schemas/currencyCode"
+                    },
+                    "localCurrencyCode": {
+                        "$ref": "#/components/schemas/currencyCode"
+                    },
+                    "exchangeRate": {
+                        "type": "number",
+                        "description": "The exchange rate used in computing charges when local currency is different from invoice currency. ",
+                        "example": 1.3
+                    },
+                    "nonRecurringAmount": {
+                        "type": "number",
+                        "description": "Amount of non-recurring charges.",
+                        "example": 50
+                    },
+                    "recurringAmount": {
+                        "type": "number",
+                        "description": "Amount of recurring charges.",
+                        "example": 50
+                    },
+                    "adjustment": {
+                        "type": "number",
+                        "description": "Amount of discounts or adjustments applied",
+                        "example": 0.1
+                    },
+                    "taxAmount": {
+                        "type": "number",
+                        "description": "Amount of tax applied",
+                        "example": 100
+                    },
+                    "totalAmount": {
+                        "type": "number",
+                        "description": "Net total amount after applicable taxes and discounts. ",
+                        "example": 100
+                    },
+                    "legacyOrderId": {
+                        "type": "string",
+                        "description": "Order ID that were previously used in legacy orders",
+                        "example": "1-198048780276"
+                    },
+                    "additionalInfo": {
+                        "title": "Additional Details of the product",
+                        "type": "array",
+                        "items": {
+                            "properties": {
+                                "key": {
+                                    "type": "string"
+                                },
+                                "value": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "example": [
+                            {
+                                "key": "ASSET_ID",
+                                "value": "4-89137987923"
+                            },
+                            {
+                                "key": "SERIAL_NUMBER",
+                                "value": "232891719"
+                            },
+                            {
+                                "key": "SPACE_ID",
+                                "value": "SY2:01:000283"
+                            },
+                            {
+                                "key": "FIRST_PRICE_INCREASE",
+                                "value": "12"
+                            },
+                            {
+                                "key": "PRICE_INCREASE_PERCENTAGE",
+                                "value": "5"
+                            }
+                        ]
+                    },
+                    "termsOfUse": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/termsOfUseItems"
+                        }
+                    }
+                }
+            },
+            "customerDetails": {
+                "type": "object",
+                "properties": {
+                    "accountName": {
+                        "$ref": "#/components/schemas/accountName"
+                    },
+                    "accountNumber": {
+                        "$ref": "#/components/schemas/accountNumber"
+                    },
+                    "region": {
+                        "type": "string",
+                        "description": "This is the region code of Equinix Legal Entity",
+                        "enum": [
+                            "APAC",
+                            "AMER",
+                            "EMEA"
+                        ]
+                    }
+                }
+            },
+            "invoiceSummaryDetails": {
+                "type": "object",
+                "properties": {
+                    "transactionId": {
+                        "description": "Unique identifier for a specific transaction. A transaction type can be an `INVOICE` or `CREDIT_MEMO`. ",
+                        "type": "string",
+                        "example": "100210235267"
+                    },
+                    "businessLegalEntity": {
+                        "type": "string",
+                        "description": "Name of the Equinix entity that issued billing document",
+                        "example": "0100-EQUINIX INC"
+                    },
+                    "customerDetails": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/customerDetails"
+                            },
+                            {
+                                "properties": {
+                                    "accountContact": {
+                                        "type": "string",
+                                        "description": "Customer contact name.",
+                                        "example": "Attn: Accounts Payable"
+                                    },
+                                    "address": {
+                                        "type": "object",
+                                        "title": "Address details",
+                                        "properties": {
+                                            "addressLine1": {
+                                                "type": "string",
+                                                "description": "Address line 1",
+                                                "example": "ABC Street 123"
+                                            },
+                                            "addressLine2": {
+                                                "type": "string",
+                                                "description": "Address line 2",
+                                                "example": "block 11, #01-11"
+                                            },
+                                            "city": {
+                                                "type": "string",
+                                                "description": "City name.",
+                                                "example": "San Francisco"
+                                            },
+                                            "state": {
+                                                "type": "string",
+                                                "description": "State of the city.",
+                                                "example": "California"
+                                            },
+                                            "countryCode": {
+                                                "$ref": "#/components/schemas/countryCode"
+                                            },
+                                            "zipCode": {
+                                                "type": "string",
+                                                "description": "Postal address",
+                                                "example": "94086"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        ]
+                    },
+                    "transactionType": {
+                        "description": "Billing Type",
+                        "type": "string",
+                        "enum": [
+                            "INVOICE",
+                            "CREDIT_MEMO"
+                        ]
+                    },
+                    "transactionDate": {
+                        "description": "Billing Date",
+                        "type": "string",
+                        "format": "date",
+                        "example": "2020-06-01"
+                    },
+                    "billingPurchaseOrder": {
+                        "type": "string",
+                        "description": "Purchase order reference for invoice. When there are more than 1 applicable purchase order reference, this field will display multiple instead of showing specific purchase order number. ",
+                        "example": "multiple"
+                    },
+                    "billingCycle": {
+                        "type": "string",
+                        "description": "The start date which billing is being triggered",
+                        "example": "1st of the month"
+                    },
+                    "billingContacts": {
+                        "type": "object",
+                        "properties": {
+                            "firstName": {
+                                "type": "string",
+                                "description": "First name of the contact.",
+                                "example": "John"
+                            },
+                            "lastName": {
+                                "type": "string",
+                                "description": "Last name of the contact.",
+                                "example": "Doe"
+                            },
+                            "details": {
+                                "type": "array",
+                                "description": "Reference of the related party, could be a party reference or a party role reference",
+                                "items": {
+                                    "type": "object",
+                                    "title": "Contact Details",
+                                    "properties": {
+                                        "type": {
+                                            "type": "string",
+                                            "description": "Communications Type ",
+                                            "example": "PHONE",
+                                            "enum": [
+                                                "PHONE",
+                                                "EMAIL",
+                                                "MOBILE"
+                                            ]
+                                        },
+                                        "value": {
+                                            "type": "string",
+                                            "description": "Value of related `type` (eg, phone Number, email address)",
+                                            "example": "+1-4601231122"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "paymentDueDate": {
+                        "type": "string",
+                        "description": "Date which payment is due for the invoice in `YYYY-MM-DD` format",
+                        "example": "2020-07-01",
+                        "format": "date"
+                    },
+                    "paymentTerms": {
+                        "type": "string",
+                        "description": "Invoice payment terms",
+                        "example": "Net 30"
+                    },
+                    "currencyCode": {
+                        "$ref": "#/components/schemas/currencyCode"
+                    },
+                    "totalRecurringAmount": {
+                        "type": "number",
+                        "description": "Total recurring charges.",
+                        "example": "19999"
+                    },
+                    "totalNonRecurringAmount": {
+                        "type": "number",
+                        "description": "Total non-recurring charges.",
+                        "example": "22113"
+                    },
+                    "totalAmount": {
+                        "type": "number",
+                        "description": "Total invoice charges. This includes recurring and non-recurring charges.",
+                        "example": "42112"
+                    },
+                    "totalAdjustment": {
+                        "type": "number",
+                        "description": "Total adjustment amount. ",
+                        "example": 0.1
+                    },
+                    "vatNumber": {
+                        "type": "string",
+                        "description": "Customer VAT Registration number",
+                        "example": "GB123456789"
+                    },
+                    "paymentInstructions": {
+                        "$ref": "#/components/schemas/paymentInstructions"
+                    },
+                    "taxInfo": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/taxInfo"
+                        }
+                    },
+                    "priorAdjustmentInfo": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/priorAdjustmentInfo"
+                        }
+                    },
+                    "totalPriorAdjustmentAmount": {
+                        "type": "number",
+                        "description": "Adjusted original total amount."
+                    }
+                }
+            },
+            "taxInfo": {
+                "type": "object",
+                "properties": {
+                    "description": {
+                        "type": "string",
+                        "description": "Type of tax imposed for a transaction",
+                        "example": "VAT 5% on 19103"
+                    },
+                    "value": {
+                        "type": "number",
+                        "description": "The corresponding tax value for a given tax type.",
+                        "example": 19.01
+                    }
+                }
+            },
+            "priorAdjustmentInfo": {
+                "type": "object",
+                "properties": {
+                    "transactionId": {
+                        "type": "string",
+                        "description": "Original invoice number which credit memo is applicable to. In some cases, this may include multiple documents consisting of credit memos and invoices.",
+                        "example": "100210214299"
+                    },
+                    "totalAmount": {
+                        "type": "number",
+                        "description": "Original invoice value. This is only applicable to credit memo.",
+                        "example": 12630.92
+                    },
+                    "transactionDate": {
+                        "type": "string",
+                        "description": "Original invoice date in YYYY-MM-DD. This is only applicable to credit memo.",
+                        "example": "2020-03-01"
+                    }
+                }
+            },
+            "paymentInstructions": {
+                "type": "object",
+                "properties": {
+                    "electronic": {
+                        "type": "object",
+                        "properties": {
+                            "bankName": {
+                                "type": "string",
+                                "description": "Name of bank for electronic payment.",
+                                "example": "Wells Fargo Bank, NA"
+                            },
+                            "bankAddress": {
+                                "$ref": "#/components/schemas/bankAddressDetails"
+                            },
+                            "payeeName": {
+                                "type": "string",
+                                "description": "Equinix payee name for electronic payment.",
+                                "example": "Equinix, INC"
+                            },
+                            "payeeAccountNumber": {
+                                "type": "string",
+                                "description": "Equinix bank account number.",
+                                "example": "4121543037"
+                            },
+                            "bankCode": {
+                                "type": "string",
+                                "description": "Equinix international bank account number. This can be `BSB#`, `IBAN`, `CNAP`, `ABA#` depending on the region. Please refer to appendix for more information.",
+                                "example": "121000248"
+                            },
+                            "swiftCode": {
+                                "type": "string",
+                                "description": "Equinix SWIFT code for bank transfer",
+                                "example": "WFBIUS6S"
+                            },
+                            "sortCode": {
+                                "type": "string",
+                                "description": "Equinix Sort code for bank transfer",
+                                "example": ""
+                            }
+                        }
+                    },
+                    "check": {
+                        "type": "object",
+                        "properties": {
+                            "bankName": {
+                                "type": "string",
+                                "description": "Name of Bank for check payment.",
+                                "example": "Wells Fargo Bank, NA"
+                            },
+                            "bankAddress": {
+                                "$ref": "#/components/schemas/bankAddressDetails"
+                            }
+                        }
+                    },
+                    "emailRemittance": {
+                        "type": "string",
+                        "description": "Email address to send remittance advice.",
+                        "example": "Remittance-AMER-NA@equinix.com"
+                    }
+                }
+            },
+            "bankAddressDetails": {
+                "type": "object",
+                "title": "Address details",
+                "properties": {
+                    "addressLine1": {
+                        "type": "string",
+                        "description": "Address line 1",
+                        "example": "Address line 1"
+                    },
+                    "addressLine2": {
+                        "type": "string",
+                        "description": "Address line 2",
+                        "example": "Address line 2"
+                    }
+                }
+            },
+            "invoiceSummaryResponse": {
+                "type": "object",
+                "properties": {
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/invoiceSummaryDetails"
+                        }
+                    },
+                    "pagination": {
+                        "$ref": "#/components/schemas/pagination_summary"
+                    }
+                }
+            },
+            "termsOfUseItems": {
+                "type": "object",
+                "title": "Terms of use",
+                "properties": {
+                    "value": {
+                        "description": "Denotes the value of period",
+                        "type": "integer",
+                        "example": "36"
+                    },
+                    "type": {
+                        "description": "Type of terms of use",
+                        "type": "string",
+                        "enum": [
+                            "INITIAL_TERM",
+                            "RENEWAL_TERM"
+                        ],
+                        "example": "INITIAL_TERM"
+                    },
+                    "period": {
+                        "description": "Denotes the period type",
+                        "type": "string",
+                        "enum": [
+                            "MONTHS"
+                        ],
+                        "example": "MONTHS"
+                    }
+                }
+            },
+            "paginationSearch": {
+                "type": "object",
+                "properties": {
+                    "offset": {
+                        "type": "integer",
+                        "example": 0
+                    },
+                    "limit": {
+                        "type": "integer",
+                        "example": 25
+                    },
+                    "total": {
+                        "type": "integer",
+                        "example": 100
+                    },
+                    "next": {
+                        "type": "string",
+                        "example": "/invoices/search?offset=25&limit=25"
+                    },
+                    "previous": {
+                        "type": "string",
+                        "example": "/invoices/search?offset=0&limit=25"
+                    }
+                },
+                "description": "Pagination"
+            },
+            "pagination": {
+                "type": "object",
+                "properties": {
+                    "offset": {
+                        "type": "integer",
+                        "example": 0
+                    },
+                    "limit": {
+                        "type": "integer",
+                        "example": 25
+                    },
+                    "total": {
+                        "type": "integer",
+                        "example": 100
+                    },
+                    "next": {
+                        "type": "string",
+                        "example": "/invoices/details?offset=25&limit=25"
+                    },
+                    "previous": {
+                        "type": "string",
+                        "example": "/invoices/details?offset=0&limit=25"
+                    }
+                },
+                "description": "Paginations"
+            },
+            "pagination_summary": {
+                "type": "object",
+                "properties": {
+                    "offset": {
+                        "type": "integer",
+                        "example": 0
+                    },
+                    "limit": {
+                        "type": "integer",
+                        "example": 25
+                    },
+                    "total": {
+                        "type": "integer",
+                        "example": 100
+                    },
+                    "next": {
+                        "type": "string",
+                        "example": "/invoices?offset=25&limit=25"
+                    },
+                    "previous": {
+                        "type": "string",
+                        "example": "/invoices?offset=0&limit=25"
+                    }
+                },
+                "description": "Pagination" 
+            }
+        } 
+    }
+}

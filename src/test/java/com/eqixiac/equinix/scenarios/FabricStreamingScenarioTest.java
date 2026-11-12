@@ -39,7 +39,7 @@ class FabricStreamingScenarioTest extends IntegrationTestBase {
         if (fabric != null) fabric.close();
     }
 
-    // ── Stream Lifecycle ────────────────────────────────────────────────
+    // Stream Lifecycle
 
     @Test
     @Order(1)

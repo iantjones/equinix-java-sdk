@@ -23,7 +23,7 @@ import com.eqixiac.equinix.fabric.model.json.creators.CloudRouterOperator;
 
 import java.util.List;
 
-public interface CloudRouter {
+public interface CloudRouter extends DeletableResource {
 
      String getUuid();
 

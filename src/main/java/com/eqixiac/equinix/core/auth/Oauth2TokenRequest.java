@@ -24,7 +24,7 @@ import lombok.Getter;
  * The wire body for the OAuth2 token request ({@code POST /oauth2/v1/token}, spec schema
  * {@code Oauth2TokenRequest}): {@code client_id}, {@code client_secret} and {@code grant_type}.
  *
- * <p>This DTO — not the {@link EquinixCredentials} instance itself — is what the SDK serializes
+ * <p>This DTO - not the {@link EquinixCredentials} instance itself - is what the SDK serializes
  * when authenticating. That decouples the wire contract from whatever class a custom
  * {@link EquinixCredentialsProvider} returns: implementations of {@code EquinixCredentials} only
  * need to supply {@code getAccessKey()}/{@code getSecretKey()}; they carry no Jackson annotations

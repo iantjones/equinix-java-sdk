@@ -23,7 +23,6 @@ import com.eqixiac.equinix.fabric.model.implementation.filter.FilterPropertyList
 import com.eqixiac.equinix.fabric.model.implementation.sort.SortPropertyList;
 import com.eqixiac.equinix.fabric.model.json.CloudEventJson;
 
-import java.util.List;
 
 public interface CloudEventClient<T> extends PageablePost<T> {
 
@@ -31,5 +30,11 @@ public interface CloudEventClient<T> extends PageablePost<T> {
 
     CloudEventJson getByUuid(String uuid);
 
-    List<CloudEvent> getByAssetId(String asset, String assetId);
+    /**
+     * Searches the last operational event per subject ({@code POST /fabric/v4/liveEvents/search}).
+     *
+     * @param filter the {@code /subject} filter
+     * @return the first page
+     */
+    Page<CloudEventJson> searchLiveEvents(FilterPropertyList filter);
 }

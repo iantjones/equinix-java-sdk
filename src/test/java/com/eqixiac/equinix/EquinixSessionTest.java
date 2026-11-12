@@ -48,7 +48,7 @@ class EquinixSessionTest {
         try (Equinix eq = new Equinix(creds())) {
             Object core = eq.fabric().getEquinixClient();
             assertSame(core, eq.networkEdge().getEquinixClient());
-            assertSame(core, eq.customerPortal().getEquinixClient());
+            assertSame(core, eq.operations().getEquinixClient());
             assertSame(core, eq.ibxSmartView().getEquinixClient());
             assertSame(core, eq.internetAccess().getEquinixClient());
             assertSame(core, eq.projects().getEquinixClient());

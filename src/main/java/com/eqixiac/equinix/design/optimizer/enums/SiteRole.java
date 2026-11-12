@@ -13,7 +13,7 @@ import lombok.Getter;
 @Getter
 public enum SiteRole {
 
-    /** Corporate headquarters — the heaviest role (multiplier 1.5). */
+    /** Corporate headquarters - the heaviest role (multiplier 1.5). */
     HEADQUARTERS("Corporate headquarters", 1.5),
 
     /** Major employee concentration (multiplier 1.2). */
@@ -25,7 +25,7 @@ public enum SiteRole {
     /** Manufacturing or production facility (multiplier 1.0). */
     MANUFACTURING("Manufacturing or production facility", 1.0),
 
-    /** Smaller branch or satellite office — the default role, and the lightest (multiplier 0.8). */
+    /** Smaller branch or satellite office - the default role, and the lightest (multiplier 0.8). */
     BRANCH_OFFICE("Smaller branch or satellite office", 0.8),
 
     /** Region with high customer density (multiplier 1.3). */

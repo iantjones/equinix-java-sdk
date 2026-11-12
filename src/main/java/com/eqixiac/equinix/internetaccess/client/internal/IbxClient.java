@@ -24,7 +24,7 @@ import com.eqixiac.equinix.internetaccess.model.json.IbxJson;
 
 /**
  * Internal client for the Equinix Internet Access (EIA) v2 product-availability lookup:
- * {@code GET /internetAccess/v2/ibxs} — the IBXs where EIA is available for a given service
+ * {@code GET /internetAccess/v2/ibxs} - the IBXs where EIA is available for a given service
  * connection type.
  */
 public interface IbxClient extends Pageable<Ibx> {

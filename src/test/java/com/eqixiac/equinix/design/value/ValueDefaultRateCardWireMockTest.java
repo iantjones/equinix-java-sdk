@@ -40,8 +40,8 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Drives the calculators' <em>default</em> rate-card resolution end-to-end: when no
  * {@code rateCard(...)} is supplied, {@code SavingsCalculatorEngine} and {@code TcoEngine}
- * resolve {@code RateCard.standardChain(fabric)} — live {@code EquinixRateCard} pricing
- * layered over the bundled {@code ReferenceRateCard} — so the Equinix interconnect cost
+ * resolve {@code RateCard.standardChain(fabric)} - live {@code EquinixRateCard} pricing
+ * layered over the bundled {@code ReferenceRateCard} - so the Equinix interconnect cost
  * must come off the WireMock-stubbed {@code /fabric/v4/prices/search} catalogue while the
  * cloud-egress rates come from the reference card.
  *
@@ -68,7 +68,7 @@ class ValueDefaultRateCardWireMockTest extends WireMockTestBase {
     @BeforeEach
     void resetBeforeEach() {
         resetStubs();
-        // The live leg of the default chain: EVPL_VC_SV_DC_100 — 100 Mbps, MRC 250.00 / NRC 0.00.
+        // The live leg of the default chain: EVPL_VC_SV_DC_100 - 100 Mbps, MRC 250.00 / NRC 0.00.
         stubPaginatedPost(wireMock, "/fabric/v4/prices/search", "/json/fabric/paginated_prices.json");
     }
 
@@ -95,7 +95,9 @@ class ValueDefaultRateCardWireMockTest extends WireMockTestBase {
         assertEquals(0, new BigDecimal("900").compareTo(s.getInternetEgressMonthlyCost()), "0.09 × 10,000");
         assertEquals(0, new BigDecimal("200").compareTo(s.getPrivateEgressMonthlyCost()), "0.02 × 10,000");
         assertEquals(0, new BigDecimal("700").compareTo(s.getMonthlyEgressSavings()));
-        assertEquals(0, new BigDecimal("450").compareTo(s.getNetMonthlySavings()), "700 − 250");
+        // A Fabric connection is an AWS hosted connection: 100 Mbps at 0.06 USD/h x 730 h = 43.80 (2026-11 bundle).
+        assertEquals(0, new BigDecimal("406.20").compareTo(s.getNetMonthlySavings()), "700 - 250 - 43.80");
+        assertEquals(0, new BigDecimal("43.80").compareTo(s.getCloudProviderPortMonthlyCost()));
 
         // The wire: the default chain really fetched the live catalogue, type-scoped.
         wireMock.verify(postRequestedFor(urlPathEqualTo("/fabric/v4/prices/search"))

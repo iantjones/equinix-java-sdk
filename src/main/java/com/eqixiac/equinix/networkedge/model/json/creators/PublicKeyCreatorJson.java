@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  *
  * @author ianjones
  */
+@lombok.Getter
 public class PublicKeyCreatorJson {
 
     @JsonProperty("keyName")

@@ -22,7 +22,7 @@ import com.eqixiac.equinix.internetaccess.model.Ibx;
 
 /**
  * Client interface for the Equinix Internet Access (EIA) v2 product-availability lookup
- * ({@code GET /internetAccess/v2/ibxs}) — the IBX data centers where Equinix Internet Access is
+ * ({@code GET /internetAccess/v2/ibxs}) - the IBX data centers where Equinix Internet Access is
  * available for a given service connection type.
  */
 public interface InternetAccessIbxs {
@@ -30,8 +30,9 @@ public interface InternetAccessIbxs {
     /**
      * Returns the IBXs where Equinix Internet Access is available for the given connection type.
      *
-     * @param connectionType the service connection type ({@code IA_C} physical or {@code IA_VC} virtual)
+     * @param connectionType the service connection type ({@code IA_C} physical or {@code IA_VC} virtual); required
      * @return a paginated list of matching IBXs
+     * @throws IllegalArgumentException if {@code connectionType} is {@code null}
      */
     PaginatedList<Ibx> availability(ConnectionType connectionType);
 
@@ -45,6 +46,7 @@ public interface InternetAccessIbxs {
      * @param assetType the type of asset the user must have in the IBX (e.g. {@code CABINET}),
      *                  or {@code null} for no asset constraint
      * @return a paginated list of matching IBXs
+     * @throws IllegalArgumentException if {@code connectionType} is {@code null}
      */
     PaginatedList<Ibx> availability(ConnectionType connectionType, String accessPointType, String assetType);
 

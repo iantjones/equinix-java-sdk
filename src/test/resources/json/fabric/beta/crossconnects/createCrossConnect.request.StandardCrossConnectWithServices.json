@@ -1,0 +1,59 @@
+{
+  "type": "XC",
+  "name": "My-CC-service",
+  "aSide": {
+    "demarcationPoint": {
+      "patchPanelId": "CP:Demarc:1259684",
+      "patchPanelPortA": 35,
+      "patchPanelPortB": 32,
+      "connectorType": "SC"
+    }
+  },
+  "zSide": {
+    "demarcationPoint": {
+      "patchPanelId": "CP:Demarc:1259684",
+      "patchPanelPortA": 12,
+      "patchPanelPortB": 24,
+      "connectorType": "SC"
+    }
+  },
+  "schedule": {
+    "code": "STANDARD",
+    "requestedDateTime": "2026-02-27T07:21:39Z"
+  },
+  "services": [
+    {
+      "type": "XC_LINK_LIGHT_VERIFICATION"
+    },
+    {
+      "type": "XC_PATCH_EQUIPMENT",
+      "device": {
+        "cabinetUniqueSpaceId": "SV2:00:000000:0100",
+        "port": 32,
+        "connectorType": "SC"
+      },
+      "description": "device description"
+    }
+  ],
+  "notifications": [
+    {
+      "type": "TECHNICAL",
+      "emails": [
+        "abc@test.com"
+      ],
+      "phone": [
+        {
+          "type": "MOBILE",
+          "number": "+14085551234",
+          "contactPreference": {
+            "timezone": "PST",
+            "availability": "ANYTIME"
+          }
+        }
+      ]
+    }
+  ],
+  "order": {
+    "customerReferenceId": "12345"
+  }
+}

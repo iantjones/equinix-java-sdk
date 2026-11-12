@@ -7,14 +7,16 @@ import com.eqixiac.equinix.core.http.response.PaginatedFilteredList;
 import com.eqixiac.equinix.fabric.model.Metric;
 import com.eqixiac.equinix.fabric.model.ValidateConnectionResult;
 import com.eqixiac.equinix.fabric.model.implementation.filter.Filter;
+import com.eqixiac.equinix.fabric.model.implementation.filter.MetricQuery;
 import com.eqixiac.equinix.fabric.model.implementation.filter.FilterPropertyList;
 import com.eqixiac.equinix.fabric.model.implementation.sort.Sort;
 import com.eqixiac.equinix.fabric.model.implementation.sort.SortPropertyList;
 import org.junit.jupiter.api.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
-import static com.eqixiac.equinix.core.ResponseStubs.stubErrorInline;
+import static com.eqixiac.equinix.core.ResponseStubs.*;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -84,110 +86,73 @@ class FabricMetricsWireMockTest extends WireMockTestBase {
                         equalTo("auth-key-123"))));
     }
 
+    private static final String PORT = "8ac8ecfe-c7cb-4def-9f77-5ce93c19d83d";
+
     @Test
-    @DisplayName("metrics().search() POSTs {filter:{and:[...]}} and deserializes Metric data")
-    void searchMetrics_postsFilterAndDeserializesResponse() {
-        String responseBody = "{"
-                + "\"pagination\":{\"offset\":0,\"limit\":20,\"total\":1},"
-                + "\"data\":[{"
-                + "  \"type\":\"equinix.fabric.connection\","
-                + "  \"name\":\"equinix.fabric.connection.bandwidth_tx.usage\","
-                + "  \"unit\":\"bps\","
-                + "  \"interval\":\"PT1H\","
-                + "  \"resource\":{\"uuid\":\"conn-uuid\",\"type\":\"CONNECTION\",\"name\":\"my-conn\"},"
-                + "  \"summary\":\"tx usage\","
-                + "  \"datapoints\":[{\"startDateTime\":\"2024-01-01T00:00:00Z\",\"endDateTime\":\"2024-01-01T01:00:00Z\",\"value\":12345.6}]"
-                + "}]}";
+    @DisplayName("search(MetricQuery) POSTs subject, names and range as in the spec example and reads the response example")
+    void searchMetrics_specExampleShape() {
+        stubPaginatedPost(wireMock, "/fabric/v4/metrics/search", "/json/fabric/metrics_search_response.json");
 
-        wireMock.stubFor(post(urlEqualTo("/fabric/v4/metrics/search"))
-                .willReturn(okJson(responseBody)));
+        PaginatedFilteredList<Metric> metrics = fabric.metrics().search(MetricQuery.forPort(PORT)
+                .names("equinix.fabric.port.bandwidth_rx.usage", "equinix.fabric.port.bandwidth_tx.usage")
+                .between(LocalDateTime.of(2025, 9, 1, 19, 19, 50), LocalDateTime.of(2025, 9, 3, 19, 19, 50)));
 
-        FilterPropertyList filter = Filter.filter().and()
-                .equals("/name", "equinix.fabric.connection.bandwidth_tx.usage")
-                .equals("/subject", "/connections/conn-uuid");
+        assertEquals(2, metrics.size());
+        assertEquals("equinix.fabric.port.bandwidth_rx.usage", metrics.get(0).getName());
+        assertEquals("bit/s", metrics.get(0).getUnit());
+        wireMock.verify(postRequestedFor(urlEqualTo("/fabric/v4/metrics/search"))
+                .withRequestBody(matchingJsonPath("$.filter.and[0].property", equalTo("/subject")))
+                .withRequestBody(matchingJsonPath("$.filter.and[0].operator", equalTo("=")))
+                .withRequestBody(matchingJsonPath("$.filter.and[0].values[0]", equalTo("/fabric/v4/ports/" + PORT)))
+                .withRequestBody(matchingJsonPath("$.filter.and[1].property", equalTo("/name")))
+                .withRequestBody(matchingJsonPath("$.filter.and[1].operator", equalTo("IN")))
+                .withRequestBody(matchingJsonPath("$.filter.and[1].values[1]", equalTo("equinix.fabric.port.bandwidth_tx.usage")))
+                .withRequestBody(matchingJsonPath("$.filter.and[2].property", equalTo("/dataPoints/endDateTime")))
+                .withRequestBody(matchingJsonPath("$.filter.and[2].operator", equalTo("BETWEEN")))
+                .withRequestBody(matchingJsonPath("$.filter.and[2].values[0]", equalTo("2025-09-01T19:19:50Z"))));
+    }
 
-        PaginatedFilteredList<Metric> metrics = fabric.metrics().search(filter);
+    @Test
+    @DisplayName("forConnection() loads every page of the connection's metrics through /metrics/search")
+    void forConnection_usesSearch() {
+        stubPaginatedPost(wireMock, "/fabric/v4/metrics/search", "/json/fabric/metrics_search_response.json");
 
-        assertNotNull(metrics);
-        assertEquals(1, metrics.size());
-        Metric metric = metrics.get(0);
-        assertEquals("equinix.fabric.connection.bandwidth_tx.usage", metric.getName());
-        assertEquals("bps", metric.getUnit());
-        assertEquals("PT1H", metric.getInterval());
-        assertNotNull(metric.getResource());
-        assertEquals("conn-uuid", metric.getResource().getUuid());
-        assertNotNull(metric.getDatapoints());
-        assertEquals(1, metric.getDatapoints().size());
-        assertEquals(12345.6, metric.getDatapoints().get(0).getValue());
-        assertNotNull(metric.getDatapoints().get(0).getStartDateTime());
+        List<Metric> metrics = fabric.metrics().forConnection("conn-uuid",
+                LocalDateTime.of(2026, 11, 10, 0, 0), LocalDateTime.of(2026, 11, 11, 0, 0),
+                "equinix.fabric.connection.bandwidth_tx.usage");
+
+        assertEquals(2, metrics.size());
+        wireMock.verify(postRequestedFor(urlEqualTo("/fabric/v4/metrics/search"))
+                .withRequestBody(matchingJsonPath("$.filter.and[0].values[0]", equalTo("/fabric/v4/connections/conn-uuid"))));
+        wireMock.verify(0, getRequestedFor(urlPathMatching("/fabric/v4/connections/.*/metrics")));
+    }
+
+    @Test
+    @DisplayName("forMetro() targets /fabric/v4/metros/{code} (live-verified subject, 2026-11-11)")
+    void forMetro_subject() {
+        stubPaginatedPost(wireMock, "/fabric/v4/metrics/search", "/json/fabric/metrics_search_response.json");
+
+        fabric.metrics().forMetro("SV", LocalDateTime.of(2026, 11, 10, 0, 0), LocalDateTime.of(2026, 11, 11, 0, 0),
+                "equinix.fabric.metro.sv_dc.latency");
 
         wireMock.verify(postRequestedFor(urlEqualTo("/fabric/v4/metrics/search"))
-                .withRequestBody(matchingJsonPath("$.filter.and[0].property", equalTo("/name")))
-                .withRequestBody(matchingJsonPath("$.filter.and[1].property", equalTo("/subject"))));
+                .withRequestBody(matchingJsonPath("$.filter.and[0].values[0]", equalTo("/fabric/v4/metros/SV"))));
     }
 
     @Test
-    @DisplayName("metrics().search() with empty filter still POSTs to search")
-    void searchMetrics_emptyFilterStillPostsToSearch() {
-        wireMock.stubFor(post(urlEqualTo("/fabric/v4/metrics/search"))
-                .willReturn(okJson("{\"pagination\":{\"offset\":0,\"limit\":20,\"total\":0},\"data\":[]}")));
-
-        PaginatedFilteredList<Metric> metrics = fabric.metrics().search();
-
-        assertNotNull(metrics);
-        assertEquals(0, metrics.size());
-        wireMock.verify(postRequestedFor(urlEqualTo("/fabric/v4/metrics/search")));
-    }
-
-    @Test
-    @DisplayName("connections().getMetrics() GETs {uuid}/metrics and returns the data list")
-    void connectionGetMetrics_returnsDataList() {
-        String responseBody = "{"
-                + "\"pagination\":{\"offset\":0,\"limit\":20,\"total\":1},"
-                + "\"data\":[{"
-                + "  \"type\":\"equinix.fabric.connection\","
-                + "  \"name\":\"equinix.fabric.connection.bandwidth_rx.usage\","
-                + "  \"unit\":\"bps\","
-                + "  \"datapoints\":[{\"startDateTime\":\"2024-01-01T00:00:00Z\",\"endDateTime\":\"2024-01-01T01:00:00Z\",\"value\":42.0}]"
-                + "}]}";
-
-        wireMock.stubFor(get(urlPathMatching("/fabric/v4/connections/.*/metrics"))
-                .willReturn(okJson(responseBody)));
-
-        List<Metric> metrics = fabric.connections().getMetrics(
-                "conn-uuid", "equinix.fabric.connection.bandwidth_rx.usage", null, null);
-
-        assertNotNull(metrics);
-        assertEquals(1, metrics.size());
-        assertEquals("equinix.fabric.connection.bandwidth_rx.usage", metrics.get(0).getName());
-        assertEquals(42.0, metrics.get(0).getDatapoints().get(0).getValue());
-
-        wireMock.verify(getRequestedFor(urlPathMatching("/fabric/v4/connections/conn-uuid/metrics"))
-                .withQueryParam("name", equalTo("equinix.fabric.connection.bandwidth_rx.usage")));
-    }
-
-    @Test
-    @DisplayName("ports().getMetrics() GETs {uuid}/metrics and returns the data list")
-    void portGetMetrics_returnsDataList() {
-        String responseBody = "{"
-                + "\"pagination\":{\"offset\":0,\"limit\":20,\"total\":1},"
-                + "\"data\":[{"
-                + "  \"type\":\"equinix.fabric.port\","
-                + "  \"name\":\"equinix.fabric.port.bandwidth_rx.usage\","
-                + "  \"unit\":\"bps\","
-                + "  \"datapoints\":[{\"startDateTime\":\"2024-01-01T00:00:00Z\",\"endDateTime\":\"2024-01-01T01:00:00Z\",\"value\":7.0}]"
-                + "}]}";
-
-        wireMock.stubFor(get(urlPathMatching("/fabric/v4/ports/.*/metrics"))
-                .willReturn(okJson(responseBody)));
-
-        List<Metric> metrics = fabric.ports().getMetrics("port-uuid", null, null, null);
-
-        assertNotNull(metrics);
-        assertEquals(1, metrics.size());
-        assertEquals("equinix.fabric.port.bandwidth_rx.usage", metrics.get(0).getName());
-
-        wireMock.verify(getRequestedFor(urlPathMatching("/fabric/v4/ports/port-uuid/metrics")));
+    @DisplayName("invalid searches are rejected before any request: no name, no subject, two subjects")
+    void invalidSearchesRejected() {
+        assertThrows(IllegalStateException.class, () -> fabric.metrics().search(MetricQuery.forPort(PORT)));
+        assertThrows(IllegalArgumentException.class, () -> fabric.metrics().search(
+                Filter.filter().and().equals("/name", "equinix.fabric.port.bandwidth_rx.usage"), null));
+        assertThrows(IllegalArgumentException.class, () -> fabric.metrics().search(
+                Filter.filter().and().equals("/subject", "/fabric/v4/ports/" + PORT), null));
+        assertThrows(IllegalArgumentException.class, () -> fabric.metrics().search(
+                Filter.filter().and().in("/subject", List.of((Object) "/fabric/v4/ports/a", "/fabric/v4/ports/b"))
+                        .equals("/name", "equinix.fabric.port.bandwidth_rx.usage"), null));
+        assertThrows(IllegalArgumentException.class, () -> fabric.metrics().forPort(PORT,
+                LocalDateTime.of(2026, 11, 11, 0, 0), LocalDateTime.of(2026, 11, 10, 0, 0), "n"));
+        wireMock.verify(0, postRequestedFor(urlEqualTo("/fabric/v4/metrics/search")));
     }
 
     @Test
@@ -222,103 +187,6 @@ class FabricMetricsWireMockTest extends WireMockTestBase {
                 .withQueryParam("toDateTime", absent()));
     }
 
-    @Test
-    @DisplayName("metrics().getMetricsByAssetId() GETs /{asset}/{assetId}/metrics with name query param")
-    void getMetricsByAssetId_returnsDataList() {
-        String responseBody = "{"
-                + "\"pagination\":{\"offset\":0,\"limit\":20,\"total\":1},"
-                + "\"data\":[{"
-                + "  \"type\":\"equinix.fabric.port\","
-                + "  \"name\":\"equinix.fabric.port.bandwidth_rx.usage\","
-                + "  \"unit\":\"bps\","
-                + "  \"datapoints\":[{\"startDateTime\":\"2024-01-01T00:00:00Z\",\"endDateTime\":\"2024-01-01T01:00:00Z\",\"value\":99.0}]"
-                + "}]}";
-
-        wireMock.stubFor(get(urlPathMatching("/fabric/v4/ports/.*/metrics"))
-                .willReturn(okJson(responseBody)));
-
-        List<Metric> metrics = fabric.metrics().getMetricsByAssetId(
-                "ports", "asset-uuid", "equinix.fabric.port.bandwidth_rx.usage", null, null);
-
-        assertNotNull(metrics);
-        assertEquals(1, metrics.size());
-        assertEquals("equinix.fabric.port.bandwidth_rx.usage", metrics.get(0).getName());
-
-        wireMock.verify(getRequestedFor(urlPathEqualTo("/fabric/v4/ports/asset-uuid/metrics"))
-                .withQueryParam("name", equalTo("equinix.fabric.port.bandwidth_rx.usage")));
-    }
-
-    /**
-     * Coverage for the sort-carrying search variants of the Metrics resource. The Metrics
-     * resource is defined with {@code rootUri: "metrics"} and {@code SearchMetrics}
-     * {@code requestUri: "search"} (no {@code overrideRootUri}), so every variant targets
-     * {@code POST /fabric/v4/metrics/search}. These assert the serialized {@code sort} array
-     * carried in the POST body, complementing the existing {@code search()} / {@code search(filter)}
-     * cases above.
-     */
-    @Nested
-    @DisplayName("metrics().search(filter, sort) — sort-carrying variants")
-    class SearchWithSort {
-
-        private static final String SEARCH_URL = "/fabric/v4/metrics/search";
-
-        private static final String SEARCH_BODY = "{"
-                + "\"pagination\":{\"offset\":0,\"limit\":20,\"total\":1},"
-                + "\"data\":[{"
-                + "  \"type\":\"equinix.fabric.connection\","
-                + "  \"name\":\"equinix.fabric.connection.bandwidth_tx.usage\","
-                + "  \"unit\":\"bps\","
-                + "  \"interval\":\"PT1H\","
-                + "  \"resource\":{\"uuid\":\"conn-uuid\",\"type\":\"CONNECTION\",\"name\":\"my-conn\"},"
-                + "  \"datapoints\":[{\"startDateTime\":\"2024-01-01T00:00:00Z\",\"endDateTime\":\"2024-01-01T01:00:00Z\",\"value\":12345.6}]"
-                + "}]}";
-
-        @Test
-        @DisplayName("search(filter, sort) POSTs both the filter and sort arrays in the body")
-        void searchWithFilterAndSort_postsBothFilterAndSort() {
-            wireMock.stubFor(post(urlPathEqualTo(SEARCH_URL)).willReturn(okJson(SEARCH_BODY)));
-
-            FilterPropertyList filter = Filter.filter().and()
-                    .equals("/name", "equinix.fabric.connection.bandwidth_tx.usage")
-                    .equals("/subject", "/connections/conn-uuid");
-            SortPropertyList sort = Sort.sort().desc("/name");
-
-            PaginatedFilteredList<Metric> metrics = fabric.metrics().search(filter, sort);
-
-            assertNotNull(metrics);
-            assertEquals(1, metrics.size());
-            assertEquals("equinix.fabric.connection.bandwidth_tx.usage", metrics.get(0).getName());
-
-            wireMock.verify(postRequestedFor(urlPathEqualTo(SEARCH_URL))
-                    .withRequestBody(matchingJsonPath("$.filter.and[0].property", equalTo("/name")))
-                    .withRequestBody(matchingJsonPath("$.filter.and[0].values[0]",
-                            equalTo("equinix.fabric.connection.bandwidth_tx.usage")))
-                    .withRequestBody(matchingJsonPath("$.filter.and[1].property", equalTo("/subject")))
-                    .withRequestBody(matchingJsonPath("$.sort[0].property", equalTo("/name")))
-                    .withRequestBody(matchingJsonPath("$.sort[0].direction", equalTo("DESC"))));
-        }
-
-        @Test
-        @DisplayName("search(sort) POSTs the sort array in the body without any filter")
-        void searchWithSortOnly_postsSortArray() {
-            wireMock.stubFor(post(urlPathEqualTo(SEARCH_URL)).willReturn(okJson(SEARCH_BODY)));
-
-            SortPropertyList sort = Sort.sort().asc("/name");
-
-            // No search(sort)-only overload on Metrics; the sort-only shape is expressed as
-            // an empty filter plus the sort, which still serializes the sort array in the body.
-            PaginatedFilteredList<Metric> metrics =
-                    fabric.metrics().search(Filter.filter().empty(), sort);
-
-            assertNotNull(metrics);
-            assertEquals(1, metrics.size());
-
-            wireMock.verify(postRequestedFor(urlPathEqualTo(SEARCH_URL))
-                    .withRequestBody(matchingJsonPath("$.sort[0].property", equalTo("/name")))
-                    .withRequestBody(matchingJsonPath("$.sort[0].direction", equalTo("ASC"))));
-        }
-    }
-
     @Nested
     @DisplayName("Error handling")
     class Errors {
@@ -330,7 +198,7 @@ class FabricMetricsWireMockTest extends WireMockTestBase {
                     401, "[{\"errorCode\":\"ERR-401\",\"errorMessage\":\"Unauthorized\"}]");
 
             assertThrows(EquinixAuthenticationException.class,
-                    () -> fabric.metrics().search(Filter.filter().empty()));
+                    () -> fabric.metrics().search(MetricQuery.forPort(PORT).names("n")));
         }
 
         @Test
@@ -340,7 +208,7 @@ class FabricMetricsWireMockTest extends WireMockTestBase {
                     500, "[{\"errorCode\":\"ERR-500\",\"errorMessage\":\"Internal server error\"}]");
 
             assertThrows(EquinixServerException.class,
-                    () -> fabric.metrics().search(Filter.filter().empty()));
+                    () -> fabric.metrics().search(MetricQuery.forPort(PORT).names("n")));
         }
     }
 }

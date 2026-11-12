@@ -1,0 +1,30 @@
+{
+  "href": "https://api.equinix.com/fabric/v4/crossConnects/46bb1a31-c28f-4197-8b10-06e0e03d0743/actions/7400b2b2-98c7-4c5e-ca95-cbea5798fe08",
+  "uuid": "7400b2b2-98c7-4c5e-ca95-cbea5798fe08",
+  "type": "XC_INFORMATION_UPDATE",
+  "state": "COMPLETED",
+  "data": {
+    "notes": [
+      {
+        "href": "https://api.equinix.com/fabric/v4/crossConnects/46bb1a31-c28f-4197-8b10-06e0e03d0743/notes/e41f485e-3094-42de-8797-0ef19a51df79",
+        "uuid": "e41f485e-3094-42de-8797-0ef19a51df79",
+        "parentNote": {
+          "href": "https://api.equinix.com/fabric/v4/crossConnects/46bb1a31-c28f-4197-8b10-06e0e03d0743/notes/a11f485e-3094-42de-8797-0ef19a51df79",
+          "uuid": "a11f485e-3094-42de-8797-0ef19a51df79"
+        },
+        "comments": "Please proceed"
+      }
+    ],
+    "attachments": [
+      {
+        "href": "https://api.equinix.com/fabric/v4/crossConnects/46bb1a31-c28f-4197-8b10-06e0e03d0743/attachments/b41f485e-3094-42de-8797-0ef19a51df82",
+        "uuid": "b41f485e-3094-42de-8797-0ef19a51df82",
+        "attachmentId": "e41f485e-3094-42de-8797-0ef19a51df79"
+      }
+    ]
+  },
+  "changeLog": {
+    "createdDateTime": "2026-07-24T06:50:46Z",
+    "createdBy": "testuser"
+  }
+}

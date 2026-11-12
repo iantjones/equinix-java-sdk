@@ -1,17 +1,18 @@
 == summary
-Deployment Plan: 1 Cloud Router(s), 2 provider connection(s), 0 backbone link(s), 4 routing protocol(s). Total resources: 7. Estimated monthly cost: $1300. DEFERRED TO PROVISIONING: 2 (validated at provisioning; needs your authorization keys). SKIPPED (could not validate now): 3 (offline or the API could not be reached — see the reasons).
+Deployment Plan: 1 Cloud Router(s), 2 provider connection(s), 0 backbone link(s), 4 routing protocol(s). Total resources: 7. Estimated monthly cost: $1300. DEFERRED TO PROVISIONING: 2 (validated at provisioning; needs your authorization keys). SKIPPED (could not validate now): 3 (offline or the API could not be reached - see the reasons).
 == markdown
 # Deployment Plan
 
+Plan id `1dfbdb888f4561b0`, deployment `FCR`.
 _Generated from optimization computed at 2026-09-21T00:00:00Z_
 
 **Total Resources:** 7
 
-> **DEFERRED TO PROVISIONING** — the live connection endpoint dry-run runs when the plan is applied (needs your authorization keys)
-> - Connection 'FCR-DC-to-aws' (AWS): endpoints validated structurally; the live endpoint dry-run runs at provisioning once Cloud Router 'FCR-DC' exists — you will need to supply AWS Account ID (12-digit), a VLAN tag
-> - Connection 'FCR-DC-to-gcp' (GCP): endpoints validated structurally; the live endpoint dry-run runs at provisioning once Cloud Router 'FCR-DC' exists — you will need to supply GCP pairing key, a VLAN tag
+> **DEFERRED TO PROVISIONING** - the live connection endpoint dry-run runs when the plan is applied (needs your authorization keys)
+> - Connection 'FCR-DC-to-aws' (AWS): endpoints validated structurally; the live endpoint dry-run runs at provisioning once Cloud Router 'FCR-DC' exists - you will need to supply AWS Account ID (12-digit), a VLAN tag
+> - Connection 'FCR-DC-to-gcp' (GCP): endpoints validated structurally; the live endpoint dry-run runs at provisioning once Cloud Router 'FCR-DC' exists - you will need to supply GCP pairing key, a VLAN tag
 
-> **SKIPPED (could not validate now)** — these checks could not be attempted; each reason says why. They do not invalidate the plan.
+> **SKIPPED (could not validate now)** - these checks could not be attempted; each reason says why. They do not invalidate the plan.
 > - Catalog validation skipped: no Service Profile catalog surface available (offline or not connected)
 > - Package-ceiling checks skipped: no Cloud Router API surface available (offline or not connected)
 > - Live router dry-run skipped: no Cloud Router API surface available (offline or not connected)
@@ -66,7 +67,7 @@ Resources will be created in this order:
 3. Backbone Links (0)
 4. Routing Protocols (4)
 
-Call `plan.dryRun()` to validate, or `plan.execute()` to provision all resources.
+Call `plan.dryRun()` to validate, `plan.diff()` to compare with live state, `plan.reconcile(...)` to create only what is missing (resumable from a checkpoint), or `plan.execute(...)` to provision everything in one run.
 
 == totalResourceCount
 7
@@ -88,7 +89,7 @@ true
 == validationErrors
 []
 == deferredValidations
-[Connection 'FCR-DC-to-aws' (AWS): endpoints validated structurally; the live endpoint dry-run runs at provisioning once Cloud Router 'FCR-DC' exists — you will need to supply AWS Account ID (12-digit), a VLAN tag, Connection 'FCR-DC-to-gcp' (GCP): endpoints validated structurally; the live endpoint dry-run runs at provisioning once Cloud Router 'FCR-DC' exists — you will need to supply GCP pairing key, a VLAN tag]
+[Connection 'FCR-DC-to-aws' (AWS): endpoints validated structurally; the live endpoint dry-run runs at provisioning once Cloud Router 'FCR-DC' exists - you will need to supply AWS Account ID (12-digit), a VLAN tag, Connection 'FCR-DC-to-gcp' (GCP): endpoints validated structurally; the live endpoint dry-run runs at provisioning once Cloud Router 'FCR-DC' exists - you will need to supply GCP pairing key, a VLAN tag]
 == skippedValidations
 [Catalog validation skipped: no Service Profile catalog surface available (offline or not connected), Package-ceiling checks skipped: no Cloud Router API surface available (offline or not connected), Live router dry-run skipped: no Cloud Router API surface available (offline or not connected)]
 == requiredInputs

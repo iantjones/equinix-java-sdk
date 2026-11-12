@@ -34,8 +34,8 @@ import java.util.function.Supplier;
 /**
  * An in-memory snapshot of every metro the Metros API returns, keyed by {@link MetroId} so lookups
  * work for metros the {@link MetroCode} enum does not list. This is the authoritative, always-current
- * set of metros (and their IBX data centers) — built by loading {@code fabric.metros().list()} once
- * and caching the result — for code that needs to discover or validate metros rather than hard-code
+ * set of metros (and their IBX data centers) - built by loading {@code fabric.metros().list()} once
+ * and caching the result - for code that needs to discover or validate metros rather than hard-code
  * the enum.
  *
  * <p><b>Cross-source enrichment.</b> Fabric's metros carry the metro-level picture (centroid
@@ -43,7 +43,7 @@ import java.util.function.Supplier;
  * EIA's {@code /internetAccess/v2/ibxs} (per-IBX coordinates, country, metro association). When
  * built with {@code EquinixConfig.enrichMetroRegistry} (or via {@link #load(Metros, Collection)}),
  * the registry merges both so it is the SDK's most complete location directory: {@link #ibx(String)}
- * returns the full EIA {@link Ibx} — ready for {@code design.geo.SpeedOfLightLatency} IBX-to-IBX
+ * returns the full EIA {@link Ibx} - ready for {@code design.geo.SpeedOfLightLatency} IBX-to-IBX
  * math. The registry is deliberately cross-domain in that mode (fabric + internetaccess data, one
  * lookup surface).</p>
  *
@@ -109,7 +109,7 @@ public final class MetroRegistry {
     }
 
     /**
-     * Loads the registry with a re-invocable per-IBX source (typically the EIA ibx catalogue —
+     * Loads the registry with a re-invocable per-IBX source (typically the EIA ibx catalogue - 
      * see the class notes on cross-source enrichment). The source is queried once now and again on
      * every {@link #refresh()}. IBXes are keyed case-insensitively by {@code ibxCode}; duplicates
      * keep the first occurrence.
@@ -123,8 +123,8 @@ public final class MetroRegistry {
     }
 
     /**
-     * Re-reads this registry's sources — the Metros API, and the per-IBX source when it was loaded
-     * with one — and atomically replaces the cached snapshot, so the registry reflects the live
+     * Re-reads this registry's sources - the Metros API, and the per-IBX source when it was loaded
+     * with one - and atomically replaces the cached snapshot, so the registry reflects the live
      * catalogue (new metros, new IBXes, coordinate updates) without rebuilding references to it.
      * Thread-safe: readers see either the old snapshot or the new one, never a mix.
      *
@@ -137,7 +137,7 @@ public final class MetroRegistry {
 
     private static Snapshot buildSnapshot(Metros metros, Collection<? extends Ibx> ibxDetails) {
         Map<String, Metro> map = new LinkedHashMap<>();
-        // loadAll() pages through the full catalogue — list() alone returns only the first page.
+        // loadAll() pages through the full catalogue - list() alone returns only the first page.
         for (Metro metro : metros.list().loadAll()) {
             MetroId id = metro.metroId();
             if (id != null) {
@@ -232,7 +232,7 @@ public final class MetroRegistry {
 
     /**
      * Looks up per-IBX detail (coordinates, country, metro association) merged in at load time.
-     * Populated only when the registry was built with enrichment — see
+     * Populated only when the registry was built with enrichment - see
      * {@code EquinixConfig.enrichMetroRegistry} and the class notes.
      *
      * @param ibxCode the IBX data-center code (e.g. {@code "SV5"}); case-insensitive
@@ -247,7 +247,7 @@ public final class MetroRegistry {
 
     /**
      * Returns the enriched per-IBX records associated with a metro (matched on the record's own
-     * {@code metroCode}). Empty when the registry is not enriched or the metro has no records —
+     * {@code metroCode}). Empty when the registry is not enriched or the metro has no records - 
      * {@link #ibxs(String)} still lists the metro's IBX <em>codes</em> from Fabric either way.
      *
      * @param metroCode the metro code (e.g. {@code "SV"}); case-insensitive

@@ -40,9 +40,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
- * Proves the PeeringDB API-key resolution order — explicit argument, then
+ * Proves the PeeringDB API-key resolution order - explicit argument, then
  * {@code EquinixConfig.peeringDbApiKey}, then the {@code PEERINGDB_API_KEY} environment variable,
- * then anonymous — at the wire level: each test runs {@code analyze()} against a WireMock-stubbed
+ * then anonymous - at the wire level: each test runs {@code analyze()} against a WireMock-stubbed
  * PeeringDB and asserts the presence (and exact value) or absence of the
  * {@code Authorization: Api-Key ...} header on the PeeringDB requests.
  *
@@ -75,7 +75,7 @@ class PeeringDbCredentialResolutionWireMockTest extends WireMockTestBase {
                 .willReturn(okJson(loadFixture("/json/peering/peeringdb_net_16509_response.json"))));
         wireMock.stubFor(get(urlPathEqualTo("/api/netixlan")).withQueryParam("asn", equalTo("16509"))
                 .willReturn(okJson(loadFixture("/json/peering/peeringdb_netixlan_16509_response.json"))));
-        wireMock.stubFor(get(urlPathEqualTo("/api/netfac")).withQueryParam("asn", equalTo("16509"))
+        wireMock.stubFor(get(urlPathEqualTo("/api/netfac")).withQueryParam("net_id", equalTo("1234"))
                 .willReturn(okJson(loadFixture("/json/peering/peeringdb_netfac_16509_response.json"))));
     }
 

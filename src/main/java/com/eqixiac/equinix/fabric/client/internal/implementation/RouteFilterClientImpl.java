@@ -70,8 +70,9 @@ public class RouteFilterClientImpl extends ResourceClientBase<RouteFilter, Route
     }
 
     public RouteFilterJson update(String uuid, List<PatchOperation> operations) {
-        // PATCH /routeFilters/{uuid} with an op/path/value array sent as application/json
-        // (not json-patch+json), so updateOne (default content-type) is correct here.
+        // PATCH /routeFilters/{uuid} with an op/path/value array sent as application/json. The spec
+        // lists both application/json and application/json-patch+json; live (2026-11-12, own
+        // sdk-probe filter) both answered 202 REPROVISIONING.
         return updateOne("UpdateRouteFilter", uuid, operations);
     }
 

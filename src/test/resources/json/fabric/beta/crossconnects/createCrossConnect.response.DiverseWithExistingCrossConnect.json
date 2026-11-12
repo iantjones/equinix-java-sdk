@@ -1,0 +1,119 @@
+{
+  "href": "https://api.equinix.com/fabric/v4/crossConnects/46bb1a31-c28f-4197-8b10-06e0e03d0743",
+  "type": "XC",
+  "name": "My-CC-service-SEC",
+  "uuid": "46bb1a31-c28f-4197-8b10-06e0e03d0743",
+  "state": "PROVISIONING",
+  "serialNumber": "234567890",
+  "redundancy": {
+    "group": "7cf39156-9dec-40f7-a254-9bb401342e83",
+    "priority": "SECONDARY"
+  },
+  "aSide": {
+    "demarcationPoint": {
+      "patchPanelId": "PP:Demarc:1260379",
+      "patchPanelPortA": 14,
+      "patchPanelPortB": 15,
+      "connectorType": "SC",
+      "cageUniqueSpaceId": "SV1:00:000000",
+      "cabinetUniqueSpaceId": "SV1:00:000000:0100"
+    },
+    "location": {
+      "ibxCode": "SV1"
+    }
+  },
+  "zSide": {
+    "demarcationPoint": {
+      "patchPanelId": "PP:Demarc:1260379",
+      "patchPanelPortA": 22,
+      "patchPanelPortB": 23,
+      "connectorType": "SC",
+      "cageUniqueSpaceId": "SV2:00:000000",
+      "cabinetUniqueSpaceId": "SV2:00:000000:0100"
+    },
+    "location": {
+      "ibxCode": "SV1"
+    }
+  },
+  "account": {
+    "accountNumber": 123456
+  },
+  "notifications": [
+    {
+      "type": "ORDERING",
+      "emails": [
+        "abc@test.com"
+      ],
+      "phone": [
+        {
+          "type": "MOBILE",
+          "number": "+14085551234",
+          "contactPreference": {
+            "timezone": "PST",
+            "availability": "ANYTIME"
+          }
+        }
+      ]
+    },
+    {
+      "type": "TECHNICAL",
+      "emails": [
+        "abc@test.com"
+      ],
+      "phone": [
+        {
+          "type": "MOBILE",
+          "number": "+14085551234",
+          "contactPreference": {
+            "timezone": "PST",
+            "availability": "ANYTIME"
+          }
+        }
+      ]
+    },
+    {
+      "type": "NOTIFICATION",
+      "emails": [
+        "abc@test.com"
+      ]
+    }
+  ],
+  "order": {
+    "orderNumber": "1-1234567890",
+    "customerReferenceId": "12345"
+  },
+  "links": [
+    {
+      "href": "https://api.equinix.com/fabric/v4/crossConnects/46bb1a31-c28f-4197-8b10-06e0e03d0743/schedules",
+      "rel": "getCrossConnectSchedulesByUuid",
+      "method": "GET",
+      "contentType": "application/json",
+      "authenticate": true
+    },
+    {
+      "href": "https://api.equinix.com/fabric/v4/crossConnects/46bb1a31-c28f-4197-8b10-06e0e03d0743/services",
+      "rel": "getCrossConnectServicesByUuid",
+      "method": "GET",
+      "contentType": "application/json",
+      "authenticate": true
+    },
+    {
+      "href": "https://api.equinix.com/fabric/v4/crossConnects/46bb1a31-c28f-4197-8b10-06e0e03d0743/notes",
+      "rel": "getCrossConnectNotesByUuid",
+      "method": "GET",
+      "contentType": "application/json",
+      "authenticate": true
+    },
+    {
+      "href": "https://api.equinix.com/fabric/v4/crossConnects/46bb1a31-c28f-4197-8b10-06e0e03d0743/attachments",
+      "rel": "getCrossConnectAttachmentsByUuid",
+      "method": "GET",
+      "contentType": "application/json",
+      "authenticate": true
+    }
+  ],
+  "changeLog": {
+    "createdDateTime": "2026-02-28T07:21:39Z",
+    "createdBy": "testuser"
+  }
+}

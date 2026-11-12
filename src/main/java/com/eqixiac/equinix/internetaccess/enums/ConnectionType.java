@@ -22,8 +22,8 @@ import com.eqixiac.equinix.core.model.APIParam;
  * Service connection type for Equinix Internet Access (EIA).
  *
  * <ul>
- *   <li>{@code IA_C} — physical (dedicated port) connection.</li>
- *   <li>{@code IA_VC} — virtual connection.</li>
+ *   <li>{@code IA_C} - physical (dedicated port) connection.</li>
+ *   <li>{@code IA_VC} - virtual connection.</li>
  * </ul>
  */
 public enum ConnectionType implements APIParam {

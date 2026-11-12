@@ -40,6 +40,10 @@ import static org.junit.jupiter.api.Assertions.assertNull;
  * hold the summary, the Markdown report, every planned field that reaches a Fabric request body,
  * the pricing figures and the three validation buckets. Line endings are normalized on read
  * because the repository checks text out with CRLF on Windows.</p>
+ *
+ * <p>Regenerated once for the plan-lifecycle release: the Markdown report gained the plan-id /
+ * deployment line and the Execution section names {@code diff()} and {@code reconcile(...)}. Every
+ * other line, including every planned field and price, is byte-identical to the 3f8fc655 output.</p>
  */
 @DisplayName("EQUINIX_ONLY output is identical to the pre-change wizard")
 class EquinixOnlyOutputUnchangedTest {

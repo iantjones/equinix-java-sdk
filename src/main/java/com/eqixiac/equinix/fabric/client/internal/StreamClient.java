@@ -17,12 +17,14 @@
 package com.eqixiac.equinix.fabric.client.internal;
 
 import com.eqixiac.equinix.core.http.response.Page;
-import com.eqixiac.equinix.core.http.response.Pageable;
+import com.eqixiac.equinix.core.http.response.PageablePost;
+import com.eqixiac.equinix.fabric.model.implementation.filter.FilterPropertyList;
+import com.eqixiac.equinix.fabric.model.implementation.sort.SortPropertyList;
 import com.eqixiac.equinix.fabric.model.Stream;
 import com.eqixiac.equinix.fabric.model.json.StreamJson;
 import com.eqixiac.equinix.fabric.model.json.creators.StreamCreatorJson;
 
-public interface StreamClient<T> extends Pageable<T> {
+public interface StreamClient<T> extends PageablePost<T> {
 
     Page<StreamJson> list();
 
@@ -35,4 +37,13 @@ public interface StreamClient<T> extends Pageable<T> {
     StreamJson delete(String uuid);
 
     StreamJson refresh(String uuid);
+
+    /**
+     * {@code POST /fabric/v4/streams/search}.
+     *
+     * @param filter the filter, or {@code null}
+     * @param sort the sort, or {@code null}
+     * @return the first page
+     */
+    Page<StreamJson> search(FilterPropertyList filter, SortPropertyList sort);
 }

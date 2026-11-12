@@ -1,0 +1,150 @@
+{
+  "pagination": {
+    "offset": 0,
+    "limit": 10,
+    "total": 2,
+    "next": null,
+    "previous": null
+  },
+  "data": [
+    {
+      "type": "GAUGE",
+      "name": "equinix.fabric.port.bandwidth_rx.usage",
+      "unit": "bit/s",
+      "interval": "PT5M",
+      "resource": {
+        "href": "https://api.equinix.com/fabric/v4/ports/0689734d-25c6-40d1-a9ff-3e4edea07a72",
+        "uuid": "0689734d-25c6-40d1-a9ff-3e4edea07a72",
+        "type": "XF_PORT",
+        "state": "PROVISIONED",
+        "name": "my-port-name"
+      },
+      "summary": {
+        "mean": 102.15384615384616,
+        "max": 107
+      },
+      "datapoints": [
+        {
+          "endDateTime": "2025-05-14T13:57:56.000Z",
+          "value": 107
+        },
+        {
+          "endDateTime": "2025-05-14T14:02:48.000Z",
+          "value": 97
+        },
+        {
+          "endDateTime": "2025-05-14T14:07:58.000Z",
+          "value": 105
+        },
+        {
+          "endDateTime": "2025-05-14T14:12:36.000Z",
+          "value": 102
+        },
+        {
+          "endDateTime": "2025-05-14T14:18:00.000Z",
+          "value": 96
+        },
+        {
+          "endDateTime": "2025-05-14T14:23:03.000Z",
+          "value": 106
+        },
+        {
+          "endDateTime": "2025-05-14T14:27:59.000Z",
+          "value": 104
+        },
+        {
+          "endDateTime": "2025-05-14T14:32:56.000Z",
+          "value": 104
+        },
+        {
+          "endDateTime": "2025-05-14T14:37:51.000Z",
+          "value": 103
+        },
+        {
+          "endDateTime": "2025-05-14T14:42:59.000Z",
+          "value": 100
+        },
+        {
+          "endDateTime": "2025-05-14T14:47:58.000Z",
+          "value": 105
+        },
+        {
+          "endDateTime": "2025-05-14T14:53:08.000Z",
+          "value": 94
+        },
+        {
+          "endDateTime": "2025-05-14T14:57:46.000Z",
+          "value": 105
+        }
+      ]
+    },
+    {
+      "type": "GAUGE",
+      "name": "equinix.fabric.port.bandwidth_tx.usage",
+      "unit": "bit/s",
+      "interval": "PT5M",
+      "resource": {
+        "href": "https://api.equinix.com/fabric/v4/ports/0689734d-25c6-40d1-a9ff-3e4edea07a72",
+        "uuid": "0689734d-25c6-40d1-a9ff-3e4edea07a72"
+      },
+      "summary": {
+        "mean": 255.92307692307693,
+        "max": 295
+      },
+      "datapoints": [
+        {
+          "endDateTime": "2025-05-14T13:57:56.000Z",
+          "value": 259
+        },
+        {
+          "endDateTime": "2025-05-14T14:02:48.000Z",
+          "value": 234
+        },
+        {
+          "endDateTime": "2025-05-14T14:07:58.000Z",
+          "value": 242
+        },
+        {
+          "endDateTime": "2025-05-14T14:12:36.000Z",
+          "value": 280
+        },
+        {
+          "endDateTime": "2025-05-14T14:18:00.000Z",
+          "value": 243
+        },
+        {
+          "endDateTime": "2025-05-14T14:23:03.000Z",
+          "value": 262
+        },
+        {
+          "endDateTime": "2025-05-14T14:27:59.000Z",
+          "value": 247
+        },
+        {
+          "endDateTime": "2025-05-14T14:32:56.000Z",
+          "value": 295
+        },
+        {
+          "endDateTime": "2025-05-14T14:37:51.000Z",
+          "value": 284
+        },
+        {
+          "endDateTime": "2025-05-14T14:42:59.000Z",
+          "value": 227
+        },
+        {
+          "endDateTime": "2025-05-14T14:47:58.000Z",
+          "value": 260
+        },
+        {
+          "endDateTime": "2025-05-14T14:53:08.000Z",
+          "value": 251
+        },
+        {
+          "endDateTime": "2025-05-14T14:57:46.000Z",
+          "value": 243
+        }
+      ]
+    }
+  ]
+}

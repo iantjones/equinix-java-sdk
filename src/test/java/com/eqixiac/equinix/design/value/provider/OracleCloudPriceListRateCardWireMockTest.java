@@ -140,7 +140,7 @@ class OracleCloudPriceListRateCardWireMockTest extends WireMockTestBase {
         assertTrue(card.egress(CloudProviderType.ORACLE_CLOUD, "us-ashburn-1", EgressPath.INTERNET, Term.MONTH_12)
                 .isEmpty(), "the outage yields no rate");
 
-        // The endpoint recovers. The SAME adapter must fetch again — the failure must not have
+        // The endpoint recovers. The SAME adapter must fetch again - the failure must not have
         // been memoized as an empty catalogue for the adapter's lifetime.
         stubPriceList();
 
@@ -204,7 +204,7 @@ class OracleCloudPriceListRateCardWireMockTest extends WireMockTestBase {
                 "a SKU found in the retrieved pages is a real datum despite the truncation");
 
         assertTrue(card.egress(CloudProviderType.ORACLE_CLOUD, "ap-tokyo-1", EgressPath.INTERNET, Term.MONTH_12)
-                .isEmpty(), "the APAC SKU may live on the unreachable page — a miss is not authoritative");
+                .isEmpty(), "the APAC SKU may live on the unreachable page - a miss is not authoritative");
 
         // Page 2 recovers with the APAC SKU. The miss was not cached and the incomplete catalogue
         // was not memoized, so the SAME adapter retries and now finds it.

@@ -44,4 +44,13 @@ public final class StreamAssetJson implements StreamAsset {
 
     @JsonProperty("attachmentStatus")
     private StreamAssetAttachmentStatus attachmentStatus;
+
+    @JsonProperty("streamUuid")
+    private String streamUuid;
+
+    @JsonProperty("projectId")
+    private String projectId;
+
+    @JsonProperty("interfaces")
+    private java.util.List<com.eqixiac.equinix.fabric.model.implementation.StreamDeviceInterface> interfaces;
 }

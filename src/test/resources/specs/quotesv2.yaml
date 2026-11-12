@@ -1,0 +1,909 @@
+{
+    "openapi": "3.0.0",
+    "x-eqx-api-linter-skip-rules": [
+        3,
+        24
+    ],
+    "info": {
+        "version": "2.0",
+        "title": "Quote APIs",
+        "description": "Quote API allow users to retrieve detailed information about their Equinix quote. Users can use this API to get line level product and service pricing. In additional, users can also obtain important information such as quote expiry date and terms of use. Note that only quotes from the past 12 months will be returned.", 
+        "termsOfService": "https://www.equinix.com/about/legal/terms",
+        "contact": {
+            "name": "Equinix API Support",
+            "url": "https://docs.equinix.com/api-support.htm"
+        }
+    },
+    "servers": [
+        {
+            "url": "https://api.equinix.com"
+        },
+        {
+            "url": "https://sandboxapi.equinix.com"
+        }
+    ],
+    "tags": [
+        {
+            "name": "Quote",
+            "description": "Quote"
+        }
+    ],
+    "paths": {
+        "/v2/quotes/{quoteId}": {
+            "get": {
+                "tags": [
+                    "Quote"
+                ],
+                "operationId": "Retrieve a quote",
+                "summary": "Retrieve a quote",
+                "description": "This method retrieves a specific quote by its ID for a user with appropriate viewing permission.",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "quoteId",
+                        "in": "path",
+                        "description": "Identifier of the quote",
+                        "required": true,
+                        "style": "simple",
+                        "explode": false,
+                        "schema": {
+                            "maximum": 100,
+                            "minimum": 1,
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "ibxs",
+                        "in": "query",
+                        "description": "List of IBXs to be filtered",
+                        "required": false,
+                        "style": "form",
+                        "explode": false,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        },
+                        "example": "SG1"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Ok",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/quote_response"
+                                },
+                                "example": {
+                                    "quoteId": "1-100000000009",
+                                    "accountName": "Company Name LLC",
+                                    "accountNumber": "1000001",
+                                    "quoteRequestType": "NEW",
+                                    "contacts": [
+                                        {
+                                            "firstName": "John",
+                                            "lastName": "Doe",
+                                            "details": [
+                                                {
+                                                    "value": "johndoe@acme.com",
+                                                    "type": "EMAIL"
+                                                }
+                                            ],
+                                            "type": "QUOTATION"
+                                        }
+                                    ],
+                                    "status": "APPROVED",
+                                    "createdDateTime": "2020-11-12T19:07:21.000Z",
+                                    "updatedDateTime": "2020-11-12T20:03:15.000Z",
+                                    "expirationDateTime": "2021-02-10T00:00:00.000Z",
+                                    "channel": "OFFLINE",
+                                    "subChannel": "QUOTE",
+                                    "currencyCode": "USD",
+                                    "termsOfUse": [
+                                        {
+                                            "value": "36",
+                                            "type": "INITIAL_TERM",
+                                            "period": "MONTHS"
+                                        },
+                                        {
+                                            "value": "12.0",
+                                            "type": "RENEWAL_TERM",
+                                            "period": "MONTHS"
+                                        },
+                                        {
+                                            "value": "90.0",
+                                            "type": "NON_RENEWAL_NOTICE",
+                                            "period": "DAYS"
+                                        }
+                                    ],
+                                    "totalPricing": [
+                                        {
+                                            "value": "0.0",
+                                            "type": "MONTHLY_CHARGE",
+                                            "valueType": "ABSOLUTE"
+                                        },
+                                        {
+                                            "value": "0.0",
+                                            "type": "ONE_TIME_CHARGE",
+                                            "valueType": "ABSOLUTE"
+                                        },
+                                        {
+                                            "value": "0.0",
+                                            "type": "MONTHLY_DISCOUNT",
+                                            "valueType": "ABSOLUTE"
+                                        },
+                                        {
+                                            "value": "0.0",
+                                            "type": "ONE_TIME_DISCOUNT",
+                                            "valueType": "ABSOLUTE"
+                                        }
+                                    ],
+                                    "versionNumber": "1",
+                                    "details": [
+                                        {
+                                            "lineId": "1-1ABC0DEV",
+                                            "parentLineId": null,
+                                            "rootLineId": "1-1ABC0DEV",
+                                            "ibx": "NY4",
+                                            "productDescription": "Not Applicable",
+                                            "cage": null,
+                                            "productCode": "SPC00006.PROD",
+                                            "productName": "Secure Cabinet With kVA Based Power",
+                                            "assetizable": true,
+                                            "lineItemModified": true,
+                                            "quantity": "1",
+                                            "unitPricing": [
+                                                {
+                                                    "value": "0.0",
+                                                    "type": "NET_MONTHLY_CHARGE",
+                                                    "valueType": "ABSOLUTE"
+                                                }
+                                            ],
+                                            "requestType": "NO_CHANGE",
+                                            "totalPricing": [
+                                                {
+                                                    "value": "0.0",
+                                                    "type": "NET_MONTHLY_CHARGE",
+                                                    "valueType": "ABSOLUTE"
+                                                },
+                                                {
+                                                    "value": "0.0",
+                                                    "type": "MONTHLY_CHARGE",
+                                                    "valueType": "ABSOLUTE"
+                                                },
+                                                {
+                                                    "value": "0.0",
+                                                    "type": "ONE_TIME_CHARGE",
+                                                    "valueType": "ABSOLUTE"
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "lineId": "1-2LCT0QQL",
+                                            "parentLineId": "1-1ABC0DEV",
+                                            "rootLineId": "1-1ABC0DEV",
+                                            "ibx": "NY4",
+                                            "productDescription": "AC Power ( 30 kVA )",
+                                            "cage": null,
+                                            "productCode": "POW00001.ELEM",
+                                            "productName": "AC Power ( 30 kVA )",
+                                            "assetizable": true,
+                                            "lineItemModified": true,
+                                            "quantity": "1",
+                                            "unitPricing": [
+                                                {
+                                                    "value": "0.0",
+                                                    "type": "NET_MONTHLY_CHARGE",
+                                                    "valueType": "ABSOLUTE"
+                                                }
+                                            ],
+                                            "requestType": "NO_CHANGE",
+                                            "totalPricing": [
+                                                {
+                                                    "value": "0.0",
+                                                    "type": "NET_MONTHLY_CHARGE",
+                                                    "valueType": "ABSOLUTE"
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "lineId": "1-2LCT0QQK",
+                                            "parentLineId": "1-1ABC0DEV",
+                                            "rootLineId": "1-1ABC0DEV",
+                                            "ibx": "NY4",
+                                            "productDescription": "Draw Cap Overage Charge",
+                                            "cage": null,
+                                            "productCode": "POW00020.ELEM",
+                                            "productName": "Draw Cap Overage Charge",
+                                            "assetizable": true,
+                                            "lineItemModified": true,
+                                            "quantity": "1",
+                                            "unitPricing": [
+                                                {
+                                                    "value": "0.0",
+                                                    "type": "NET_ONE_TIME_CHARGE",
+                                                    "valueType": "ABSOLUTE"
+                                                }
+                                            ],
+                                            "requestType": "NO_CHANGE",
+                                            "totalPricing": [
+                                                {
+                                                    "value": "0.0",
+                                                    "type": "NET_ONE_TIME_CHARGE",
+                                                    "valueType": "ABSOLUTE"
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "allOf": [
+                                            {
+                                                "$ref": "#/components/schemas/Error"
+                                            }
+                                        ]
+                                    }
+                                },
+                                "example": [
+                                    {
+                                        "errorCode": "EQ-2010005",
+                                        "errorMessage": "QuoteID not found for this account. Please ensure you have the appropriate permissions to view this quote",
+                                        "correlationId": "99740129126918"
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "allOf": [
+                                            {
+                                                "$ref": "#/components/schemas/Error"
+                                            }
+                                        ]
+                                    }
+                                },
+                                "example": [
+                                    {
+                                        "errorCode": "EQ-2010101",
+                                        "errorMessage": "The server has encountered an unexpected error. We apologize for the inconvenience. Please try again later.",
+                                        "correlationId": "99740129126918"
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "securitySchemes": {
+            "BearerAuth": {
+                "type": "http",
+                "scheme": "bearer",
+                "bearerFormat": "JWT"
+            }
+        },
+        "schemas": {
+            "Error": {
+                "title": "Error Info",
+                "type": "array",
+                "items": {
+                  "title": "Error details",
+                  "type": "object",
+                  "properties": {
+                    "errorCode": {
+                      "type": "string",
+                      "example": "EQ-20YYXXX"
+                    },
+                    "errorMessage": {
+                      "type": "string",
+                      "example": "Error message"
+                    },
+                    "details": {
+                      "type": "string",
+                      "example": "Error details"
+                    },
+                    "correlationId": {
+                      "type": "string",
+                      "example": "Correlation ID to trace the error back"
+                    },
+                    "help": {
+                      "type": "string",
+                      "example": "URL to a help page for the corresponding errorCode"
+                    },
+                    "additionalInfo": {
+                      "title": "Error details",
+                      "type": "object",
+                      "properties": {
+                        "property": {
+                          "type": "string",
+                          "example": "id"
+                        },
+                        "reason": {
+                          "type": "string",
+                          "example": "missing id"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+            "quote_response": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/quote_response_base"
+                    },
+                    {
+                        "properties": {
+                            "details": {
+                                "type": "array",
+                                "description": "Quote details of line items",
+                                "items": {
+                                    "$ref": "#/components/schemas/quote_details"
+                                }
+                            }
+                        }
+                    }
+                ]
+            },
+            "quote_response_base": {
+                "type": "object",
+                "properties": {
+                    "quoteId": {
+                        "type": "string",
+                        "description": "Equinix quote ID. ",
+                        "example": "1-1234567891011"
+                    },
+                    "accountName": {
+                        "type": "string",
+                        "description": "Customer account name",
+                        "example": "AAA Corporation Ltd"
+                    },
+                    "accountNumber": {
+                        "type": "string",
+                        "description": "Customer account number",
+                        "example": "123456"
+                    },
+                    "quoteRequestType": {
+                        "type": "string",
+                        "description": "The request type of the quote",
+                        "enum": [
+                            "NEW",
+                            "AMENDMENT",
+                            "PAPERWORK",
+                            "REPLACEMENT_RENEWAL",
+                            "TERMINATION",
+                            "MIGRATION"
+                        ]
+                    },
+                    "contacts": {
+                        "type": "array",
+                        "description": "The related party(ies) that are associated to the quote.",
+                        "items": {
+                            "$ref": "#/components/schemas/Contacts"
+                        }
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "SUBMITTED",
+                            "APPROVED"
+                        ],
+                        "description": "The current status of the quote"
+                    },
+                    "createdDateTime": {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "The quote created date and time in UTC timezone.",
+                        "example": "2020-11-19T06:51:10.000Z"
+                    },
+                    "updatedDateTime": {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "The quote updated date and time in UTC timezone.",
+                        "example": "2020-11-20T06:51:10.000Z"
+                    },
+                    "expirationDateTime": {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "The quote expiration date and time in UTC timezone. Quote will be invalid when `expirationDateTime` has passed.",
+                        "example": "2020-12-31T06:51:10.000Z"
+                    },
+                    "channel": {
+                        "type": "string",
+                        "enum": [
+                            "PORTAL",
+                            "OFFLINE"
+                        ],
+                        "description": "The channel which quote was being requested."
+                    },
+                    "subChannel": {
+                        "type": "string",
+                        "enum": [
+                            "QUOTE"
+                        ],
+                        "description": "The sub-channel which quote was being requested."
+                    },
+                    "customerReferenceId": {
+                        "type": "string",
+                        "description": "Customer Reference Number / External Reference Number",
+                        "example": "048837d6-4cd8-401f-ba41-a4ac015c3f3e"
+                    },
+                    "agreementNumber": {
+                        "type": "string",
+                        "description": "Quote agreement number"
+                    },
+                    "currencyCode": {
+                        "description": "The quote currency code in ISO-4217 format",
+                        "type": "string",
+                        "enum": [
+                            "AED",
+                            "AFN",
+                            "ALL",
+                            "AMD",
+                            "ANG",
+                            "AOA",
+                            "ARS",
+                            "AUD",
+                            "AWG",
+                            "AZN",
+                            "BAM",
+                            "BBD",
+                            "BDT",
+                            "BGN",
+                            "BHD",
+                            "BIF",
+                            "BMD",
+                            "BND",
+                            "BOB",
+                            "BOV",
+                            "BRL",
+                            "BSD",
+                            "BTN",
+                            "BWP",
+                            "BYN",
+                            "BZD",
+                            "CAD",
+                            "CDF",
+                            "CHE",
+                            "CHF",
+                            "CHW",
+                            "CLF",
+                            "CLP",
+                            "CNY",
+                            "COP",
+                            "COU",
+                            "CRC",
+                            "CUC",
+                            "CUP",
+                            "CVE",
+                            "CZK",
+                            "DJF",
+                            "DKK",
+                            "DOP",
+                            "DZD",
+                            "EGP",
+                            "ERN",
+                            "ETB",
+                            "EUR",
+                            "FJD",
+                            "FKP",
+                            "GBP",
+                            "GEL",
+                            "GHS",
+                            "GIP",
+                            "GMD",
+                            "GNF",
+                            "GTQ",
+                            "GYD",
+                            "HKD",
+                            "HNL",
+                            "HRK",
+                            "HTG",
+                            "HUF",
+                            "IDR",
+                            "ILS",
+                            "INR",
+                            "IQD",
+                            "IRR",
+                            "ISK",
+                            "JMD",
+                            "JOD",
+                            "JPY",
+                            "KES",
+                            "KGS",
+                            "KHR",
+                            "KMF",
+                            "KPW",
+                            "KRW",
+                            "KWD",
+                            "KYD",
+                            "KZT",
+                            "LAK",
+                            "LBP",
+                            "LKR",
+                            "LRD",
+                            "LSL",
+                            "LYD",
+                            "MAD",
+                            "MDL",
+                            "MGA",
+                            "MKD",
+                            "MMK",
+                            "MNT",
+                            "MOP",
+                            "MRU",
+                            "MUR",
+                            "MVR",
+                            "MWK",
+                            "MXN",
+                            "MXV",
+                            "MYR",
+                            "MZN",
+                            "NAD",
+                            "NGN",
+                            "NIO",
+                            "NOK",
+                            "NPR",
+                            "NZD",
+                            "OMR",
+                            "PAB",
+                            "PEN",
+                            "PGK",
+                            "PHP",
+                            "PKR",
+                            "PLN",
+                            "PYG",
+                            "QAR",
+                            "RON",
+                            "RSD",
+                            "RUB",
+                            "RWF",
+                            "SAR",
+                            "SBD",
+                            "SCR",
+                            "SDG",
+                            "SEK",
+                            "SGD",
+                            "SHP",
+                            "SLL",
+                            "SOS",
+                            "SRD",
+                            "SSP",
+                            "STN",
+                            "SVC",
+                            "SYP",
+                            "SZL",
+                            "THB",
+                            "TJS",
+                            "TMT",
+                            "TND",
+                            "TOP",
+                            "TRY",
+                            "TTD",
+                            "TWD",
+                            "TZS",
+                            "UAH",
+                            "UGX",
+                            "USD",
+                            "USN",
+                            "UYI",
+                            "UYU",
+                            "UYW",
+                            "UZS",
+                            "VES",
+                            "VND",
+                            "VUV",
+                            "WST",
+                            "XAF",
+                            "XAG",
+                            "XAU",
+                            "XBA",
+                            "XBB",
+                            "XBC",
+                            "XBD",
+                            "XCD",
+                            "XDR",
+                            "XOF",
+                            "XPD",
+                            "XPF",
+                            "XPT",
+                            "XSU",
+                            "XTS",
+                            "XUA",
+                            "XXX",
+                            "YER",
+                            "ZAR",
+                            "ZMW",
+                            "ZWL"
+                        ]
+                    },
+                    "termsOfUse": {
+                        "type": "array",
+                        "description": "Terms and conditions of quote such as initial term, renewal period and non-renewal notice. ",
+                        "items": {
+                            "$ref": "#/components/schemas/termsOfUse_Details"
+                        }
+                    },
+                    "totalPricing": {
+                        "type": "array",
+                        "description": "Pricing details of grand total price",
+                        "items": {
+                            "$ref": "#/components/schemas/pricingDetails"
+                        }
+                    },
+                    "versionNumber": {
+                        "type": "string",
+                        "description": "Version number will be updated when quote is revised"
+                    }
+                }
+            },
+            "quote_details": {
+                "type": "object",
+                "properties": {
+                    "lineId": {
+                        "type": "string",
+                        "description": "Unique identifier associated with line item.",
+                        "example": "1-NEYSNX123"
+                    },
+                    "parentLineId": {
+                        "type": "string",
+                        "description": "Unique identifier associated with `lineId` to denote hierarchy of the product. When this field is null, item is at root level.",
+                        "example": "1-NEYSNX124"
+                    },
+                    "rootLineId": {
+                        "type": "string",
+                        "description": "Unique identifier to specify root item. Useful when product order hierarchy exceeds 2.",
+                        "example": "1-NEYSNX120"
+                    },
+                    "ibx": {
+                        "type": "string",
+                        "description": "Location code of Equinix datacenter",
+                        "example": "AM1"
+                    },
+                    "cage": {
+                        "type": "string",
+                        "description": "Cage ID",
+                        "example": "DC2:01:001030"
+                    },
+                    "productDescription": {
+                        "type": "string",
+                        "description": "Description of the product. ",
+                        "example": "Smart Hands Support Plan"
+                    },
+                    "productType": {
+                        "type": "string",
+                        "description": "Product type",
+                        "enum": [
+                            "CROSS_CONNECT",
+                            "SMART_HANDS",
+                            "WORK_VISIT",
+                            "SECURITY_ACCESS",
+                            "CONFERENCE_ROOM",
+                            "TROUBLE_TICKET",
+                            "SHIPMENTS",
+                            "NETWORK_PORTS",
+                            "DEINSTALL_CROSS_CONNECT",
+                            "CLOUD_EXCHANGE_PORTS",
+                            "OTHER"
+                        ]
+                    },
+                    "productCode": {
+                        "type": "string",
+                        "description": "Equinix Product catalog code.",
+                        "example": "PS00002.PROD"
+                    },
+                    "productName": {
+                        "type": "string",
+                        "description": "Product name",
+                        "example": "Smart Hands Support Plan"
+                    },
+                    "assetizable": {
+                        "type": "boolean",
+                        "description": "When this value is `true`, line item is assetizable."
+                    },
+                    "lineItemModified": {
+                        "type": "boolean",
+                        "description": "When this value is `true`, it means there are changes to POE."
+                    },
+                    "quantity": {
+                        "type": "number",
+                        "description": "The total amount of quantity bought. To be used with `unitOfMeasure` to derive value",
+                        "example": 20
+                    },
+                    "unitOfMeasure": {
+                        "type": "string",
+                        "description": "Metric of `quantity`",
+                        "example": "HRS",
+                        "enum": [
+                            "CAB",
+                            "EACH",
+                            "MBP",
+                            "KVA",
+                            "GB",
+                            "HRS",
+                            "SFT",
+                            "LF",
+                            "KWH"
+                        ]
+                    },
+                    "unitPricing": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/pricingDetails"
+                        }
+                    },
+                    "totalPricing": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/pricingDetails"
+                        }
+                    },
+                    "requestType": {
+                        "type": "string",
+                        "description": "Type of order request. For example, requestType can be of ADD if you are adding new services/product.",
+                        "enum": [
+                            "ADD",
+                            "DELETE",
+                            "UPDATE",
+                            "NO_CHANGE"
+                        ]
+                    },
+                    "additionalInfo": {
+                        "type": "array",
+                        "description": "This section is reserved to display product specific information",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "key": {
+                                    "type": "string"
+                                },
+                                "value": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "termsOfUse_Details": {
+                "type": "object",
+                "properties": {
+                    "value": {
+                        "type": "integer",
+                        "description": "Denotes the value of period"
+                    },
+                    "period": {
+                        "type": "string",
+                        "description": "Denotes the period type",
+                        "enum": [
+                            "MONTHS",
+                            "DAYS"
+                        ]
+                    },
+                    "type": {
+                        "type": "string",
+                        "description": "Type of quote terms",
+                        "enum": [
+                            "INITIAL_TERM",
+                            "RENEWAL_TERM",
+                            "NON_RENEWAL_NOTICE"
+                        ]
+                    }
+                }
+            },
+            "pricingDetails": {
+                "title": "Pricing Details",
+                "description": "Pricing details for a particular service or product. This can be of recurring and non-recurring charges. ",
+                "type": "object",
+                "properties": {
+                    "value": {
+                        "type": "number",
+                        "description": "To be used with `valueType` and `type`. Can be used to denote price or discount for an order or service",
+                        "example": "100"
+                    },
+                    "valueType": {
+                        "type": "string",
+                        "description": "To indicate if `value` is of absolute or percentage value. i.e Use `ABSOLUTE` for $50 or `PERCENTAGE` for 50%",
+                        "enum": [
+                            "ABSOLUTE",
+                            "PERCENTAGE"
+                        ]
+                    },
+                    "type": {
+                        "type": "string",
+                        "description": "To indicate the type of `value` and `valueType.",
+                        "enum": [
+                            "ONE_TIME_CHARGE",
+                            "MONTHLY_CHARGE",
+                            "MONTHLY_DISCOUNT",
+                            "ONE_TIME_DISCOUNT",
+                            "NET_MONTHLY_CHARGE",
+                            "NET_ONE_TIME_CHARGE",
+                            "TAX"
+                        ]
+                    }
+                }
+            },
+            "Contacts": {
+                "type": "object",
+                "properties": {
+                    "registeredUser": {
+                        "type": "string",
+                        "description": "Username of a registered user.",
+                        "example": "john_doe"
+                    },
+                    "firstName": {
+                        "type": "string",
+                        "description": "First name of the contact.",
+                        "example": "John"
+                    },
+                    "lastName": {
+                        "type": "string",
+                        "description": "Last name of the contact.",
+                        "example": "Doe"
+                    },
+                    "type": {
+                        "type": "string",
+                        "description": "contact type",
+                        "enum": [
+                            "QUOTATION",
+                            "SUPPLIER"
+                        ]
+                    },
+                    "details": {
+                        "type": "array",
+                        "description": "Reference of the related party, could be a party reference or a party role reference",
+                        "items": {
+                            "$ref": "#/components/schemas/ContactsDetails"
+                        }
+                    }
+                },
+                "description": "Contact information."
+            },
+            "ContactsDetails": {
+                "type": "object",
+                "properties": {
+                    "type": {
+                        "type": "string",
+                        "description": "Communications Type ",
+                        "example": "PHONE",
+                        "enum": [
+                            "PHONE",
+                            "EMAIL",
+                            "MOBILE"
+                        ]
+                    },
+                    "value": {
+                        "type": "string",
+                        "description": "Unique identifier of a related party (eg, Phone Number, email address)",
+                        "example": "+1-4601231122"
+                    }
+                },
+                "description": "Contact information."
+            }
+        }
+    }
+}

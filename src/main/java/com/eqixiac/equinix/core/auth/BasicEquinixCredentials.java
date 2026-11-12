@@ -45,7 +45,7 @@ public class BasicEquinixCredentials implements EquinixCredentials {
      *
      * @param accessKey the OAuth2 Client ID from the Equinix Developer Portal
      * @param secretKey the OAuth2 Client Secret from the Equinix Developer Portal
-     * @throws IllegalArgumentException if either value is null or blank — failing here with a
+     * @throws IllegalArgumentException if either value is null or blank - failing here with a
      *         clear message rather than as a confusing 400/401 on the first API call
      */
     public BasicEquinixCredentials(String accessKey, String secretKey) {

@@ -39,7 +39,8 @@ import com.eqixiac.equinix.fabric.model.implementation.LinkProtocol;
  *   <li>{@link #getAuthenticationKey()} &mdash; The cloud provider's authentication key (e.g., AWS Account ID,
  *       Azure Service Key, GCP Pairing Key)</li>
  *   <li>{@link #getSellerRegion()} &mdash; The cloud provider's region (e.g., {@code "us-east-1"},
- *       {@code "eastus"}, {@code "us-east1"})</li>
+ *       {@code "us-east1"}); {@code null} for Azure</li>
+ *   <li>{@link #getMetroCode()} &mdash; The Equinix metro the provider is reached in (required live)</li>
  * </ul>
  *
  * <h3>Quick Start</h3>
@@ -48,7 +49,8 @@ import com.eqixiac.equinix.fabric.model.implementation.LinkProtocol;
  * // Wrap an AWS Direct Connect connection object
  * AwsDirectConnectAdapter adapter = new AwsDirectConnectAdapter(
  *     awsConnection,                           // AWS SDK Connection object
- *     "equinix-aws-service-profile-uuid"        // Equinix service profile for AWS
+ *     "equinix-aws-service-profile-uuid",       // Equinix service profile for AWS
+ *     "SV"                                      // Equinix metro of the provider port
  * );
  *
  * // Use it directly in the Equinix connection builder
@@ -123,7 +125,7 @@ public interface CloudProviderConnectionAdapter<T> {
      * <p>The region string follows the provider's naming convention:</p>
      * <ul>
      *   <li><strong>AWS</strong>: {@code "us-east-1"}, {@code "eu-west-1"}, etc.</li>
-     *   <li><strong>Azure</strong>: {@code "eastus"}, {@code "westeurope"}, etc.</li>
+     *   <li><strong>Azure</strong>: not sent; {@link AzureExpressRouteAdapter} returns {@code null}</li>
      *   <li><strong>Google Cloud</strong>: {@code "us-east1"}, {@code "europe-west1"}, etc.</li>
      *   <li><strong>Oracle Cloud</strong>: {@code "us-ashburn-1"}, {@code "uk-london-1"}, etc.</li>
      * </ul>
@@ -216,12 +218,27 @@ public interface CloudProviderConnectionAdapter<T> {
     }
 
     /**
+     * Returns the metro code to send as {@code AccessPoint.location.metroCode} on the provider
+     * side. Fabric rejects a service-provider z-side without it (HTTP 400 EQ-3142501, live-confirmed
+     * 2026-11-11), so the four built-in adapters require it at construction. The default returns
+     * {@code null}; a custom adapter that returns {@code null} must be used with
+     * {@code ConnectionBuilder.zSideCloudProvider(adapter, linkProtocol, metroCode)}, and the other
+     * cloud-provider builder paths reject it.
+     *
+     * @return the metro code (for example {@code "SV"}), or {@code null}
+     */
+    default String getMetroCode() {
+        return null;
+    }
+
+    /**
      * Returns a human-readable description of the cloud provider connection for use in
      * logging and diagnostics.
      *
      * @return a description string such as "AWS Direct Connect to us-east-1"
      */
     default String describe() {
-        return getProviderType().getDisplayName() + " to " + getSellerRegion();
+        return getProviderType().getDisplayName() + " to "
+                + (getSellerRegion() != null ? getSellerRegion() : "metro " + getMetroCode());
     }
 }

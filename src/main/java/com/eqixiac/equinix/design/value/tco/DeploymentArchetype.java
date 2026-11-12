@@ -4,7 +4,7 @@ import lombok.Getter;
 
 /**
  * The deployment approaches the TCO model compares. The value-realization
- * story is the delta between them — chiefly how each treats cloud data egress.
+ * story is the delta between them - chiefly how each treats cloud data egress.
  *
  * <p>The first three apply to every comparison. {@link #NATIVE_MULTICLOUD_INTERCONNECT}
  * applies only to a cloud-to-cloud comparison (a peer cloud declared with
@@ -15,15 +15,15 @@ public enum DeploymentArchetype {
 
     /**
      * Workload in the public cloud, egressing over the public internet. Modelled as the
-     * egress volume at the provider's internet per-GB rate (from the resolved rate card —
+     * egress volume at the provider's internet per-GB rate (from the resolved rate card - 
      * reference figures by default, or provider-API/custom rates when supplied). This is
      * the comparison's savings baseline.
      */
     PUBLIC_CLOUD_INTERNET("Public cloud over internet"),
 
     /**
-     * Self-managed on-premises deployment. Modelled from four coarse inputs — carrier IP
-     * transit (per Mbps), amortized hardware, a cross-connect, and power/space (per kW) —
+     * Self-managed on-premises deployment. Modelled from four coarse inputs - carrier IP
+     * transit (per Mbps), amortized hardware, a cross-connect, and power/space (per kW) - 
      * sourced from the bundled reference midpoints unless individually overridden on the
      * builder ({@code onPrem*} methods). Reference-only: no live pricing exists for this
      * archetype.

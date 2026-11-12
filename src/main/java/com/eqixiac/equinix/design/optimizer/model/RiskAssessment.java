@@ -49,7 +49,7 @@ public class RiskAssessment {
     }
 
     /**
-     * Whether any {@code COMPLIANCE_GAP} finding was raised — i.e. a requested compliance zone
+     * Whether any {@code COMPLIANCE_GAP} finding was raised - i.e. a requested compliance zone
      * that no selected metro covers, or a force-included metro outside every requested zone.
      *
      * @return {@code true} when the deployment leaves a requested compliance zone uncovered

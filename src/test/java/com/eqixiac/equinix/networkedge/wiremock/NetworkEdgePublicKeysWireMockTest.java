@@ -14,8 +14,9 @@ import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * WireMock-based API tests for Network Edge Public Keys. The publicKeys resource exposes only
- * list (GET) and create (POST) — the API has no get-by-id or delete endpoint.
+ * WireMock-based API tests for Network Edge Public Keys: list (GET), create (POST) and delete
+ * (DELETE {uuid}; live-only, not in the published spec). Create and delete shapes are the ones
+ * observed live on 2026-11-11: 201 with an empty body and the id in {@code Location}; 204.
  */
 class NetworkEdgePublicKeysWireMockTest extends WireMockTestBase {
 
@@ -93,36 +94,66 @@ class NetworkEdgePublicKeysWireMockTest extends WireMockTestBase {
     }
 
     @Nested
-    @DisplayName("define() / create()")
+    @DisplayName("define() / create() / delete()")
     class Create {
 
+        private static final String UUID = "0f1bde3d-7b7a-4ade-8619-62f486bdbe5f";
+
         @Test
-        @DisplayName("POSTs the create body and reads the created public key from the response")
+        @DisplayName("reads the new id from Location on the live 201-with-empty-body, then the key from the list")
         void createsPublicKey() {
             String keyValue = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQTestKeyValue test@example.com";
 
-            // POST /ne/v1/publicKeys -> 201 with the created object in the body.
             wireMock.stubFor(post(urlPathMatching("/ne/v1/publicKeys/?"))
-                    .willReturn(okJson("{\"uuid\":\"b2c3d4e5-f6a7-8901-bcde-234567890abc\","
-                            + "\"keyName\":\"test-public-key\","
-                            + "\"keyValue\":\"" + keyValue + "\","
-                            + "\"keyType\":\"RSA\"}")));
+                    .willReturn(aResponse().withStatus(201).withHeader("Location", "/v1/publicKeys/" + UUID)));
+            // Live list shape: a bare array (2026-11-11).
+            wireMock.stubFor(get(urlPathMatching("/ne/v1/publicKeys/?"))
+                    .willReturn(okJson("[{\"uuid\":\"" + UUID + "\",\"keyName\":\"test-public-key\","
+                            + "\"keyValue\":\"" + keyValue + "\",\"keyType\":\"RSA\",\"projectId\":\"p-1\"}]")));
 
             PublicKey publicKey = networkEdge.publicKeys()
                     .define("test-public-key", keyValue)
                     .forAccount("ucm-67890")
                     .create();
 
-            assertNotNull(publicKey);
-            // getUuid()/getKeyName() reflect the response body returned by the POST.
-            assertEquals("b2c3d4e5-f6a7-8901-bcde-234567890abc", publicKey.getUuid());
+            assertEquals(UUID, publicKey.getUuid());
             assertEquals("test-public-key", publicKey.getKeyName());
-
-            // Verify the outgoing create request body.
             wireMock.verify(postRequestedFor(urlPathMatching("/ne/v1/publicKeys/?"))
                     .withRequestBody(matchingJsonPath("$.keyName", equalTo("test-public-key")))
                     .withRequestBody(matchingJsonPath("$.keyValue", equalTo(keyValue)))
                     .withRequestBody(matchingJsonPath("$.accountUcmId", equalTo("ucm-67890"))));
+            wireMock.verify(getRequestedFor(urlPathMatching("/ne/v1/publicKeys/?"))
+                    .withQueryParam("accountUcmId", equalTo("ucm-67890")));
+        }
+
+        @Test
+        @DisplayName("falls back to the request values when the new key is not yet listed")
+        void createsPublicKeyNotYetListed() {
+            wireMock.stubFor(post(urlPathMatching("/ne/v1/publicKeys/?"))
+                    .willReturn(aResponse().withStatus(201).withHeader("Location", "/v1/publicKeys/" + UUID)));
+            wireMock.stubFor(get(urlPathMatching("/ne/v1/publicKeys/?")).willReturn(okJson("[]")));
+
+            PublicKey publicKey = networkEdge.publicKeys().define("k", "ssh-rsa AAAA x").create();
+
+            assertEquals(UUID, publicKey.getUuid());
+            assertEquals("k", publicKey.getKeyName());
+        }
+
+        @Test
+        @DisplayName("delete() sends DELETE /ne/v1/publicKeys/{uuid} and the wrapper stays readable")
+        void deletesPublicKey() {
+            wireMock.stubFor(post(urlPathMatching("/ne/v1/publicKeys/?"))
+                    .willReturn(aResponse().withStatus(201).withHeader("Location", "/v1/publicKeys/" + UUID)));
+            wireMock.stubFor(get(urlPathMatching("/ne/v1/publicKeys/?")).willReturn(okJson("[]")));
+            wireMock.stubFor(delete(urlPathEqualTo("/ne/v1/publicKeys/" + UUID))
+                    .willReturn(aResponse().withStatus(204)));
+
+            PublicKey publicKey = networkEdge.publicKeys().define("k", "ssh-rsa AAAA x").create();
+            assertTrue(publicKey.delete());
+            assertTrue(networkEdge.publicKeys().delete(UUID));
+
+            wireMock.verify(2, deleteRequestedFor(urlPathEqualTo("/ne/v1/publicKeys/" + UUID)));
+            assertEquals(UUID, publicKey.getUuid());
         }
     }
 }

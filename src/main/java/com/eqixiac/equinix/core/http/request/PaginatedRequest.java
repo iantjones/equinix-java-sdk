@@ -37,8 +37,8 @@ public final class PaginatedRequest<T> extends EquinixRequest<T> {
      * Points the request's paging window at the page starting at {@code offset}, sized
      * {@code limit}. The paging pipeline calls this with the <em>server-reported</em> pagination
      * (next page: {@code serverOffset + serverLimit}; rollback after a failed fetch:
-     * {@code serverOffset}). Advancing from the server-reported window — rather than by the
-     * caller-requested page size — is what keeps paging correct when the server clamps the
+     * {@code serverOffset}). Advancing from the server-reported window - rather than by the
+     * caller-requested page size - is what keeps paging correct when the server clamps the
      * requested limit (e.g. Fabric caps {@code limit} at 100): a caller-side
      * {@code offset += requestedPageSize} advance would skip every record between the clamped
      * and the requested page size.

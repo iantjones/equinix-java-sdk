@@ -56,7 +56,7 @@ class NetworkEdgeACLTemplatesWireMockTest extends WireMockTestBase {
             assertEquals("acl-1111-2222-3333-444455556666", template.getUuid());
             assertEquals("test-acl-template", template.getName());
 
-            // Spec ACLTemplateDetailsResponse.virtualDeviceDetails (VirtualDeviceACLDetails[]) —
+            // Spec ACLTemplateDetailsResponse.virtualDeviceDetails (VirtualDeviceACLDetails[]) - 
             // the devices this template is attached to must map.
             assertNotNull(template.getVirtualDeviceDetails());
             assertEquals(1, template.getVirtualDeviceDetails().size());
@@ -135,7 +135,7 @@ class NetworkEdgeACLTemplatesWireMockTest extends WireMockTestBase {
 
             // Regression guard: ACLTemplateCreatorJson's constructor previously dropped accountUcmId
             // (set via .forAccount(...)), so neither the create POST nor its follow-up GET carried
-            // the required accountUcmId query param. Fixed — both now include it.
+            // the required accountUcmId query param. Fixed - both now include it.
             wireMock.verify(postRequestedFor(urlPathMatching("/ne/v1/aclTemplates/?"))
                     .withQueryParam("accountUcmId", equalTo("account-ucm-123")));
             wireMock.verify(getRequestedFor(urlPathEqualTo("/ne/v1/aclTemplates/" + NEW_UUID))
@@ -283,8 +283,8 @@ class NetworkEdgeACLTemplatesWireMockTest extends WireMockTestBase {
         private static final String PATH = "/ne/v1/aclTemplates/" + UUID;
 
         private void stubRefreshScenario() {
-            // First GET returns the original state; the second GET — triggered by
-            // wrapper.refresh() — returns a DIFFERENT payload (renamed, new description).
+            // First GET returns the original state; the second GET - triggered by
+            // wrapper.refresh() - returns a DIFFERENT payload (renamed, new description).
             wireMock.stubFor(get(urlPathEqualTo(PATH))
                     .inScenario("acl-refresh")
                     .whenScenarioStateIs(com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED)

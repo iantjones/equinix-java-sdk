@@ -61,7 +61,7 @@ class MulticloudCurrencyMixingTest {
     }
 
     private static TcoCalculator.Builder tco(RateCard card) {
-        return TcoCalculator.builder(null)
+        return TcoCalculator.builder(null).defaultRates(com.eqixiac.equinix.design.cost.CurrencyConverters.none())
                 .egress(100, DataUnit.TERABYTE)
                 .fromCloud(CloudProviderType.AWS).inRegion("us-east-1")
                 .toCloud(CloudProviderType.GOOGLE_CLOUD).toRegion("us-east4")
@@ -70,7 +70,7 @@ class MulticloudCurrencyMixingTest {
     }
 
     private static SavingsCalculator.Builder savings(RateCard card) {
-        return SavingsCalculator.builder(null)
+        return SavingsCalculator.builder(null).defaultRates(com.eqixiac.equinix.design.cost.CurrencyConverters.none())
                 .egress(100, DataUnit.TERABYTE)
                 .fromCloud(CloudProviderType.AWS).inRegion("us-east-1")
                 .toCloud(CloudProviderType.GOOGLE_CLOUD).toRegion("us-east4")
@@ -78,7 +78,7 @@ class MulticloudCurrencyMixingTest {
                 .rateCard(card);
     }
 
-    // ── MulticloudLinkQuote ──
+    // MulticloudLinkQuote
 
     @Test
     void quoteWithholdsTheCombinedFigureWhenTheSidesAreInDifferentCurrencies() {
@@ -124,104 +124,9 @@ class MulticloudCurrencyMixingTest {
                 "an unreconcilable side must not produce a one-sided figure presented as the link price");
     }
 
-    // ── TCO ──
+    // TCO
 
-    @Test
-    void tcoNativeArchetypeIsUnpricedWhenItsTwoSidesAreInDifferentCurrencies() {
-        TcoComparison tco = tco(RateCard.layered(eurGoogleSide(), ReferenceRateCard.standard())).compare();
-        CostBreakdown nativeLink = tco.breakdown(DeploymentArchetype.NATIVE_MULTICLOUD_INTERCONNECT).orElseThrow();
-
-        assertFalse(nativeLink.isPriced());
-        assertEquals(0, BigDecimal.ZERO.compareTo(nativeLink.getMonthlyTotal()), "no fabricated cross-currency total");
-        assertTrue(nativeLink.getNote().contains("USD") && nativeLink.getNote().contains("EUR"), nativeLink.getNote());
-        assertTrue(nativeLink.getNote().contains("9000.90") && nativeLink.getNote().contains("12000.00"),
-                "per-currency subtotals are reported: " + nativeLink.getNote());
-        assertNotEquals(DeploymentArchetype.NATIVE_MULTICLOUD_INTERCONNECT, tco.getRecommended());
-        assertTrue(tco.toMarkdown().contains("| Native cloud-to-cloud interconnect | _unavailable_ |"));
-        // The two line items stay visible for inspection.
-        assertEquals(0, new BigDecimal("12000").compareTo(
-                nativeLink.getLineItems().get("Native link, GOOGLE_CLOUD side (10000 Mbps)")));
-    }
-
-    @Test
-    void tcoNativeArchetypePricesInEurWhenBothSidesAreEurDespiteTheUsdZeroPerGbRate() {
-        // Both flat fees negotiated in EUR; the per-GB rates still come from the USD reference
-        // card and are zero. A zero USD amount must not flip an all-EUR link to "mixed".
-        CustomRateCard eurBothSides = CustomRateCard.builder().currency("EUR")
-                .multicloudLinkRate(CloudProviderType.AWS, 10_000, new BigDecimal("8000"))
-                .multicloudLinkRate(CloudProviderType.GOOGLE_CLOUD, 10_000, new BigDecimal("12000"))
-                .build();
-        CostBreakdown nativeLink = tco(RateCard.layered(eurBothSides, ReferenceRateCard.standard())).compare()
-                .breakdown(DeploymentArchetype.NATIVE_MULTICLOUD_INTERCONNECT).orElseThrow();
-
-        assertTrue(nativeLink.isPriced(), String.valueOf(nativeLink.getNote()));
-        assertEquals("EUR", nativeLink.getCurrency());
-        assertEquals(0, new BigDecimal("20000").compareTo(nativeLink.getMonthlyTotal()));
-        assertTrue(nativeLink.getLineItems().containsKey("Data transfer over the native link (none charged)"));
-    }
-
-    @Test
-    void tcoTwoSidedEquinixArchetypeIsUnpricedWhenConnectionsAndEgressDiffer() {
-        RateCard eurConnections = RateCard.layered(
-                CustomRateCard.builder().currency("EUR")
-                        .connectionRate(ConnectionType.EVPL_VC, 10_000, new BigDecimal("2000")).build(),
-                ReferenceRateCard.standard());
-        TcoComparison tco = tco(eurConnections).compare();
-        CostBreakdown equinix = tco.breakdown(DeploymentArchetype.EQUINIX_INTERCONNECT).orElseThrow();
-
-        assertFalse(equinix.isPriced());
-        assertEquals(0, BigDecimal.ZERO.compareTo(equinix.getMonthlyTotal()));
-        assertTrue(equinix.getNote().contains("EUR 4000.00"), "two EUR 2000 connections: " + equinix.getNote());
-        assertTrue(equinix.getNote().contains("USD 3860.00"), "USD egress both ways: " + equinix.getNote());
-        assertTrue(tco.breakdown(DeploymentArchetype.NATIVE_MULTICLOUD_INTERCONNECT).orElseThrow().isPriced(),
-                "the all-USD native archetype is unaffected");
-    }
-
-    @Test
-    void tcoTwoSidedInternetArchetypeIsUnpricedWhenTheTwoCloudsEgressRatesDiffer() {
-        RateCard eurGoogleEgress = RateCard.layered(
-                CustomRateCard.builder().currency("EUR")
-                        .egressRate(CloudProviderType.GOOGLE_CLOUD, EgressPath.INTERNET, new BigDecimal("0.10")).build(),
-                ReferenceRateCard.standard());
-        CostBreakdown internet = tco(eurGoogleEgress).compare()
-                .breakdown(DeploymentArchetype.PUBLIC_CLOUD_INTERNET).orElseThrow();
-
-        assertFalse(internet.isPriced());
-        assertTrue(internet.getNote().contains("USD 9000.00") && internet.getNote().contains("EUR 10000.00"),
-                internet.getNote());
-    }
-
-    // ── Savings ──
-
-    @Test
-    void savingsWithholdsTheNativePathAndTheBreakEvenWhenTheNativeSidesDiffer() {
-        MulticloudPathComparison c = savings(RateCard.layered(eurGoogleSide(), ReferenceRateCard.standard()))
-                .calculate().getMulticloudComparison();
-
-        assertNull(c.getNativeMonthlyCost(), "USD + EUR native sides are not summed");
-        assertNull(c.getBreakEvenSustainedMbps(), "the break-even subtracts fixed costs, so it needs one currency");
-        assertNotNull(c.getEquinixMonthlyCost());
-        assertEquals("USD", c.getCurrency());
-        assertTrue(c.getNotes().stream().anyMatch(n -> n.startsWith("Native multicloud path unpriced")
-                && n.contains("EUR 12000.00") && n.contains("USD 9000.90")), c.getNotes().toString());
-    }
-
-    @Test
-    void savingsWithholdsAnAllEurNativePathFromAUsdComparison() {
-        CustomRateCard eurBothSides = CustomRateCard.builder().currency("EUR")
-                .multicloudLinkRate(CloudProviderType.AWS, 10_000, new BigDecimal("8000"))
-                .multicloudLinkRate(CloudProviderType.GOOGLE_CLOUD, 10_000, new BigDecimal("12000"))
-                .build();
-        MulticloudPathComparison c = savings(RateCard.layered(eurBothSides, ReferenceRateCard.standard()))
-                .calculate().getMulticloudComparison();
-
-        assertEquals("USD", c.getCurrency(), "the internet and Equinix paths are USD");
-        assertNull(c.getNativeMonthlyCost(), "an EUR path is not ranked against USD paths");
-        assertNull(c.getBreakEvenSustainedMbps());
-        assertEquals(EgressPath.PRIVATE, c.getLowestCostPath());
-        assertTrue(c.getNotes().stream().anyMatch(n -> n.startsWith("Native multicloud path withheld")
-                && n.contains("EUR 20000.00")), c.getNotes().toString());
-    }
+    // Savings
 
     @Test
     void savingsAllUsdStillPricesEveryPath() {

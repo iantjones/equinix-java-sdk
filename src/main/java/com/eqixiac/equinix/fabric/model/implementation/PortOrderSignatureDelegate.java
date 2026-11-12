@@ -26,7 +26,7 @@ import lombok.NoArgsConstructor;
  * Order delegate details for a port order signature (the Fabric v4
  * {@code PortOrderSignatureDelegate} schema).
  *
- * <p>Prefer {@code builder()} over the positional constructor — all three parameters are
+ * <p>Prefer {@code builder()} over the positional constructor - all three parameters are
  * {@code String}s.</p>
  *
  * @author ianjones

@@ -22,11 +22,11 @@ import lombok.Builder;
 import lombok.Value;
 
 /**
- * Represents a mutual IX presence — an Equinix IX where both the customer's ASN and a target
+ * Represents a mutual IX presence - an Equinix IX where both the customer's ASN and a target
  * ASN are connected, and peering could therefore be established (or may already exist).
  *
  * <p>PeeringDB records IX <em>membership</em>, not BGP sessions, so whether the two networks
- * already peer at this IX is not — and cannot be — determined from this data; the finding is
+ * already peer at this IX is not - and cannot be - determined from this data; the finding is
  * mutual presence, and opportunities for pairs that already peer should simply be ignored.
  * Where peering does not yet exist, the finding is immediately actionable: both networks are on
  * the same IX LAN, so establishing peering requires only a BGP session configuration (or, if the

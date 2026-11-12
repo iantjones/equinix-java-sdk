@@ -20,7 +20,9 @@ import com.eqixiac.equinix.core.client.ResourceClientBase;
 import com.eqixiac.equinix.core.enums.RequestType;
 import com.eqixiac.equinix.core.http.ResponseHandler;
 import com.eqixiac.equinix.core.http.request.EquinixRequest;
+import com.eqixiac.equinix.core.http.SerializationHelper;
 import com.eqixiac.equinix.core.http.request.PatchOperation;
+import com.eqixiac.equinix.core.http.response.EquinixResponse;
 import com.eqixiac.equinix.core.http.response.Page;
 import com.eqixiac.equinix.core.model.FilteredSortedPaginatedPost;
 import com.eqixiac.equinix.fabric.client.implementation.FabricConfigImpl;
@@ -79,7 +81,7 @@ public class ServiceProfileClientImpl extends ResourceClientBase<ServiceProfile,
     }
 
     public ServiceProfileJson create(ServiceProfileCreatorJson serviceProfileCreatorJson) {
-        // apiParams names this operation PostServiceProfile (not CreateServiceProfile) — explicit.
+        // apiParams names this operation PostServiceProfile (not CreateServiceProfile) - explicit.
         return postOne("PostServiceProfile", serviceProfileCreatorJson);
     }
 
@@ -87,8 +89,39 @@ public class ServiceProfileClientImpl extends ResourceClientBase<ServiceProfile,
         return patchOne("UpdateServiceProfile", uuid, operations);
     }
 
+    /**
+     * {@code PUT /fabric/v4/serviceProfiles/{uuid}}. The spec marks the {@code If-Match} header
+     * {@code required}; the value is the {@code ETag} the service returns on
+     * {@code GET /serviceProfiles/{uuid}}. This overload reads the current ETag first, so the
+     * replace is conditional on the profile not having changed between the read and the write.
+     */
     public ServiceProfileJson put(String uuid, ServiceProfileCreatorJson serviceProfileCreatorJson) {
-        return updateOne("PutServiceProfile", uuid, serviceProfileCreatorJson);
+        return put(uuid, serviceProfileCreatorJson, currentETag(uuid));
+    }
+
+    /**
+     * {@code PUT /fabric/v4/serviceProfiles/{uuid}} with a caller-supplied {@code If-Match} value
+     * (an ETag from an earlier read). A {@code null} value sends no header.
+     */
+    public ServiceProfileJson put(String uuid, ServiceProfileCreatorJson serviceProfileCreatorJson, String ifMatch) {
+        EquinixRequest<ServiceProfileJson> request = buildRequestWithPathParams("PutServiceProfile",
+                RequestType.SINGLE, Map.of("uuid", uuid), ServiceProfileJson.class);
+        SerializationHelper.serializeJson(request, serviceProfileCreatorJson);
+        if (ifMatch != null) {
+            request.addHeader("If-Match", ifMatch);
+        }
+        return ResponseHandler.handleSingletonResponse(invoke(request), request);
+    }
+
+    /** Reads {@code ETag} from {@code GET /serviceProfiles/{uuid}}; {@code null} if absent. */
+    String currentETag(String uuid) {
+        EquinixRequest<ServiceProfileJson> request = buildRequestWithPathParams("GetServiceProfile",
+                RequestType.SINGLE, Map.of("uuid", uuid), ServiceProfileJson.class);
+        EquinixResponse<ServiceProfileJson> response = invoke(request);
+        String etag = response.getHeaders() != null ? response.getHeaders().get("ETag") : null;
+        // Consumes and closes the body, and raises the mapped exception on an error status.
+        ResponseHandler.handleSingletonResponse(response, request);
+        return etag;
     }
 
     public ServiceProfileJson delete(String uuid) {

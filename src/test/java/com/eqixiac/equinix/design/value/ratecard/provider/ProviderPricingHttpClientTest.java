@@ -48,7 +48,7 @@ class ProviderPricingHttpClientTest extends WireMockTestBase {
         RequestConfig config = new ProviderPricingHttpClient().requestConfig();
 
         assertEquals(ProviderPricingHttpClient.DEFAULT_CONNECT_TIMEOUT_MS, config.getConnectTimeout(),
-                "connect timeout must be finite — an unresponsive endpoint must not hang the caller");
+                "connect timeout must be finite - an unresponsive endpoint must not hang the caller");
         assertEquals(ProviderPricingHttpClient.DEFAULT_SOCKET_TIMEOUT_MS, config.getSocketTimeout(),
                 "socket timeout must be finite");
         assertEquals(ProviderPricingHttpClient.DEFAULT_CONNECTION_REQUEST_TIMEOUT_MS,

@@ -1,0 +1,18 @@
+{
+  "pagination": {
+    "offset": 0,
+    "limit": 20,
+    "total": 1
+  },
+  "data": [
+    {
+      "href": "https://api.equinix.com/fabric/v4/ports/e684aa26-8276-48b7-bb42-a6d9def0a419",
+      "uuid": "d684aa26-8276-48b7-bb42-a6d9def0a418",
+      "streamUuid": "e784aa26-8276-48b7-bb42-a6d9def0a424",
+      "type": "XF_PORT",
+      "metricsEnabled": false,
+      "attachmentStatus": "ATTACHED",
+      "projectId": "dadd3ab6-c0af-430c-8216-43d44f08c1c5"
+    }
+  ]
+}

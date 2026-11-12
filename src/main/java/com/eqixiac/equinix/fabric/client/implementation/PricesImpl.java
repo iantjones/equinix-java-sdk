@@ -35,6 +35,8 @@ public class PricesImpl implements Prices {
     public PaginatedFilteredList<Pricing> list(FilterPropertyList filter) {
         Page<PricingJson> responsePage = serviceClient.list(filter);
         PaginatedFilteredList<Pricing> PricingList = ResponseHandler.mapPaginatedFilteredList(responsePage.getItems(), this.serviceClient, PricingWrapper::new);
-        return new PaginatedFilteredList<>(PricingList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
+        // Single page: the price search accepts no pagination (see PricingClientImpl.list), so the
+        // list is built without a Pagination and hasNextPage()/loadAll() never request more.
+        return new PaginatedFilteredList<>(PricingList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), null);
     }
 }

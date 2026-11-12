@@ -1,0 +1,98 @@
+name: live-readonly
+
+# Nightly run of the live READ-ONLY integration tier (GET / list / search only) against the
+# Equinix APIs. Credentials come from the repository secrets EQUINIX_ACCESS_KEY and
+# EQUINIX_SECRET_KEY, passed as ENVIRONMENT variables only (never -D: surefire can copy system
+# properties into its reports). The run is skipped when the secrets are not configured (forks).
+# Optional: EQUINIX_ACCESS_POLICY_TOKEN enables the IAM project-scoped reads.
+#
+# Verdicts (target/integration-report.json / target/site/integration-report.html):
+#   PASS, SKIPPED (with reason), SERVER_ERROR (endpoint answered 5xx: reported, does not fail the
+#   run) and FAIL (fails the run: assertion, deserialization error, unexpected 4xx).
+
+on:
+  schedule:
+    - cron: '23 3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: live-readonly
+  cancel-in-progress: false
+
+jobs:
+  credentials:
+    name: Check credentials are configured
+    runs-on: ubuntu-latest
+    outputs:
+      present: ${{ steps.check.outputs.present }}
+    steps:
+      - id: check
+        env:
+          ACCESS_KEY: ${{ secrets.EQUINIX_ACCESS_KEY }}
+          SECRET_KEY: ${{ secrets.EQUINIX_SECRET_KEY }}
+        run: |
+          if [ -n "$ACCESS_KEY" ] && [ -n "$SECRET_KEY" ]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::EQUINIX_ACCESS_KEY / EQUINIX_SECRET_KEY not configured; live read-only tier skipped."
+          fi
+
+  live-readonly:
+    name: Live read-only tier
+    needs: credentials
+    if: needs.credentials.outputs.present == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78 # v6.2.0
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: Run the read-only tier
+        env:
+          EQUINIX_ACCESS_KEY: ${{ secrets.EQUINIX_ACCESS_KEY }}
+          EQUINIX_SECRET_KEY: ${{ secrets.EQUINIX_SECRET_KEY }}
+          EQUINIX_ACCESS_POLICY_TOKEN: ${{ secrets.EQUINIX_ACCESS_POLICY_TOKEN }}
+        run: ./mvnw -B -ntp test -Pintegration-readonly
+
+      - name: Summarise verdicts
+        if: always()
+        run: |
+          if [ -f target/integration-report.json ]; then
+            python3 - <<'EOF' >> "$GITHUB_STEP_SUMMARY"
+          import json
+          r = json.load(open("target/integration-report.json"))
+          c = r.get("testCounts", {})
+          print("### Live read-only tier")
+          print("| PASS | SKIPPED | SERVER_ERROR | FAIL |")
+          print("|---|---|---|---|")
+          print("| %s | %s | %s | %s |" % (c.get("PASS", 0), c.get("SKIPPED", 0), c.get("SERVER_ERROR", 0), c.get("FAIL", 0)))
+          for t in r.get("tests", []):
+              if t["outcome"] in ("FAIL", "SERVER_ERROR"):
+                  reason = (t.get("reason") or "").splitlines()[0][:200]
+                  print("- **%s** %s: %s" % (t["outcome"], t["test"], reason))
+          EOF
+          fi
+
+      - name: Upload the integration report
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: live-readonly-report
+          path: |
+            target/integration-report.json
+            target/site/integration-report.html
+            target/surefire-reports/
+          if-no-files-found: ignore
+          retention-days: 30

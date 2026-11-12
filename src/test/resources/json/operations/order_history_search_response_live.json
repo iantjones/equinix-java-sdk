@@ -1,0 +1,34 @@
+{
+  "links": [
+    { "rel": "self", "href": "/v1/retrieve-orders" },
+    { "rel": "next", "href": "/v1/retrieve-orders?page=1" }
+  ],
+  "content": [
+    {
+      "orderNumber": "1-999000111222",
+      "createdAt": "2026-11-11T17:17:53Z",
+      "orderStatus": "SUBMITTED",
+      "orderSource": "Portal",
+      "account": { "accountName": "Example Holdings", "accountNumber": "123456" },
+      "uiMetaData": { "pricingEnforcementFlag": false },
+      "orderingContacts": {
+        "firstName": "Ada", "lastName": "Lovelace", "workPhone": "+1 555 0100",
+        "contactUCId": "UC-1", "username": "ada", "emailAddress": "ada@example.com"
+      },
+      "notificationContacts": [
+        { "phone": "+1 555 0101", "firstName": "Grace", "lastName": "Hopper", "workPhone": "+1 555 0102",
+          "contactUCId": "UC-2", "username": "grace", "emailAddress": "grace@example.com" }
+      ],
+      "technicalContacts": [],
+      "ibx": ["SV1"],
+      "type": ["SMART_HANDS"],
+      "piiHoldFlag": false,
+      "pendingCustomerInputFlag": false,
+      "awaitingCustomerResponse": false,
+      "modifiable": false,
+      "cancellable": true,
+      "links": []
+    }
+  ],
+  "page": { "size": 1, "totalElements": 1, "totalPages": 1, "number": 0 }
+}

@@ -20,7 +20,7 @@ import java.util.Locale;
 
 /**
  * The result of asking the person at the MCP client to approve one action through a form
- * elicitation ({@link ServerContext#confirmWithHuman(String)}).
+ * elicitation ({@link ServerContext#confirmWithHuman(String)}, delivered by a {@link HumanConfirmer}).
  *
  * <p>The MCP client is the only party in a tool call that can attest a person saw a prompt and
  * answered it. A tool argument cannot: the calling model writes every argument. This type records
@@ -39,6 +39,8 @@ import java.util.Locale;
  *       {@link ServerContext#elicitTimeoutMillis()} ms</td><td>no</td></tr>
  *   <tr><td>{@link Status#FAILED}</td><td>the round trip threw, was interrupted, or returned no
  *       result</td><td>no</td></tr>
+ *   <tr><td>{@link Status#CALL_CANCELLED}</td><td>the client cancelled the tool call
+ *       ({@code notifications/cancelled}) while the prompt was open</td><td>no</td></tr>
  *   <tr><td>{@link Status#UNSUPPORTED_BY_CLIENT}</td><td>no client exchange is bound, or the client
  *       did not declare form elicitation at initialize; no prompt was sent</td><td>not asked</td></tr>
  * </table>
@@ -84,6 +86,9 @@ public record HumanConfirmation(Status status, String detail) {
 
         /** The round trip threw, was interrupted, or returned no result. */
         FAILED,
+
+        /** The client cancelled the tool call while the prompt was open; the prompt was abandoned. */
+        CALL_CANCELLED,
 
         /** The client cannot service a form elicitation; nothing was sent. */
         UNSUPPORTED_BY_CLIENT;

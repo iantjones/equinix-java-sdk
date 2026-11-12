@@ -29,6 +29,8 @@ public class PrecisionTimeWrapper extends ResourceImpl<PrecisionTime> implements
 
     @Delegate(excludes = PrecisionTimeMutability.class)
     private PrecisionTimeJson jsonObject;
+
+    private boolean deleted;
     @Getter
     private final Pageable<PrecisionTime> serviceClient;
 
@@ -42,8 +44,17 @@ public class PrecisionTimeWrapper extends ResourceImpl<PrecisionTime> implements
     }
 
     public Boolean delete() {
-        this.jsonObject = ((PrecisionTimeClientImpl)this.serviceClient).delete(this.getUuid());
+        PrecisionTimeJson response = ((PrecisionTimeClientImpl)this.serviceClient).delete(this.getUuid());
+        if (response != null) {
+            this.jsonObject = response;
+        }
+        this.deleted = true;
         return true;
+    }
+
+    @Override
+    public boolean isDeleted() {
+        return this.deleted;
     }
 
     public void refresh() {

@@ -21,11 +21,8 @@ import com.eqixiac.equinix.core.http.response.Page;
 import com.eqixiac.equinix.core.http.response.PaginatedFilteredList;
 import com.eqixiac.equinix.core.http.response.PaginatedList;
 import com.eqixiac.equinix.fabric.client.Ports;
-import com.eqixiac.equinix.fabric.client.internal.PortStatisticClient;
 import com.eqixiac.equinix.fabric.client.internal.PortClient;
-import com.eqixiac.equinix.fabric.model.Metric;
 import com.eqixiac.equinix.fabric.model.Port;
-import com.eqixiac.equinix.fabric.model.PortStatistic;
 import com.eqixiac.equinix.fabric.model.PortVlan;
 import com.eqixiac.equinix.fabric.model.implementation.PhysicalPort;
 import com.eqixiac.equinix.fabric.model.implementation.filter.Filter;
@@ -33,12 +30,9 @@ import com.eqixiac.equinix.fabric.model.implementation.filter.FilterPropertyList
 import com.eqixiac.equinix.fabric.model.implementation.sort.SortPropertyList;
 import com.eqixiac.equinix.fabric.model.json.PhysicalPortsResponseJson;
 import com.eqixiac.equinix.fabric.model.json.PortJson;
-import com.eqixiac.equinix.fabric.model.json.PortStatisticJson;
 import com.eqixiac.equinix.fabric.model.json.creators.PortOperator;
-import com.eqixiac.equinix.fabric.model.wrappers.PortStatisticWrapper;
 import com.eqixiac.equinix.fabric.model.wrappers.PortWrapper;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 
@@ -51,12 +45,10 @@ public class PortsImpl implements Ports {
 
     private final PortClient<Port> serviceClient;
 
-    private final PortStatisticClient<PortStatistic> statisticServiceClient;
-
-    public PaginatedList<Port> list() {
+    public List<Port> list() {
         Page<PortJson> responsePage = serviceClient.list();
-        PaginatedList<Port> portList = ResponseHandler.mapPaginatedList(responsePage.getItems(), this.serviceClient, PortWrapper::new);
-        return new PaginatedList<>(portList, this.serviceClient, responsePage.getAssociatedRequest(), responsePage.getAssociatedResponse(), responsePage.getPagination());
+        return responsePage.getItems() == null ? List.of() : responsePage.getItems().stream()
+                .map(json -> (Port) new PortWrapper(json, this.serviceClient)).toList();
     }
 
     public PaginatedFilteredList<Port> search() {
@@ -84,16 +76,6 @@ public class PortsImpl implements Ports {
 
     public List<PortVlan> getVlans(String portUuid) {
         return serviceClient.getVlans(portUuid);
-    }
-
-    @Deprecated
-    public PortStatistic getStatistics(String uuid, LocalDateTime startDateTime, LocalDateTime endDateTime) {
-        PortStatisticJson portStatisticJson = statisticServiceClient.getStatistics(uuid, startDateTime, endDateTime);
-        return new PortStatisticWrapper(portStatisticJson, this.statisticServiceClient);
-    }
-
-    public List<Metric> getMetrics(String uuid, String name, LocalDateTime fromDateTime, LocalDateTime toDateTime) {
-        return statisticServiceClient.getMetrics(uuid, name, fromDateTime, toDateTime);
     }
 
     public PortOperator.PortBuilder define() {

@@ -28,7 +28,7 @@ import lombok.Getter;
 @Getter
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class VirtualDeviceSummary {
-    
+
     @JsonProperty("uuid")
     private String uuid;
 

@@ -21,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  * Regression tests for request-body serialization failures in
  * {@link EquinixHttpClient#executeWithRetries}. A {@code JsonProcessingException} thrown while
  * serializing the request body extends {@code IOException}, but it is a deterministic client-side
- * bug — not a transport failure: it must be thrown after exactly one attempt (no retries, which
+ * bug - not a transport failure: it must be thrown after exactly one attempt (no retries, which
  * could never succeed) and must not be recorded on the circuit breaker (the service was never
  * contacted, so it says nothing about service health).
  *
@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  */
 class EquinixHttpClientSerializationFailureTest {
 
-    /** Incremented once per serialization attempt — Jackson calls the getter each time it serializes. */
+    /** Incremented once per serialization attempt - Jackson calls the getter each time it serializes. */
     private final AtomicInteger serializationAttempts = new AtomicInteger();
 
     /** A payload that deterministically fails Jackson serialization on every attempt. */
@@ -64,7 +64,7 @@ class EquinixHttpClientSerializationFailureTest {
     }
 
     /**
-     * A PUT (idempotent — eligible for IO-exception retries under the policy above) so that only
+     * A PUT (idempotent - eligible for IO-exception retries under the policy above) so that only
      * the serialization-failure classification, not the method-idempotency gate, prevents retries.
      */
     private EquinixRequest<Object> putRequestWithBody(Object payload) {

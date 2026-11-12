@@ -24,7 +24,7 @@ import com.eqixiac.equinix.fabric.client.RoutingProtocols;
 import com.eqixiac.equinix.fabric.client.ServiceProfiles;
 
 /**
- * Narrow capability view of {@link Fabric} that the value-add design engines depend on —
+ * Narrow capability view of {@link Fabric} that the value-add design engines depend on - 
  * the metro/service-profile/cloud-router/connection/routing-protocol resources the optimizer,
  * deployment wizard, and peering intelligence actually use.
  *
@@ -39,7 +39,7 @@ import com.eqixiac.equinix.fabric.client.ServiceProfiles;
  * {@code PlanValidator} records checks it cannot run as SKIPPED (with the reason) rather than
  * passing or failing them, the optimizer reports an unreadable catalog as an incomplete scan, and
  * peering intelligence marks Fabric availability as "not analyzed". A stub that throws from a
- * method it cannot serve is therefore a legitimate offline gateway — but {@link #metros()} and
+ * method it cannot serve is therefore a legitimate offline gateway - but {@link #metros()} and
  * {@link #serviceProfiles()} feed everything and should be real for any meaningful run.</p>
  *
  * @author ianjones
@@ -47,38 +47,38 @@ import com.eqixiac.equinix.fabric.client.ServiceProfiles;
 public interface FabricGateway {
 
     /**
-     * @return the Metros client — the metro catalog (codes, regions, coordinates, connected-metro
+     * @return the Metros client - the metro catalog (codes, regions, coordinates, connected-metro
      *         latencies) every design engine reads
      */
     Metros metros();
 
     /**
-     * @return the Service Profiles client — provider availability for the optimizer, z-side
+     * @return the Service Profiles client - provider availability for the optimizer, z-side
      *         profile selection for the wizard, and Fabric on-ramp cross-referencing for peering
      *         intelligence
      */
     ServiceProfiles serviceProfiles();
 
     /**
-     * @return the Cloud Routers client — used by the deployment wizard to validate router
+     * @return the Cloud Routers client - used by the deployment wizard to validate router
      *         packages and to create Cloud Routers on {@code execute()}
      */
     CloudRouters cloudRouters();
 
     /**
-     * @return the Connections client — used by the deployment wizard for connection dry-runs and
+     * @return the Connections client - used by the deployment wizard for connection dry-runs and
      *         creation
      */
     Connections connections();
 
     /**
-     * @return the Routing Protocols client — used by the deployment wizard to attach BGP/DIRECT
+     * @return the Routing Protocols client - used by the deployment wizard to attach BGP/DIRECT
      *         protocols to created connections
      */
     RoutingProtocols routingProtocols();
 
     /**
-     * @return the Prices client — live Fabric pricing for {@code EquinixRateCard} and the
+     * @return the Prices client - live Fabric pricing for {@code EquinixRateCard} and the
      *         engines' cost estimation
      */
     Prices prices();

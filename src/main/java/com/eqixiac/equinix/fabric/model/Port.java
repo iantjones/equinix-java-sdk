@@ -91,8 +91,6 @@ public interface Port extends AccessPointable {
 
     PackageRef getPortPackage();
 
-    PortSettings getSettings();
-
     List<PhysicalPort> getPhysicalPorts();
 
     Redundancy getRedundancy();
