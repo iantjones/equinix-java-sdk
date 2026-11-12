@@ -85,6 +85,10 @@ try {
     if ($DeployMavenCentral) {
         if (-not (Get-Command gpg -ErrorAction SilentlyContinue)) { Die "gpg not found (needed for -DeployMavenCentral)" }
         if (-not $GpgKeyId) { Die "-GpgKeyId is required with -DeployMavenCentral" }
+        # Maven runs in batch mode, where the gpg plugin cannot open a passphrase prompt. Sign once here,
+        # before anything is tagged: it proves the key works and leaves the passphrase in gpg-agent.
+        "release preflight" | gpg --clearsign --local-user $GpgKeyId | Out-Null
+        if ($LASTEXITCODE -ne 0) { Die "gpg could not sign with key $GpgKeyId (passphrase prompt cancelled, or no pinentry)" }
     }
     $hasGh = [bool](Get-Command gh -ErrorAction SilentlyContinue)
     if (-not $hasGh -and -not $SkipGitHub) { Write-Host "  [WARN] gh not found; GitHub release skipped" -ForegroundColor Yellow; $SkipGitHub = $true }

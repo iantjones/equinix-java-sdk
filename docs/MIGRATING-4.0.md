@@ -14,6 +14,10 @@ covers the breaks a caller is most likely to meet, organised by what you used.
 </dependency>
 ```
 
+Coming from 2.0.1: 3.0.0 was never published to Maven Central, so the previous version there is
+2.0.1. Read the `[3.0.0]` section of [CHANGELOG.md](../CHANGELOG.md) first
+(core redesign, MCP client replaced by the embedded MCP server), then this page.
+
 ## Contents
 
 - [Authentication and errors](#authentication-and-errors)

@@ -60,6 +60,11 @@ ok "CHANGELOG.md has a [$version] section"
 if $deploy; then
   command -v gpg >/dev/null || die "gpg not found (needed for --deploy)"
   [[ -n "$gpg_key" ]] || die "--gpg-key is required with --deploy"
+  # Maven runs in batch mode, where the gpg plugin cannot open a passphrase prompt. Sign once here,
+  # before anything is tagged: it proves the key works and leaves the passphrase in gpg-agent.
+  echo "release preflight" | gpg --clearsign --local-user "$gpg_key" >/dev/null \
+    || die "gpg could not sign with key $gpg_key (passphrase prompt cancelled, or no pinentry)"
+  ok "gpg can sign with $gpg_key"
 fi
 if ! $skip_github && ! command -v gh >/dev/null; then
   echo "  [WARN] gh not found; GitHub release skipped"; skip_github=true
