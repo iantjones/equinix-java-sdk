@@ -190,6 +190,13 @@
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
             <version>4.5.14</version>
+            <exclusions>
+                <!-- Declared directly below at a fixed version; excluding it here keeps one version on every path. -->
+                <exclusion>
+                    <groupId>commons-codec</groupId>
+                    <artifactId>commons-codec</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <!--
           Override the commons-codec version brought in transitively by httpclient (1.11),

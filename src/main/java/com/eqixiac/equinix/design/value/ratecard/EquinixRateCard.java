@@ -65,6 +65,7 @@ public final class EquinixRateCard implements RateCard {
     private final FabricGateway fabric;
 
     /** Successful query results keyed by the query; a failed query is not cached, so it is retried. */
+    private final java.util.Set<String> warnedKeys = java.util.concurrent.ConcurrentHashMap.newKeySet();
     private final java.util.concurrent.ConcurrentMap<String, List<Pricing>> queryCache =
             new java.util.concurrent.ConcurrentHashMap<>();
 
@@ -309,6 +310,13 @@ public final class EquinixRateCard implements RateCard {
         if (cached != null) {
             return cached;
         }
+        if (fabric == null || fabric.prices() == null) {
+            // No Fabric price client behind this card (an offline or partially wired gateway): the lookup
+            // defers to the next rate card, as it does when the live call fails.
+            liveSourceUnavailable = true;
+            log.debug("No Fabric price client for ({}); the lookup defers to the next rate card", key);
+            return null;
+        }
         try {
             PaginatedFilteredList<Pricing> page = fabric.prices().list(filter);
             // A null page is a genuine empty result, distinct from a failed query below.
@@ -318,8 +326,13 @@ public final class EquinixRateCard implements RateCard {
             return rows;
         } catch (RuntimeException e) {
             liveSourceUnavailable = true;
-            log.warn("Could not fetch Equinix prices ({}) from the live Fabric Pricing API; the lookup defers "
-                    + "to the next rate card and is retried next time: {}", key, e.getMessage());
+            // Warn once per lookup key; a design run repeats the same lookup many times.
+            if (warnedKeys.add(key)) {
+                log.warn("Could not fetch Equinix prices ({}) from the live Fabric Pricing API; the lookup "
+                        + "defers to the next rate card and is retried next time: {}", key, e.getMessage());
+            } else {
+                log.debug("Equinix price lookup ({}) failed again: {}", key, e.getMessage());
+            }
             return null;
         }
     }
