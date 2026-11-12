@@ -6,13 +6,19 @@
 
 A Java 21 client for the Equinix REST APIs: Fabric (v4, including the Beta families under
 `fabric.beta()`), Network Edge, the data center operations APIs (cross connects, Smart Hands,
-shipments, site access, tickets, billing), Internet Access, IBX SmartView, Projects, IAM and STS, plus a typed receiver for Equinix Messaging Gateway notifications. On top of the clients sits a
+shipments, site access, tickets, billing), Internet Access, IBX SmartView, Projects, IAM and STS,
+plus a typed receiver for Equinix Messaging Gateway notifications. On top of the clients sits a
 design layer that reads the live Fabric catalogue and prices to choose metros for a `DesignSpec`,
 simulate failures, plan and execute a deployment, analyse an existing estate and write a Design
 Decision Record. The same jar runs as a local MCP server over stdio that exposes the design layer
 and a few cross-domain reads to an MCP host. This is an independent community project. It is not
 an Equinix product, Equinix does not endorse or support it, and Equinix trademarks belong to
 Equinix, Inc.; the name is used only to identify the APIs the SDK calls.
+
+Documentation: [eqixiac.com](https://eqixiac.com) has the guides, use cases and worked examples;
+the API reference (Javadoc) is at [eqixiac.com/apidocs](https://eqixiac.com/apidocs/). This README
+is the reference summary, and the [CHANGELOG](CHANGELOG.md) and
+[migration guide](docs/MIGRATING-4.0.md) cover what changed in 4.0.0.
 
 ## Contents
 
