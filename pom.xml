@@ -83,7 +83,7 @@
         <plugin.extra-enforcer-rules.version>1.11.0</plugin.extra-enforcer-rules.version>
         <plugin.jacoco.version>0.8.16</plugin.jacoco.version>
         <plugin.gpg.version>3.2.8</plugin.gpg.version>
-        <plugin.central-publishing.version>0.10.0</plugin.central-publishing.version>
+        <plugin.central-publishing.version>0.12.0</plugin.central-publishing.version>
         <plugin.dependency-check.version>12.2.2</plugin.dependency-check.version>
         <plugin.wrapper.version>3.3.4</plugin.wrapper.version>
         <plugin.dependency.version>3.9.0</plugin.dependency.version>
