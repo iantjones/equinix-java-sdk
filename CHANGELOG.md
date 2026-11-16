@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- `EndToEndDesignExample` (test sources, with a `main` method) and `docs/design/end-to-end-example.md`:
+  one design carried through every design engine, the connectivity and access decisions the design
+  layer does not make, the deployment plan and a deploy gate, with output from a live read-only run
+  under `docs/design/examples/end-to-end/`. `EndToEndDesignExampleTest` runs the same flow offline.
+
 ### Security
 - The build manages two transitives of the optional `azure-messaging-servicebus` 7.18.0 to versions
   without published advisories: `org.apache.qpid:proton-j` 0.35.0 (GHSA-p2gc-fm5w-94jj) and Netty

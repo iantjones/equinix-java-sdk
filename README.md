@@ -494,7 +494,8 @@ assumptions, not SLAs.
 
 [docs/design/design-platform.md](docs/design/design-platform.md) is the full reference and
 [docs/design/cloud-to-cloud.md](docs/design/cloud-to-cloud.md) covers native cloud-to-cloud links
-(Beta). A summary:
+(Beta). [docs/design/end-to-end-example.md](docs/design/end-to-end-example.md) runs every engine on
+one design, from the spec to the deploy decision. A summary:
 
 ```yaml
 schemaVersion: "1"
@@ -671,7 +672,7 @@ else is contacted; the MCP server sends no telemetry.
 | `./mvnw -Pcoverage verify` | Both suites, then the JaCoCo gate |
 | `./run-live.sh [tier]` | A live tier against the real APIs with credentials from `.env.local` |
 
-At the time of writing the default suite runs 2,045 tests and the WireMock suite
+At the time of writing the default suite runs 2,050 tests and the WireMock suite
 1,462 tests.
 
 Live tiers, each selected by a Maven profile: `integration-readonly` (GET, list and search only),

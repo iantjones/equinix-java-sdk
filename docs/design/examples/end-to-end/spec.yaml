@@ -1,0 +1,113 @@
+schemaVersion: 1
+name: global-interconnect
+description: "Private access to three clouds from six sites, with peering and internet\
+  \ breakout."
+sites:
+- label: Ashburn data center
+  metro: DC
+  role: DATA_CENTER
+  weight: 3.0
+- label: Chicago headquarters
+  metro: CH
+  role: HEADQUARTERS
+  headcount: 1200
+- label: Dallas operations
+  metro: DA
+  role: EMPLOYEE_HUB
+  headcount: 400
+- label: London office
+  metro: LD
+  role: PRIMARY_MARKET
+  headcount: 600
+- label: Frankfurt plant
+  metro: FR
+  role: MANUFACTURING
+  headcount: 300
+- label: Singapore hub
+  metro: SG
+  role: BRANCH_OFFICE
+  headcount: 250
+workloads:
+- label: order-api
+  type: TRANSACTIONAL
+  bandwidthMbps: 1000
+  latencySensitivity: CRITICAL
+  maxLatencyMs: 250.0
+  clouds:
+  - aws
+- label: analytics
+  type: BIG_DATA_ANALYTICS
+  bandwidthMbps: 2000
+  latencySensitivity: LOW
+  clouds:
+  - aws
+  - azure
+- label: inference
+  type: AI_ML_INFERENCE
+  bandwidthMbps: 500
+  latencySensitivity: HIGH
+  clouds:
+  - gcp
+  pinnedMetro: SG
+- label: plant-erp
+  type: CUSTOM
+  bandwidthMbps: 500
+  clouds:
+  - azure
+  pinnedMetro: FR
+- label: disaster-recovery
+  type: DISASTER_RECOVERY
+  bandwidthMbps: 1000
+  latencySensitivity: LOW
+  clouds:
+  - aws
+  - azure
+clouds:
+- id: aws
+  provider: AWS
+  region: us-east-1
+  required: true
+  monthlyEgressGb: 60000.0
+- id: azure
+  provider: AZURE
+  region: westeurope
+  required: true
+  monthlyEgressGb: 30000.0
+- id: gcp
+  provider: GOOGLE_CLOUD
+  region: asia-southeast1
+  required: true
+  monthlyEgressGb: 15000.0
+peers:
+- asn: 13335
+  label: CDN and DNS provider
+- asn: 20940
+  label: Content delivery provider
+- asn: 8075
+  label: SaaS productivity provider
+constraints:
+  requiredMetros:
+  - DC
+  - FR
+  requiredRegions:
+  - AMER
+  - EMEA
+  - APAC
+  minimumRedundancy: MULTI_REGION
+  minMetros: 3
+  maxMetros: 4
+  minSurvivalPct: 40.0
+objectives:
+  weights:
+    latency: 0.3
+    cost: 0.2
+    provider_coverage: 0.2
+    resilience: 0.15
+    compliance: 0.05
+    carbon: 0.1
+commercial:
+  currency: USD
+  budgetMaxMonthly: 60000
+  term: MONTH_12
+  annualGrowthRate: 0.3
+  horizonMonths: 36

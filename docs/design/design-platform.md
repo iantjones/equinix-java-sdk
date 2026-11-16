@@ -5,6 +5,9 @@ has the summary. All latency on this page is round-trip milliseconds. Prices are
 prices, dated reference figures copied from public pages, or estimates; every cost line states which.
 None of them is a quote. Availability figures are planning assumptions, not SLAs.
 
+[End-to-end design example](end-to-end-example.md) runs every engine on one design, from the spec to
+the deploy decision, with output from a live read-only run.
+
 ## Contents
 
 - [Conventions](#conventions)

@@ -1,0 +1,1582 @@
+{
+  "deploymentName" : "global-interconnect",
+  "namePrefix" : "FCR",
+  "specFingerprint" : "a5f92102787ee30f40ab911fee6c2caf9ba279c5ead65986a92ba8d9b2a9a7da",
+  "sourceComputedAt" : "2026-11-16T17:06:48.479596Z",
+  "cloudRouters" : [ {
+    "key" : "router/TR",
+    "metroId" : "TR",
+    "name" : "FCR-TR",
+    "packageCode" : "STANDARD",
+    "notificationEmails" : [ "noc@example.com" ]
+  }, {
+    "key" : "router/FR",
+    "metroId" : "FR",
+    "name" : "FCR-FR",
+    "packageCode" : "STANDARD",
+    "notificationEmails" : [ "noc@example.com" ]
+  }, {
+    "key" : "router/SG",
+    "metroId" : "SG",
+    "name" : "FCR-SG",
+    "packageCode" : "STANDARD",
+    "notificationEmails" : [ "noc@example.com" ]
+  }, {
+    "key" : "router/DC",
+    "metroId" : "DC",
+    "name" : "FCR-DC",
+    "packageCode" : "STANDARD",
+    "notificationEmails" : [ "noc@example.com" ]
+  } ],
+  "providerConnections" : [ {
+    "key" : "connection/TR/aws",
+    "name" : "FCR-TR-to-aws",
+    "connectionType" : "IP_VC",
+    "purpose" : "PROVIDER",
+    "bandwidthMbps" : 5000,
+    "bandwidthAllocation" : {
+      "totalMbps" : 4000,
+      "perWorkload" : {
+        "order-api" : 1000,
+        "analytics" : 2000,
+        "disaster-recovery" : 1000
+      },
+      "reasoning" : "Sum of dependent workload bandwidths at TR | Rounded up 4000->5000 Mbps to the nearest service-profile tier (+1000 Mbps billable)"
+    },
+    "profileSelection" : {
+      "requestedMbps" : 4000,
+      "selectedProfileUuid" : "de55ca94-df3b-4680-845f-6f7093f76bef",
+      "selectedSellerRegion" : "ca-central-1",
+      "selectedTierMbps" : 5000,
+      "roundedUp" : true,
+      "alternatives" : [ {
+        "serviceProfileUuid" : "de55ca94-df3b-4680-845f-6f7093f76bef",
+        "sellerRegions" : [ "ca-central-1" ],
+        "coveringTierMbps" : 5000,
+        "supportedBandwidths" : [ 1000, 2000, 5000, 10000, 25000 ],
+        "allowCustomBandwidth" : false
+      } ],
+      "reasoning" : "Requested 4000 Mbps has no exact tier on any candidate profile; rounded up to the smallest satisfying tier 5000 Mbps on profile de55ca94-df3b-4680-845f-6f7093f76bef (+1000 Mbps billable)."
+    },
+    "notificationEmails" : [ "noc@example.com" ],
+    "asideMetro" : "TR",
+    "asideRouterName" : "FCR-TR",
+    "zsideCloudType" : "AWS",
+    "zsideServiceProfileUuid" : "de55ca94-df3b-4680-845f-6f7093f76bef",
+    "zsideProviderLabel" : "aws",
+    "zsideSellerRegion" : "ca-central-1",
+    "aSideMetro" : "TR",
+    "aSideRouterName" : "FCR-TR",
+    "zSideServiceProfileUuid" : "de55ca94-df3b-4680-845f-6f7093f76bef",
+    "zSideProviderLabel" : "aws",
+    "zSideSellerRegion" : "ca-central-1",
+    "zSideCloudType" : "AWS"
+  }, {
+    "key" : "connection/TR/azure",
+    "name" : "FCR-TR-to-azure",
+    "connectionType" : "IP_VC",
+    "purpose" : "PROVIDER",
+    "bandwidthMbps" : 3000,
+    "bandwidthAllocation" : {
+      "totalMbps" : 3000,
+      "perWorkload" : {
+        "analytics" : 2000,
+        "disaster-recovery" : 1000
+      },
+      "reasoning" : "Sum of dependent workload bandwidths at TR"
+    },
+    "profileSelection" : {
+      "requestedMbps" : 3000,
+      "selectedProfileUuid" : "a1390b22-bbe0-4e93-ad37-85beef9d254d",
+      "selectedTierMbps" : 3000,
+      "roundedUp" : false,
+      "alternatives" : [ {
+        "serviceProfileUuid" : "a1390b22-bbe0-4e93-ad37-85beef9d254d",
+        "sellerRegions" : [ ],
+        "coveringTierMbps" : 3000,
+        "supportedBandwidths" : [ ],
+        "allowCustomBandwidth" : false
+      } ],
+      "reasoning" : "Requested 3000 Mbps is carried exactly at 3000 Mbps by profile a1390b22-bbe0-4e93-ad37-85beef9d254d."
+    },
+    "notificationEmails" : [ "noc@example.com" ],
+    "asideMetro" : "TR",
+    "asideRouterName" : "FCR-TR",
+    "zsideCloudType" : "AZURE",
+    "zsideServiceProfileUuid" : "a1390b22-bbe0-4e93-ad37-85beef9d254d",
+    "zsideProviderLabel" : "azure",
+    "aSideMetro" : "TR",
+    "aSideRouterName" : "FCR-TR",
+    "zSideServiceProfileUuid" : "a1390b22-bbe0-4e93-ad37-85beef9d254d",
+    "zSideProviderLabel" : "azure",
+    "zSideCloudType" : "AZURE"
+  }, {
+    "key" : "connection/TR/gcp",
+    "name" : "FCR-TR-to-gcp",
+    "connectionType" : "IP_VC",
+    "purpose" : "PROVIDER",
+    "bandwidthMbps" : 1000,
+    "bandwidthAllocation" : {
+      "totalMbps" : 1000,
+      "perWorkload" : {
+        "default" : 1000
+      },
+      "reasoning" : "Sum of dependent workload bandwidths at TR"
+    },
+    "profileSelection" : {
+      "requestedMbps" : 1000,
+      "selectedProfileUuid" : "b97dacca-abe6-4e8c-8be1-fcdd1be1defe",
+      "selectedSellerRegion" : "northamerica-northeast2",
+      "selectedTierMbps" : 1000,
+      "roundedUp" : false,
+      "alternatives" : [ {
+        "serviceProfileUuid" : "b97dacca-abe6-4e8c-8be1-fcdd1be1defe",
+        "sellerRegions" : [ "northamerica-northeast2" ],
+        "coveringTierMbps" : 1000,
+        "supportedBandwidths" : [ 50, 100, 200, 300, 400, 500, 1000, 2000, 5000, 10000, 20000, 50000 ],
+        "allowCustomBandwidth" : false
+      }, {
+        "serviceProfileUuid" : "bd4570e2-d792-4a00-87f5-3bde040cdcd7",
+        "sellerRegions" : [ "northamerica-northeast2" ],
+        "coveringTierMbps" : 1000,
+        "supportedBandwidths" : [ 50, 100, 200, 300, 400, 500, 1000, 2000, 5000, 10000, 20000, 50000 ],
+        "allowCustomBandwidth" : false
+      } ],
+      "reasoning" : "Requested 1000 Mbps is carried exactly at 1000 Mbps by profile b97dacca-abe6-4e8c-8be1-fcdd1be1defe. 2 profiles can carry this bandwidth; the tightest-fitting was chosen (the alternatives are exposed for review)."
+    },
+    "notificationEmails" : [ "noc@example.com" ],
+    "asideMetro" : "TR",
+    "asideRouterName" : "FCR-TR",
+    "zsideCloudType" : "GOOGLE_CLOUD",
+    "zsideServiceProfileUuid" : "b97dacca-abe6-4e8c-8be1-fcdd1be1defe",
+    "zsideProviderLabel" : "gcp",
+    "zsideSellerRegion" : "northamerica-northeast2",
+    "aSideMetro" : "TR",
+    "aSideRouterName" : "FCR-TR",
+    "zSideServiceProfileUuid" : "b97dacca-abe6-4e8c-8be1-fcdd1be1defe",
+    "zSideProviderLabel" : "gcp",
+    "zSideSellerRegion" : "northamerica-northeast2",
+    "zSideCloudType" : "GOOGLE_CLOUD"
+  }, {
+    "key" : "connection/FR/aws",
+    "name" : "FCR-FR-to-aws",
+    "connectionType" : "IP_VC",
+    "purpose" : "PROVIDER",
+    "bandwidthMbps" : 1000,
+    "bandwidthAllocation" : {
+      "totalMbps" : 1000,
+      "perWorkload" : {
+        "default" : 1000
+      },
+      "reasoning" : "Sum of dependent workload bandwidths at FR"
+    },
+    "profileSelection" : {
+      "requestedMbps" : 1000,
+      "selectedProfileUuid" : "de55ca94-df3b-4680-845f-6f7093f76bef",
+      "selectedSellerRegion" : "eu-central-1",
+      "selectedTierMbps" : 1000,
+      "roundedUp" : false,
+      "alternatives" : [ {
+        "serviceProfileUuid" : "de55ca94-df3b-4680-845f-6f7093f76bef",
+        "sellerRegions" : [ "eu-central-1" ],
+        "coveringTierMbps" : 1000,
+        "supportedBandwidths" : [ 1000, 2000, 5000, 10000, 25000 ],
+        "allowCustomBandwidth" : false
+      }, {
+        "serviceProfileUuid" : "ed48616a-c182-40b4-a462-a78ba812e961",
+        "sellerRegions" : [ "eu-central-1" ],
+        "coveringTierMbps" : 1000,
+        "supportedBandwidths" : [ 1000, 2000, 5000, 10000, 25000 ],
+        "allowCustomBandwidth" : false
+      } ],
+      "reasoning" : "Requested 1000 Mbps is carried exactly at 1000 Mbps by profile de55ca94-df3b-4680-845f-6f7093f76bef. 2 profiles can carry this bandwidth; the tightest-fitting was chosen (the alternatives are exposed for review)."
+    },
+    "notificationEmails" : [ "noc@example.com" ],
+    "asideMetro" : "FR",
+    "asideRouterName" : "FCR-FR",
+    "zsideCloudType" : "AWS",
+    "zsideServiceProfileUuid" : "de55ca94-df3b-4680-845f-6f7093f76bef",
+    "zsideProviderLabel" : "aws",
+    "zsideSellerRegion" : "eu-central-1",
+    "aSideMetro" : "FR",
+    "aSideRouterName" : "FCR-FR",
+    "zSideServiceProfileUuid" : "de55ca94-df3b-4680-845f-6f7093f76bef",
+    "zSideProviderLabel" : "aws",
+    "zSideSellerRegion" : "eu-central-1",
+    "zSideCloudType" : "AWS"
+  }, {
+    "key" : "connection/FR/azure",
+    "name" : "FCR-FR-to-azure",
+    "connectionType" : "IP_VC",
+    "purpose" : "PROVIDER",
+    "bandwidthMbps" : 500,
+    "bandwidthAllocation" : {
+      "totalMbps" : 500,
+      "perWorkload" : {
+        "plant-erp" : 500
+      },
+      "reasoning" : "Sum of dependent workload bandwidths at FR"
+    },
+    "profileSelection" : {
+      "requestedMbps" : 500,
+      "selectedProfileUuid" : "a1390b22-bbe0-4e93-ad37-85beef9d254d",
+      "selectedTierMbps" : 500,
+      "roundedUp" : false,
+      "alternatives" : [ {
+        "serviceProfileUuid" : "a1390b22-bbe0-4e93-ad37-85beef9d254d",
+        "sellerRegions" : [ ],
+        "coveringTierMbps" : 500,
+        "supportedBandwidths" : [ ],
+        "allowCustomBandwidth" : false
+      } ],
+      "reasoning" : "Requested 500 Mbps is carried exactly at 500 Mbps by profile a1390b22-bbe0-4e93-ad37-85beef9d254d."
+    },
+    "notificationEmails" : [ "noc@example.com" ],
+    "asideMetro" : "FR",
+    "asideRouterName" : "FCR-FR",
+    "zsideCloudType" : "AZURE",
+    "zsideServiceProfileUuid" : "a1390b22-bbe0-4e93-ad37-85beef9d254d",
+    "zsideProviderLabel" : "azure",
+    "aSideMetro" : "FR",
+    "aSideRouterName" : "FCR-FR",
+    "zSideServiceProfileUuid" : "a1390b22-bbe0-4e93-ad37-85beef9d254d",
+    "zSideProviderLabel" : "azure",
+    "zSideCloudType" : "AZURE"
+  }, {
+    "key" : "connection/FR/gcp",
+    "name" : "FCR-FR-to-gcp",
+    "connectionType" : "IP_VC",
+    "purpose" : "PROVIDER",
+    "bandwidthMbps" : 1000,
+    "bandwidthAllocation" : {
+      "totalMbps" : 1000,
+      "perWorkload" : {
+        "default" : 1000
+      },
+      "reasoning" : "Sum of dependent workload bandwidths at FR"
+    },
+    "profileSelection" : {
+      "requestedMbps" : 1000,
+      "selectedProfileUuid" : "6aa4ceca-e532-4b61-a932-b8a5868712fc",
+      "selectedSellerRegion" : "europe-west3",
+      "selectedTierMbps" : 1000,
+      "roundedUp" : false,
+      "alternatives" : [ {
+        "serviceProfileUuid" : "6aa4ceca-e532-4b61-a932-b8a5868712fc",
+        "sellerRegions" : [ "europe-west3" ],
+        "coveringTierMbps" : 1000,
+        "supportedBandwidths" : [ 50, 100, 200, 300, 400, 500, 1000, 2000, 5000, 10000, 20000, 50000 ],
+        "allowCustomBandwidth" : false
+      }, {
+        "serviceProfileUuid" : "76013c6d-b9c4-4762-9708-324875b399b3",
+        "sellerRegions" : [ "europe-west3" ],
+        "coveringTierMbps" : 1000,
+        "supportedBandwidths" : [ 50, 100, 200, 300, 400, 500, 1000, 2000, 5000, 10000, 20000, 50000 ],
+        "allowCustomBandwidth" : false
+      }, {
+        "serviceProfileUuid" : "b97dacca-abe6-4e8c-8be1-fcdd1be1defe",
+        "sellerRegions" : [ "europe-west3" ],
+        "coveringTierMbps" : 1000,
+        "supportedBandwidths" : [ 50, 100, 200, 300, 400, 500, 1000, 2000, 5000, 10000, 20000, 50000 ],
+        "allowCustomBandwidth" : false
+      }, {
+        "serviceProfileUuid" : "bd4570e2-d792-4a00-87f5-3bde040cdcd7",
+        "sellerRegions" : [ "europe-west3" ],
+        "coveringTierMbps" : 1000,
+        "supportedBandwidths" : [ 50, 100, 200, 300, 400, 500, 1000, 2000, 5000, 10000, 20000, 50000 ],
+        "allowCustomBandwidth" : false
+      } ],
+      "reasoning" : "Requested 1000 Mbps is carried exactly at 1000 Mbps by profile 6aa4ceca-e532-4b61-a932-b8a5868712fc. 4 profiles can carry this bandwidth; the tightest-fitting was chosen (the alternatives are exposed for review)."
+    },
+    "notificationEmails" : [ "noc@example.com" ],
+    "asideMetro" : "FR",
+    "asideRouterName" : "FCR-FR",
+    "zsideCloudType" : "GOOGLE_CLOUD",
+    "zsideServiceProfileUuid" : "6aa4ceca-e532-4b61-a932-b8a5868712fc",
+    "zsideProviderLabel" : "gcp",
+    "zsideSellerRegion" : "europe-west3",
+    "aSideMetro" : "FR",
+    "aSideRouterName" : "FCR-FR",
+    "zSideServiceProfileUuid" : "6aa4ceca-e532-4b61-a932-b8a5868712fc",
+    "zSideProviderLabel" : "gcp",
+    "zSideSellerRegion" : "europe-west3",
+    "zSideCloudType" : "GOOGLE_CLOUD"
+  }, {
+    "key" : "connection/SG/aws",
+    "name" : "FCR-SG-to-aws",
+    "connectionType" : "IP_VC",
+    "purpose" : "PROVIDER",
+    "bandwidthMbps" : 1000,
+    "bandwidthAllocation" : {
+      "totalMbps" : 1000,
+      "perWorkload" : {
+        "default" : 1000
+      },
+      "reasoning" : "Sum of dependent workload bandwidths at SG"
+    },
+    "profileSelection" : {
+      "requestedMbps" : 1000,
+      "selectedProfileUuid" : "de55ca94-df3b-4680-845f-6f7093f76bef",
+      "selectedSellerRegion" : "ap-southeast-1",
+      "selectedTierMbps" : 1000,
+      "roundedUp" : false,
+      "alternatives" : [ {
+        "serviceProfileUuid" : "de55ca94-df3b-4680-845f-6f7093f76bef",
+        "sellerRegions" : [ "ap-southeast-1" ],
+        "coveringTierMbps" : 1000,
+        "supportedBandwidths" : [ 1000, 2000, 5000, 10000, 25000 ],
+        "allowCustomBandwidth" : false
+      }, {
+        "serviceProfileUuid" : "ed48616a-c182-40b4-a462-a78ba812e961",
+        "sellerRegions" : [ "ap-southeast-1" ],
+        "coveringTierMbps" : 1000,
+        "supportedBandwidths" : [ 1000, 2000, 5000, 10000, 25000 ],
+        "allowCustomBandwidth" : false
+      } ],
+      "reasoning" : "Requested 1000 Mbps is carried exactly at 1000 Mbps by profile de55ca94-df3b-4680-845f-6f7093f76bef. 2 profiles can carry this bandwidth; the tightest-fitting was chosen (the alternatives are exposed for review)."
+    },
+    "notificationEmails" : [ "noc@example.com" ],
+    "asideMetro" : "SG",
+    "asideRouterName" : "FCR-SG",
+    "zsideCloudType" : "AWS",
+    "zsideServiceProfileUuid" : "de55ca94-df3b-4680-845f-6f7093f76bef",
+    "zsideProviderLabel" : "aws",
+    "zsideSellerRegion" : "ap-southeast-1",
+    "aSideMetro" : "SG",
+    "aSideRouterName" : "FCR-SG",
+    "zSideServiceProfileUuid" : "de55ca94-df3b-4680-845f-6f7093f76bef",
+    "zSideProviderLabel" : "aws",
+    "zSideSellerRegion" : "ap-southeast-1",
+    "zSideCloudType" : "AWS"
+  }, {
+    "key" : "connection/SG/azure",
+    "name" : "FCR-SG-to-azure",
+    "connectionType" : "IP_VC",
+    "purpose" : "PROVIDER",
+    "bandwidthMbps" : 1000,
+    "bandwidthAllocation" : {
+      "totalMbps" : 1000,
+      "perWorkload" : {
+        "default" : 1000
+      },
+      "reasoning" : "Sum of dependent workload bandwidths at SG"
+    },
+    "profileSelection" : {
+      "requestedMbps" : 1000,
+      "selectedProfileUuid" : "a1390b22-bbe0-4e93-ad37-85beef9d254d",
+      "selectedTierMbps" : 1000,
+      "roundedUp" : false,
+      "alternatives" : [ {
+        "serviceProfileUuid" : "a1390b22-bbe0-4e93-ad37-85beef9d254d",
+        "sellerRegions" : [ ],
+        "coveringTierMbps" : 1000,
+        "supportedBandwidths" : [ ],
+        "allowCustomBandwidth" : false
+      } ],
+      "reasoning" : "Requested 1000 Mbps is carried exactly at 1000 Mbps by profile a1390b22-bbe0-4e93-ad37-85beef9d254d."
+    },
+    "notificationEmails" : [ "noc@example.com" ],
+    "asideMetro" : "SG",
+    "asideRouterName" : "FCR-SG",
+    "zsideCloudType" : "AZURE",
+    "zsideServiceProfileUuid" : "a1390b22-bbe0-4e93-ad37-85beef9d254d",
+    "zsideProviderLabel" : "azure",
+    "aSideMetro" : "SG",
+    "aSideRouterName" : "FCR-SG",
+    "zSideServiceProfileUuid" : "a1390b22-bbe0-4e93-ad37-85beef9d254d",
+    "zSideProviderLabel" : "azure",
+    "zSideCloudType" : "AZURE"
+  }, {
+    "key" : "connection/SG/gcp",
+    "name" : "FCR-SG-to-gcp",
+    "connectionType" : "IP_VC",
+    "purpose" : "PROVIDER",
+    "bandwidthMbps" : 500,
+    "bandwidthAllocation" : {
+      "totalMbps" : 500,
+      "perWorkload" : {
+        "inference" : 500
+      },
+      "reasoning" : "Sum of dependent workload bandwidths at SG"
+    },
+    "profileSelection" : {
+      "requestedMbps" : 500,
+      "selectedProfileUuid" : "b97dacca-abe6-4e8c-8be1-fcdd1be1defe",
+      "selectedSellerRegion" : "asia-southeast1",
+      "selectedTierMbps" : 500,
+      "roundedUp" : false,
+      "alternatives" : [ {
+        "serviceProfileUuid" : "b97dacca-abe6-4e8c-8be1-fcdd1be1defe",
+        "sellerRegions" : [ "asia-southeast1" ],
+        "coveringTierMbps" : 500,
+        "supportedBandwidths" : [ 50, 100, 200, 300, 400, 500, 1000, 2000, 5000, 10000, 20000, 50000 ],
+        "allowCustomBandwidth" : false
+      }, {
+        "serviceProfileUuid" : "bd4570e2-d792-4a00-87f5-3bde040cdcd7",
+        "sellerRegions" : [ "asia-southeast1" ],
+        "coveringTierMbps" : 500,
+        "supportedBandwidths" : [ 50, 100, 200, 300, 400, 500, 1000, 2000, 5000, 10000, 20000, 50000 ],
+        "allowCustomBandwidth" : false
+      } ],
+      "reasoning" : "Requested 500 Mbps is carried exactly at 500 Mbps by profile b97dacca-abe6-4e8c-8be1-fcdd1be1defe. 2 profiles can carry this bandwidth; the tightest-fitting was chosen (the alternatives are exposed for review)."
+    },
+    "notificationEmails" : [ "noc@example.com" ],
+    "asideMetro" : "SG",
+    "asideRouterName" : "FCR-SG",
+    "zsideCloudType" : "GOOGLE_CLOUD",
+    "zsideServiceProfileUuid" : "b97dacca-abe6-4e8c-8be1-fcdd1be1defe",
+    "zsideProviderLabel" : "gcp",
+    "zsideSellerRegion" : "asia-southeast1",
+    "aSideMetro" : "SG",
+    "aSideRouterName" : "FCR-SG",
+    "zSideServiceProfileUuid" : "b97dacca-abe6-4e8c-8be1-fcdd1be1defe",
+    "zSideProviderLabel" : "gcp",
+    "zSideSellerRegion" : "asia-southeast1",
+    "zSideCloudType" : "GOOGLE_CLOUD"
+  }, {
+    "key" : "connection/DC/aws",
+    "name" : "FCR-DC-to-aws",
+    "connectionType" : "IP_VC",
+    "purpose" : "PROVIDER",
+    "bandwidthMbps" : 5000,
+    "bandwidthAllocation" : {
+      "totalMbps" : 4000,
+      "perWorkload" : {
+        "order-api" : 1000,
+        "analytics" : 2000,
+        "disaster-recovery" : 1000
+      },
+      "reasoning" : "Sum of dependent workload bandwidths at DC | Rounded up 4000->5000 Mbps to the nearest service-profile tier (+1000 Mbps billable)"
+    },
+    "profileSelection" : {
+      "requestedMbps" : 4000,
+      "selectedProfileUuid" : "de55ca94-df3b-4680-845f-6f7093f76bef",
+      "selectedSellerRegion" : "us-east-1",
+      "selectedTierMbps" : 5000,
+      "roundedUp" : true,
+      "alternatives" : [ {
+        "serviceProfileUuid" : "de55ca94-df3b-4680-845f-6f7093f76bef",
+        "sellerRegions" : [ "us-east-1" ],
+        "coveringTierMbps" : 5000,
+        "supportedBandwidths" : [ 1000, 2000, 5000, 10000, 25000 ],
+        "allowCustomBandwidth" : false
+      } ],
+      "reasoning" : "Requested 4000 Mbps has no exact tier on any candidate profile; rounded up to the smallest satisfying tier 5000 Mbps on profile de55ca94-df3b-4680-845f-6f7093f76bef (+1000 Mbps billable)."
+    },
+    "notificationEmails" : [ "noc@example.com" ],
+    "asideMetro" : "DC",
+    "asideRouterName" : "FCR-DC",
+    "zsideCloudType" : "AWS",
+    "zsideServiceProfileUuid" : "de55ca94-df3b-4680-845f-6f7093f76bef",
+    "zsideProviderLabel" : "aws",
+    "zsideSellerRegion" : "us-east-1",
+    "aSideMetro" : "DC",
+    "aSideRouterName" : "FCR-DC",
+    "zSideServiceProfileUuid" : "de55ca94-df3b-4680-845f-6f7093f76bef",
+    "zSideProviderLabel" : "aws",
+    "zSideSellerRegion" : "us-east-1",
+    "zSideCloudType" : "AWS"
+  }, {
+    "key" : "connection/DC/azure",
+    "name" : "FCR-DC-to-azure",
+    "connectionType" : "IP_VC",
+    "purpose" : "PROVIDER",
+    "bandwidthMbps" : 3000,
+    "bandwidthAllocation" : {
+      "totalMbps" : 3000,
+      "perWorkload" : {
+        "analytics" : 2000,
+        "disaster-recovery" : 1000
+      },
+      "reasoning" : "Sum of dependent workload bandwidths at DC"
+    },
+    "profileSelection" : {
+      "requestedMbps" : 3000,
+      "selectedProfileUuid" : "0de4e413-edd7-4325-912f-7c8a4428e156",
+      "selectedTierMbps" : 3000,
+      "roundedUp" : false,
+      "alternatives" : [ {
+        "serviceProfileUuid" : "0de4e413-edd7-4325-912f-7c8a4428e156",
+        "sellerRegions" : [ ],
+        "coveringTierMbps" : 3000,
+        "supportedBandwidths" : [ ],
+        "allowCustomBandwidth" : false
+      }, {
+        "serviceProfileUuid" : "a1390b22-bbe0-4e93-ad37-85beef9d254d",
+        "sellerRegions" : [ ],
+        "coveringTierMbps" : 3000,
+        "supportedBandwidths" : [ ],
+        "allowCustomBandwidth" : false
+      } ],
+      "reasoning" : "Requested 3000 Mbps is carried exactly at 3000 Mbps by profile 0de4e413-edd7-4325-912f-7c8a4428e156. 2 profiles can carry this bandwidth; the tightest-fitting was chosen (the alternatives are exposed for review)."
+    },
+    "notificationEmails" : [ "noc@example.com" ],
+    "asideMetro" : "DC",
+    "asideRouterName" : "FCR-DC",
+    "zsideCloudType" : "AZURE",
+    "zsideServiceProfileUuid" : "0de4e413-edd7-4325-912f-7c8a4428e156",
+    "zsideProviderLabel" : "azure",
+    "aSideMetro" : "DC",
+    "aSideRouterName" : "FCR-DC",
+    "zSideServiceProfileUuid" : "0de4e413-edd7-4325-912f-7c8a4428e156",
+    "zSideProviderLabel" : "azure",
+    "zSideCloudType" : "AZURE"
+  }, {
+    "key" : "connection/DC/gcp",
+    "name" : "FCR-DC-to-gcp",
+    "connectionType" : "IP_VC",
+    "purpose" : "PROVIDER",
+    "bandwidthMbps" : 1000,
+    "bandwidthAllocation" : {
+      "totalMbps" : 1000,
+      "perWorkload" : {
+        "default" : 1000
+      },
+      "reasoning" : "Sum of dependent workload bandwidths at DC"
+    },
+    "profileSelection" : {
+      "requestedMbps" : 1000,
+      "selectedProfileUuid" : "b97dacca-abe6-4e8c-8be1-fcdd1be1defe",
+      "selectedSellerRegion" : "us-east4",
+      "selectedTierMbps" : 1000,
+      "roundedUp" : false,
+      "alternatives" : [ {
+        "serviceProfileUuid" : "b97dacca-abe6-4e8c-8be1-fcdd1be1defe",
+        "sellerRegions" : [ "us-east4" ],
+        "coveringTierMbps" : 1000,
+        "supportedBandwidths" : [ 50, 100, 200, 300, 400, 500, 1000, 2000, 5000, 10000, 20000, 50000 ],
+        "allowCustomBandwidth" : false
+      }, {
+        "serviceProfileUuid" : "bd4570e2-d792-4a00-87f5-3bde040cdcd7",
+        "sellerRegions" : [ "us-east4" ],
+        "coveringTierMbps" : 1000,
+        "supportedBandwidths" : [ 50, 100, 200, 300, 400, 500, 1000, 2000, 5000, 10000, 20000, 50000 ],
+        "allowCustomBandwidth" : false
+      } ],
+      "reasoning" : "Requested 1000 Mbps is carried exactly at 1000 Mbps by profile b97dacca-abe6-4e8c-8be1-fcdd1be1defe. 2 profiles can carry this bandwidth; the tightest-fitting was chosen (the alternatives are exposed for review)."
+    },
+    "notificationEmails" : [ "noc@example.com" ],
+    "asideMetro" : "DC",
+    "asideRouterName" : "FCR-DC",
+    "zsideCloudType" : "GOOGLE_CLOUD",
+    "zsideServiceProfileUuid" : "b97dacca-abe6-4e8c-8be1-fcdd1be1defe",
+    "zsideProviderLabel" : "gcp",
+    "zsideSellerRegion" : "us-east4",
+    "aSideMetro" : "DC",
+    "aSideRouterName" : "FCR-DC",
+    "zSideServiceProfileUuid" : "b97dacca-abe6-4e8c-8be1-fcdd1be1defe",
+    "zSideProviderLabel" : "gcp",
+    "zSideSellerRegion" : "us-east4",
+    "zSideCloudType" : "GOOGLE_CLOUD"
+  } ],
+  "backboneLinks" : [ {
+    "metroA" : "TR",
+    "metroZ" : "FR",
+    "name" : "FCR-TR-to-FR",
+    "bandwidthMbps" : 10000,
+    "topology" : "FULL_MESH",
+    "connection" : {
+      "key" : "backbone/TR-FR",
+      "name" : "FCR-TR-to-FR",
+      "connectionType" : "IP_VC",
+      "purpose" : "BACKBONE",
+      "bandwidthMbps" : 10000,
+      "notificationEmails" : [ "noc@example.com" ],
+      "asideMetro" : "TR",
+      "asideRouterName" : "FCR-TR",
+      "zsideMetro" : "FR",
+      "zsideRouterName" : "FCR-FR",
+      "aSideMetro" : "TR",
+      "aSideRouterName" : "FCR-TR",
+      "zSideMetro" : "FR",
+      "zSideRouterName" : "FCR-FR"
+    }
+  }, {
+    "metroA" : "TR",
+    "metroZ" : "SG",
+    "name" : "FCR-TR-to-SG",
+    "bandwidthMbps" : 10000,
+    "topology" : "FULL_MESH",
+    "connection" : {
+      "key" : "backbone/TR-SG",
+      "name" : "FCR-TR-to-SG",
+      "connectionType" : "IP_VC",
+      "purpose" : "BACKBONE",
+      "bandwidthMbps" : 10000,
+      "notificationEmails" : [ "noc@example.com" ],
+      "asideMetro" : "TR",
+      "asideRouterName" : "FCR-TR",
+      "zsideMetro" : "SG",
+      "zsideRouterName" : "FCR-SG",
+      "aSideMetro" : "TR",
+      "aSideRouterName" : "FCR-TR",
+      "zSideMetro" : "SG",
+      "zSideRouterName" : "FCR-SG"
+    }
+  }, {
+    "metroA" : "TR",
+    "metroZ" : "DC",
+    "name" : "FCR-TR-to-DC",
+    "bandwidthMbps" : 10000,
+    "topology" : "FULL_MESH",
+    "connection" : {
+      "key" : "backbone/TR-DC",
+      "name" : "FCR-TR-to-DC",
+      "connectionType" : "IP_VC",
+      "purpose" : "BACKBONE",
+      "bandwidthMbps" : 10000,
+      "notificationEmails" : [ "noc@example.com" ],
+      "asideMetro" : "TR",
+      "asideRouterName" : "FCR-TR",
+      "zsideMetro" : "DC",
+      "zsideRouterName" : "FCR-DC",
+      "aSideMetro" : "TR",
+      "aSideRouterName" : "FCR-TR",
+      "zSideMetro" : "DC",
+      "zSideRouterName" : "FCR-DC"
+    }
+  }, {
+    "metroA" : "FR",
+    "metroZ" : "SG",
+    "name" : "FCR-FR-to-SG",
+    "bandwidthMbps" : 10000,
+    "topology" : "FULL_MESH",
+    "connection" : {
+      "key" : "backbone/FR-SG",
+      "name" : "FCR-FR-to-SG",
+      "connectionType" : "IP_VC",
+      "purpose" : "BACKBONE",
+      "bandwidthMbps" : 10000,
+      "notificationEmails" : [ "noc@example.com" ],
+      "asideMetro" : "FR",
+      "asideRouterName" : "FCR-FR",
+      "zsideMetro" : "SG",
+      "zsideRouterName" : "FCR-SG",
+      "aSideMetro" : "FR",
+      "aSideRouterName" : "FCR-FR",
+      "zSideMetro" : "SG",
+      "zSideRouterName" : "FCR-SG"
+    }
+  }, {
+    "metroA" : "FR",
+    "metroZ" : "DC",
+    "name" : "FCR-FR-to-DC",
+    "bandwidthMbps" : 10000,
+    "topology" : "FULL_MESH",
+    "connection" : {
+      "key" : "backbone/FR-DC",
+      "name" : "FCR-FR-to-DC",
+      "connectionType" : "IP_VC",
+      "purpose" : "BACKBONE",
+      "bandwidthMbps" : 10000,
+      "notificationEmails" : [ "noc@example.com" ],
+      "asideMetro" : "FR",
+      "asideRouterName" : "FCR-FR",
+      "zsideMetro" : "DC",
+      "zsideRouterName" : "FCR-DC",
+      "aSideMetro" : "FR",
+      "aSideRouterName" : "FCR-FR",
+      "zSideMetro" : "DC",
+      "zSideRouterName" : "FCR-DC"
+    }
+  }, {
+    "metroA" : "SG",
+    "metroZ" : "DC",
+    "name" : "FCR-SG-to-DC",
+    "bandwidthMbps" : 10000,
+    "topology" : "FULL_MESH",
+    "connection" : {
+      "key" : "backbone/SG-DC",
+      "name" : "FCR-SG-to-DC",
+      "connectionType" : "IP_VC",
+      "purpose" : "BACKBONE",
+      "bandwidthMbps" : 10000,
+      "notificationEmails" : [ "noc@example.com" ],
+      "asideMetro" : "SG",
+      "asideRouterName" : "FCR-SG",
+      "zsideMetro" : "DC",
+      "zsideRouterName" : "FCR-DC",
+      "aSideMetro" : "SG",
+      "aSideRouterName" : "FCR-SG",
+      "zSideMetro" : "DC",
+      "zSideRouterName" : "FCR-DC"
+    }
+  } ],
+  "routingProtocols" : [ {
+    "key" : "connection/TR/aws/rp/DIRECT",
+    "type" : "DIRECT",
+    "name" : "FCR-TR-to-aws-DIRECT",
+    "connectionName" : "FCR-TR-to-aws",
+    "equinixIfaceIpv4" : "10.100.0.1/30",
+    "bfdEnabled" : false,
+    "bfdInterval" : 0
+  }, {
+    "key" : "connection/TR/aws/rp/BGP",
+    "type" : "BGP",
+    "name" : "FCR-TR-to-aws-BGP",
+    "connectionName" : "FCR-TR-to-aws",
+    "customerPeerIpv4" : "10.100.0.2/30",
+    "equinixPeerIpv4" : "10.100.0.1/30",
+    "customerAsn" : 64512,
+    "bfdEnabled" : true,
+    "bfdInterval" : 300
+  }, {
+    "key" : "connection/TR/azure/rp/DIRECT",
+    "type" : "DIRECT",
+    "name" : "FCR-TR-to-azure-DIRECT",
+    "connectionName" : "FCR-TR-to-azure",
+    "equinixIfaceIpv4" : "10.100.1.1/30",
+    "bfdEnabled" : false,
+    "bfdInterval" : 0
+  }, {
+    "key" : "connection/TR/azure/rp/BGP",
+    "type" : "BGP",
+    "name" : "FCR-TR-to-azure-BGP",
+    "connectionName" : "FCR-TR-to-azure",
+    "customerPeerIpv4" : "10.100.1.2/30",
+    "equinixPeerIpv4" : "10.100.1.1/30",
+    "customerAsn" : 64512,
+    "bfdEnabled" : true,
+    "bfdInterval" : 300
+  }, {
+    "key" : "connection/TR/gcp/rp/DIRECT",
+    "type" : "DIRECT",
+    "name" : "FCR-TR-to-gcp-DIRECT",
+    "connectionName" : "FCR-TR-to-gcp",
+    "equinixIfaceIpv4" : "10.100.2.1/30",
+    "bfdEnabled" : false,
+    "bfdInterval" : 0
+  }, {
+    "key" : "connection/TR/gcp/rp/BGP",
+    "type" : "BGP",
+    "name" : "FCR-TR-to-gcp-BGP",
+    "connectionName" : "FCR-TR-to-gcp",
+    "customerPeerIpv4" : "10.100.2.2/30",
+    "equinixPeerIpv4" : "10.100.2.1/30",
+    "customerAsn" : 64512,
+    "bfdEnabled" : true,
+    "bfdInterval" : 300
+  }, {
+    "key" : "connection/FR/aws/rp/DIRECT",
+    "type" : "DIRECT",
+    "name" : "FCR-FR-to-aws-DIRECT",
+    "connectionName" : "FCR-FR-to-aws",
+    "equinixIfaceIpv4" : "10.100.3.1/30",
+    "bfdEnabled" : false,
+    "bfdInterval" : 0
+  }, {
+    "key" : "connection/FR/aws/rp/BGP",
+    "type" : "BGP",
+    "name" : "FCR-FR-to-aws-BGP",
+    "connectionName" : "FCR-FR-to-aws",
+    "customerPeerIpv4" : "10.100.3.2/30",
+    "equinixPeerIpv4" : "10.100.3.1/30",
+    "customerAsn" : 64512,
+    "bfdEnabled" : true,
+    "bfdInterval" : 300
+  }, {
+    "key" : "connection/FR/azure/rp/DIRECT",
+    "type" : "DIRECT",
+    "name" : "FCR-FR-to-azure-DIRECT",
+    "connectionName" : "FCR-FR-to-azure",
+    "equinixIfaceIpv4" : "10.100.4.1/30",
+    "bfdEnabled" : false,
+    "bfdInterval" : 0
+  }, {
+    "key" : "connection/FR/azure/rp/BGP",
+    "type" : "BGP",
+    "name" : "FCR-FR-to-azure-BGP",
+    "connectionName" : "FCR-FR-to-azure",
+    "customerPeerIpv4" : "10.100.4.2/30",
+    "equinixPeerIpv4" : "10.100.4.1/30",
+    "customerAsn" : 64512,
+    "bfdEnabled" : true,
+    "bfdInterval" : 300
+  }, {
+    "key" : "connection/FR/gcp/rp/DIRECT",
+    "type" : "DIRECT",
+    "name" : "FCR-FR-to-gcp-DIRECT",
+    "connectionName" : "FCR-FR-to-gcp",
+    "equinixIfaceIpv4" : "10.100.5.1/30",
+    "bfdEnabled" : false,
+    "bfdInterval" : 0
+  }, {
+    "key" : "connection/FR/gcp/rp/BGP",
+    "type" : "BGP",
+    "name" : "FCR-FR-to-gcp-BGP",
+    "connectionName" : "FCR-FR-to-gcp",
+    "customerPeerIpv4" : "10.100.5.2/30",
+    "equinixPeerIpv4" : "10.100.5.1/30",
+    "customerAsn" : 64512,
+    "bfdEnabled" : true,
+    "bfdInterval" : 300
+  }, {
+    "key" : "connection/SG/aws/rp/DIRECT",
+    "type" : "DIRECT",
+    "name" : "FCR-SG-to-aws-DIRECT",
+    "connectionName" : "FCR-SG-to-aws",
+    "equinixIfaceIpv4" : "10.100.6.1/30",
+    "bfdEnabled" : false,
+    "bfdInterval" : 0
+  }, {
+    "key" : "connection/SG/aws/rp/BGP",
+    "type" : "BGP",
+    "name" : "FCR-SG-to-aws-BGP",
+    "connectionName" : "FCR-SG-to-aws",
+    "customerPeerIpv4" : "10.100.6.2/30",
+    "equinixPeerIpv4" : "10.100.6.1/30",
+    "customerAsn" : 64512,
+    "bfdEnabled" : true,
+    "bfdInterval" : 300
+  }, {
+    "key" : "connection/SG/azure/rp/DIRECT",
+    "type" : "DIRECT",
+    "name" : "FCR-SG-to-azure-DIRECT",
+    "connectionName" : "FCR-SG-to-azure",
+    "equinixIfaceIpv4" : "10.100.7.1/30",
+    "bfdEnabled" : false,
+    "bfdInterval" : 0
+  }, {
+    "key" : "connection/SG/azure/rp/BGP",
+    "type" : "BGP",
+    "name" : "FCR-SG-to-azure-BGP",
+    "connectionName" : "FCR-SG-to-azure",
+    "customerPeerIpv4" : "10.100.7.2/30",
+    "equinixPeerIpv4" : "10.100.7.1/30",
+    "customerAsn" : 64512,
+    "bfdEnabled" : true,
+    "bfdInterval" : 300
+  }, {
+    "key" : "connection/SG/gcp/rp/DIRECT",
+    "type" : "DIRECT",
+    "name" : "FCR-SG-to-gcp-DIRECT",
+    "connectionName" : "FCR-SG-to-gcp",
+    "equinixIfaceIpv4" : "10.100.8.1/30",
+    "bfdEnabled" : false,
+    "bfdInterval" : 0
+  }, {
+    "key" : "connection/SG/gcp/rp/BGP",
+    "type" : "BGP",
+    "name" : "FCR-SG-to-gcp-BGP",
+    "connectionName" : "FCR-SG-to-gcp",
+    "customerPeerIpv4" : "10.100.8.2/30",
+    "equinixPeerIpv4" : "10.100.8.1/30",
+    "customerAsn" : 64512,
+    "bfdEnabled" : true,
+    "bfdInterval" : 300
+  }, {
+    "key" : "connection/DC/aws/rp/DIRECT",
+    "type" : "DIRECT",
+    "name" : "FCR-DC-to-aws-DIRECT",
+    "connectionName" : "FCR-DC-to-aws",
+    "equinixIfaceIpv4" : "10.100.9.1/30",
+    "bfdEnabled" : false,
+    "bfdInterval" : 0
+  }, {
+    "key" : "connection/DC/aws/rp/BGP",
+    "type" : "BGP",
+    "name" : "FCR-DC-to-aws-BGP",
+    "connectionName" : "FCR-DC-to-aws",
+    "customerPeerIpv4" : "10.100.9.2/30",
+    "equinixPeerIpv4" : "10.100.9.1/30",
+    "customerAsn" : 64512,
+    "bfdEnabled" : true,
+    "bfdInterval" : 300
+  }, {
+    "key" : "connection/DC/azure/rp/DIRECT",
+    "type" : "DIRECT",
+    "name" : "FCR-DC-to-azure-DIRECT",
+    "connectionName" : "FCR-DC-to-azure",
+    "equinixIfaceIpv4" : "10.100.10.1/30",
+    "bfdEnabled" : false,
+    "bfdInterval" : 0
+  }, {
+    "key" : "connection/DC/azure/rp/BGP",
+    "type" : "BGP",
+    "name" : "FCR-DC-to-azure-BGP",
+    "connectionName" : "FCR-DC-to-azure",
+    "customerPeerIpv4" : "10.100.10.2/30",
+    "equinixPeerIpv4" : "10.100.10.1/30",
+    "customerAsn" : 64512,
+    "bfdEnabled" : true,
+    "bfdInterval" : 300
+  }, {
+    "key" : "connection/DC/gcp/rp/DIRECT",
+    "type" : "DIRECT",
+    "name" : "FCR-DC-to-gcp-DIRECT",
+    "connectionName" : "FCR-DC-to-gcp",
+    "equinixIfaceIpv4" : "10.100.11.1/30",
+    "bfdEnabled" : false,
+    "bfdInterval" : 0
+  }, {
+    "key" : "connection/DC/gcp/rp/BGP",
+    "type" : "BGP",
+    "name" : "FCR-DC-to-gcp-BGP",
+    "connectionName" : "FCR-DC-to-gcp",
+    "customerPeerIpv4" : "10.100.11.2/30",
+    "equinixPeerIpv4" : "10.100.11.1/30",
+    "customerAsn" : 64512,
+    "bfdEnabled" : true,
+    "bfdInterval" : 300
+  }, {
+    "key" : "backbone/TR-FR/rp/DIRECT",
+    "type" : "DIRECT",
+    "name" : "FCR-TR-to-FR-DIRECT",
+    "connectionName" : "FCR-TR-to-FR",
+    "equinixIfaceIpv4" : "10.100.12.1/30",
+    "bfdEnabled" : false,
+    "bfdInterval" : 0
+  }, {
+    "key" : "backbone/TR-FR/rp/BGP",
+    "type" : "BGP",
+    "name" : "FCR-TR-to-FR-BGP",
+    "connectionName" : "FCR-TR-to-FR",
+    "customerPeerIpv4" : "10.100.12.2/30",
+    "equinixPeerIpv4" : "10.100.12.1/30",
+    "customerAsn" : 64512,
+    "bfdEnabled" : true,
+    "bfdInterval" : 300
+  }, {
+    "key" : "backbone/TR-SG/rp/DIRECT",
+    "type" : "DIRECT",
+    "name" : "FCR-TR-to-SG-DIRECT",
+    "connectionName" : "FCR-TR-to-SG",
+    "equinixIfaceIpv4" : "10.100.13.1/30",
+    "bfdEnabled" : false,
+    "bfdInterval" : 0
+  }, {
+    "key" : "backbone/TR-SG/rp/BGP",
+    "type" : "BGP",
+    "name" : "FCR-TR-to-SG-BGP",
+    "connectionName" : "FCR-TR-to-SG",
+    "customerPeerIpv4" : "10.100.13.2/30",
+    "equinixPeerIpv4" : "10.100.13.1/30",
+    "customerAsn" : 64512,
+    "bfdEnabled" : true,
+    "bfdInterval" : 300
+  }, {
+    "key" : "backbone/TR-DC/rp/DIRECT",
+    "type" : "DIRECT",
+    "name" : "FCR-TR-to-DC-DIRECT",
+    "connectionName" : "FCR-TR-to-DC",
+    "equinixIfaceIpv4" : "10.100.14.1/30",
+    "bfdEnabled" : false,
+    "bfdInterval" : 0
+  }, {
+    "key" : "backbone/TR-DC/rp/BGP",
+    "type" : "BGP",
+    "name" : "FCR-TR-to-DC-BGP",
+    "connectionName" : "FCR-TR-to-DC",
+    "customerPeerIpv4" : "10.100.14.2/30",
+    "equinixPeerIpv4" : "10.100.14.1/30",
+    "customerAsn" : 64512,
+    "bfdEnabled" : true,
+    "bfdInterval" : 300
+  }, {
+    "key" : "backbone/FR-SG/rp/DIRECT",
+    "type" : "DIRECT",
+    "name" : "FCR-FR-to-SG-DIRECT",
+    "connectionName" : "FCR-FR-to-SG",
+    "equinixIfaceIpv4" : "10.100.15.1/30",
+    "bfdEnabled" : false,
+    "bfdInterval" : 0
+  }, {
+    "key" : "backbone/FR-SG/rp/BGP",
+    "type" : "BGP",
+    "name" : "FCR-FR-to-SG-BGP",
+    "connectionName" : "FCR-FR-to-SG",
+    "customerPeerIpv4" : "10.100.15.2/30",
+    "equinixPeerIpv4" : "10.100.15.1/30",
+    "customerAsn" : 64512,
+    "bfdEnabled" : true,
+    "bfdInterval" : 300
+  }, {
+    "key" : "backbone/FR-DC/rp/DIRECT",
+    "type" : "DIRECT",
+    "name" : "FCR-FR-to-DC-DIRECT",
+    "connectionName" : "FCR-FR-to-DC",
+    "equinixIfaceIpv4" : "10.100.16.1/30",
+    "bfdEnabled" : false,
+    "bfdInterval" : 0
+  }, {
+    "key" : "backbone/FR-DC/rp/BGP",
+    "type" : "BGP",
+    "name" : "FCR-FR-to-DC-BGP",
+    "connectionName" : "FCR-FR-to-DC",
+    "customerPeerIpv4" : "10.100.16.2/30",
+    "equinixPeerIpv4" : "10.100.16.1/30",
+    "customerAsn" : 64512,
+    "bfdEnabled" : true,
+    "bfdInterval" : 300
+  }, {
+    "key" : "backbone/SG-DC/rp/DIRECT",
+    "type" : "DIRECT",
+    "name" : "FCR-SG-to-DC-DIRECT",
+    "connectionName" : "FCR-SG-to-DC",
+    "equinixIfaceIpv4" : "10.100.17.1/30",
+    "bfdEnabled" : false,
+    "bfdInterval" : 0
+  }, {
+    "key" : "backbone/SG-DC/rp/BGP",
+    "type" : "BGP",
+    "name" : "FCR-SG-to-DC-BGP",
+    "connectionName" : "FCR-SG-to-DC",
+    "customerPeerIpv4" : "10.100.17.2/30",
+    "equinixPeerIpv4" : "10.100.17.1/30",
+    "customerAsn" : 64512,
+    "bfdEnabled" : true,
+    "bfdInterval" : 300
+  } ],
+  "pricing" : {
+    "monthlyTotal" : 10797.34,
+    "setupTotal" : 0.00,
+    "currency" : "USD",
+    "monthlyByCurrency" : {
+      "USD" : 10797.34
+    },
+    "routerMonthlyCost" : 4993.66,
+    "routerCurrency" : "USD",
+    "routerMonthlyByCurrency" : {
+      "USD" : 4993.66
+    },
+    "providerConnectionMonthlyCost" : 2907.47,
+    "providerConnectionCurrency" : "USD",
+    "providerConnectionMonthlyByCurrency" : {
+      "USD" : 2907.47
+    },
+    "backboneMonthlyCost" : 2896.21,
+    "backboneCurrency" : "USD",
+    "backboneMonthlyByCurrency" : {
+      "USD" : 2896.21
+    },
+    "perConnectionCost" : {
+      "FCR-TR-to-aws" : 364.02,
+      "FCR-TR-to-azure" : 350,
+      "FCR-TR-to-gcp" : 196.01,
+      "FCR-FR-to-aws" : 187.24,
+      "FCR-FR-to-azure" : 143.18,
+      "FCR-FR-to-gcp" : 187.24,
+      "FCR-SG-to-aws" : 201.74,
+      "FCR-SG-to-azure" : 201.74,
+      "FCR-SG-to-gcp" : 151.30,
+      "FCR-DC-to-aws" : 375.0,
+      "FCR-DC-to-azure" : 350,
+      "FCR-DC-to-gcp" : 200.0,
+      "FCR-TR-to-FR" : 486.52,
+      "FCR-TR-to-SG" : 486.52,
+      "FCR-TR-to-DC" : 486.52,
+      "FCR-FR-to-SG" : 468.09,
+      "FCR-FR-to-DC" : 468.09,
+      "FCR-SG-to-DC" : 500.47
+    },
+    "lines" : [ {
+      "label" : "FCR-TR",
+      "metro" : "TR",
+      "monthly" : 1243.96,
+      "oneTime" : 0.00,
+      "currency" : "USD",
+      "source" : "EQUINIX_LIVE",
+      "monthlyLow" : 1219.08,
+      "monthlyHigh" : 1268.84,
+      "note" : "Equinix price ECX00014.PROD; converted from CAD 1777.0 at 0.700035 USD/CAD (ECB reference rate via Frankfurter, 2026-11-16, as of 2026-11-16); range widened +/-2% for exchange-rate uncertainty",
+      "conversion" : {
+        "originalMonthly" : 1777.0,
+        "originalOneTime" : 0,
+        "originalCurrency" : "CAD",
+        "rate" : 0.70003500,
+        "kind" : "LIVE",
+        "source" : "ECB reference rate via Frankfurter, 2026-11-16",
+        "asOf" : "2026-11-16",
+        "bandPercent" : 2.0
+      }
+    }, {
+      "label" : "FCR-FR",
+      "metro" : "FR",
+      "monthly" : 1198.32,
+      "oneTime" : 0.00,
+      "currency" : "USD",
+      "source" : "EQUINIX_LIVE",
+      "monthlyLow" : 1174.35,
+      "monthlyHigh" : 1222.28,
+      "note" : "Equinix price ECX00014.PROD; converted from EUR 1088.0 at 1.10139437 USD/EUR (ECB reference rate via Frankfurter, 2026-11-16, as of 2026-11-16); range widened +/-2% for exchange-rate uncertainty",
+      "conversion" : {
+        "originalMonthly" : 1088.0,
+        "originalOneTime" : 0,
+        "originalCurrency" : "EUR",
+        "rate" : 1.10139437,
+        "kind" : "LIVE",
+        "source" : "ECB reference rate via Frankfurter, 2026-11-16",
+        "asOf" : "2026-11-16",
+        "bandPercent" : 2.0
+      }
+    }, {
+      "label" : "FCR-SG",
+      "metro" : "SG",
+      "monthly" : 1276.38,
+      "oneTime" : 0.00,
+      "currency" : "USD",
+      "source" : "EQUINIX_LIVE",
+      "monthlyLow" : 1250.85,
+      "monthlyHigh" : 1301.91,
+      "note" : "Equinix price ECX00014.PROD; converted from SGD 1645.0 at 0.77591558 USD/SGD (ECB reference rate via Frankfurter, 2026-11-16, as of 2026-11-16); range widened +/-2% for exchange-rate uncertainty",
+      "conversion" : {
+        "originalMonthly" : 1645.0,
+        "originalOneTime" : 0,
+        "originalCurrency" : "SGD",
+        "rate" : 0.77591558,
+        "kind" : "LIVE",
+        "source" : "ECB reference rate via Frankfurter, 2026-11-16",
+        "asOf" : "2026-11-16",
+        "bandPercent" : 2.0
+      }
+    }, {
+      "label" : "FCR-DC",
+      "metro" : "DC",
+      "monthly" : 1275.0,
+      "oneTime" : 0,
+      "currency" : "USD",
+      "source" : "EQUINIX_LIVE",
+      "monthlyLow" : 1275.0,
+      "monthlyHigh" : 1275.0,
+      "note" : "Equinix price ECX00014.PROD"
+    }, {
+      "label" : "FCR-TR-to-aws",
+      "metro" : "TR",
+      "monthly" : 364.02,
+      "oneTime" : 0.00,
+      "currency" : "USD",
+      "source" : "EQUINIX_LIVE",
+      "monthlyLow" : 356.74,
+      "monthlyHigh" : 371.30,
+      "note" : "Equinix price ECX00015.PROD; converted from CAD 520.0 at 0.700035 USD/CAD (ECB reference rate via Frankfurter, 2026-11-16, as of 2026-11-16); range widened +/-2% for exchange-rate uncertainty",
+      "conversion" : {
+        "originalMonthly" : 520.0,
+        "originalOneTime" : 0,
+        "originalCurrency" : "CAD",
+        "rate" : 0.70003500,
+        "kind" : "LIVE",
+        "source" : "ECB reference rate via Frankfurter, 2026-11-16",
+        "asOf" : "2026-11-16",
+        "bandPercent" : 2.0
+      }
+    }, {
+      "label" : "FCR-TR-to-azure",
+      "metro" : "TR",
+      "monthly" : 350,
+      "oneTime" : 0,
+      "currency" : "USD",
+      "source" : "REFERENCE",
+      "monthlyLow" : 350,
+      "monthlyHigh" : 350,
+      "note" : "reference VC ~10000 Mbps"
+    }, {
+      "label" : "FCR-TR-to-gcp",
+      "metro" : "TR",
+      "monthly" : 196.01,
+      "oneTime" : 0.00,
+      "currency" : "USD",
+      "source" : "EQUINIX_LIVE",
+      "monthlyLow" : 192.09,
+      "monthlyHigh" : 199.93,
+      "note" : "Equinix price ECX00015.PROD; converted from CAD 280.0 at 0.700035 USD/CAD (ECB reference rate via Frankfurter, 2026-11-16, as of 2026-11-16); range widened +/-2% for exchange-rate uncertainty",
+      "conversion" : {
+        "originalMonthly" : 280.0,
+        "originalOneTime" : 0,
+        "originalCurrency" : "CAD",
+        "rate" : 0.70003500,
+        "kind" : "LIVE",
+        "source" : "ECB reference rate via Frankfurter, 2026-11-16",
+        "asOf" : "2026-11-16",
+        "bandPercent" : 2.0
+      }
+    }, {
+      "label" : "FCR-FR-to-aws",
+      "metro" : "FR",
+      "monthly" : 187.24,
+      "oneTime" : 0.00,
+      "currency" : "USD",
+      "source" : "EQUINIX_LIVE",
+      "monthlyLow" : 183.49,
+      "monthlyHigh" : 190.98,
+      "note" : "Equinix price ECX00015.PROD; converted from EUR 170.0 at 1.10139437 USD/EUR (ECB reference rate via Frankfurter, 2026-11-16, as of 2026-11-16); range widened +/-2% for exchange-rate uncertainty",
+      "conversion" : {
+        "originalMonthly" : 170.0,
+        "originalOneTime" : 0,
+        "originalCurrency" : "EUR",
+        "rate" : 1.10139437,
+        "kind" : "LIVE",
+        "source" : "ECB reference rate via Frankfurter, 2026-11-16",
+        "asOf" : "2026-11-16",
+        "bandPercent" : 2.0
+      }
+    }, {
+      "label" : "FCR-FR-to-azure",
+      "metro" : "FR",
+      "monthly" : 143.18,
+      "oneTime" : 0.00,
+      "currency" : "USD",
+      "source" : "EQUINIX_LIVE",
+      "monthlyLow" : 140.32,
+      "monthlyHigh" : 146.04,
+      "note" : "Equinix price ECX00015.PROD; converted from EUR 130.0 at 1.10139437 USD/EUR (ECB reference rate via Frankfurter, 2026-11-16, as of 2026-11-16); range widened +/-2% for exchange-rate uncertainty",
+      "conversion" : {
+        "originalMonthly" : 130.0,
+        "originalOneTime" : 0,
+        "originalCurrency" : "EUR",
+        "rate" : 1.10139437,
+        "kind" : "LIVE",
+        "source" : "ECB reference rate via Frankfurter, 2026-11-16",
+        "asOf" : "2026-11-16",
+        "bandPercent" : 2.0
+      }
+    }, {
+      "label" : "FCR-FR-to-gcp",
+      "metro" : "FR",
+      "monthly" : 187.24,
+      "oneTime" : 0.00,
+      "currency" : "USD",
+      "source" : "EQUINIX_LIVE",
+      "monthlyLow" : 183.49,
+      "monthlyHigh" : 190.98,
+      "note" : "Equinix price ECX00015.PROD; converted from EUR 170.0 at 1.10139437 USD/EUR (ECB reference rate via Frankfurter, 2026-11-16, as of 2026-11-16); range widened +/-2% for exchange-rate uncertainty",
+      "conversion" : {
+        "originalMonthly" : 170.0,
+        "originalOneTime" : 0,
+        "originalCurrency" : "EUR",
+        "rate" : 1.10139437,
+        "kind" : "LIVE",
+        "source" : "ECB reference rate via Frankfurter, 2026-11-16",
+        "asOf" : "2026-11-16",
+        "bandPercent" : 2.0
+      }
+    }, {
+      "label" : "FCR-SG-to-aws",
+      "metro" : "SG",
+      "monthly" : 201.74,
+      "oneTime" : 0.00,
+      "currency" : "USD",
+      "source" : "EQUINIX_LIVE",
+      "monthlyLow" : 197.70,
+      "monthlyHigh" : 205.77,
+      "note" : "Equinix price ECX00015.PROD; converted from SGD 260.0 at 0.77591558 USD/SGD (ECB reference rate via Frankfurter, 2026-11-16, as of 2026-11-16); range widened +/-2% for exchange-rate uncertainty",
+      "conversion" : {
+        "originalMonthly" : 260.0,
+        "originalOneTime" : 0,
+        "originalCurrency" : "SGD",
+        "rate" : 0.77591558,
+        "kind" : "LIVE",
+        "source" : "ECB reference rate via Frankfurter, 2026-11-16",
+        "asOf" : "2026-11-16",
+        "bandPercent" : 2.0
+      }
+    }, {
+      "label" : "FCR-SG-to-azure",
+      "metro" : "SG",
+      "monthly" : 201.74,
+      "oneTime" : 0.00,
+      "currency" : "USD",
+      "source" : "EQUINIX_LIVE",
+      "monthlyLow" : 197.70,
+      "monthlyHigh" : 205.77,
+      "note" : "Equinix price ECX00015.PROD; converted from SGD 260.0 at 0.77591558 USD/SGD (ECB reference rate via Frankfurter, 2026-11-16, as of 2026-11-16); range widened +/-2% for exchange-rate uncertainty",
+      "conversion" : {
+        "originalMonthly" : 260.0,
+        "originalOneTime" : 0,
+        "originalCurrency" : "SGD",
+        "rate" : 0.77591558,
+        "kind" : "LIVE",
+        "source" : "ECB reference rate via Frankfurter, 2026-11-16",
+        "asOf" : "2026-11-16",
+        "bandPercent" : 2.0
+      }
+    }, {
+      "label" : "FCR-SG-to-gcp",
+      "metro" : "SG",
+      "monthly" : 151.30,
+      "oneTime" : 0.00,
+      "currency" : "USD",
+      "source" : "EQUINIX_LIVE",
+      "monthlyLow" : 148.28,
+      "monthlyHigh" : 154.33,
+      "note" : "Equinix price ECX00015.PROD; converted from SGD 195.0 at 0.77591558 USD/SGD (ECB reference rate via Frankfurter, 2026-11-16, as of 2026-11-16); range widened +/-2% for exchange-rate uncertainty",
+      "conversion" : {
+        "originalMonthly" : 195.0,
+        "originalOneTime" : 0,
+        "originalCurrency" : "SGD",
+        "rate" : 0.77591558,
+        "kind" : "LIVE",
+        "source" : "ECB reference rate via Frankfurter, 2026-11-16",
+        "asOf" : "2026-11-16",
+        "bandPercent" : 2.0
+      }
+    }, {
+      "label" : "FCR-DC-to-aws",
+      "metro" : "DC",
+      "monthly" : 375.0,
+      "oneTime" : 0,
+      "currency" : "USD",
+      "source" : "EQUINIX_LIVE",
+      "monthlyLow" : 375.0,
+      "monthlyHigh" : 375.0,
+      "note" : "Equinix price ECX00015.PROD"
+    }, {
+      "label" : "FCR-DC-to-azure",
+      "metro" : "DC",
+      "monthly" : 350,
+      "oneTime" : 0,
+      "currency" : "USD",
+      "source" : "REFERENCE",
+      "monthlyLow" : 350,
+      "monthlyHigh" : 350,
+      "note" : "reference VC ~10000 Mbps"
+    }, {
+      "label" : "FCR-DC-to-gcp",
+      "metro" : "DC",
+      "monthly" : 200.0,
+      "oneTime" : 0,
+      "currency" : "USD",
+      "source" : "EQUINIX_LIVE",
+      "monthlyLow" : 200.0,
+      "monthlyHigh" : 200.0,
+      "note" : "Equinix price ECX00015.PROD"
+    }, {
+      "label" : "FCR-TR-to-FR",
+      "metro" : "TR",
+      "monthly" : 486.52,
+      "oneTime" : 0.00,
+      "currency" : "USD",
+      "source" : "EQUINIX_LIVE",
+      "monthlyLow" : 476.79,
+      "monthlyHigh" : 496.25,
+      "note" : "Equinix price ECX00015.PROD; converted from CAD 695.0 at 0.700035 USD/CAD (ECB reference rate via Frankfurter, 2026-11-16, as of 2026-11-16); range widened +/-2% for exchange-rate uncertainty",
+      "conversion" : {
+        "originalMonthly" : 695.0,
+        "originalOneTime" : 0,
+        "originalCurrency" : "CAD",
+        "rate" : 0.70003500,
+        "kind" : "LIVE",
+        "source" : "ECB reference rate via Frankfurter, 2026-11-16",
+        "asOf" : "2026-11-16",
+        "bandPercent" : 2.0
+      }
+    }, {
+      "label" : "FCR-TR-to-SG",
+      "metro" : "TR",
+      "monthly" : 486.52,
+      "oneTime" : 0.00,
+      "currency" : "USD",
+      "source" : "EQUINIX_LIVE",
+      "monthlyLow" : 476.79,
+      "monthlyHigh" : 496.25,
+      "note" : "Equinix price ECX00015.PROD; converted from CAD 695.0 at 0.700035 USD/CAD (ECB reference rate via Frankfurter, 2026-11-16, as of 2026-11-16); range widened +/-2% for exchange-rate uncertainty",
+      "conversion" : {
+        "originalMonthly" : 695.0,
+        "originalOneTime" : 0,
+        "originalCurrency" : "CAD",
+        "rate" : 0.70003500,
+        "kind" : "LIVE",
+        "source" : "ECB reference rate via Frankfurter, 2026-11-16",
+        "asOf" : "2026-11-16",
+        "bandPercent" : 2.0
+      }
+    }, {
+      "label" : "FCR-TR-to-DC",
+      "metro" : "TR",
+      "monthly" : 486.52,
+      "oneTime" : 0.00,
+      "currency" : "USD",
+      "source" : "EQUINIX_LIVE",
+      "monthlyLow" : 476.79,
+      "monthlyHigh" : 496.25,
+      "note" : "Equinix price ECX00015.PROD; converted from CAD 695.0 at 0.700035 USD/CAD (ECB reference rate via Frankfurter, 2026-11-16, as of 2026-11-16); range widened +/-2% for exchange-rate uncertainty",
+      "conversion" : {
+        "originalMonthly" : 695.0,
+        "originalOneTime" : 0,
+        "originalCurrency" : "CAD",
+        "rate" : 0.70003500,
+        "kind" : "LIVE",
+        "source" : "ECB reference rate via Frankfurter, 2026-11-16",
+        "asOf" : "2026-11-16",
+        "bandPercent" : 2.0
+      }
+    }, {
+      "label" : "FCR-FR-to-SG",
+      "metro" : "FR",
+      "monthly" : 468.09,
+      "oneTime" : 0.00,
+      "currency" : "USD",
+      "source" : "EQUINIX_LIVE",
+      "monthlyLow" : 458.73,
+      "monthlyHigh" : 477.45,
+      "note" : "Equinix price ECX00015.PROD; converted from EUR 425.0 at 1.10139437 USD/EUR (ECB reference rate via Frankfurter, 2026-11-16, as of 2026-11-16); range widened +/-2% for exchange-rate uncertainty",
+      "conversion" : {
+        "originalMonthly" : 425.0,
+        "originalOneTime" : 0,
+        "originalCurrency" : "EUR",
+        "rate" : 1.10139437,
+        "kind" : "LIVE",
+        "source" : "ECB reference rate via Frankfurter, 2026-11-16",
+        "asOf" : "2026-11-16",
+        "bandPercent" : 2.0
+      }
+    }, {
+      "label" : "FCR-FR-to-DC",
+      "metro" : "FR",
+      "monthly" : 468.09,
+      "oneTime" : 0.00,
+      "currency" : "USD",
+      "source" : "EQUINIX_LIVE",
+      "monthlyLow" : 458.73,
+      "monthlyHigh" : 477.45,
+      "note" : "Equinix price ECX00015.PROD; converted from EUR 425.0 at 1.10139437 USD/EUR (ECB reference rate via Frankfurter, 2026-11-16, as of 2026-11-16); range widened +/-2% for exchange-rate uncertainty",
+      "conversion" : {
+        "originalMonthly" : 425.0,
+        "originalOneTime" : 0,
+        "originalCurrency" : "EUR",
+        "rate" : 1.10139437,
+        "kind" : "LIVE",
+        "source" : "ECB reference rate via Frankfurter, 2026-11-16",
+        "asOf" : "2026-11-16",
+        "bandPercent" : 2.0
+      }
+    }, {
+      "label" : "FCR-SG-to-DC",
+      "metro" : "SG",
+      "monthly" : 500.47,
+      "oneTime" : 0.00,
+      "currency" : "USD",
+      "source" : "EQUINIX_LIVE",
+      "monthlyLow" : 490.46,
+      "monthlyHigh" : 510.47,
+      "note" : "Equinix price ECX00015.PROD; converted from SGD 645.0 at 0.77591558 USD/SGD (ECB reference rate via Frankfurter, 2026-11-16, as of 2026-11-16); range widened +/-2% for exchange-rate uncertainty",
+      "conversion" : {
+        "originalMonthly" : 645.0,
+        "originalOneTime" : 0,
+        "originalCurrency" : "SGD",
+        "rate" : 0.77591558,
+        "kind" : "LIVE",
+        "source" : "ECB reference rate via Frankfurter, 2026-11-16",
+        "asOf" : "2026-11-16",
+        "bandPercent" : 2.0
+      }
+    } ],
+    "currencyNotes" : [ "17 of 22 line(s) converted to USD: CAD at ECB reference rate via Frankfurter, 2026-11-16; EUR at ECB reference rate via Frankfurter, 2026-11-16; SGD at ECB reference rate via Frankfurter, 2026-11-16" ],
+    "source" : "COMPOSITE",
+    "disclaimer" : "Some or all figures are heuristic or reference estimates (live Fabric pricing was unavailable for part of this plan). Actual costs may vary; contact your Equinix account team for precise quotes. 17 of 22 line(s) converted to USD: CAD at ECB reference rate via Frankfurter, 2026-11-16; EUR at ECB reference rate via Frankfurter, 2026-11-16; SGD at ECB reference rate via Frankfurter, 2026-11-16; each converted line keeps its original amount, the rate and its date."
+  },
+  "valid" : false,
+  "validationErrors" : [ "Router dry-run validation warning for 'FCR-TR': Error returned by Equinix API (HTTP 400). EQ-3040032: Invalid account number (field: account.accountNumber)\nStatus Code: 400\nURI: https://api.equinix.com/fabric/v4/routers?dryRun=true\nCorrelation Id: 7684c49a-1832-413a-8981-d18fd8691ab5\n  Details: Invalid account number\n  Property: account.accountNumber | Reason: invalid project account number", "Router dry-run validation warning for 'FCR-FR': Error returned by Equinix API (HTTP 400). EQ-3040032: Invalid account number (field: account.accountNumber)\nStatus Code: 400\nURI: https://api.equinix.com/fabric/v4/routers?dryRun=true\nCorrelation Id: 46324653-1c43-4125-aa56-4f0db7dc082a\n  Details: Invalid account number\n  Property: account.accountNumber | Reason: invalid project account number", "Router dry-run validation warning for 'FCR-SG': Error returned by Equinix API (HTTP 400). EQ-3040032: Invalid account number (field: account.accountNumber)\nStatus Code: 400\nURI: https://api.equinix.com/fabric/v4/routers?dryRun=true\nCorrelation Id: c87511d7-3c87-4c59-8799-08d4acbe9888\n  Details: Invalid account number\n  Property: account.accountNumber | Reason: invalid project account number", "Router dry-run validation warning for 'FCR-DC': Error returned by Equinix API (HTTP 400). EQ-3040032: Invalid account number (field: account.accountNumber)\nStatus Code: 400\nURI: https://api.equinix.com/fabric/v4/routers?dryRun=true\nCorrelation Id: 3df1f6c7-8b2d-44fc-b964-0d6ff0dc8652\n  Details: Invalid account number\n  Property: account.accountNumber | Reason: invalid project account number" ],
+  "deferredValidations" : [ "Connection 'FCR-TR-to-aws' (aws): endpoints validated structurally; the live endpoint dry-run runs at provisioning once Cloud Router 'FCR-TR' exists - you will need to supply AWS Account ID (12-digit), a VLAN tag", "Connection 'FCR-TR-to-azure' (azure): endpoints validated structurally; the live endpoint dry-run runs at provisioning once Cloud Router 'FCR-TR' exists - you will need to supply Azure ExpressRoute service key (GUID), a VLAN tag, an Azure peering type", "Connection 'FCR-TR-to-gcp' (gcp): endpoints validated structurally; the live endpoint dry-run runs at provisioning once Cloud Router 'FCR-TR' exists - you will need to supply GCP pairing key, a VLAN tag", "Connection 'FCR-FR-to-aws' (aws): endpoints validated structurally; the live endpoint dry-run runs at provisioning once Cloud Router 'FCR-FR' exists - you will need to supply AWS Account ID (12-digit), a VLAN tag", "Connection 'FCR-FR-to-azure' (azure): endpoints validated structurally; the live endpoint dry-run runs at provisioning once Cloud Router 'FCR-FR' exists - you will need to supply Azure ExpressRoute service key (GUID), a VLAN tag, an Azure peering type", "Connection 'FCR-FR-to-gcp' (gcp): endpoints validated structurally; the live endpoint dry-run runs at provisioning once Cloud Router 'FCR-FR' exists - you will need to supply GCP pairing key, a VLAN tag", "Connection 'FCR-SG-to-aws' (aws): endpoints validated structurally; the live endpoint dry-run runs at provisioning once Cloud Router 'FCR-SG' exists - you will need to supply AWS Account ID (12-digit), a VLAN tag", "Connection 'FCR-SG-to-azure' (azure): endpoints validated structurally; the live endpoint dry-run runs at provisioning once Cloud Router 'FCR-SG' exists - you will need to supply Azure ExpressRoute service key (GUID), a VLAN tag, an Azure peering type", "Connection 'FCR-SG-to-gcp' (gcp): endpoints validated structurally; the live endpoint dry-run runs at provisioning once Cloud Router 'FCR-SG' exists - you will need to supply GCP pairing key, a VLAN tag", "Connection 'FCR-DC-to-aws' (aws): endpoints validated structurally; the live endpoint dry-run runs at provisioning once Cloud Router 'FCR-DC' exists - you will need to supply AWS Account ID (12-digit), a VLAN tag", "Connection 'FCR-DC-to-azure' (azure): endpoints validated structurally; the live endpoint dry-run runs at provisioning once Cloud Router 'FCR-DC' exists - you will need to supply Azure ExpressRoute service key (GUID), a VLAN tag, an Azure peering type", "Connection 'FCR-DC-to-gcp' (gcp): endpoints validated structurally; the live endpoint dry-run runs at provisioning once Cloud Router 'FCR-DC' exists - you will need to supply GCP pairing key, a VLAN tag" ],
+  "skippedValidations" : [ ],
+  "requiredInputs" : [ {
+    "connectionName" : "FCR-TR-to-aws",
+    "providerLabel" : "aws",
+    "cloudType" : "AWS",
+    "authenticationKeyLabel" : "AWS Account ID (12-digit)",
+    "authenticationKeyRequired" : true,
+    "authenticationKeyProvided" : false,
+    "vlanTagRequired" : true,
+    "peeringTypeRequired" : false
+  }, {
+    "connectionName" : "FCR-TR-to-azure",
+    "providerLabel" : "azure",
+    "cloudType" : "AZURE",
+    "authenticationKeyLabel" : "Azure ExpressRoute service key (GUID)",
+    "authenticationKeyRequired" : true,
+    "authenticationKeyProvided" : false,
+    "vlanTagRequired" : true,
+    "peeringTypeRequired" : true
+  }, {
+    "connectionName" : "FCR-TR-to-gcp",
+    "providerLabel" : "gcp",
+    "cloudType" : "GOOGLE_CLOUD",
+    "authenticationKeyLabel" : "GCP pairing key",
+    "authenticationKeyRequired" : true,
+    "authenticationKeyProvided" : false,
+    "vlanTagRequired" : true,
+    "peeringTypeRequired" : false
+  }, {
+    "connectionName" : "FCR-FR-to-aws",
+    "providerLabel" : "aws",
+    "cloudType" : "AWS",
+    "authenticationKeyLabel" : "AWS Account ID (12-digit)",
+    "authenticationKeyRequired" : true,
+    "authenticationKeyProvided" : false,
+    "vlanTagRequired" : true,
+    "peeringTypeRequired" : false
+  }, {
+    "connectionName" : "FCR-FR-to-azure",
+    "providerLabel" : "azure",
+    "cloudType" : "AZURE",
+    "authenticationKeyLabel" : "Azure ExpressRoute service key (GUID)",
+    "authenticationKeyRequired" : true,
+    "authenticationKeyProvided" : false,
+    "vlanTagRequired" : true,
+    "peeringTypeRequired" : true
+  }, {
+    "connectionName" : "FCR-FR-to-gcp",
+    "providerLabel" : "gcp",
+    "cloudType" : "GOOGLE_CLOUD",
+    "authenticationKeyLabel" : "GCP pairing key",
+    "authenticationKeyRequired" : true,
+    "authenticationKeyProvided" : false,
+    "vlanTagRequired" : true,
+    "peeringTypeRequired" : false
+  }, {
+    "connectionName" : "FCR-SG-to-aws",
+    "providerLabel" : "aws",
+    "cloudType" : "AWS",
+    "authenticationKeyLabel" : "AWS Account ID (12-digit)",
+    "authenticationKeyRequired" : true,
+    "authenticationKeyProvided" : false,
+    "vlanTagRequired" : true,
+    "peeringTypeRequired" : false
+  }, {
+    "connectionName" : "FCR-SG-to-azure",
+    "providerLabel" : "azure",
+    "cloudType" : "AZURE",
+    "authenticationKeyLabel" : "Azure ExpressRoute service key (GUID)",
+    "authenticationKeyRequired" : true,
+    "authenticationKeyProvided" : false,
+    "vlanTagRequired" : true,
+    "peeringTypeRequired" : true
+  }, {
+    "connectionName" : "FCR-SG-to-gcp",
+    "providerLabel" : "gcp",
+    "cloudType" : "GOOGLE_CLOUD",
+    "authenticationKeyLabel" : "GCP pairing key",
+    "authenticationKeyRequired" : true,
+    "authenticationKeyProvided" : false,
+    "vlanTagRequired" : true,
+    "peeringTypeRequired" : false
+  }, {
+    "connectionName" : "FCR-DC-to-aws",
+    "providerLabel" : "aws",
+    "cloudType" : "AWS",
+    "authenticationKeyLabel" : "AWS Account ID (12-digit)",
+    "authenticationKeyRequired" : true,
+    "authenticationKeyProvided" : false,
+    "vlanTagRequired" : true,
+    "peeringTypeRequired" : false
+  }, {
+    "connectionName" : "FCR-DC-to-azure",
+    "providerLabel" : "azure",
+    "cloudType" : "AZURE",
+    "authenticationKeyLabel" : "Azure ExpressRoute service key (GUID)",
+    "authenticationKeyRequired" : true,
+    "authenticationKeyProvided" : false,
+    "vlanTagRequired" : true,
+    "peeringTypeRequired" : true
+  }, {
+    "connectionName" : "FCR-DC-to-gcp",
+    "providerLabel" : "gcp",
+    "cloudType" : "GOOGLE_CLOUD",
+    "authenticationKeyLabel" : "GCP pairing key",
+    "authenticationKeyRequired" : true,
+    "authenticationKeyProvided" : false,
+    "vlanTagRequired" : true,
+    "peeringTypeRequired" : false
+  } ],
+  "planId" : "c502b0d151391174",
+  "schemaVersion" : "1"
+}
