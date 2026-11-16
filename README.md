@@ -387,7 +387,11 @@ for (Project p : eq.projects().projects().list()) {
 `BillingNotification`, `OrderNotification`, `ManagedServiceNotification`, `UnknownNotification`) and
 dispatches them to an `EmgMessageHandler`. `EmgListener` drives any `EmgReceiver`;
 `ServiceBusEmgReceiver` binds it to Azure Service Bus and needs the optional
-`azure-messaging-servicebus` dependency.
+`azure-messaging-servicebus` dependency. The SDK is built and tested against 7.18.0. That version
+resolves `org.apache.qpid:proton-j` 0.34.1 and `io.netty:netty-codec-dns` 4.1.135.Final, which have
+published advisories (GHSA-p2gc-fm5w-94jj, GHSA-mfg7-5gfp-c4w3); in your build, set `proton-j` to
+0.35.0 or later and Netty to 4.1.136.Final or later (the Netty BOM does it in one entry), as this
+project's `pom.xml` does.
 
 ```java
 EmgMessageHandler handler = new EmgMessageHandler() {

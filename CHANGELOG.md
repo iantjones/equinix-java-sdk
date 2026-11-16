@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+- The build manages two transitives of the optional `azure-messaging-servicebus` 7.18.0 to versions
+  without published advisories: `org.apache.qpid:proton-j` 0.35.0 (GHSA-p2gc-fm5w-94jj) and Netty
+  4.1.137.Final through the Netty BOM (`netty-codec-dns`, GHSA-mfg7-5gfp-c4w3). Neither library is in
+  the SDK jar or the MCP server jar. A build that adds the Azure client should set the same versions;
+  the README and the `messaging` package documentation say so.
+
+### Build
+- Every Netty module resolves to one version; before, the tree mixed 4.1.135.Final and 4.1.137.Final.
+
 ## [4.0.0] - 2026-11-12
 
 A major release. It removes deprecated and non-functional surfaces without compatibility shims, adds

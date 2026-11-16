@@ -16,7 +16,10 @@
  *   <li>{@link com.eqixiac.equinix.messaging.transport} adds a receive/settle loop, and
  *       {@link com.eqixiac.equinix.messaging.transport.servicebus} binds it to Azure Service Bus. That
  *       binding needs {@code com.azure:azure-messaging-servicebus}, which the SDK declares
- *       {@code <optional>}: add it to your own build.</li>
+ *       {@code <optional>}: add it to your own build. The SDK is built against 7.18.0; with that
+ *       version also set {@code org.apache.qpid:proton-j} to 0.35.0 or later and Netty to
+ *       4.1.136.Final or later in your build, because the versions it resolves by default have
+ *       published advisories.</li>
  * </ul>
  *
  * <h2>Connection details</h2>
