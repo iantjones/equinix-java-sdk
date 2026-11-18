@@ -96,6 +96,14 @@ public final class FabricCatalogLoader {
                         builder.providerAvailability(metro, cloud.getKey(), availability));
             }
             for (CloudIntent cloud : spec.clouds()) {
+                List<String> elsewhere = catalog.otherRegionOnly(cloud.id());
+                if (!elsewhere.isEmpty()) {
+                    builder.note("Cloud '" + cloud.id() + "' names region " + cloud.region() + ": "
+                            + elsewhere.size() + " metro(s) offer the provider through other regions only ("
+                            + String.join(", ", elsewhere) + "). Workloads are placed in a metro that serves "
+                            + "the named region when one is in the design; a connection planned elsewhere "
+                            + "states the region it uses.");
+                }
                 String reason = catalog.unresolvedReason(cloud);
                 if (reason != null) {
                     builder.note("Cloud '" + cloud.id() + "' is reachable from no metro: " + reason

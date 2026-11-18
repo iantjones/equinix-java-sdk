@@ -112,8 +112,8 @@ import java.util.TreeSet;
  *   <li>Simulate failures with {@link ResilienceAnalyzer}.</li>
  *   <li>Project growth and commitment terms with {@link GrowthPlanner}.</li>
  *   <li>Compare egress cost with {@link SavingsCalculator} and {@link TcoCalculator}.</li>
- *   <li>Decide how each destination is reached (rules in this class, see {@link #connectivityFor}).</li>
- *   <li>Decide how each metro is entered (rules in this class, see {@link #accessFor}) and list the
+ *   <li>Decide how each destination is reached ({@code ConnectivityPlanner}, see {@link #connectivityFor}).</li>
+ *   <li>Decide how each metro is entered ({@code ConnectivityPlanner}, see {@link #accessFor}) and list the
  *       physical orders that follow.</li>
  *   <li>Write the {@link DesignDecisionRecord}.</li>
  *   <li>Build the deployment plan with {@link DeploymentWizard}; export Markdown, Terraform and a
@@ -125,8 +125,8 @@ import java.util.TreeSet;
  * <p><b>What the design layer decides and what this example decides.</b> The engines choose metros, place
  * workloads, price the design, simulate failures and plan Cloud Routers, cloud connections, backbone
  * links and routing protocols. They do not plan Network Edge devices, physical ports, cross connects,
- * Internet Access or Internet Exchange (IX) membership. For those, steps 6 and 7 apply plain rules
- * written in this class and print what would be ordered; they send no order.</p>
+ * Internet Access or Internet Exchange (IX) membership. For those, steps 6 and 7 print the decisions of
+ * {@code ConnectivityPlanner} and what would be ordered; they send no order.</p>
  *
  * <p>Cost figures are design-time estimates, not quotes. Availability figures in the resilience report
  * are planning assumptions, not SLAs.</p>
@@ -492,7 +492,7 @@ public final class EndToEndDesignExample {
         }
 
         // 7. How each metro is entered, and the physical orders
-        List<AccessDecision> access = accessFor(spec, portfolio, in.discovery());
+        List<AccessDecision> access = accessFor(spec, optimization, in.discovery());
         out.println("7. Access per metro");
         for (AccessDecision a : access) {
             out.printf("   %s %s: %s%n", a.metro(), a.access(), a.reason());
@@ -575,71 +575,28 @@ public final class EndToEndDesignExample {
     static List<ConnectivityDecision> connectivityFor(DesignSpec spec, OptimizationResult optimization,
                                                      PeeringIntelligenceResult peering, Discovery discovery) {
         List<ConnectivityDecision> decisions = new ArrayList<>();
-        MetroPortfolio portfolio = optimization.getRecommended().portfolio();
-        PlacementPlan placement = optimization.getPlacement();
-        for (CloudIntent cloud : spec.clouds()) {
-            Set<String> metros = new LinkedHashSet<>();
-            if (placement != null) {
-                for (MetroId metro : portfolio.metros()) {
-                    placement.legsIn(metro).stream().filter(leg -> cloud.id().equals(leg.cloudId()))
-                            .forEach(leg -> metros.add(metro.code()));
-                }
-            }
-            decisions.add(new ConnectivityDecision(cloud.id(), Reach.FABRIC_CLOUD_ROUTER, List.copyOf(metros),
-                    metros.isEmpty() ? "no placement connects this cloud" : "private on-ramp where the placement connects it"));
+        for (com.eqixiac.equinix.design.connectivity.ConnectivityPlan.ReachDecision d
+                : connectivityPlan(spec, optimization, peering, discovery).reach()) {
+            decisions.add(new ConnectivityDecision(d.destination(), Reach.valueOf(d.reach().name()), d.metros(),
+                    d.reason()));
         }
-        for (PeerIntent peer : spec.peers()) {
-            String label = peer.label() == null ? "AS" + peer.asn() : peer.label() + " (AS" + peer.asn() + ")";
-            UnifiedConnectivityView view = peering == null ? null : peering.unifiedView(peer.asn());
-            if (view == null) {
-                decisions.add(new ConnectivityDecision(label, Reach.UNDECIDED, List.of(),
-                        "no Peering Intelligence result for this peer"));
-                continue;
-            }
-            List<String> ix = new ArrayList<>();
-            List<String> fabric = new ArrayList<>();
-            for (MetroId metro : portfolio.metros()) {
-                UnifiedConnectivityView.MetroConnectivity in = view.forMetro(metro);
-                if (in != null && in.isHasIxPeering()) {
-                    ix.add(metro.code());
-                }
-                if (in != null && in.isHasFabric()) {
-                    fabric.add(metro.code());
-                }
-            }
-            if (!ix.isEmpty()) {
-                decisions.add(new ConnectivityDecision(label, Reach.INTERNET_EXCHANGE, ix,
-                        "the peer is at an IX in a chosen metro"));
-            } else if (!fabric.isEmpty()) {
-                decisions.add(new ConnectivityDecision(label, Reach.FABRIC_PRIVATE, fabric,
-                        "no IX presence in a chosen metro; the peer publishes a Fabric service profile there"));
-            } else {
-                decisions.add(new ConnectivityDecision(label, Reach.INTERNET_ACCESS, internetMetros(portfolio, discovery),
-                        "the peer is in no chosen metro"));
-            }
-        }
-        List<String> breakout = internetMetros(portfolio, discovery);
-        decisions.add(new ConnectivityDecision("internet", breakout.isEmpty() ? Reach.UNDECIDED : Reach.INTERNET_ACCESS,
-                breakout, breakout.isEmpty() ? "Internet Access availability is unknown for the chosen metros"
-                        : "Internet Access in each chosen metro that offers it"));
         return decisions;
     }
 
-    private static List<String> internetMetros(MetroPortfolio portfolio, Discovery discovery) {
-        List<String> metros = new ArrayList<>();
-        for (MetroId metro : portfolio.metros()) {
-            if (discovery.internetAccessMetros().contains(metro.code())) {
-                metros.add(metro.code());
-            }
-        }
-        return metros;
+    /** The rules are applied by the SDK's {@code ConnectivityPlanner}; this example prints its plan. */
+    private static com.eqixiac.equinix.design.connectivity.ConnectivityPlan connectivityPlan(
+            DesignSpec spec, OptimizationResult optimization, PeeringIntelligenceResult peering, Discovery discovery) {
+        return com.eqixiac.equinix.design.connectivity.ConnectivityPlanner.forSpec(spec).optimization(optimization)
+                .peering(peering)
+                .availability(new com.eqixiac.equinix.design.connectivity.ProductAvailability(
+                        discovery.networkEdgeMetros(), discovery.internetAccessMetros(), discovery.notes()))
+                .plan();
     }
 
     // Step 7 rules
 
     /**
-     * How each chosen metro is entered. The design layer plans the Cloud Router in each metro and
-     * nothing below it, so the rules are stated here:
+     * How each chosen metro is entered, as decided by {@code ConnectivityPlanner}:
      * <ul>
      *   <li>A metro with a site of role {@code DATA_CENTER} is entered through two Fabric ports, one per
      *       chassis group, each with its own cross connect from the cage.</li>
@@ -649,37 +606,16 @@ public final class EndToEndDesignExample {
      *       metros.</li>
      * </ul>
      *
-     * @param spec      the design
-     * @param portfolio the chosen metros
-     * @param discovery product availability
+     * @param spec         the design
+     * @param optimization the optimizer's result
+     * @param discovery    product availability
      * @return one decision per metro
      */
-    static List<AccessDecision> accessFor(DesignSpec spec, MetroPortfolio portfolio, Discovery discovery) {
+    static List<AccessDecision> accessFor(DesignSpec spec, OptimizationResult optimization, Discovery discovery) {
         List<AccessDecision> decisions = new ArrayList<>();
-        for (MetroId metro : portfolio.metros()) {
-            String code = metro.code();
-            Optional<SiteIntent> cage = spec.sites().stream()
-                    .filter(s -> s.role() == SiteRole.DATA_CENTER && code.equalsIgnoreCase(s.metro())).findFirst();
-            if (cage.isPresent()) {
-                decisions.add(new AccessDecision(code, Access.PHYSICAL_PORTS,
-                        "the site '" + cage.get().label() + "' is a data center in this metro",
-                        List.of("Fabric port " + code + "-primary, 10G, redundancy group with priority PRIMARY",
-                                "Fabric port " + code + "-secondary, 10G, same redundancy group with priority SECONDARY",
-                                "cross connect from the cage to " + code + "-primary",
-                                "cross connect from the cage to " + code + "-secondary on a diverse path",
-                                "virtual connections from both ports to the Cloud Router in " + code)));
-            } else if (discovery.networkEdgeMetros().contains(code)) {
-                decisions.add(new AccessDecision(code, Access.NETWORK_EDGE,
-                        "no data center site here and Network Edge is offered",
-                        List.of("Network Edge device pair in " + code + " (redundant, SD-WAN or router image)",
-                                "virtual connections from both devices to the Cloud Router in " + code)));
-            } else {
-                decisions.add(new AccessDecision(code, Access.CLOUD_ROUTER_ONLY,
-                        discovery.networkEdgeMetros().isEmpty()
-                                ? "no data center site here and Network Edge availability is unknown"
-                                : "no data center site here and Network Edge is not offered",
-                        List.of()));
-            }
+        for (com.eqixiac.equinix.design.connectivity.ConnectivityPlan.AccessDecision d
+                : connectivityPlan(spec, optimization, null, discovery).access()) {
+            decisions.add(new AccessDecision(d.metro(), Access.valueOf(d.access().name()), d.reason(), d.orders()));
         }
         return decisions;
     }

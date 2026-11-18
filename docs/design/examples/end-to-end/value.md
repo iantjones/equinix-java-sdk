@@ -18,7 +18,7 @@
 
 _Derived from spec fingerprint `a5f92102787e`_
 - Assumed: 4000 Mbps of workloads to 'aws' rounded up to the 5000 Mbps Fabric tier
-- Assumed: The portfolio DC+FR+SG+TR has several metros; the connection is priced in DC
+- Assumed: The portfolio DC+FR+SG has several metros; the connection is priced in DC
 
 _Design-time estimate, not a quote. Equinix interconnect costs use live Fabric pricing where available; egress rates are indicative reference or caller-supplied figures. Actual costs depend on region, tiering, volume, and contract terms. Excludes per-provider free-tier egress allowances and compute/storage costs. Net savings include the AWS interconnect port fee at the bundled reference rate._
 
@@ -36,7 +36,7 @@ _Design-time estimate, not a quote. Equinix interconnect costs use live Fabric p
 
 _Derived from spec fingerprint `a5f92102787e`_
 - Assumed: 4000 Mbps of workloads to 'aws' rounded up to the 5000 Mbps Fabric tier
-- Assumed: The portfolio DC+FR+SG+TR has several metros; the connection is priced in DC
+- Assumed: The portfolio DC+FR+SG has several metros; the connection is priced in DC
 
 **Recommended:** Equinix interconnected
 

@@ -197,7 +197,12 @@ final class PlanMarkdown {
                         .append(" | ").append(conn.getASideRouterName()).append(" (").append(conn.getASideMetro()).append(")")
                         .append(" | ").append(conn.getZSideProviderLabel());
                 if (conn.getZSideSellerRegion() != null) {
-                    md.append(" [").append(conn.getZSideSellerRegion()).append("]");
+                    md.append(" [").append(conn.getZSideSellerRegion());
+                    if (conn.getZSideRequestedRegion() != null) {
+                        md.append("; the design names ").append(conn.getZSideRequestedRegion())
+                                .append(", reached over the provider's network");
+                    }
+                    md.append("]");
                 }
                 md.append(" | ").append(conn.getBandwidthMbps()).append(" Mbps");
                 ProfileSelection sel = conn.getProfileSelection();
@@ -272,6 +277,17 @@ final class PlanMarkdown {
                 md.append("| **Total Monthly** | **")
                         .append(describeByCurrency(plan.getPricing().getMonthlyByCurrency()))
                         .append("** (multiple currencies - no single total) |\n");
+            }
+            if (plan.getPricing().getOutsidePlanMonthly() != null) {
+                md.append("| Provider fees and data egress (billed by the cloud providers; not created by this "
+                        + "plan; reference figures) | ")
+                        .append(money(plan.getPricing().getOutsidePlanMonthly(), plan.getPricing().getCurrency()))
+                        .append(" |\n");
+            }
+            if (plan.getPricing().getDesignMonthly() != null) {
+                md.append("| **Design total monthly** | **")
+                        .append(money(plan.getPricing().getDesignMonthly(), plan.getPricing().getCurrency()))
+                        .append("** |\n");
             }
             if (plan.getPricing().getSetupTotal() != null) {
                 md.append("| Setup (one-time) | ")

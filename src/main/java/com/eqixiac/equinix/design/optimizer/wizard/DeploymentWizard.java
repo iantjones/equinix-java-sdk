@@ -780,6 +780,11 @@ public final class DeploymentWizard {
         String getSpecFingerprint() { return specFingerprint; }
         List<PlannedInterconnect> getInterconnects() { return interconnects; }
 
+        /** The spec behind the plan, for the pricer: {@link #designSpec}, else the optimisation result's. */
+        DesignSpec getDesignSpecOrResultSpec() {
+            return pricingSpec();
+        }
+
         /** The spec whose commercial terms price the plan: {@link #designSpec}, else the optimisation result's. */
         private DesignSpec pricingSpec() {
             if (designSpec != null) {

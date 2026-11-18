@@ -153,6 +153,30 @@ final class ResultAssembler {
                         + "search answers, or price with a rate card you hold", null));
             }
         }
+        if (plan != null) {
+            java.util.Set<String> seen = new java.util.LinkedHashSet<>();
+            for (PlacementPlan.Placement p : plan.placements()) {
+                for (String issue : p.issues()) {
+                    if (issue.contains("through another region than") && seen.add(issue)) {
+                        findings.add(finding(RiskSeverity.MEDIUM, "CLOUD_REGION_NOT_LOCAL", issue + " (workload '"
+                                + p.workload() + "').", "Add a metro whose on-ramp serves the named region, drop "
+                                + "the region from the spec to accept any on-ramp, or plan the provider-side path "
+                                + "(for AWS, a Direct Connect gateway) yourself", null));
+                    }
+                }
+            }
+        }
+        if (plan != null) {
+            java.util.Set<MetroId> idle = plan.idleMetros();
+            for (MetroId metro : WorkloadPlacer.accessMetros(rec.portfolio(), context)) {
+                if (idle.contains(metro)) {
+                    findings.add(finding(RiskSeverity.INFO, "ACCESS_METRO", metro.code() + " carries no workload "
+                            + "and no cloud connection. It is in the design as the nearest metro to a site, "
+                            + "allowed by constraints.allowAccessMetros; its Cloud Router and backbone links are "
+                            + "priced.", null, metro));
+                }
+            }
+        }
         ObjectiveValue resilience = rec == null ? null : rec.values().get(Objective.RESILIENCE);
         RiskAssessment risk = new RiskAssessment(findings, overall(findings),
                 resilience != null && resilience.known() ? resilience.value() : 0);

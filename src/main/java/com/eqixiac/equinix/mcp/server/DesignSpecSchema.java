@@ -84,8 +84,12 @@ final class DesignSpecSchema {
                 "bandwidthMbps", with(integer("Sustained bandwidth in Mbps; sizes and prices the workload's cloud "
                         + "connections. Unsized workloads leave those connections unpriced."), "minimum", 1),
                 "latencySensitivity", stringEnum("Descriptive latency class.", names(LatencySensitivity.class)),
-                "maxLatencyMs", with(number("Hard ceiling on ROUND-TRIP ms from every site to this workload's metro. "
-                        + "A hard constraint: designs that break it are infeasible."), "exclusiveMinimum", 0),
+                "maxLatencyMs", with(number("Hard ceiling on ROUND-TRIP ms to this workload's metro, from the sites "
+                        + "in 'sites' (from every site when 'sites' is omitted). A hard constraint: designs that "
+                        + "break it are infeasible."), "exclusiveMinimum", 0),
+                "sites", array("Labels of the sites (from sites[].label) that use this workload. Omit for every "
+                        + "site. Placement and maxLatencyMs then consider only these sites, so a regional workload "
+                        + "can have a regional latency limit.", string("A site label.")),
                 "clouds", array("Ids of clouds (from clouds[].id) this workload must reach. Two or more clouds "
                         + "make a cloud-to-cloud flow.", string("A cloud id.")),
                 "pinnedMetro", with(string("Metro this workload must run in."), "pattern", METRO_PATTERN)),
@@ -125,7 +129,12 @@ final class DesignSpecSchema {
                 "maxLatencyMs", with(number("Ceiling on ROUND-TRIP ms from every site to the metro that serves it."),
                         "exclusiveMinimum", 0),
                 "minMetros", with(integer("Fewest metros a design may use."), "minimum", 1),
-                "maxMetros", with(integer("Most metros a design may use (default 3)."), "minimum", 1)));
+                "maxMetros", with(integer("Most metros a design may use (default 3)."), "minimum", 1),
+                "minSurvivalPct", with(number("Least share of the design's service, in percent, that must survive "
+                        + "its worst single failure, measured by failure simulation."), "minimum", 0, "maximum", 100),
+                "allowAccessMetros", bool("true lets a design include a metro that carries no workload or cloud "
+                        + "connection when it is the nearest metro to a site (it brings that site onto the "
+                        + "backbone). Default false: every metro must carry a workload or a cloud connection.")));
 
         Map<String, Object> objectives = object(props(
                 "profile", stringEnum("Named weight profile.", WeightProfiles.names().toArray(new String[0])),
@@ -214,7 +223,8 @@ final class DesignSpecSchema {
                     type: GENERAL_COMPUTE  # optional archetype, e.g. TRANSACTIONAL, AI_ML_INFERENCE, DISASTER_RECOVERY
                     bandwidthMbps: 1000    # sustained Mbps; sizes and prices the cloud connection
                     clouds: [aws-use1]
-                    # maxLatencyMs: 80     # optional HARD ceiling, round-trip ms from every site
+                    # maxLatencyMs: 80     # optional HARD ceiling, round-trip ms from the workload's sites
+                    # sites: [New York]    # optional: the sites that use it (default: every site)
                     # pinnedMetro: NY      # optional: force this workload into one metro
                 # peers:                   # optional: networks to peer with (design_analyze_peering)
                 #   - asn: 13335

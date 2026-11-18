@@ -185,7 +185,21 @@ final class PlanPricer {
                         + "for part of this plan). Actual costs may vary; contact your Equinix account team for precise quotes.";
         }
 
+        List<com.eqixiac.equinix.design.spi.CostLine> outside = outsidePlan(config, rateCard, providerConnections,
+                term, target, fx);
+        BigDecimal outsideMonthly = null;
+        if (!outside.isEmpty() && outside.stream().allMatch(l -> l.currency().equals(target))) {
+            outsideMonthly = outside.stream().map(com.eqixiac.equinix.design.spi.CostLine::monthly)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+        }
+        BigDecimal planMonthly = mixed ? null : recon.monthlyTotal().orElse(BigDecimal.ZERO);
+        BigDecimal designMonthly = planMonthly != null && outsideMonthly != null && target.equals(currency)
+                ? planMonthly.add(outsideMonthly) : null;
+
         PlanPricing equinixPricing = PlanPricing.builder()
+                .outsidePlanLines(outside)
+                .outsidePlanMonthly(outsideMonthly)
+                .designMonthly(designMonthly)
                 .monthlyTotal(mixed ? null : recon.monthlyTotal().orElse(BigDecimal.ZERO))
                 .setupTotal(mixed ? null : recon.setupTotal().orElse(BigDecimal.ZERO))
                 .currency(currency)
@@ -286,6 +300,61 @@ final class PlanPricer {
      * a raw cross-currency category sum (EUR&nbsp;280 + USD&nbsp;300 = "580") is a fabricated
      * number and is never reported.
      */
+    /**
+     * What the design costs beyond the resources this plan creates: the cloud provider's fee per hosted
+     * connection (reference table) and egress over the private path for each cloud with a stated volume.
+     * The same items the Metro Optimizer's cost model lists, so the two totals reconcile.
+     */
+    private static List<com.eqixiac.equinix.design.spi.CostLine> outsidePlan(
+            DeploymentWizard.Builder config, RateCard rateCard, List<PlannedConnection> providerConnections,
+            Term term, String target, com.eqixiac.equinix.design.spi.CurrencyConverter fx) {
+        List<com.eqixiac.equinix.design.spi.CostLine> lines = new ArrayList<>();
+        Set<String> connected = new HashSet<>();
+        for (PlannedConnection conn : providerConnections) {
+            if (conn.getZSideProviderLabel() != null) {
+                connected.add(conn.getZSideProviderLabel());
+            }
+            com.eqixiac.equinix.fabric.model.implementation.cloud.CloudProviderType type = conn.getZSideCloudType();
+            if (type == null || conn.getBandwidthMbps() <= 0) {
+                continue;
+            }
+            com.eqixiac.equinix.design.value.ratecard.PriceLookup<PriceQuote> fee = ReferenceRateCard.standard()
+                    .providerConnection(type, com.eqixiac.equinix.design.value.ratecard.ConnectionModel.HOSTED,
+                            conn.getBandwidthMbps());
+            if (fee.isPriced()) {
+                lines.add(inPlanCurrency("Provider hosted-connection fee " + conn.getZSideProviderLabel() + " "
+                        + conn.getBandwidthMbps() + " Mbps in " + conn.getASideMetro().code(), conn.getASideMetro(),
+                        fee.value(), target, fx));
+            }
+        }
+        com.eqixiac.equinix.design.spec.DesignSpec spec = config.getDesignSpecOrResultSpec();
+        if (spec == null) {
+            return lines;
+        }
+        RateCard card = rateCard != null ? rateCard : ReferenceRateCard.standard();
+        for (com.eqixiac.equinix.design.spec.CloudIntent cloud : spec.clouds()) {
+            if (cloud.monthlyEgressGb() == null || cloud.monthlyEgressGb() <= 0 || cloud.provider() == null
+                    || !connected.contains(cloud.id())) {
+                continue;
+            }
+            com.eqixiac.equinix.design.value.ratecard.PriceLookup<com.eqixiac.equinix.design.value.ratecard.EgressRate>
+                    rate = card.egressLookup(cloud.provider(), cloud.region(),
+                    com.eqixiac.equinix.design.value.ratecard.EgressPath.PRIVATE, term);
+            if (!rate.isPriced()) {
+                continue;
+            }
+            com.eqixiac.equinix.design.value.ratecard.EgressRate r = rate.value();
+            BigDecimal monthly = r.costFor(BigDecimal.valueOf(cloud.monthlyEgressGb()))
+                    .setScale(2, java.math.RoundingMode.HALF_UP);
+            com.eqixiac.equinix.design.spi.CostLine line = com.eqixiac.equinix.design.spi.CostLine.exact(
+                    String.format(Locale.ROOT, "Data out of %s, %.0f GB/month over the private path", cloud.id(),
+                            cloud.monthlyEgressGb()), null, monthly, BigDecimal.ZERO,
+                    r.getCurrency().getCurrencyCode(), r.getSource(), r.getPricePerGb().toPlainString() + "/GB");
+            lines.add(com.eqixiac.equinix.design.cost.CurrencyConverters.convert(line, target, fx).orElse(line));
+        }
+        return lines;
+    }
+
     private static BigDecimal categoryMonthly(CurrencyReconciler categoryRecon) {
         return categoryRecon.monthlyTotal().orElse(null);
     }
@@ -341,10 +410,20 @@ final class PlanPricer {
      */
     static PriceQuote priceConnection(RateCard rateCard, ConnectionType type,
                                               int bandwidthMbps, MetroId metro, Term term) {
+        // Fabric bills a connection at a bandwidth tier. A plan bandwidth between tiers (a provider profile
+        // that lists no speeds leaves the requirement as it is) is priced at the tier that covers it, which
+        // is also what the optimizer's cost model prices.
+        int tier = com.eqixiac.equinix.design.cost.RateCardCostModel.tierFor(bandwidthMbps);
+        int billedMbps = tier > 0 ? tier : bandwidthMbps;
         if (rateCard != null) {
-            Optional<PriceQuote> quote = rateCard.connection(type, bandwidthMbps, toMetroCode(metro), term);
+            Optional<PriceQuote> quote = rateCard.connection(type, billedMbps, toMetroCode(metro), term);
             if (quote.isPresent()) {
-                return quote.get();
+                if (billedMbps == bandwidthMbps) {
+                    return quote.get();
+                }
+                String note = quote.get().getNote();
+                return quote.get().withNote((note == null || note.isBlank() ? "" : note + "; ")
+                        + "priced at the " + billedMbps + " Mbps Fabric tier that covers " + bandwidthMbps + " Mbps");
             }
         }
         return PriceQuote.of(estimateConnectionCost(bandwidthMbps), BigDecimal.valueOf(500),

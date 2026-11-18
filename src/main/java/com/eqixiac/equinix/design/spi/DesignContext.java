@@ -87,6 +87,19 @@ public interface DesignContext {
      */
     Set<String> reachableClouds(MetroId metro);
 
+    /**
+     * Whether the on-ramp at a metro serves the region the spec names for a cloud. The placement prefers
+     * such metros, and results say when a connection uses another region.
+     *
+     * @param metro   a metro
+     * @param cloudId a spec cloud id
+     * @return {@code false} only when the metro's on-ramp is known to serve other regions; {@code true}
+     *         when it serves the named region, when the spec names none, or when that is not known
+     */
+    default boolean servesRequestedRegion(MetroId metro, String cloudId) {
+        return true;
+    }
+
     /** @return the cost model that prices portfolios in this run */
     CostModel costModel();
 

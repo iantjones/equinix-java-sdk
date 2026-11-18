@@ -1,6 +1,6 @@
 graph LR
-  subgraph metro_TR["Metro: TR"]
-    fcr0(["FCR-TR<br/>STANDARD"])
+  subgraph metro_DC["Metro: DC"]
+    fcr0(["FCR-DC<br/>STANDARD"])
   end
   subgraph metro_FR["Metro: FR"]
     fcr1(["FCR-FR<br/>STANDARD"])
@@ -8,33 +8,15 @@ graph LR
   subgraph metro_SG["Metro: SG"]
     fcr2(["FCR-SG<br/>STANDARD"])
   end
-  subgraph metro_DC["Metro: DC"]
-    fcr3(["FCR-DC<br/>STANDARD"])
-  end
-  prov4["aws<br/>ca-central-1"]
-  fcr0 -->|5000 Mbps| prov4
-  prov5["azure"]
-  fcr0 -->|3000 Mbps| prov5
-  prov6["gcp<br/>northamerica-northeast2"]
-  fcr0 -->|1000 Mbps| prov6
-  prov7["aws<br/>eu-central-1"]
-  fcr1 -->|1000 Mbps| prov7
-  fcr1 -->|500 Mbps| prov5
-  prov8["gcp<br/>europe-west3"]
-  fcr1 -->|1000 Mbps| prov8
-  prov9["aws<br/>ap-southeast-1"]
-  fcr2 -->|1000 Mbps| prov9
-  fcr2 -->|1000 Mbps| prov5
-  prov10["gcp<br/>asia-southeast1"]
-  fcr2 -->|500 Mbps| prov10
-  prov11["aws<br/>us-east-1"]
-  fcr3 -->|5000 Mbps| prov11
-  fcr3 -->|3000 Mbps| prov5
-  prov12["gcp<br/>us-east4"]
-  fcr3 -->|1000 Mbps| prov12
+  prov3["aws<br/>us-east-1"]
+  fcr0 -->|5000 Mbps| prov3
+  prov4["azure"]
+  fcr0 -->|3000 Mbps| prov4
+  prov5["aws<br/>eu-central-1"]
+  fcr1 -->|5000 Mbps| prov5
+  fcr1 -->|3500 Mbps| prov4
+  prov6["gcp<br/>asia-southeast1"]
+  fcr2 -->|500 Mbps| prov6
   fcr0 <-->|10000 Mbps backbone| fcr1
   fcr0 <-->|10000 Mbps backbone| fcr2
-  fcr0 <-->|10000 Mbps backbone| fcr3
   fcr1 <-->|10000 Mbps backbone| fcr2
-  fcr1 <-->|10000 Mbps backbone| fcr3
-  fcr2 <-->|10000 Mbps backbone| fcr3

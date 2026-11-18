@@ -235,6 +235,12 @@ public final class CatalogDesignContext implements DesignContext {
         return reachable.getOrDefault(metro, Set.of());
     }
 
+    @Override
+    public boolean servesRequestedRegion(MetroId metro, String cloudId) {
+        ProviderAvailability chosen = providerAvailability(metro).get(cloudId);
+        return chosen == null || !Boolean.FALSE.equals(chosen.getServesRequestedRegion());
+    }
+
     /**
      * @param metro a metro
      * @return the service profile chosen per cloud id at that metro (only clouds reachable there)

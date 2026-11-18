@@ -13,7 +13,7 @@ design engine, then the API clients for the parts the design layer does not plan
 
 The default run creates nothing. It reads the Fabric catalogue and prices, Network Edge metros and
 Internet Access availability. Building the plan also sends one Cloud Router `dryRun=true` request per
-metro (see [Step 9](#step-9-build-the-deployment-plan)).
+metro when a billing account is given (see [Step 9](#step-9-build-the-deployment-plan)).
 
 ## Contents
 
@@ -31,7 +31,7 @@ metro (see [Step 9](#step-9-build-the-deployment-plan)).
 - [Step 9: build the deployment plan](#step-9-build-the-deployment-plan)
 - [Step 10: the deploy gate](#step-10-the-deploy-gate)
 - [What is not modelled](#what-is-not-modelled)
-- [Findings from building the example](#findings-from-building-the-example)
+- [Engine changes that came from the example](#engine-changes-that-came-from-the-example)
 
 ## The scenario
 
@@ -53,12 +53,12 @@ metro (see [Step 9](#step-9-build-the-deployment-plan)).
 | Cost, currency conversion, growth, commitment terms, egress value | `RateCardCostModel`, `GrowthPlanner`, `SavingsCalculator`, `TcoCalculator` |
 | What a failure takes down, and what fixes it | `ResilienceAnalyzer` |
 | Cloud Routers, cloud connections, backbone links, BGP | `DeploymentWizard` |
-| Cloud on-ramp, IX, private connection or Internet Access per destination | Rules in the example ([Step 6](#step-6-decide-how-each-destination-is-reached)), using `PeeringIntelligence` output for peers |
-| Physical ports, cross connects or Network Edge per metro | Rules in the example ([Step 7](#step-7-decide-how-each-metro-is-entered)) |
+| Cloud on-ramp, IX, private connection or Internet Access per destination | `ConnectivityPlanner` ([Step 6](#step-6-decide-how-each-destination-is-reached)), using `PeeringIntelligence` output for peers |
+| Physical ports, cross connects or Network Edge per metro | `ConnectivityPlanner` ([Step 7](#step-7-decide-how-each-metro-is-entered)) |
 | Whether to deploy | The gate in the example ([Step 10](#step-10-the-deploy-gate)) |
 
-The design layer has no engine for the last three rows. The example states its rules in code and
-prints what would be ordered. It sends no port, cross connect, Network Edge or Internet Access order.
+`ConnectivityPlanner` applies fixed rules and lists what would be ordered. It sends no port, cross
+connect, Network Edge or Internet Access order, and a `DeploymentPlan` does not contain those items.
 
 ## Run it
 
@@ -79,7 +79,7 @@ java -cp "target/classes:target/test-classes:$(cat target/cp.txt)" com.eqixiac.e
 | `EQIXIAC_EXAMPLE_ESTATE_PROJECT` | Adds an estate review of that project's deployed Fabric resources |
 | `--deploy` with `EQIXIAC_EXAMPLE_DEPLOY=yes` | Allows deployment if the gate passes. Both are needed |
 
-The live run took 147 seconds and examined 814,385 portfolios.
+In the live run the optimizer examined 814,385 portfolios in 21 seconds.
 
 ## Step 1: write the spec
 
@@ -120,14 +120,12 @@ spec.requireValid();
 
 The spec as YAML: [`spec.yaml`](examples/end-to-end/spec.yaml).
 
-Two limits in the spec shaped the scenario:
+Two spec options exist that this scenario does not use:
 
-- A workload latency limit applies to the farthest site in the whole spec. A workload cannot be scoped
-  to some sites. With sites on three continents, 250 ms is the smallest round number that any design
-  meets.
-- A metro counts as used only when a workload or cloud connection lands in it. A metro that would only
-  shorten a site's access path is rejected by the `every_metro_used` constraint, so the APAC metro
-  needs a pinned workload.
+- `WorkloadIntent.sites` limits a workload's latency limit and placement to the sites it names. Without
+  it the limit applies to the farthest site in the spec, which is why `order-api` has a 250 ms limit.
+- `DesignConstraints.allowAccessMetros` lets the optimizer add a metro that carries no workload and
+  only shortens a site's path. It is off by default, so here every chosen metro runs a workload.
 
 ## Step 2: choose metros
 
@@ -136,33 +134,38 @@ OptimizationResult optimization = MetroOptimizer.forSpec(fabric, spec).rateCard(
 DesignOption best = optimization.getRecommended();
 ```
 
-Result: DC + FR + SG + TR (Toronto), weighted score 90.1 of 100, chosen from 15 feasible designs.
+Result: DC + FR + SG, weighted score 89.4 of 100, chosen from 15 feasible designs.
 
 | Design | Weighted | Latency (ms) | Cost (USD/month) | Resilience (%) | Carbon (gCO2e/kWh) |
 |---|---:|---:|---:|---:|---:|
-| DC+FR+SG+TR (recommended) | 90.1 | 11.9 | 16,180.9 | 82.2 | 235.3 |
-| DC+FR+SG | 89.4 | 16.0 | 14,480.6 | 82.2 | 390.2 |
-| CH+DC+FR+SG | 88.8 | 5.4 | 16,233.9 | 82.2 | 390.2 |
-| AM+DC+FR+SG | 87.5 | 14.9 | 16,112.1 | 82.2 | 390.2 |
-| DC+FR+MA+SG | 87.5 | 14.8 | 16,170.7 | 82.2 | 390.2 |
+| DC+FR+SG (recommended) | 89.4 | 16.0 | 15,948.7 | 82.2 | 390.2 |
+| CH+DC+FR+SG | 87.6 | 5.4 | 19,202.0 | 82.2 | 390.2 |
+| DC+FR+SG+TR | 86.7 | 11.9 | 19,117.6 | 82.2 | 390.2 |
+| AM+DC+FR+SG | 86.3 | 14.9 | 18,984.5 | 82.2 | 390.2 |
+| DC+FR+MA+SG | 86.2 | 14.8 | 19,095.2 | 82.2 | 390.2 |
 
 Latency is the site-weighted round trip to the nearest chosen metro. The three required and pinned
-metros were fixed by the spec. The optimizer chose whether a fourth pays for itself, and which one.
+metros were fixed by the spec. The optimizer chose whether a fourth pays for itself: none does at these
+weights. The cost includes the full-mesh backbone between Cloud Routers, so a fourth metro adds a
+router, its connections and three backbone links.
 
-Sensitivity: the recommendation holds while the carbon weight is at least 7% and the cost weight is at
-most 25%. Toronto is in the design because of the 10% carbon weight: the bundled table gives Canada a
-lower grid intensity than the United States, and the placement runs `order-api`, `analytics` and
-`disaster-recovery` there with DC as standby. Drop the carbon weight below 7% and DC+FR+SG wins.
+Sensitivity: the recommendation holds while the latency weight is at most 48% and the cost weight is at
+least 10%. Outside either bound CH+DC+FR+SG takes over.
 
 Placement:
 
 | Workload | Runs in | Standby | Site-weighted round trip (ms) |
 |---|---|---|---:|
-| order-api | TR | DC | 45.9 |
-| analytics | TR | DC | 45.9 |
+| order-api | DC | FR | 49.2 |
+| analytics | DC | FR | 49.2 |
 | inference | SG (pinned) | none | 177.2 |
 | plant-erp | FR (pinned) | none | 78.2 |
-| disaster-recovery | TR | DC | 45.9 |
+| disaster-recovery | DC | FR | 49.2 |
+
+The optimizer places a workload first in a metro that reaches each cloud in the region the spec names.
+DC reaches AWS `us-east-1`. The standby, FR, reaches AWS through `eu-central-1`. The report states this
+as a `CLOUD_REGION_NOT_LOCAL` finding: traffic to `us-east-1` continues over the provider's network,
+which is not modelled or priced.
 
 Full report: [`optimization.md`](examples/end-to-end/optimization.md).
 
@@ -175,11 +178,12 @@ ResilienceReport resilience = ResilienceAnalyzer.forSpec(fabric, spec)
 
 | Check | Result |
 |---|---|
-| N-1 | Fails: 6 of 38 single failures cause an outage |
-| N-2 | Fails: 212 of 639 pairs cause an outage, 42 degrade service |
+| N-1 | Fails: 6 of 31 single failures cause an outage, 2 degrade service |
+| N-2 | Fails: 165 of 418 pairs cause an outage, 46 degrade service |
 
 The outages come from the two pinned workloads, which have no standby metro. Remediation the analyzer
-re-simulated and confirmed: add a standby Google Cloud connection in DC sized for 500 Mbps. For the loss
+re-simulated and confirmed: add a standby Google Cloud connection in DC sized for 500 Mbps, raise the
+Azure connection in DC from 3,000 to 3,500 Mbps, and add a second, redundant Azure connection in FR. For the loss
 of FR or SG it found no candidate metro among the nearest five that removes the outage, because the
 workload is pinned.
 
@@ -193,7 +197,7 @@ CatalogDesignContext context = FabricCatalogLoader.load(fabric, spec, null);
 GrowthPlan growth = GrowthPlanner.forSpec(spec, portfolio, context, rateCard, ReferenceRateCard.standard()).plan();
 ```
 
-19 items over 36 months at 30% a year. Example: the DC to AWS connection needs an upgrade from 5,000 to
+16 items over 36 months at 30% a year. Example: the DC to AWS connection needs an upgrade from 5,000 to
 10,000 Mbps in month 12. For virtual connections the live prices were the same at every term, so the
 planner recommends month to month (ties go to the shorter term). Provider-side fees have no term axis
 and are priced on demand. Full plan: [`growth.md`](examples/end-to-end/growth.md).
@@ -220,7 +224,14 @@ output: [`value.md`](examples/end-to-end/value.md).
 
 ## Step 6: decide how each destination is reached
 
-No engine makes this choice. The example's rules (`connectivityFor`):
+```java
+ConnectivityPlan connectivity = ConnectivityPlanner.forSpec(spec).optimization(optimization)
+        .peering(peering)                                   // null when Peering Intelligence was not run
+        .availability(ProductAvailability.read(equinix))    // Network Edge and Internet Access metros
+        .plan();
+```
+
+`ConnectivityPlanner` applies these rules to each destination:
 
 1. A cloud is reached over a private Fabric connection from the Cloud Router in each metro where the
    optimizer's placement connects it.
@@ -231,8 +242,8 @@ No engine makes this choice. The example's rules (`connectivityFor`):
 
 | Destination | Reached by | Metros |
 |---|---|---|
-| aws | Fabric and Cloud Router | DC, TR |
-| azure | Fabric and Cloud Router | DC, FR, TR |
+| aws | Fabric and Cloud Router | DC, FR |
+| azure | Fabric and Cloud Router | DC, FR |
 | gcp | Fabric and Cloud Router | SG |
 | AS13335, AS20940, AS8075 | Undecided | none |
 | internet | Internet Access | DC, FR |
@@ -241,13 +252,12 @@ The peers are undecided because the live run did not pass `--peering`: Peering I
 PeeringDB, which rate-limits anonymous callers. With a result, rule 2 reads
 `UnifiedConnectivityView.forMetro(metro)` for each peer (`isHasIxPeering()`, `isHasFabric()`).
 
-Internet Access was offered in DC and FR and not in SG or TR, as read from
+Internet Access was offered in DC and FR and not in SG, as read from
 `internetAccess().ibxs().availability(ConnectionType.IA_VC)`.
 
 ## Step 7: decide how each metro is entered
 
-The design layer plans the Cloud Router in each metro and nothing below it. The example's rules
-(`accessFor`):
+The same `ConnectivityPlan` holds one access decision per metro (`connectivity.access()`). The rules:
 
 1. A metro with a site of role `DATA_CENTER` is entered through two Fabric ports in one redundancy
    group, each with its own cross connect from the cage.
@@ -260,12 +270,11 @@ The design layer plans the Cloud Router in each metro and nothing below it. The 
 | DC | Physical ports | Two 10G Fabric ports (primary and secondary in one redundancy group), two cross connects on diverse paths, virtual connections from both ports to the Cloud Router |
 | FR | Network Edge | A redundant device pair, virtual connections from both devices to the Cloud Router |
 | SG | Network Edge | The same |
-| TR | Network Edge | The same |
 
 Network Edge availability comes from `networkEdge().setup().listMetros()`. To validate these orders
 without placing them, use the dry-run calls the SDK has: `fabric.ports().define()...dryRun().create()`
 validates a port order, and `connections().define(...)...dryRun().create()` validates a virtual
-connection. Both need a billing account, so the example prints the orders and does not send them.
+connection. Both need a billing account, so the example prints the planned orders and does not send them.
 The SDK has no dry run for cross connect orders or Network Edge device creates.
 
 ## Step 8: write the decision record
@@ -294,19 +303,32 @@ String diagram = new TopologyDiagram().toMermaid(plan);
 
 | Item | Count |
 |---|---:|
-| Cloud Routers | 4 |
-| Cloud connections | 12 |
-| Backbone links (full mesh) | 6 |
-| Routing protocols | 36 |
+| Cloud Routers | 3 |
+| Cloud connections | 5 |
+| Backbone links (full mesh) | 3 |
+| Routing protocols | 16 |
 
-The plan's estimate is USD 10,797.34 a month. It covers the Equinix items only (Cloud Routers,
-connections, backbone). The optimizer's USD 16,180.91 also includes the cloud providers' connection
-fees and private-path egress, so the two figures differ by design.
+The plan connects a cloud only in a metro where the placement uses it: AWS and Azure in DC and FR,
+Google Cloud in SG. The FR to AWS row reads `aws [eu-central-1; the design names us-east-1, reached over
+the provider's network]`.
 
-`plan()` sent a Cloud Router `dryRun=true` request for each metro. With no billing account given, the
-service answered HTTP 400 `EQ-3040032` (invalid account number) four times, and the plan records four
-validation errors. Twelve connection checks are deferred until the routers exist and the provider keys
-are supplied.
+| Cost row in the plan | USD/month |
+|---|---:|
+| Cloud Routers | 3,749.70 |
+| Provider connections | 1,606.20 |
+| Backbone links | 1,468.09 |
+| Total monthly (created by the plan) | 6,823.99 |
+| Provider fees and data egress (billed by the cloud providers, reference figures) | 9,124.73 |
+| Design total monthly | 15,948.72 |
+
+The design total equals the optimizer's cost for DC+FR+SG in [Step 2](#step-2-choose-metros). Five of
+the eleven Equinix lines were converted to USD from EUR or SGD at the ECB reference rate of the run
+date.
+
+No billing account was given, so the three Cloud Router dry runs were skipped and the plan is valid
+with no errors. Each skipped check is listed in the plan with the reason. Five connection checks are
+deferred until the routers exist and the provider keys are supplied. With an account, `plan()` sends a
+Cloud Router `dryRun=true` request for each metro.
 
 Outputs: [`plan.md`](examples/end-to-end/plan.md), [`plan.json`](examples/end-to-end/plan.json),
 [`main.tf`](examples/end-to-end/main.tf), [`topology.mmd`](examples/end-to-end/topology.mmd).
@@ -317,14 +339,14 @@ The example deploys only when every check passes:
 
 | Check | Live run |
 |---|---|
-| The plan is valid | Fail: 4 errors (no billing account) |
-| The estimate is within the budget | Pass: 10,797.34 of 60,000 |
+| The plan is valid | Pass: 0 errors |
+| The estimate is within the budget | Pass: 6,823.99 of 60,000 |
 | N-1 passes | Fail |
-| Provider inputs are present | Fail: 12 missing (AWS account ids, Azure service keys, Google pairing keys) |
+| Provider inputs are present | Fail: 5 missing (AWS account ids, Azure service keys, a Google pairing key) |
 | A project and billing account were given | Fail |
 | Deployment was requested with `--deploy` and `EQIXIAC_EXAMPLE_DEPLOY=yes` | Fail |
 
-Result: not deploying, 5 of 6 checks failed. When the gate passes, the example calls
+Result: not deploying, 4 of 6 checks failed. When the gate passes, the example calls
 `plan.reconcile(inputs, ExecutionOptions.defaults(), new FileCheckpointStore(dir))`, which creates what
 is missing, records a checkpoint after each step, and can be re-run after a failure.
 
@@ -343,13 +365,16 @@ and remove that check.
 - The carbon objective is a siting indicator from country-level grid figures. It is not an emissions
   estimate.
 
-## Findings from building the example
+## Engine changes that came from the example
 
-| Finding | Effect |
+The first version of this example exposed six gaps in the design layer. Each is closed in the release
+after 4.0.0; see the [CHANGELOG](../../CHANGELOG.md).
+
+| Gap | Now |
 |---|---|
-| A workload latency limit applies to every site in the spec | A regional workload cannot have a regional limit |
-| A metro that only serves sites counts as unused | A metro cannot be added for access latency alone |
-| `plan()` sends router dry runs when no billing account is given | Every plan built without an account records validation errors |
-| A standby metro can connect a cloud in a region the spec did not name | In the live plan, Toronto connects AWS `ca-central-1`; the spec names `us-east-1` |
-| The plan estimate and the optimizer cost use different scopes | Two monthly figures for one design; the plan's excludes provider fees and egress |
-| No engine chooses between IX, a private connection and Internet Access, or between ports and Network Edge | The example decides by rule |
+| A workload latency limit applied to every site in the spec | `WorkloadIntent.sites` scopes a workload to named sites |
+| A metro that only serves sites counted as unused | `DesignConstraints.allowAccessMetros` permits it; the report marks it `ACCESS_METRO` |
+| `plan()` recorded validation errors when no billing account was given | The router dry run is a skipped check with the reason |
+| A standby metro could connect a cloud in a region the spec did not name, without saying so | Placement prefers the named region; a different region is a `CLOUD_REGION_NOT_LOCAL` finding and is written on the plan row |
+| The plan estimate and the optimizer cost differed for one design | The optimizer prices the backbone; the plan shows provider fees and egress and a design total |
+| No engine chose between IX, a private connection and Internet Access, or between ports and Network Edge | `ConnectivityPlanner` |

@@ -50,11 +50,13 @@ public final class ProviderCatalog {
 
     private final Map<String, Map<MetroId, ProviderAvailability>> byCloud;
     private final Map<String, Integer> profilesMatched;
+    private final Map<String, List<String>> otherRegionOnly;
 
     private ProviderCatalog(Map<String, Map<MetroId, ProviderAvailability>> byCloud,
-                            Map<String, Integer> profilesMatched) {
+                            Map<String, Integer> profilesMatched, Map<String, List<String>> otherRegionOnly) {
         this.byCloud = byCloud;
         this.profilesMatched = profilesMatched;
+        this.otherRegionOnly = otherRegionOnly;
     }
 
     /**
@@ -65,7 +67,9 @@ public final class ProviderCatalog {
     public static ProviderCatalog resolve(List<CloudIntent> clouds, List<ServiceProfile> profiles) {
         Map<String, Map<MetroId, ProviderAvailability>> byCloud = new LinkedHashMap<>();
         Map<String, Integer> matchedCounts = new LinkedHashMap<>();
+        Map<String, List<String>> otherRegionOnly = new LinkedHashMap<>();
         for (CloudIntent cloud : clouds) {
+            java.util.Set<String> wrongRegion = new java.util.TreeSet<>();
             Map<MetroId, ProviderAvailability> chosen = new TreeMap<>(java.util.Comparator.comparing(MetroId::code));
             Map<MetroId, List<ServiceProfileOption>> options = new LinkedHashMap<>();
             int matched = 0;
@@ -99,7 +103,8 @@ public final class ProviderCatalog {
                             : new ArrayList<>(spm.getSellerRegions().keySet());
                     ProviderAvailability candidate = ProviderAvailability.builder()
                             .providerLabel(cloud.id()).available(true).sellerRegions(regions)
-                            .serviceProfileUuid(profile.getUuid()).build();
+                            .serviceProfileUuid(profile.getUuid()).requestedRegion(cloud.region())
+                            .servesRequestedRegion(servesRegion(regions, cloud.region())).build();
                     ProviderAvailability incumbent = chosen.get(spm.metroId());
                     if (incumbent == null || outranks(candidate, incumbent, cloud.region())) {
                         chosen.put(spm.metroId(), candidate);
@@ -116,8 +121,14 @@ public final class ProviderCatalog {
                     .profileOptions(options.getOrDefault(metro, List.of())).build()));
             byCloud.put(cloud.id(), Collections.unmodifiableMap(withOptions));
             matchedCounts.put(cloud.id(), matched);
+            chosen.forEach((metro, availability) -> {
+                if (Boolean.FALSE.equals(availability.getServesRequestedRegion())) {
+                    wrongRegion.add(metro.code());
+                }
+            });
+            otherRegionOnly.put(cloud.id(), List.copyOf(wrongRegion));
         }
-        return new ProviderCatalog(byCloud, matchedCounts);
+        return new ProviderCatalog(byCloud, matchedCounts, otherRegionOnly);
     }
 
     /** @return per cloud id, the chosen profile at every metro the cloud is reachable from */
@@ -131,6 +142,18 @@ public final class ProviderCatalog {
      */
     public int profilesMatched(String cloudId) {
         return profilesMatched.getOrDefault(cloudId, 0);
+    }
+
+    /**
+     * The metros where the provider is present but every matching profile serves cloud regions other than
+     * the one the spec names. They still reach the provider; the placement prefers metros that serve the
+     * named region, and a connection planned at one of these states the region it uses.
+     *
+     * @param cloudId a spec cloud id
+     * @return the metro codes, sorted; empty when the spec names no region or none was left out
+     */
+    public List<String> otherRegionOnly(String cloudId) {
+        return otherRegionOnly.getOrDefault(cloudId, List.of());
     }
 
     /**
@@ -157,6 +180,19 @@ public final class ProviderCatalog {
                     .contains(cloud.serviceProfileName().toLowerCase(Locale.ROOT));
         }
         return cloud.provider() != null && cloud.provider().matchesServiceProfileName(profile.getName());
+    }
+
+    /** @return whether the list holds the wanted region; {@code null} when either is unknown */
+    static Boolean servesRegion(List<String> regions, String wanted) {
+        if (wanted == null || wanted.isBlank() || regions == null || regions.isEmpty()) {
+            return null;
+        }
+        for (String region : regions) {
+            if (wanted.equalsIgnoreCase(region)) {
+                return Boolean.TRUE;
+            }
+        }
+        return Boolean.FALSE;
     }
 
     private static String selector(CloudIntent cloud) {

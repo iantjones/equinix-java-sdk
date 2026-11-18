@@ -302,7 +302,7 @@ final class DeploymentWizardEngine {
                     // Legacy / hand-built entry with no capability data: keep the pre-selected default and
                     // the raw requirement - there is no tier list to round against.
                     serviceProfileUuid = provider.getServiceProfileUuid();
-                    sellerRegion = firstOrNull(provider.getSellerRegions());
+                    sellerRegion = regionFor(provider, provider.getSellerRegions());
                     stampedBandwidth = requestedMbps;
                 }
 
@@ -321,6 +321,9 @@ final class DeploymentWizardEngine {
                         .zSideServiceProfileUuid(serviceProfileUuid)
                         .zSideProviderLabel(provider.getProviderLabel())
                         .zSideSellerRegion(sellerRegion)
+                        .zSideRequestedRegion(provider.getRequestedRegion() != null && sellerRegion != null
+                                && !provider.getRequestedRegion().equalsIgnoreCase(sellerRegion)
+                                ? provider.getRequestedRegion() : null)
                         // Resolve the provider label to a typed cloud provider so the plan can
                         // enumerate the exact authorization key the connection will need at
                         // provisioning (AWS Account ID, Azure service key, GCP pairing key, ...).
@@ -352,14 +355,35 @@ final class DeploymentWizardEngine {
      * @return the selection (default profile, stamped tier, and covering alternatives), or {@code null}
      *         when no candidate can carry {@code mbps} even after rounding up
      */
+    /**
+     * The cloud region a connection asks for: the region the design named when the profile lists it,
+     * else the first region the profile lists.
+     */
+    private static String regionFor(ProviderAvailability provider, List<String> listed) {
+        String wanted = provider.getRequestedRegion();
+        if (wanted != null && listed != null) {
+            for (String region : listed) {
+                if (wanted.equalsIgnoreCase(region)) {
+                    return region;
+                }
+            }
+        }
+        return firstOrNull(listed);
+    }
+
     private static ProfileSelection selectProfile(ProviderAvailability provider, int mbps) {
         List<ServiceProfileOption> options = provider.getProfileOptions();
         if (options == null || options.isEmpty()) {
             return null;
         }
         String defaultUuid = provider.getServiceProfileUuid();
+        String wanted = provider.getRequestedRegion();
         Comparator<ServiceProfileOption> byFit = Comparator
-                .comparingInt((ServiceProfileOption o) -> o.coveringTier(mbps))
+                // A profile that serves the region the design named comes first, whatever its tier fit.
+                .comparingInt((ServiceProfileOption o) -> wanted == null || o.getSellerRegions() == null
+                        || o.getSellerRegions().isEmpty() || o.getSellerRegions().stream()
+                        .anyMatch(wanted::equalsIgnoreCase) ? 0 : 1)
+                .thenComparingInt(o -> o.coveringTier(mbps))
                 .thenComparingInt(ServiceProfileOption::capacityCeiling)
                 .thenComparingInt(o -> o.excessTiersAbove(mbps))
                 .thenComparingInt(o -> Objects.equals(o.getServiceProfileUuid(), defaultUuid) ? 0 : 1)
@@ -383,7 +407,7 @@ final class DeploymentWizardEngine {
         return ProfileSelection.builder()
                 .requestedMbps(mbps)
                 .selectedProfileUuid(chosen.getServiceProfileUuid())
-                .selectedSellerRegion(firstOrNull(chosen.getSellerRegions()))
+                .selectedSellerRegion(regionFor(provider, chosen.getSellerRegions()))
                 .selectedTierMbps(chosenTier)
                 .roundedUp(roundedUp)
                 .alternatives(alternatives)
@@ -557,7 +581,19 @@ final class DeploymentWizardEngine {
             totalMbps += bw;
         }
 
-        // Ensure minimum bandwidth
+        if (totalMbps <= 0 && strategy != BandwidthStrategy.AGGREGATED && result.getPlacement() != null
+                && result.getPlacement().legsIn(metro.getMetroId()).stream()
+                .noneMatch(leg -> provider.getProviderLabel().equals(leg.cloudId()))) {
+            // The optimizer's placement connects this cloud in other metros, not here. The provider being
+            // available at this metro is not a reason to connect it: no workload here uses it, and a
+            // connection would be billed and would reach a region nobody asked for.
+            return BandwidthAllocation.builder().totalMbps(0).perWorkload(perWorkload)
+                    .reasoning("Not connected at " + metro.getMetroId() + ": the placement puts no workload "
+                            + "that uses " + provider.getProviderLabel() + " here")
+                    .build();
+        }
+
+        // A cloud leg whose workloads state no bandwidth still needs a connection: size it at the default.
         if (totalMbps <= 0) {
             totalMbps = 1000;
             perWorkload.put("default", 1000);

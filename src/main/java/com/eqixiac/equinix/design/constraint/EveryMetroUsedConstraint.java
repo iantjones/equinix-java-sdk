@@ -48,8 +48,12 @@ public final class EveryMetroUsedConstraint implements Constraint {
             return ConstraintVerdict.pass(ID, "nothing to place");
         }
         PlacementPlan plan = WorkloadPlacer.place(portfolio, context);
-        Set<MetroId> idle = plan.idleMetros();
-        return idle.isEmpty() ? ConstraintVerdict.pass(ID, "every metro carries a workload or a cloud connection")
+        Set<MetroId> idle = new java.util.LinkedHashSet<>(plan.idleMetros());
+        Set<MetroId> access = WorkloadPlacer.accessMetros(portfolio, context);
+        boolean accessOnly = idle.removeAll(access);
+        return idle.isEmpty() ? ConstraintVerdict.pass(ID, accessOnly
+                ? "every metro carries a workload or a cloud connection, or is the nearest metro to a site"
+                : "every metro carries a workload or a cloud connection")
                 : ConstraintVerdict.fail(ID, idle.stream().map(MetroId::code).collect(Collectors.joining(", "))
                         + " would carry nothing");
     }

@@ -115,6 +115,55 @@ class BuiltInConstraintsTest {
     }
 
     @Test
+    @DisplayName("a workload that names its sites is placed and limited by those sites only")
+    void workloadSites() {
+        // Two sites: HQ next to DC, a London office next to LD. A 20 ms limit cannot hold for both.
+        DesignSpec.DesignSpecBuilder two = DesignSpec.builder().name("regional")
+                .site(SiteIntent.builder().label("HQ").metro("DC").build())
+                .site(SiteIntent.builder().label("London").metro("LD").build());
+        DesignSpec everySite = two.workload(WorkloadIntent.builder().label("erp").bandwidthMbps(10)
+                .maxLatencyMs(20.0).build()).build();
+        DesignSpec londonOnly = DesignSpec.builder().name("regional")
+                .site(SiteIntent.builder().label("HQ").metro("DC").build())
+                .site(SiteIntent.builder().label("London").metro("LD").build())
+                .workload(WorkloadIntent.builder().label("erp").bandwidthMbps(10).maxLatencyMs(20.0)
+                        .sites(List.of("London")).build()).build();
+        java.util.function.Function<DesignSpec, FakeDesignContext> facts = spec -> new FakeDesignContext(spec)
+                .metro("DC", Region.AMER).metro("LD", Region.EMEA)
+                .latency("DC", "HQ", 0.5).latency("LD", "HQ", 73.4)
+                .latency("DC", "London", 73.4).latency("LD", "London", 0.5);
+
+        assertFalse(ok(new WorkloadLatencyConstraint(), facts.apply(everySite), "DC", "LD"),
+                "with no sites named the limit applies to both sites, and no metro is within 20 ms of both");
+        FakeDesignContext regional = facts.apply(londonOnly);
+        assertTrue(ok(new WorkloadLatencyConstraint(), regional, "DC", "LD"));
+        assertEquals(MetroId.of("LD"), com.eqixiac.equinix.design.placement.WorkloadPlacer
+                .place(MetroPortfolio.ofCodes("DC", "LD"), regional).placement("erp").orElseThrow().primary(),
+                "placed by its own site, not by the site-weighted mean of every site");
+
+        DesignSpec unknown = DesignSpec.builder().name("regional")
+                .site(SiteIntent.builder().label("HQ").metro("DC").build())
+                .workload(WorkloadIntent.builder().label("erp").sites(List.of("Paris")).build()).build();
+        assertTrue(unknown.validate().stream().anyMatch(i -> i.path().equals("workloads[0].sites[0]")
+                && i.message().contains("Paris")), unknown.validate().toString());
+    }
+
+    @Test
+    @DisplayName("a workload with no sites named serializes as before, so existing fingerprints do not change")
+    void workloadSitesAreOptionalInJson() throws Exception {
+        DesignSpec spec = base(DesignConstraints.none()).build();
+        assertFalse(com.eqixiac.equinix.design.spec.DesignSpecIO.toJson(spec).contains("\"sites\" : [ ]"));
+        assertFalse(com.eqixiac.equinix.design.spec.DesignSpecIO.toJson(spec)
+                .replace("\"sites\" : [ {", "").contains("\"sites\""), "only the top-level sites list is written");
+        DesignSpec named = spec.toBuilder().clearWorkloads()
+                .workload(WorkloadIntent.builder().label("api").bandwidthMbps(1000).clouds(List.of("aws"))
+                        .sites(List.of("HQ")).build()).build();
+        assertEquals(named, com.eqixiac.equinix.design.spec.DesignSpecIO.fromJson(
+                com.eqixiac.equinix.design.spec.DesignSpecIO.toJson(named)));
+        assertFalse(spec.fingerprint().equals(named.fingerprint()));
+    }
+
+    @Test
     @DisplayName("workload latency, pinned metro, required clouds, metro count and every-metro-used")
     void workloadRules() {
         DesignSpec spec = base(DesignConstraints.builder().minMetros(1).maxMetros(2).build())

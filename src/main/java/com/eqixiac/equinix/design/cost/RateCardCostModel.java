@@ -90,6 +90,12 @@ public final class RateCardCostModel implements CostModel {
 
     /** Lookups {@link #prepare} runs at once by default: small, so the live price search is not flooded. */
     public static final int DEFAULT_PREFETCH_THREADS = 6;
+
+    /**
+     * The bandwidth assumed for each backbone connection between Cloud Routers, in Mbps: the Deployment
+     * Wizard's default, so an estimate and the plan built from it price the same links.
+     */
+    public static final int DEFAULT_BACKBONE_MBPS = 10_000;
     /** How long one lookup may run during {@link #prepare} before the fallback card is used. */
     public static final java.time.Duration DEFAULT_LOOKUP_TIMEOUT = java.time.Duration.ofSeconds(20);
     /** Timeouts in one run after which {@link #prepare} stops asking the primary card. */
@@ -103,10 +109,12 @@ public final class RateCardCostModel implements CostModel {
     private final Term term;
     private final ConnectionType connectionType;
     private final String routerPackage;
+    private final int backboneMbps;
     private final String targetCurrency;
     private final CommercialTerms.ExchangeRates exchangeRates;
     private final CurrencyConverters.Chain converter;
     private final Map<String, Optional<CostLine>> cache = new ConcurrentHashMap<>();
+    private final Map<String, PriceLookup<PriceQuote>> connectionQuotes = new ConcurrentHashMap<>();
     private final Map<String, String> unpricedReasons = new ConcurrentHashMap<>();
     private final RateCard fallbackCard;
     private final int prefetchThreads;
@@ -120,6 +128,7 @@ public final class RateCardCostModel implements CostModel {
         this.term = b.term;
         this.connectionType = b.connectionType;
         this.routerPackage = b.routerPackage;
+        this.backboneMbps = b.backboneMbps;
         this.targetCurrency = b.targetCurrency;
         this.exchangeRates = b.exchangeRates;
         this.converter = CurrencyConverters.forTerms(CommercialTerms.builder().currency(b.targetCurrency)
@@ -355,8 +364,21 @@ public final class RateCardCostModel implements CostModel {
             need.accept(connection(leg.metro(), tier, leg.cloudId()));
             need.accept(providerPort(leg.metro(), tier, cloud));
         }
+        // A metro kept only to bring a site onto the backbone still needs its Cloud Router and its links.
+        routerMetros.addAll(WorkloadPlacer.accessMetros(plan.portfolio(), context));
         for (MetroId metro : routerMetros) {
             need.accept(router(metro));
+        }
+        if (backboneMbps > 0 && routerMetros.size() > 1) {
+            // The Cloud Routers of a multi-metro design are joined by backbone connections. The Deployment
+            // Wizard plans a full mesh by default, so the estimate prices the same links.
+            List<MetroId> ordered = new ArrayList<>(routerMetros);
+            ordered.sort(java.util.Comparator.comparing(MetroId::code));
+            for (int i = 0; i < ordered.size(); i++) {
+                for (int j = i + 1; j < ordered.size(); j++) {
+                    need.accept(backbone(ordered.get(i), ordered.get(j)));
+                }
+            }
         }
         for (CloudIntent cloud : context.spec().clouds()) {
             if (cloud.monthlyEgressGb() != null && cloud.monthlyEgressGb() > 0) {
@@ -415,11 +437,38 @@ public final class RateCardCostModel implements CostModel {
         String label = "Fabric " + connectionType + " " + tier + " Mbps " + metro.code() + " to " + cloudId;
         return new Need(key, label, card -> {
             Optional<MetroCode> code = metro.asMetroCode();
-            PriceLookup<PriceQuote> quote = card.connectionLookup(connectionType, tier, code.orElse(null), term);
+            PriceLookup<PriceQuote> quote = connectionQuote(card, tier, code.orElse(null));
             if (!quote.isPriced()) {
                 return Resolved.unpriced(label + ": " + quote.unpricedReason());
             }
             return Resolved.priced(line(label, metro, quote.value()));
+        });
+    }
+
+    /**
+     * One card query per distinct (card, bandwidth, metro): a cloud connection and the backbone links that
+     * start in the same metro at the same bandwidth share a price, so they share the lookup.
+     */
+    private PriceLookup<PriceQuote> connectionQuote(RateCard card, int mbps, MetroCode metro) {
+        String key = System.identityHashCode(card) + "|" + mbps + "|" + metro;
+        return connectionQuotes.computeIfAbsent(key, k -> card.connectionLookup(connectionType, mbps, metro, term));
+    }
+
+    private Need backbone(MetroId a, MetroId b) {
+        String key = a.code() + "|backbone|" + backboneMbps + "|" + b.code();
+        String label = "Fabric backbone " + connectionType + " " + backboneMbps + " Mbps " + a.code() + " to "
+                + b.code();
+        return new Need(key, label, card -> {
+            PriceLookup<PriceQuote> quote = connectionQuote(card, backboneMbps, a.asMetroCode().orElse(null));
+            if (!quote.isPriced()) {
+                return Resolved.unpriced(label + ": " + quote.unpricedReason());
+            }
+            CostLine l = line(label, a, quote.value());
+            String assumption = "assumed: a full mesh between Cloud Routers at " + backboneMbps + " Mbps, the "
+                    + "Deployment Wizard's default";
+            return Resolved.priced(new CostLine(l.label(), l.metro(), l.monthly(), l.oneTime(), l.currency(),
+                    l.source(), l.monthlyLow(), l.monthlyHigh(), l.note() == null ? assumption
+                    : l.note() + "; " + assumption, l.conversion()));
         });
     }
 
@@ -529,6 +578,7 @@ public final class RateCardCostModel implements CostModel {
         private Term term = Term.MONTH_1;
         private ConnectionType connectionType = ConnectionType.IP_VC;
         private String routerPackage = "STANDARD";
+        private int backboneMbps = DEFAULT_BACKBONE_MBPS;
         private String targetCurrency = "USD";
         private CommercialTerms.ExchangeRates exchangeRates;
         private com.eqixiac.equinix.design.spi.CurrencyConverter supplied;
@@ -584,6 +634,21 @@ public final class RateCardCostModel implements CostModel {
             if (packageCode != null) {
                 this.routerPackage = packageCode;
             }
+            return this;
+        }
+
+        /**
+         * The backbone between the Cloud Routers of a multi-metro design, priced as a full mesh.
+         *
+         * @param mbps bandwidth of each backbone connection in Mbps ({@value #DEFAULT_BACKBONE_MBPS} by
+         *             default); {@code 0} leaves the backbone out of the estimate
+         * @return this builder
+         */
+        public Builder backbone(int mbps) {
+            if (mbps < 0) {
+                throw new IllegalArgumentException("backbone bandwidth must not be negative");
+            }
+            this.backboneMbps = mbps;
             return this;
         }
 

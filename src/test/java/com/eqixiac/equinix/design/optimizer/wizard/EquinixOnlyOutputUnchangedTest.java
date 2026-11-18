@@ -44,6 +44,9 @@ import static org.junit.jupiter.api.Assertions.assertNull;
  * <p>Regenerated once for the plan-lifecycle release: the Markdown report gained the plan-id /
  * deployment line and the Execution section names {@code diff()} and {@code reconcile(...)}. Every
  * other line, including every planned field and price, is byte-identical to the 3f8fc655 output.</p>
+ *
+ * <p>Regenerated again when the cost table gained two rows: the provider fees and data egress the plan
+ * does not create, and the design total. No other line changed.</p>
  */
 @DisplayName("EQUINIX_ONLY output is identical to the pre-change wizard")
 class EquinixOnlyOutputUnchangedTest {

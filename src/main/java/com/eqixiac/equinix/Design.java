@@ -115,6 +115,19 @@ public final class Design {
     }
 
     /**
+     * Decides how each destination of a design is reached (cloud on-ramp, Internet Exchange, private
+     * connection or Internet Access) and how each metro is entered (physical ports, Network Edge or the
+     * Cloud Router alone), by stated rules. It reads nothing and orders nothing.
+     *
+     * @param spec the design
+     * @return the planner; give it {@code optimization(result)} and call {@code plan()}
+     */
+    public com.eqixiac.equinix.design.connectivity.ConnectivityPlanner connectivity(
+            com.eqixiac.equinix.design.spec.DesignSpec spec) {
+        return com.eqixiac.equinix.design.connectivity.ConnectivityPlanner.forSpec(spec);
+    }
+
+    /**
      * Begins a deployment-plan build from a prior optimization result.
      *
      * @param optimizationResult the optimization result to plan from

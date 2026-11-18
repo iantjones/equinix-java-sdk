@@ -43,6 +43,12 @@ import java.util.List;
  *                           (not required). Omitted from JSON, YAML and the fingerprint when unset, so specs that
  *                           do not use it keep their fingerprint. It takes precedence over the older spec label
  *                           {@code design.min_survival_pct}.
+ * @param allowAccessMetros  {@code true} lets a design include a metro that carries no workload and no cloud
+ *                           connection, when it is the nearest metro of the design to at least one site: the
+ *                           metro brings that site onto the backbone at lower latency. Such a metro gets a
+ *                           Cloud Router and backbone links, and they are priced. {@code null} or {@code false}
+ *                           keeps the default, where every metro must carry a workload or a cloud connection.
+ *                           Omitted from JSON, YAML and the fingerprint when unset.
  */
 @Builder(toBuilder = true)
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
@@ -50,7 +56,7 @@ public record DesignConstraints(List<String> requiredMetros, List<String> exclud
                                 List<Region> requiredRegions, List<Region> excludedRegions,
                                 List<ComplianceZone> complianceZones, List<String> geoZones,
                                 RedundancyTier minimumRedundancy, Double maxLatencyMs, Integer minMetros,
-                                Integer maxMetros, Double minSurvivalPct) {
+                                Integer maxMetros, Double minSurvivalPct, Boolean allowAccessMetros) {
 
     /** Normalises every list to an immutable, non-null list. */
     public DesignConstraints {
@@ -64,6 +70,6 @@ public record DesignConstraints(List<String> requiredMetros, List<String> exclud
 
     /** @return constraints that limit nothing */
     public static DesignConstraints none() {
-        return new DesignConstraints(null, null, null, null, null, null, null, null, null, null, null);
+        return new DesignConstraints(null, null, null, null, null, null, null, null, null, null, null, null);
     }
 }

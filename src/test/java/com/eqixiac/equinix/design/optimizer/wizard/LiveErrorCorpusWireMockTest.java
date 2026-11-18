@@ -327,6 +327,57 @@ class LiveErrorCorpusWireMockTest extends WireMockTestBase {
                 .willReturn(okJson(loadFixture("/json/fabric/service_profile_response.json"))));
     }
 
+    //  EQ-3040032 - no billing account number on the create
+
+    /** The body Fabric returned to a router dry run that named no account (observed 2026-11-16). */
+    private static final String EQ_3040032_INVALID_ACCOUNT_NUMBER = """
+            [
+              {
+                "errorCode": "EQ-3040032",
+                "errorMessage": "Invalid account number",
+                "correlationId": "7684c49a-1832-413a-8981-d18fd8691ab5",
+                "details": "Invalid account number",
+                "additionalInfo": [
+                  { "property": "account.accountNumber",
+                    "reason": "invalid project account number" }
+                ]
+              }
+            ]""";
+
+    @Test
+    @DisplayName("EQ-3040032 with no account number on the plan is a skipped check that says what to set, not an error")
+    void eq3040032WithoutAnAccountNumberIsSkipped() {
+        stubServiceProfileOk();
+        wireMock.stubFor(post(urlPathEqualTo("/fabric/v4/routers"))
+                .willReturn(aResponse().withStatus(400)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody(EQ_3040032_INVALID_ACCOUNT_NUMBER)));
+
+        DeploymentPlan plan = wizard().plan();
+
+        assertTrue(plan.getValidationErrors().stream().noneMatch(e -> e.contains("EQ-3040032")),
+                () -> "a missing input is not a plan defect: " + plan.getValidationErrors());
+        assertTrue(plan.getSkippedValidations().stream().anyMatch(s ->
+                        s.contains("FCR-DC") && s.contains("no billing account number was given")),
+                () -> "the skip names the router and the missing input: " + plan.getSkippedValidations());
+    }
+
+    @Test
+    @DisplayName("EQ-3040032 when an account number was given stays an error: the account itself is wrong")
+    void eq3040032WithAnAccountNumberIsAnError() {
+        stubServiceProfileOk();
+        wireMock.stubFor(post(urlPathEqualTo("/fabric/v4/routers"))
+                .willReturn(aResponse().withStatus(400)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody(EQ_3040032_INVALID_ACCOUNT_NUMBER)));
+
+        DeploymentPlan plan = wizard().accountNumber(123456L).plan();
+
+        assertFalse(plan.isValid());
+        assertTrue(plan.getValidationErrors().stream().anyMatch(e -> e.contains("EQ-3040032")),
+                () -> String.valueOf(plan.getValidationErrors()));
+    }
+
     private DeploymentWizard.Builder wizard() {
         return wizard("FCR");
     }

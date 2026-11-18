@@ -811,7 +811,14 @@ public final class PlanValidator {
                 RouterBodies.routerBody(client, r).dryRun().create();
             } catch (Exception e) {
                 LiveFailure failure = classifyLiveFailure(e);
-                if (failure.isInfeasible()) {
+                if (r.getAccountNumber() == null && e.getMessage() != null
+                        && e.getMessage().contains("EQ-3040032")) {
+                    // Fabric rejects a Cloud Router create, dry run included, that names no billing account
+                    // (EQ-3040032 "Invalid account number"). A plan built for review has none yet: that is
+                    // a missing input, not a defect in the plan.
+                    skipped.add("Router dry-run skipped for '" + r.getName() + "': no billing account number "
+                            + "was given. Set accountNumber(...) on the wizard to validate and to execute the plan");
+                } else if (failure.isInfeasible()) {
                     // Infeasibility (not entitled / throttled / server-side / transport): the dry-run
                     // could not be attempted. SKIPPED with a reason - never an error that would
                     // invalidate an otherwise-sound plan.

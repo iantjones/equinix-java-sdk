@@ -20,6 +20,7 @@ the deploy decision, with output from a live read-only run.
 - [Estate analysis](#estate-analysis)
 - [Plan lifecycle](#plan-lifecycle)
 - [Peering Intelligence](#peering-intelligence)
+- [Connectivity and metro access](#connectivity-and-metro-access)
 - [Design Decision Record](#design-decision-record)
 - [Extension points](#extension-points)
 
@@ -242,6 +243,28 @@ the factor used.
 `getPlacement()` returns a `PlacementPlan`: each workload runs in one metro, and in a design of two
 or more metros its cloud connections are duplicated at full size in a standby metro.
 
+A workload is placed and limited by the sites that use it. `WorkloadIntent.sites` lists their labels;
+when it is empty, every site counts. `maxLatencyMs` then applies to those sites only:
+
+```yaml
+workloads:
+  - label: plant-erp
+    maxLatencyMs: 20
+    sites: [Frankfurt plant]
+```
+
+When the spec names a cloud region, a workload runs in a metro whose on-ramp serves that region if
+the design has one, even when another metro is closer to the sites. A metro whose on-ramp serves
+other regions only can still be the standby, or the primary when there is no alternative. The result
+then has a `CLOUD_REGION_NOT_LOCAL` finding: traffic to the named region continues over the
+provider's own network (for AWS, a Direct Connect gateway), which the SDK neither models nor prices.
+Omit `region` to accept any on-ramp of the provider.
+
+By default every metro of a design must carry a workload or a cloud connection. With
+`constraints.allowAccessMetros: true`, a metro that carries neither is allowed when it is the nearest
+metro of the design to a site. It gets a Cloud Router and backbone links, both priced, and an
+`ACCESS_METRO` finding.
+
 ## Cost model, rate cards and currency
 
 ### Rate cards
@@ -270,7 +293,13 @@ minus 25%; estimates plus or minus 50% (`PriceBands`).
 
 `RateCardCostModel` prices a portfolio: one connection per metro and cloud (default `IP_VC`, rounded up
 to the next Fabric tier from 50 Mbps to 100 Gbps), a Cloud Router `STANDARD` per metro that carries
-a cloud connection, the provider's connection fee, and cloud egress. It prefetches prices on 6
+a cloud connection, the backbone between those Cloud Routers (a full mesh at 10,000 Mbps, the
+Deployment Wizard's default; `backbone(mbps)` changes it and `0` leaves it out), the provider's
+connection fee, and cloud egress. A `DeploymentPlan` built from the result prices the same Equinix
+items and lists the provider fees and egress as costs it does not create, so
+`PlanPricing.designMonthly` equals the optimizer's estimate for the same design. The plan connects a
+cloud only in a metro where the placement uses it and prices each connection at the Fabric tier that
+covers its bandwidth. The cost model prefetches prices on 6
 threads with a 20 s timeout per lookup and switches to the reference card after 2 timeouts, which
 adds a `PRICE_LOOKUP_FALLBACK` finding. A live run on 2026-11-12 took 10.7 s with prefetching and
 48.1 s without, with identical results.
@@ -473,6 +502,36 @@ and resiliency. The PeeringDB key is resolved from the explicit argument, then
 access, which PeeringDB throttles. Diversity scores report `distanceKm` and `estimatedRttMs` as
 nullable values: measured round-trip when Fabric publishes it, a calibrated estimate otherwise, with
 the fibre floor in `rttFloorMs` and the basis in `rttBasis`.
+
+## Connectivity and metro access
+
+```java
+ConnectivityPlan connectivity = Design.over(fabric).connectivity(spec)
+        .optimization(result)
+        .peering(peers)                                   // optional
+        .availability(ProductAvailability.read(session))  // two GET requests
+        .plan();
+System.out.println(connectivity.toMarkdown());
+```
+
+`ConnectivityPlanner` applies fixed rules. It reads nothing itself and orders nothing.
+
+| Destination | Rule |
+|---|---|
+| A cloud | A private Fabric connection from the Cloud Router in each metro where the placement connects it |
+| A peer | Public peering at an Internet Exchange (IX) when Peering Intelligence finds it at an IX in a metro of the design; otherwise a private Fabric connection when it publishes a service profile there; otherwise Internet Access. Undecided without a Peering Intelligence result |
+| General internet traffic | Internet Access in each metro of the design that offers it |
+
+| Metro | Rule |
+|---|---|
+| Has a site of role `DATA_CENTER` | Two Fabric ports in one redundancy group, each with its own cross connect from the cage |
+| Otherwise, Network Edge is offered there | A redundant pair of Network Edge devices |
+| Otherwise | The Cloud Router alone |
+
+Network Edge can also be used in a metro where you have a cage; the first rule prefers the ports you
+can cross-connect to. The decisions describe what would be ordered. They are not priced, simulated,
+or part of a `DeploymentPlan`: ports, cross connects, Network Edge devices, Internet Access services
+and IX membership are ordered through their own clients.
 
 ## Design Decision Record
 

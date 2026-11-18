@@ -70,6 +70,8 @@ _Generated from optimization computed at 2026-09-21T00:00:00Z_
 | Provider Connections | $1000 |
 | Backbone Links | $1500 |
 | **Total Monthly** | **$3400** |
+| Provider fees and data egress (billed by the cloud providers; not created by this plan; reference figures) | $3990.40 |
+| **Design total monthly** | **$7390.40** |
 | Setup (one-time) | $0 |
 
 _Some or all figures are heuristic or reference estimates (live Fabric pricing was unavailable for part of this plan). Actual costs may vary; contact your Equinix account team for precise quotes._

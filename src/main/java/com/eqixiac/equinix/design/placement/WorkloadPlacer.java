@@ -132,24 +132,27 @@ public final class WorkloadPlacer {
         if (workload.maxLatencyMs() != null) {
             List<MetroId> within = new ArrayList<>();
             for (MetroId metro : eligible) {
-                OptionalDouble worst = worstSiteLatency(metro, context);
+                OptionalDouble worst = worstSiteLatency(metro, context, workload);
                 if (worst.isEmpty() || worst.getAsDouble() <= workload.maxLatencyMs()) {
                     within.add(metro);
                 }
             }
             if (within.isEmpty()) {
-                issues.add(String.format(Locale.ROOT, "no eligible metro keeps every site within %.1f ms",
-                        workload.maxLatencyMs()));
+                issues.add(String.format(Locale.ROOT, "no eligible metro keeps %s within %.1f ms",
+                        workload.sites().isEmpty() ? "every site" : "its sites", workload.maxLatencyMs()));
             } else {
                 eligible = within;
             }
         }
 
-        eligible.sort(Comparator.comparingDouble((MetroId m) -> weightedLatency(m, context))
+        // A metro whose on-ramp serves the region the spec names comes before one that reaches the provider
+        // through another region; latency decides among equals.
+        eligible.sort(Comparator.comparingInt((MetroId m) -> otherRegionCount(workload, m, context))
+                .thenComparingDouble(m -> weightedLatency(m, context, workload))
                 .thenComparing(MetroId::code));
         MetroId primary = eligible.get(0);
         MetroId standby = !pinned && fullyReached && eligible.size() > 1 ? eligible.get(1) : null;
-        double weighted = weightedLatency(primary, context);
+        double weighted = weightedLatency(primary, context, workload);
         StringBuilder reasoning = new StringBuilder(pinned ? "pinned to " + primary.code() : "runs in " + primary.code());
         if (Double.isFinite(weighted)) {
             reasoning.append(String.format(Locale.ROOT, " (site-weighted round trip %.1f ms)", weighted));
@@ -162,8 +165,32 @@ public final class WorkloadPlacer {
         if (standby != null) {
             reasoning.append("; standby in ").append(standby.code());
         }
+        for (MetroId metro : standby == null ? List.of(primary) : List.of(primary, standby)) {
+            for (String cloud : otherRegionClouds(workload, metro, context)) {
+                String region = context.spec().cloud(cloud) == null ? null : context.spec().cloud(cloud).region();
+                issues.add(metro.code() + " reaches " + cloud + " through another region than " + region
+                        + "; traffic to " + region + " continues over the provider's network, which is not "
+                        + "modelled or priced");
+            }
+        }
         return new PlacementPlan.Placement(workload.label(), primary, standby, workload.clouds(),
                 workload.bandwidthMbps(), reasoning.toString(), issues);
+    }
+
+    /** The workload's clouds that the metro reaches only through a region the spec did not name. */
+    static List<String> otherRegionClouds(WorkloadIntent workload, MetroId metro, DesignContext context) {
+        List<String> clouds = new ArrayList<>();
+        Set<String> reachable = context.reachableClouds(metro);
+        for (String cloud : workload.clouds()) {
+            if (reachable.contains(cloud) && !context.servesRequestedRegion(metro, cloud)) {
+                clouds.add(cloud);
+            }
+        }
+        return clouds;
+    }
+
+    private static int otherRegionCount(WorkloadIntent workload, MetroId metro, DesignContext context) {
+        return otherRegionClouds(workload, metro, context).size();
     }
 
     private static int reachedCount(WorkloadIntent workload, MetroId metro, DesignContext context) {
@@ -178,15 +205,79 @@ public final class WorkloadPlacer {
     }
 
     /**
+     * The metros that are in a design to bring a site onto the backbone: for each site, the metro of the
+     * portfolio with the lowest known round trip to it. Empty unless the spec sets
+     * {@code constraints.allowAccessMetros}.
+     *
+     * @param portfolio the metros
+     * @param context   the facts of the run
+     * @return the access metros, in portfolio order
+     */
+    public static Set<MetroId> accessMetros(MetroPortfolio portfolio, DesignContext context) {
+        Set<MetroId> access = new LinkedHashSet<>();
+        if (context.spec().constraints() == null
+                || !Boolean.TRUE.equals(context.spec().constraints().allowAccessMetros())) {
+            return access;
+        }
+        for (SiteIntent site : context.spec().sites()) {
+            MetroId nearest = null;
+            double best = Double.POSITIVE_INFINITY;
+            for (MetroId metro : portfolio.metros()) {
+                OptionalDouble ms = context.roundTripLatencyMs(metro, site);
+                if (ms.isPresent() && (ms.getAsDouble() < best
+                        || (ms.getAsDouble() == best && nearest != null && metro.code().compareTo(nearest.code()) < 0))) {
+                    best = ms.getAsDouble();
+                    nearest = metro;
+                }
+            }
+            if (nearest != null) {
+                access.add(nearest);
+            }
+        }
+        return access;
+    }
+
+    /**
+     * The sites a workload is measured against: the ones it names, or every site when it names none.
+     *
+     * @param workload the workload, or {@code null} for every site
+     * @param context  the facts of the run
+     * @return the sites
+     */
+    public static List<SiteIntent> sitesOf(WorkloadIntent workload, DesignContext context) {
+        List<SiteIntent> all = context.spec().sites();
+        if (workload == null || workload.sites().isEmpty()) {
+            return all;
+        }
+        List<SiteIntent> named = new ArrayList<>();
+        for (SiteIntent site : all) {
+            if (workload.sites().contains(site.label())) {
+                named.add(site);
+            }
+        }
+        return named.isEmpty() ? all : named;
+    }
+
+    /**
      * @param metro   a metro
      * @param context the facts of the run
      * @return the site-weighted mean round trip over the sites whose latency is known (weights renormalised
      *         over them), or positive infinity when none is known
      */
     public static double weightedLatency(MetroId metro, DesignContext context) {
+        return weightedLatency(metro, context, null);
+    }
+
+    /**
+     * @param metro    a metro
+     * @param context  the facts of the run
+     * @param workload the workload whose sites count, or {@code null} for every site
+     * @return the site-weighted mean round trip over those sites, or positive infinity when none is known
+     */
+    public static double weightedLatency(MetroId metro, DesignContext context, WorkloadIntent workload) {
         double sum = 0;
         double weight = 0;
-        for (SiteIntent site : context.spec().sites()) {
+        for (SiteIntent site : sitesOf(workload, context)) {
             OptionalDouble ms = context.roundTripLatencyMs(metro, site);
             if (ms.isPresent()) {
                 double w = context.siteWeight(site);
@@ -203,8 +294,18 @@ public final class WorkloadPlacer {
      * @return the worst known site round trip from the metro, or empty when no site latency is known
      */
     public static OptionalDouble worstSiteLatency(MetroId metro, DesignContext context) {
+        return worstSiteLatency(metro, context, null);
+    }
+
+    /**
+     * @param metro    a metro
+     * @param context  the facts of the run
+     * @param workload the workload whose sites count, or {@code null} for every site
+     * @return the worst known round trip from the metro to those sites, or empty when none is known
+     */
+    public static OptionalDouble worstSiteLatency(MetroId metro, DesignContext context, WorkloadIntent workload) {
         OptionalDouble worst = OptionalDouble.empty();
-        for (SiteIntent site : context.spec().sites()) {
+        for (SiteIntent site : sitesOf(workload, context)) {
             OptionalDouble ms = context.roundTripLatencyMs(metro, site);
             if (ms.isPresent() && (worst.isEmpty() || ms.getAsDouble() > worst.getAsDouble())) {
                 worst = ms;

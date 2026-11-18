@@ -53,7 +53,7 @@ public final class WorkloadLatencyConstraint implements Constraint {
             if (p.primary() == null) {
                 return ConstraintVerdict.fail(ID, "workload '" + w.label() + "' could not be placed");
             }
-            OptionalDouble worst = WorkloadPlacer.worstSiteLatency(p.primary(), context);
+            OptionalDouble worst = WorkloadPlacer.worstSiteLatency(p.primary(), context, w);
             if (worst.isPresent()) {
                 checked++;
                 if (worst.getAsDouble() > w.maxLatencyMs()) {

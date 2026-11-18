@@ -33,4 +33,19 @@ public class ProviderAvailability {
      * the winner.
      */
     List<ServiceProfileOption> profileOptions;
+
+    /**
+     * The cloud region the design asked for ({@code CloudIntent.region}), or {@code null} when it named
+     * none.
+     */
+    String requestedRegion;
+
+    /**
+     * Whether the on-ramp at this metro serves {@code requestedRegion}: {@code TRUE} when the chosen
+     * profile lists it, {@code FALSE} when the profile lists other regions only, {@code null} when the
+     * design named no region or the profile publishes no region list. A {@code FALSE} on-ramp still
+     * reaches the provider; traffic to the named region then continues over the provider's own network
+     * (for example an AWS Direct Connect gateway), which the SDK neither models nor prices.
+     */
+    Boolean servesRequestedRegion;
 }

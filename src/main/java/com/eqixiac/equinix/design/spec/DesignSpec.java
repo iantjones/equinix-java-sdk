@@ -217,6 +217,12 @@ public record DesignSpec(String schemaVersion, String name, String description,
                 error(errors, at + ".maxLatencyMs", "must be a positive, finite number");
             }
             checkMetro(errors, at + ".pinnedMetro", workload.pinnedMetro());
+            for (int k = 0; k < workload.sites().size(); k++) {
+                String site = workload.sites().get(k);
+                if (sites.stream().noneMatch(s -> s != null && s.label() != null && s.label().equals(site))) {
+                    error(errors, at + ".sites[" + k + "]", "no site is labelled '" + site + "'");
+                }
+            }
             for (int c = 0; c < workload.clouds().size(); c++) {
                 String ref = workload.clouds().get(c);
                 if (!cloudIds.contains(ref)) {

@@ -76,6 +76,15 @@ public class PlannedConnection {
     @JsonProperty("zSideSellerRegion")
     String zSideSellerRegion;
 
+    /**
+     * The cloud region the design named, set only when it differs from {@code zSideSellerRegion}: the
+     * on-ramp at this metro serves another region, and traffic to the named region continues over the
+     * provider's own network, which the plan neither creates nor prices.
+     */
+    @JsonProperty("zSideRequestedRegion")
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+    String zSideRequestedRegion;
+
     @JsonProperty("zSideMetro")
     MetroId zSideMetro;
 

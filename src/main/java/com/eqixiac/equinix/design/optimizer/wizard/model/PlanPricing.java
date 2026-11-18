@@ -109,6 +109,28 @@ public class PlanPricing {
     List<String> currencyNotes;
 
     /**
+     * Costs the design incurs that this plan does not create: the cloud provider's own fee for each
+     * hosted connection, and data egress over the private path for each cloud whose monthly volume the
+     * spec states. They are billed by the cloud providers. Reference figures, in the plan currency where a
+     * rate source covers them. Empty when none could be priced; {@code null} on plans priced before this
+     * field existed.
+     */
+    List<com.eqixiac.equinix.design.spi.CostLine> outsidePlanLines;
+
+    /**
+     * The monthly total of {@code outsidePlanLines}; {@code null} when there are none or they are not all
+     * in the plan currency.
+     */
+    BigDecimal outsidePlanMonthly;
+
+    /**
+     * {@code monthlyTotal} plus {@code outsidePlanMonthly}: the monthly cost of the design as the Metro
+     * Optimizer estimates it (Equinix resources, provider fees and egress). {@code null} when either part
+     * is unknown.
+     */
+    BigDecimal designMonthly;
+
+    /**
      * Dominant provenance of these figures: {@link PriceSource#EQUINIX_LIVE} when every line
      * item was live-priced, {@link PriceSource#ESTIMATE} when the heuristic fallback was used,
      * or {@link PriceSource#COMPOSITE} when mixed. Read alongside {@link #disclaimer}.

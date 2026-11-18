@@ -44,26 +44,47 @@ Growth 30.0%/year over 36 months, amounts in USD. Spec `a5f92102787e`.
 |---|---:|---:|---:|---:|---:|
 | MONTH_1 | USD 2180.00 | USD 0.00 | USD 93120.00 | - | - |
 
-### Fabric IP_VC FR to azure
+### Fabric IP_VC FR to aws
 
-- growth forces an upgrade from 500 to 1000 Mbps in month 2
+- growth forces an upgrade from 5000 to 10000 Mbps in month 12
 - Recommended: MONTH_1 (MONTH_1 has the lowest total over 36 months among 4 priced option(s) (ties go to the shorter term))
 
 | Term | Month 1 | One-time | Total over horizon | Tail | Break-even |
 |---|---:|---:|---:|---:|---:|
-| MONTH_1 | USD 143.18 | USD 0.00 | USD 6982.94 | - | - |
-| MONTH_12 | USD 143.18 | USD 0.00 | USD 6982.94 | - | month 12 |
-| MONTH_24 | USD 143.18 | USD 0.00 | USD 10088.90 | 12 mo, USD 3105.96 | month 24 |
-| MONTH_36 | USD 143.18 | USD 0.00 | USD 6982.94 | - | month 36 |
+| MONTH_1 | USD 352.45 | USD 0.00 | USD 15579.20 | - | - |
+| MONTH_12 | USD 352.45 | USD 0.00 | USD 15579.20 | - | month 12 |
+| MONTH_24 | USD 352.45 | USD 0.00 | USD 21196.28 | 12 mo, USD 5617.08 | month 24 |
+| MONTH_36 | USD 352.45 | USD 0.00 | USD 15579.20 | - | month 36 |
 
-### Provider hosted-connection fee azure in FR
+### Provider hosted-connection fee aws in FR
 
-- growth forces an upgrade from 500 to 1000 Mbps in month 2
+- growth forces an upgrade from 5000 to 10000 Mbps in month 12
 - Recommended: MONTH_1 (no term axis: priced on demand)
 
 | Term | Month 1 | One-time | Total over horizon | Tail | Break-even |
 |---|---:|---:|---:|---:|---:|
-| MONTH_1 | USD 290.00 | USD 0.00 | USD 17294.00 | - | - |
+| MONTH_1 | USD 1204.50 | USD 0.00 | USD 58509.50 | - | - |
+
+### Fabric IP_VC FR to azure
+
+- growth forces an upgrade from 5000 to 10000 Mbps in month 18
+- Recommended: MONTH_1 (MONTH_1 has the lowest total over 36 months among 4 priced option(s) (ties go to the shorter term))
+
+| Term | Month 1 | One-time | Total over horizon | Tail | Break-even |
+|---|---:|---:|---:|---:|---:|
+| MONTH_1 | USD 352.45 | USD 0.00 | USD 14885.36 | - | - |
+| MONTH_12 | USD 352.45 | USD 0.00 | USD 14885.36 | - | month 12 |
+| MONTH_24 | USD 352.45 | USD 0.00 | USD 20502.44 | 12 mo, USD 5617.08 | month 24 |
+| MONTH_36 | USD 352.45 | USD 0.00 | USD 14885.36 | - | month 36 |
+
+### Provider hosted-connection fee azure in FR
+
+- growth forces an upgrade from 5000 to 10000 Mbps in month 18
+- Recommended: MONTH_1 (no term axis: priced on demand)
+
+| Term | Month 1 | One-time | Total over horizon | Tail | Break-even |
+|---|---:|---:|---:|---:|---:|
+| MONTH_1 | USD 2180.00 | USD 0.00 | USD 101660.00 | - | - |
 
 ### Fabric IP_VC SG to gcp
 
@@ -85,48 +106,6 @@ Growth 30.0%/year over 36 months, amounts in USD. Spec `a5f92102787e`.
 | Term | Month 1 | One-time | Total over horizon | Tail | Break-even |
 |---|---:|---:|---:|---:|---:|
 | MONTH_1 | USD 126.73 | USD 0.00 | USD 8075.86 | - | - |
-
-### Fabric IP_VC TR to aws
-
-- growth forces an upgrade from 5000 to 10000 Mbps in month 12
-- Recommended: MONTH_1 (MONTH_1 has the lowest total over 36 months among 4 priced option(s) (ties go to the shorter term))
-
-| Term | Month 1 | One-time | Total over horizon | Tail | Break-even |
-|---|---:|---:|---:|---:|---:|
-| MONTH_1 | USD 364.02 | USD 0.00 | USD 16167.22 | - | - |
-| MONTH_12 | USD 364.02 | USD 0.00 | USD 16167.22 | - | month 12 |
-| MONTH_24 | USD 364.02 | USD 0.00 | USD 22005.46 | 12 mo, USD 5838.24 | month 24 |
-| MONTH_36 | USD 364.02 | USD 0.00 | USD 16167.22 | - | month 36 |
-
-### Provider hosted-connection fee aws in TR
-
-- growth forces an upgrade from 5000 to 10000 Mbps in month 12
-- Recommended: MONTH_1 (no term axis: priced on demand)
-
-| Term | Month 1 | One-time | Total over horizon | Tail | Break-even |
-|---|---:|---:|---:|---:|---:|
-| MONTH_1 | USD 1204.50 | USD 0.00 | USD 58509.50 | - | - |
-
-### Fabric IP_VC TR to azure
-
-- growth forces an upgrade from 5000 to 10000 Mbps in month 25
-- Recommended: MONTH_1 (MONTH_1 has the lowest total over 36 months among 4 priced option(s) (ties go to the shorter term))
-
-| Term | Month 1 | One-time | Total over horizon | Tail | Break-even |
-|---|---:|---:|---:|---:|---:|
-| MONTH_1 | USD 364.02 | USD 0.00 | USD 14574.72 | - | - |
-| MONTH_12 | USD 364.02 | USD 0.00 | USD 14574.72 | - | month 12 |
-| MONTH_24 | USD 364.02 | USD 0.00 | USD 20412.96 | 12 mo, USD 5838.24 | month 24 |
-| MONTH_36 | USD 364.02 | USD 0.00 | USD 14574.72 | - | month 36 |
-
-### Provider hosted-connection fee azure in TR
-
-- growth forces an upgrade from 5000 to 10000 Mbps in month 25
-- Recommended: MONTH_1 (no term axis: priced on demand)
-
-| Term | Month 1 | One-time | Total over horizon | Tail | Break-even |
-|---|---:|---:|---:|---:|---:|
-| MONTH_1 | USD 2180.00 | USD 0.00 | USD 93120.00 | - | - |
 
 ### Fabric Cloud Router STANDARD in DC
 
@@ -161,17 +140,6 @@ Growth 30.0%/year over 36 months, amounts in USD. Spec `a5f92102787e`.
 | MONTH_24 | USD 1201.12 | USD 0.00 | USD 57653.76 | 12 mo, USD 14413.44 | month 20 |
 | MONTH_36 | USD 1125.85 | USD 0.00 | USD 40530.60 | - | month 27 |
 
-### Fabric Cloud Router STANDARD in TR
-
-- Recommended: MONTH_36 (MONTH_36 has the lowest total over 36 months among 4 priced option(s) (ties go to the shorter term))
-
-| Term | Month 1 | One-time | Total over horizon | Tail | Break-even |
-|---|---:|---:|---:|---:|---:|
-| MONTH_1 | USD 1463.07 | USD 0.00 | USD 52670.52 | - | - |
-| MONTH_12 | USD 1243.96 | USD 0.00 | USD 44782.56 | - | month 11 |
-| MONTH_24 | USD 1170.46 | USD 0.00 | USD 56182.08 | 12 mo, USD 14045.52 | month 20 |
-| MONTH_36 | USD 1097.65 | USD 0.00 | USD 39515.40 | - | month 28 |
-
 ### Data out of aws
 
 - Recommended: MONTH_1 (no term axis: priced on demand)
@@ -196,7 +164,7 @@ Growth 30.0%/year over 36 months, amounts in USD. Spec `a5f92102787e`.
 |---|---:|---:|---:|---:|---:|
 | MONTH_1 | USD 279.00 | USD 0.00 | USD 15108.42 | - | - |
 
-**On-demand total over the horizon:** USD 737663.56
+**On-demand total over the horizon:** USD 668978.72
 
 - Assumption: Month n carries today's traffic x (1 + 0.3)^((n - 1)/12); capacity is the next Fabric tier at or above the projected Mbps
 - Assumption: A term renews at the same term to the horizon; an upgrade within a term is billed at that term's price for the new tier; months committed beyond the horizon are counted at the last month's price

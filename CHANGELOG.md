@@ -9,9 +9,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - `EndToEndDesignExample` (test sources, with a `main` method) and `docs/design/end-to-end-example.md`:
-  one design carried through every design engine, the connectivity and access decisions the design
-  layer does not make, the deployment plan and a deploy gate, with output from a live read-only run
-  under `docs/design/examples/end-to-end/`. `EndToEndDesignExampleTest` runs the same flow offline.
+  one design carried through every design engine, the connectivity and access decisions, the
+  deployment plan and a deploy gate, with output from a live read-only run under
+  `docs/design/examples/end-to-end/`. `EndToEndDesignExampleTest` runs the same flow offline.
+- `design.connectivity`: `ConnectivityPlanner.forSpec(spec).optimization(result)...plan()` (also
+  `Design.connectivity(spec)`) decides by stated rules how each destination is reached (cloud on-ramp
+  over Fabric and a Cloud Router, Internet Exchange (IX), private Fabric connection, or Internet
+  Access) and how each metro is entered (redundant ports with cross connects, a Network Edge pair, or
+  the Cloud Router alone). `ProductAvailability.read(session)` reads where Network Edge and Internet
+  Access are offered. The result (`ConnectivityPlan`) describes what would be ordered; it orders
+  nothing and is not priced, simulated, or part of a `DeploymentPlan`.
+- `WorkloadIntent.sites`: the site labels that use a workload. Placement and `maxLatencyMs` then
+  consider only those sites, so a regional workload can carry a regional latency limit. Omitted from
+  JSON and the fingerprint when empty.
+- `DesignConstraints.allowAccessMetros`: `true` lets a design include a metro that carries no workload
+  or cloud connection when it is the nearest metro of the design to a site. Its Cloud Router and
+  backbone links are priced, and an `ACCESS_METRO` finding names it. Off by default.
+- `PlanPricing.outsidePlanLines`, `outsidePlanMonthly` and `designMonthly`, and two rows in the plan's
+  cost table: the provider fees and data egress the plan does not create, and the design total.
+- `RateCardCostModel.Builder.backbone(mbps)` (default 10,000; `0` leaves the backbone out).
+- `PlannedConnection.zSideRequestedRegion`, `ProviderAvailability.requestedRegion` and
+  `servesRequestedRegion`, `ProviderCatalog.otherRegionOnly(cloudId)`,
+  `DesignContext.servesRequestedRegion(metro, cloudId)`, `WorkloadPlacer.sitesOf(...)` and
+  `accessMetros(...)`.
+
+### Changed
+- **The optimizer's cost now includes the backbone between Cloud Routers**, priced as the full mesh
+  the Deployment Wizard plans by default. Before, a design with more metros looked cheaper than the
+  plan built from it. Cost objective values and totals of multi-metro designs rise by the backbone
+  links; rankings between designs with different metro counts can change. The optimizer's estimate
+  and the plan's design total are now the same figure for the same design.
+- **A spec that names a cloud region is placed where the on-ramp serves that region.** When a design
+  has such a metro, a workload runs there even if another metro is closer. A metro whose on-ramp
+  serves other regions only can still be a standby or the only choice; the result then carries a
+  `CLOUD_REGION_NOT_LOCAL` finding, and the plan's connection states the region it uses and the
+  region the design named. Before, the plan connected the other region without saying so. The wizard
+  also prefers a service profile that lists the named region.
+- A Cloud Router dry run rejected with `EQ-3040032` on a plan that has no billing account number is
+  recorded as a skipped check that says to set `accountNumber(...)`, not as a validation error. With
+  an account number set, the rejection stays an error.
+- **A plan built from a spec connects a cloud only in a metro where the placement uses it.** Before,
+  the wizard added a 1,000 Mbps connection for every provider a metro offers, so a plan could hold
+  connections the optimizer never priced.
+- The plan prices a connection at the Fabric bandwidth tier that covers it (3,000 Mbps at the 5,000
+  Mbps tier) and says so on the line. Before, a bandwidth between tiers found no live price and fell
+  back to the reference table.
+- MCP: the DesignSpec JSON Schema lists `workloads[].sites`, `constraints.minSurvivalPct` and
+  `constraints.allowAccessMetros`.
 
 ### Security
 - The build manages two transitives of the optional `azure-messaging-servicebus` 7.18.0 to versions
