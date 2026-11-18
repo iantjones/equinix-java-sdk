@@ -109,7 +109,9 @@ class ConnectivityPlannerTest {
                 .availability(ProductAvailability.of(Set.of("LD"), Set.of())).plan();
 
         assertEquals(Access.PHYSICAL_PORTS, plan.access().get(0).access());
-        assertEquals(5, plan.access().get(0).orders().size());
+        assertEquals(6, plan.access().get(0).orders().size(), "two ports, two cross connects, two connections");
+        assertEquals(plan.accessPlan().metro("DC").items().size() + plan.accessPlan().metro("DC").links().size(),
+                plan.access().get(0).orders().size());
         assertEquals(Access.NETWORK_EDGE, plan.access().get(1).access());
 
         ConnectivityPlan unknown = ConnectivityPlanner.forSpec(SPEC).optimization(optimized()).plan();

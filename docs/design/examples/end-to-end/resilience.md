@@ -1,9 +1,9 @@
 # Resilience report: global-interconnect on DC+FR+SG
 
-Spec fingerprint `a5f92102787ee30f40ab911fee6c2caf9ba279c5ead65986a92ba8d9b2a9a7da`; portfolio from the given optimisation result's recommendation; facts as of 2026-11-16T23:01:22.133089Z.
+Spec fingerprint `a5f92102787ee30f40ab911fee6c2caf9ba279c5ead65986a92ba8d9b2a9a7da`; portfolio from the given optimisation result's recommendation; facts as of 2026-11-18T00:50:20.966610Z.
 
-- **N-1:** N-1 fails: 6 of all 31 scenarios cause an outage and 2 degrade service.
-- **N-2:** N-2 fails: 165 of all 418 scenarios cause an outage and 46 degrade service.
+- **N-1:** N-1 fails: 6 of all 45 scenarios cause an outage and 2 degrade service.
+- **N-2:** N-2 fails: 245 of all 915 scenarios cause an outage and 74 degrade service.
 - **Single points of failure:** 6
 - **Correlated risks:** 0
 
@@ -13,11 +13,11 @@ Service index 100%; sized cloud demand 8000 Mbps.
 
 | Workload | Status | Runs in | Sites | Clouds |
 |---|---|---|---|---|
-| order-api | full | DC | Ashburn data center: Ashburn data center > DC (0.5 ms); Chicago headquarters: Chicago headquarters > DC (16.8 ms); Dallas operations: Dallas operations > DC (37.7 ms); Frankfurt plant: Frankfurt plant > DC (85.7 ms); London office: London office > DC (73.5 ms); Singapore hub: Singapore hub > SG > DC (220.5 ms) | aws: via conn:aws@DC: DC > on-ramp DC > aws (0.0 ms to the on-ramp) |
-| analytics | full | DC | Ashburn data center: Ashburn data center > DC (0.5 ms); Chicago headquarters: Chicago headquarters > DC (16.8 ms); Dallas operations: Dallas operations > DC (37.7 ms); Frankfurt plant: Frankfurt plant > DC (85.7 ms); London office: London office > DC (73.5 ms); Singapore hub: Singapore hub > SG > DC (220.5 ms) | aws: via conn:aws@DC: DC > on-ramp DC > aws (0.0 ms to the on-ramp); azure: via conn:azure@DC: DC > on-ramp DC > azure (0.0 ms to the on-ramp) |
-| inference | full | SG | Ashburn data center: Ashburn data center > DC > SG (220.5 ms); Chicago headquarters: Chicago headquarters > DC > SG (236.8 ms); Dallas operations: Dallas operations > DC > SG (257.7 ms); Frankfurt plant: Frankfurt plant > FR > SG (154.5 ms); London office: London office > FR > SG (164.7 ms); Singapore hub: Singapore hub > SG (0.5 ms) | gcp: via conn:gcp@SG: SG > on-ramp SG > gcp (0.0 ms to the on-ramp) |
-| plant-erp | full | FR | Ashburn data center: Ashburn data center > FR (85.7 ms); Chicago headquarters: Chicago headquarters > FR (100.0 ms); Dallas operations: Dallas operations > FR (123.0 ms); Frankfurt plant: Frankfurt plant > FR (0.5 ms); London office: London office > FR (10.7 ms); Singapore hub: Singapore hub > FR (154.0 ms) | azure: via conn:azure@FR: FR > on-ramp FR > azure (0.0 ms to the on-ramp) |
-| disaster-recovery | full | DC | Ashburn data center: Ashburn data center > DC (0.5 ms); Chicago headquarters: Chicago headquarters > DC (16.8 ms); Dallas operations: Dallas operations > DC (37.7 ms); Frankfurt plant: Frankfurt plant > DC (85.7 ms); London office: London office > DC (73.5 ms); Singapore hub: Singapore hub > SG > DC (220.5 ms) | aws: via conn:aws@DC: DC > on-ramp DC > aws (0.0 ms to the on-ramp); azure: via conn:azure@DC: DC > on-ramp DC > azure (0.0 ms to the on-ramp) |
+| order-api | full | DC | Ashburn data center: Ashburn data center > DC (0.5 ms); Chicago headquarters: Chicago headquarters > DC (16.8 ms); Dallas operations: Dallas operations > DC (37.7 ms); Frankfurt plant: Frankfurt plant > DC (85.7 ms); London office: London office > DC (73.5 ms); Singapore hub: Singapore hub > SG > Network Edge device SG-ne-primary (to order) > SG > DC > port DC-port-primary (to order) > DC (220.5 ms) | aws: via conn:aws@DC: DC > port DC-port-primary (to order) > DC > on-ramp DC > aws (0.0 ms to the on-ramp) |
+| analytics | full | DC | Ashburn data center: Ashburn data center > DC (0.5 ms); Chicago headquarters: Chicago headquarters > DC (16.8 ms); Dallas operations: Dallas operations > DC (37.7 ms); Frankfurt plant: Frankfurt plant > DC (85.7 ms); London office: London office > DC (73.5 ms); Singapore hub: Singapore hub > SG > Network Edge device SG-ne-primary (to order) > SG > DC > port DC-port-primary (to order) > DC (220.5 ms) | aws: via conn:aws@DC: DC > port DC-port-primary (to order) > DC > on-ramp DC > aws (0.0 ms to the on-ramp); azure: via conn:azure@DC: DC > port DC-port-primary (to order) > DC > on-ramp DC > azure (0.0 ms to the on-ramp) |
+| inference | full | SG | Ashburn data center: Ashburn data center > DC > port DC-port-primary (to order) > DC > SG > Network Edge device SG-ne-primary (to order) > SG (220.5 ms); Chicago headquarters: Chicago headquarters > DC > port DC-port-primary (to order) > DC > SG > Network Edge device SG-ne-primary (to order) > SG (236.8 ms); Dallas operations: Dallas operations > DC > port DC-port-primary (to order) > DC > SG > Network Edge device SG-ne-primary (to order) > SG (257.7 ms); Frankfurt plant: Frankfurt plant > FR > Network Edge device FR-ne-primary (to order) > FR > SG > Network Edge device SG-ne-primary (to order) > SG (154.5 ms); London office: London office > FR > Network Edge device FR-ne-primary (to order) > FR > SG > Network Edge device SG-ne-primary (to order) > SG (164.7 ms); Singapore hub: Singapore hub > SG (0.5 ms) | gcp: via conn:gcp@SG: SG > Network Edge device SG-ne-primary (to order) > SG > on-ramp SG > gcp (0.0 ms to the on-ramp) |
+| plant-erp | full | FR | Ashburn data center: Ashburn data center > FR (85.7 ms); Chicago headquarters: Chicago headquarters > FR (100.0 ms); Dallas operations: Dallas operations > FR (123.0 ms); Frankfurt plant: Frankfurt plant > FR (0.5 ms); London office: London office > FR (10.7 ms); Singapore hub: Singapore hub > FR (154.0 ms) | azure: via conn:azure@FR: FR > Network Edge device FR-ne-primary (to order) > FR > on-ramp FR > azure (0.0 ms to the on-ramp) |
+| disaster-recovery | full | DC | Ashburn data center: Ashburn data center > DC (0.5 ms); Chicago headquarters: Chicago headquarters > DC (16.8 ms); Dallas operations: Dallas operations > DC (37.7 ms); Frankfurt plant: Frankfurt plant > DC (85.7 ms); London office: London office > DC (73.5 ms); Singapore hub: Singapore hub > SG > Network Edge device SG-ne-primary (to order) > SG > DC > port DC-port-primary (to order) > DC (220.5 ms) | aws: via conn:aws@DC: DC > port DC-port-primary (to order) > DC > on-ramp DC > aws (0.0 ms to the on-ramp); azure: via conn:azure@DC: DC > port DC-port-primary (to order) > DC > on-ramp DC > azure (0.0 ms to the on-ramp) |
 
 ## Single failures
 
@@ -34,6 +34,12 @@ Service index 100%; sized cloud demand 8000 Mbps.
 | loss of the azure on-ramp in DC | survives | 100% | 0% | - | - | 100% of 8000 Mbps | - | 0 |
 | loss of the azure on-ramp in FR | degraded | 91% | 0% | - | - | 94% of 8000 Mbps | 500.0 Mbps | 0 |
 | loss of the gcp on-ramp in SG | outage | 80% | 0% | inference | gcp | 94% of 8000 Mbps | 500 Mbps | 0 |
+| loss of port DC-port-primary (to order) in DC | survives | 100% | 0% | - | - | 100% of 8000 Mbps | - | 0 |
+| loss of port DC-port-secondary (to order) in DC | unaffected | 100% | 0% | - | - | 100% of 8000 Mbps | - | 0 |
+| loss of Network Edge device FR-ne-primary (to order) in FR | survives | 100% | 0% | - | - | 100% of 8000 Mbps | - | 0 |
+| loss of Network Edge device FR-ne-secondary (to order) in FR | unaffected | 100% | 0% | - | - | 100% of 8000 Mbps | - | 0 |
+| loss of Network Edge device SG-ne-primary (to order) in SG | survives | 100% | 0% | - | - | 100% of 8000 Mbps | - | 0 |
+| loss of Network Edge device SG-ne-secondary (to order) in SG | unaffected | 100% | 0% | - | - | 100% of 8000 Mbps | - | 0 |
 | loss of the connection aws@DC | survives | 100% | 0% | - | - | 100% of 8000 Mbps | - | 0 |
 | loss of the standby connection aws@FR | unaffected | 100% | 0% | - | - | 100% of 8000 Mbps | - | 0 |
 | loss of the connection azure@DC | survives | 100% | 0% | - | - | 100% of 8000 Mbps | - | 0 |
@@ -54,6 +60,14 @@ Service index 100%; sized cloud demand 8000 Mbps.
 | loss of the backbone link DC-FR | unaffected | 100% | 0% | - | - | 100% of 8000 Mbps | - | 0 |
 | loss of the backbone link DC-SG | survives | 100% | 0% | - | - | 100% of 8000 Mbps | - | 0 |
 | loss of the backbone link FR-SG | survives | 100% | 0% | - | - | 100% of 8000 Mbps | - | 0 |
+| loss of the cross connect to DC/DC-port-primary | survives | 100% | 0% | - | - | 100% of 8000 Mbps | - | 0 |
+| loss of the cross connect to DC/DC-port-secondary | unaffected | 100% | 0% | - | - | 100% of 8000 Mbps | - | 0 |
+| loss of the access connection of DC/DC-port-primary | survives | 100% | 0% | - | - | 100% of 8000 Mbps | - | 0 |
+| loss of the access connection of DC/DC-port-secondary | unaffected | 100% | 0% | - | - | 100% of 8000 Mbps | - | 0 |
+| loss of the access connection of FR/FR-ne-primary | survives | 100% | 0% | - | - | 100% of 8000 Mbps | - | 0 |
+| loss of the access connection of FR/FR-ne-secondary | unaffected | 100% | 0% | - | - | 100% of 8000 Mbps | - | 0 |
+| loss of the access connection of SG/SG-ne-primary | survives | 100% | 0% | - | - | 100% of 8000 Mbps | - | 0 |
+| loss of the access connection of SG/SG-ne-secondary | unaffected | 100% | 0% | - | - | 100% of 8000 Mbps | - | 0 |
 | outage of cloud region AWS us-east-1 (clouds aws) | outage | 40% | 0% | order-api | aws | 50% of 8000 Mbps | 4000 Mbps | 0 |
 | outage of cloud region AZURE westeurope (clouds azure) | outage | 40% | 0% | plant-erp | azure | 56% of 8000 Mbps | 3500 Mbps | 0 |
 | outage of cloud region GOOGLE_CLOUD asia-southeast1 (clouds gcp) | outage | 80% | 0% | inference | gcp | 94% of 8000 Mbps | 500 Mbps | 0 |
@@ -96,7 +110,7 @@ None found.
 
 ## Pairs (N-2)
 
-N-2 fails: 165 of all 418 scenarios cause an outage and 46 degrade service.
+N-2 fails: 245 of all 915 scenarios cause an outage and 74 degrade service.
 
 | # | Scenario | Verdict | Service lost | Site weight affected | Shortfall | Down |
 |---|---|---|---|---|---|---|
@@ -117,11 +131,11 @@ Estimates under the assumptions below, not guarantees: Equinix publishes SLAs pe
 
 | Workload | Core | End to end | Downtime / year | Composition |
 |---|---|---|---|---|
-| order-api | 99.98986% | 99.98976% | 54 min | parallel([metro DC x router DC x conn aws@DC x on-ramp], [metro FR x router FR x conn aws@FR x on-ramp]) x cloud region(s) [AWS us-east-1] x site access 0.999999 |
-| analytics | 99.97952% | 99.97942% | 108 min | parallel([metro DC x router DC x conn aws@DC x on-ramp x conn azure@DC x on-ramp], [metro FR x router FR x conn aws@FR x on-ramp x conn azure@FR x on-ramp]) x cloud region(s) [AWS us-east-1, AZURE westeurope] x site access 0.999999 |
-| inference | 99.87006% | 99.86996% | 684 min | [metro SG x router SG x conn gcp@SG x on-ramp] x cloud region(s) [GOOGLE_CLOUD asia-southeast1] x site access 0.999999 |
-| plant-erp | 99.87006% | 99.86996% | 684 min | [metro FR x router FR x conn azure@FR x on-ramp] x cloud region(s) [AZURE westeurope] x site access 0.999999 |
-| disaster-recovery | 99.97952% | 99.97942% | 108 min | parallel([metro DC x router DC x conn aws@DC x on-ramp x conn azure@DC x on-ramp], [metro FR x router FR x conn aws@FR x on-ramp x conn azure@FR x on-ramp]) x cloud region(s) [AWS us-east-1, AZURE westeurope] x site access 0.999999 |
+| order-api | 99.98986% | 99.98976% | 54 min | parallel([metro DC x access 1.000000 x router DC x conn aws@DC x on-ramp], [metro FR x access 0.999998 x router FR x conn aws@FR x on-ramp]) x cloud region(s) [AWS us-east-1] x site access 0.999999 |
+| analytics | 99.97952% | 99.97942% | 108 min | parallel([metro DC x access 1.000000 x router DC x conn aws@DC x on-ramp x conn azure@DC x on-ramp], [metro FR x access 0.999998 x router FR x conn aws@FR x on-ramp x conn azure@FR x on-ramp]) x cloud region(s) [AWS us-east-1, AZURE westeurope] x site access 0.999999 |
+| inference | 99.86983% | 99.86973% | 685 min | [metro SG x access 0.999998 x router SG x conn gcp@SG x on-ramp] x cloud region(s) [GOOGLE_CLOUD asia-southeast1] x site access 0.999999 |
+| plant-erp | 99.86983% | 99.86973% | 685 min | [metro FR x access 0.999998 x router FR x conn azure@FR x on-ramp] x cloud region(s) [AZURE westeurope] x site access 0.999999 |
+| disaster-recovery | 99.97952% | 99.97942% | 108 min | parallel([metro DC x access 1.000000 x router DC x conn aws@DC x on-ramp x conn azure@DC x on-ramp], [metro FR x access 0.999998 x router FR x conn aws@FR x on-ramp x conn azure@FR x on-ramp]) x cloud region(s) [AWS us-east-1, AZURE westeurope] x site access 0.999999 |
 
 Assumed availability per element (SDK planning assumptions (round figures chosen 2026-11-12 for comparison only; NOT Equinix or cloud-provider SLAs: Equinix publishes SLAs per product, replace these with your contractual figures)):
 
@@ -132,6 +146,10 @@ Assumed availability per element (SDK planning assumptions (round figures chosen
 - backbone link: 99.9900%
 - site access: 99.9000%
 - cloud region: 99.9900%
+- access port: 99.9900%
+- cross connect: 99.9900%
+- edge device: 99.9000%
+- access connection: 99.9500%
 
 ## Remediation
 
@@ -169,6 +187,12 @@ flowchart LR
     n22[["inference"]]
     n23[["order-api"]]
     n24[["plant-erp"]]
+    n25[\"port DC-port-primary (to order)"\]
+    n26[\"port DC-port-secondary (to order)"\]
+    n27[\"Network Edge device FR-ne-primary (to order)"\]
+    n28[\"Network Edge device FR-ne-secondary (to order)"\]
+    n29[\"Network Edge device SG-ne-primary (to order)"\]
+    n30[\"Network Edge device SG-ne-secondary (to order)"\]
     subgraph m_DC["DC"]
         n6["DC Ashburn"]
         n9{{"Cloud Router DC"}}
@@ -198,9 +222,6 @@ flowchart LR
     n4 ---|"10.7 ms"| n7
     n5 -.-|"154.0 ms / standby"| n7
     n5 ---|"0.5 ms"| n8
-    n6 --- n9
-    n7 --- n10
-    n8 --- n11
     n9 ---|"85.7 ms"| n10
     n9 ---|"220.0 ms"| n11
     n10 ---|"154.0 ms"| n11
@@ -222,6 +243,18 @@ flowchart LR
     n23 ---|"1000 Mbps"| n6
     n23 -.-|"1000 Mbps / standby"| n7
     n24 ---|"500 Mbps"| n7
+    n6 --- n25
+    n6 --- n26
+    n7 --- n27
+    n7 --- n28
+    n8 --- n29
+    n8 --- n30
+    n25 ---|"10000 Mbps"| n9
+    n26 ---|"10000 Mbps"| n9
+    n27 ---|"10000 Mbps"| n10
+    n28 ---|"10000 Mbps"| n10
+    n29 ---|"500 Mbps"| n11
+    n30 ---|"500 Mbps"| n11
 ```
 
 | Edge | Kind | From | To | Role | Capacity | Round trip |
@@ -238,9 +271,6 @@ flowchart LR
 | access:London office@FR | site_access | London office | FR Frankfurt | primary | unknown | 10.7 ms (measured) |
 | access:Singapore hub@FR | site_access | Singapore hub | FR Frankfurt | standby | unknown | 154.0 ms (measured) |
 | access:Singapore hub@SG | site_access | Singapore hub | SG Singapore | primary | unknown | 0.5 ms (intra-metro) |
-| attach:DC | router_attachment | DC Ashburn | Cloud Router DC |  | unknown | 0.0 ms (assumed) |
-| attach:FR | router_attachment | FR Frankfurt | Cloud Router FR |  | unknown | 0.0 ms (assumed) |
-| attach:SG | router_attachment | SG Singapore | Cloud Router SG |  | unknown | 0.0 ms (assumed) |
 | backbone:DC-FR | backbone | Cloud Router DC | Cloud Router FR |  | unknown | 85.7 ms (measured) |
 | backbone:DC-SG | backbone | Cloud Router DC | Cloud Router SG |  | unknown | 220.0 ms (measured) |
 | backbone:FR-SG | backbone | Cloud Router FR | Cloud Router SG |  | unknown | 154.0 ms (measured) |
@@ -262,9 +292,22 @@ flowchart LR
 | host:order-api@DC | workload_hosting | order-api | DC Ashburn | primary | 1000 Mbps | unknown |
 | host:order-api@FR | workload_hosting | order-api | FR Frankfurt | standby | 1000 Mbps | unknown |
 | host:plant-erp@FR | workload_hosting | plant-erp | FR Frankfurt | primary | 500 Mbps | unknown |
+| xc:DC/DC-port-primary | cross_connect | DC Ashburn | port DC-port-primary (to order) |  | unknown | 0.0 ms (assumed) |
+| xc:DC/DC-port-secondary | cross_connect | DC Ashburn | port DC-port-secondary (to order) |  | unknown | 0.0 ms (assumed) |
+| reach:FR/FR-ne-primary | device_reach | FR Frankfurt | Network Edge device FR-ne-primary (to order) |  | unknown | 0.0 ms (assumed) |
+| reach:FR/FR-ne-secondary | device_reach | FR Frankfurt | Network Edge device FR-ne-secondary (to order) |  | unknown | 0.0 ms (assumed) |
+| reach:SG/SG-ne-primary | device_reach | SG Singapore | Network Edge device SG-ne-primary (to order) |  | unknown | 0.0 ms (assumed) |
+| reach:SG/SG-ne-secondary | device_reach | SG Singapore | Network Edge device SG-ne-secondary (to order) |  | unknown | 0.0 ms (assumed) |
+| accessconn:DC/DC-port-primary | access_connection | port DC-port-primary (to order) | Cloud Router DC |  | 10000 Mbps | 0.0 ms (assumed) |
+| accessconn:DC/DC-port-secondary | access_connection | port DC-port-secondary (to order) | Cloud Router DC |  | 10000 Mbps | 0.0 ms (assumed) |
+| accessconn:FR/FR-ne-primary | access_connection | Network Edge device FR-ne-primary (to order) | Cloud Router FR |  | 10000 Mbps | 0.0 ms (assumed) |
+| accessconn:FR/FR-ne-secondary | access_connection | Network Edge device FR-ne-secondary (to order) | Cloud Router FR |  | 10000 Mbps | 0.0 ms (assumed) |
+| accessconn:SG/SG-ne-primary | access_connection | Network Edge device SG-ne-primary (to order) | Cloud Router SG |  | 500 Mbps | 0.0 ms (assumed) |
+| accessconn:SG/SG-ne-secondary | access_connection | Network Edge device SG-ne-secondary (to order) | Cloud Router SG |  | 500 Mbps | 0.0 ms (assumed) |
 
 ## Assumptions
 
+- Metro access comes from the access plan: a metro joins its Cloud Router through its ports or Network Edge devices, each with one access connection. An item to order is simulated as planned.
 - One Fabric Cloud Router per metro carries cloud and inter-metro traffic (as the Deployment Wizard plans it); a router is a single element unless the design adds a second.
 - Inter-metro backbone capacity is not provisioned by the spec: it is left unknown and does not constrain the simulation.
 - A cloud connection is sized as its primary workloads' bandwidth plus 100% of its standby workloads' bandwidth.
@@ -282,9 +325,9 @@ flowchart LR
 
 ## Timings
 
-- catalogue load: 3651 ms
+- catalogue load: 3448 ms
 - graph: 1 ms
-- single failures (37): 11 ms
-- pairs (418): 51 ms
-- remediation: 13 ms
-- availability: 1 ms
+- single failures (51): 14 ms
+- pairs (915): 149 ms
+- remediation: 12 ms
+- availability: 0 ms

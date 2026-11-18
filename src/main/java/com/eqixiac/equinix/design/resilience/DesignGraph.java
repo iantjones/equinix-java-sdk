@@ -193,6 +193,7 @@ public record DesignGraph(String specFingerprint, String specName, String portfo
             case CLOUD -> alias + "((\"" + text + "\"))";
             case WORKLOAD -> alias + "[[\"" + text + "\"]]";
             case PEER -> alias + ">\"" + text + "\"]";
+            case ACCESS_PORT, EDGE_DEVICE -> alias + "[\\\"" + text + "\"\\]";
         };
     }
 
@@ -201,7 +202,8 @@ public record DesignGraph(String specFingerprint, String specName, String portfo
         if (e.capacityMbps() != null) {
             parts.add(fmt(e.capacityMbps()) + " Mbps");
         }
-        if (e.roundTripMs() != null && e.kind() != EdgeKind.ROUTER_ATTACHMENT) {
+        if (e.roundTripMs() != null && e.kind() != EdgeKind.ROUTER_ATTACHMENT && e.kind() != EdgeKind.CROSS_CONNECT
+                && e.kind() != EdgeKind.DEVICE_REACH && e.kind() != EdgeKind.ACCESS_CONNECTION) {
             parts.add(String.format(Locale.ROOT, "%.1f ms", e.roundTripMs()));
         }
         if (e.role() == EdgeRole.STANDBY) {

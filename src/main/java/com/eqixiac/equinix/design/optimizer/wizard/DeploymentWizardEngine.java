@@ -99,9 +99,20 @@ final class DeploymentWizardEngine {
         // Phase 3: Plan Backbone Links
         List<PlannedBackboneLink> backboneLinks = planBackboneLinks(config, metros, names, routerNames);
 
-        // Phase 4: Plan Routing Protocols
+        // Phase 3b: access connections, from the access plan the caller gave (none otherwise).
+        List<PlannedConnection> accessConnections =
+                planAccessConnections(config, names, routerNames, validationErrors);
+
+        // Phase 4: Plan Routing Protocols. Access connections come last, so the peering subnets of the
+        // provider connections and backbone links are the same with or without an access plan.
         List<PlannedRoutingProtocol> routingProtocols =
                 planRoutingProtocols(config, providerConnections, backboneLinks, names, subnets);
+        // Only for a connection whose port or device exists: the others are not created by this plan.
+        for (PlannedConnection conn : accessConnections) {
+            if (conn.hasAccessEndpoint()) {
+                routingProtocols.addAll(createProtocolPair(config, conn.getName(), conn.getKey(), names, subnets));
+            }
+        }
 
         // Phase 5: Estimate Pricing. Native links are priced first (each against the Equinix path
         // for the same flow), then reported on PlanPricing separately from the Equinix totals.
@@ -112,8 +123,9 @@ final class DeploymentWizardEngine {
         List<PlannedMulticloudInterconnect> multicloudLinks = MulticloudLinkPlanner.price(
                 config, rateCard, cloudToCloud.links, cloudRouters, providerConnections, backboneLinks,
                 result.getRequest());
-        PlanPricing pricing = PlanPricer.estimatePricing(config, rateCard, cloudRouters, providerConnections, backboneLinks,
-                multicloudLinks);
+        PlanPricing pricing = PlanPricer.withAccess(PlanPricer.estimatePricing(config, rateCard, cloudRouters,
+                providerConnections, backboneLinks, multicloudLinks), config, rateCard, accessConnections,
+                config.getAccess());
 
         // Phase 6: Layered plan-time validation.
         //   Layer 1 - structural + catalog checks (no provisioning, no live connection dry-run).
@@ -134,8 +146,28 @@ final class DeploymentWizardEngine {
                 config.getCustomerAsn(),
                 config.getFabric());
         validationErrors.addAll(validation.errors);
+        List<String> deferred = new ArrayList<>(validation.deferred == null ? List.<String>of() : validation.deferred);
+        List<ConnectionInputRequirement> requiredInputs = new ArrayList<>(
+                validation.requiredInputs == null ? List.<ConnectionInputRequirement>of() : validation.requiredInputs);
+        for (PlannedConnection conn : accessConnections) {
+            if (!conn.hasAccessEndpoint()) {
+                deferred.add("Access connection '" + conn.getName() + "': not validated, because "
+                        + conn.getZSideAccessItem() + " is an order to place and has no uuid yet");
+                continue;
+            }
+            boolean port = conn.getZSidePortUuid() != null;
+            deferred.add("Access connection '" + conn.getName() + "': endpoints validated structurally; the live "
+                    + "dry-run runs at provisioning once Cloud Router '" + conn.getASideRouterName() + "' exists"
+                    + (port ? " - you will need to supply a VLAN tag for the port" : ""));
+            if (port && conn.getZSideVlanTag() == null) {
+                requiredInputs.add(ConnectionInputRequirement.builder().connectionName(conn.getName())
+                        .providerLabel("port " + conn.getZSideAccessItem()).vlanTagRequired(true).build());
+            }
+        }
 
         return identity(config, DeploymentPlan.builder()
+                .access(config.getAccess())
+                .accessConnections(accessConnections.isEmpty() ? null : accessConnections)
                 .sourceOptimization(result)
                 .cloudRouters(cloudRouters)
                 .providerConnections(providerConnections)
@@ -148,9 +180,9 @@ final class DeploymentWizardEngine {
                 .pricing(pricing)
                 .valid(validationErrors.isEmpty())
                 .validationErrors(validationErrors)
-                .deferredValidations(validation.deferred)
+                .deferredValidations(deferred)
                 .skippedValidations(validation.skipped)
-                .requiredInputs(validation.requiredInputs)
+                .requiredInputs(requiredInputs)
                 .fabric(config.getFabric())
                 .build());
     }
@@ -723,6 +755,65 @@ final class DeploymentWizardEngine {
         }
 
         return pairs;
+    }
+
+    //  Phase 3b: Access connections
+
+    /**
+     * One connection from the Cloud Router of a metro to each port or Network Edge device of the access
+     * plan. Empty when the wizard was given no access plan. An access plan for another spec, or one that
+     * names a metro the plan has no Cloud Router in, is a validation error.
+     */
+    private static List<PlannedConnection> planAccessConnections(
+            DeploymentWizard.Builder config, PlanNames names, Map<MetroId, String> routerNames,
+            List<String> validationErrors) {
+        List<PlannedConnection> connections = new ArrayList<>();
+        com.eqixiac.equinix.design.access.AccessPlan access = config.getAccess();
+        if (access == null) {
+            return connections;
+        }
+        OptimizationResult result = config.getOptimizationResult();
+        String fingerprint = config.getSpecFingerprint() != null ? config.getSpecFingerprint()
+                : result == null ? null : result.getSpecFingerprint();
+        if (access.specFingerprint() != null && fingerprint != null && !access.specFingerprint().equals(fingerprint)) {
+            validationErrors.add("The access plan was made for another design (spec fingerprint "
+                    + access.specFingerprint() + "); plan the access for this design");
+            return connections;
+        }
+        String prefix = PlanNames.validatePrefix(config.getRouterNamePrefix());
+        List<String> notificationEmails = notificationEmails(config);
+        Set<String> keys = new HashSet<>();
+        for (com.eqixiac.equinix.design.access.MetroAccess metro : access.metros()) {
+            MetroId metroId = MetroId.of(metro.metro());
+            String routerName = routerNames.get(metroId);
+            if (routerName == null) {
+                if (!metro.items().isEmpty()) {
+                    validationErrors.add("The access plan names metro " + metro.metro()
+                            + ", where this plan has no Cloud Router");
+                }
+                continue;
+            }
+            for (com.eqixiac.equinix.design.access.PlannedAccessLink link : metro.links()) {
+                boolean port = link.kind() == com.eqixiac.equinix.design.access.AccessKind.FABRIC_PORT;
+                connections.add(PlannedConnection.builder()
+                        .key(uniqueKey(keys, "access/" + metro.metro() + "/" + link.item()))
+                        .projectId(config.getProjectId())
+                        .name(names.unique(prefix + "-" + link.name()))
+                        .connectionType(config.getProviderConnectionType())
+                        .purpose(ConnectionPurpose.ACCESS)
+                        .bandwidthMbps(link.bandwidthMbps())
+                        .aSideMetro(metroId)
+                        .aSideRouterName(routerName)
+                        .zSideMetro(metroId)
+                        .zSideAccessItem(link.item())
+                        .zSidePortUuid(port ? link.endpointUuid() : null)
+                        .zSideDeviceUuid(port ? null : link.endpointUuid())
+                        .redundancyPriority(link.priority())
+                        .notificationEmails(notificationEmails)
+                        .build());
+            }
+        }
+        return connections;
     }
 
     //  Phase 4: Routing Protocols

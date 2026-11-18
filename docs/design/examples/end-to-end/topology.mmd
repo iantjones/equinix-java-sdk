@@ -17,6 +17,18 @@ graph LR
   fcr1 -->|3500 Mbps| prov4
   prov6["gcp<br/>asia-southeast1"]
   fcr2 -->|500 Mbps| prov6
+  acc7[/"Port DC-port-primary<br/>to order"/]
+  acc7 -.- fcr0
+  acc8[/"Port DC-port-secondary<br/>to order"/]
+  acc8 -.- fcr0
+  acc9[/"Network Edge FR-ne-primary<br/>to order"/]
+  acc9 -.- fcr1
+  acc10[/"Network Edge FR-ne-secondary<br/>to order"/]
+  acc10 -.- fcr1
+  acc11[/"Network Edge SG-ne-primary<br/>to order"/]
+  acc11 -.- fcr2
+  acc12[/"Network Edge SG-ne-secondary<br/>to order"/]
+  acc12 -.- fcr2
   fcr0 <-->|10000 Mbps backbone| fcr1
   fcr0 <-->|10000 Mbps backbone| fcr2
   fcr1 <-->|10000 Mbps backbone| fcr2

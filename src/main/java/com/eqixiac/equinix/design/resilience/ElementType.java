@@ -30,5 +30,13 @@ public enum ElementType {
     /** A site's access circuit into a metro. */
     SITE_ACCESS,
     /** A cloud provider's region. */
-    CLOUD_REGION
+    CLOUD_REGION,
+    /** A Fabric port the design enters a metro through. */
+    ACCESS_PORT,
+    /** The cross connect from the cage to a Fabric port. */
+    CROSS_CONNECT,
+    /** A Network Edge device the design enters a metro through. */
+    EDGE_DEVICE,
+    /** The virtual connection from a port or Network Edge device to the Cloud Router. */
+    ACCESS_CONNECTION
 }

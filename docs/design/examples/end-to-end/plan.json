@@ -2,7 +2,7 @@
   "deploymentName" : "global-interconnect",
   "namePrefix" : "FCR",
   "specFingerprint" : "a5f92102787ee30f40ab911fee6c2caf9ba279c5ead65986a92ba8d9b2a9a7da",
-  "sourceComputedAt" : "2026-11-16T23:01:22.129334Z",
+  "sourceComputedAt" : "2026-11-18T00:50:20.959712Z",
   "cloudRouters" : [ {
     "key" : "router/DC",
     "metroId" : "DC",
@@ -56,8 +56,8 @@
     "zsideServiceProfileUuid" : "de55ca94-df3b-4680-845f-6f7093f76bef",
     "zsideProviderLabel" : "aws",
     "zsideSellerRegion" : "us-east-1",
-    "asideMetro" : "DC",
     "asideRouterName" : "FCR-DC",
+    "asideMetro" : "DC",
     "zsideCloudType" : "AWS",
     "aSideMetro" : "DC",
     "aSideRouterName" : "FCR-DC",
@@ -102,8 +102,8 @@
     "notificationEmails" : [ "noc@example.com" ],
     "zsideServiceProfileUuid" : "0de4e413-edd7-4325-912f-7c8a4428e156",
     "zsideProviderLabel" : "azure",
-    "asideMetro" : "DC",
     "asideRouterName" : "FCR-DC",
+    "asideMetro" : "DC",
     "zsideCloudType" : "AZURE",
     "aSideMetro" : "DC",
     "aSideRouterName" : "FCR-DC",
@@ -151,8 +151,8 @@
     "zsideProviderLabel" : "aws",
     "zsideSellerRegion" : "eu-central-1",
     "zsideRequestedRegion" : "us-east-1",
-    "asideMetro" : "FR",
     "asideRouterName" : "FCR-FR",
+    "asideMetro" : "FR",
     "zsideCloudType" : "AWS",
     "aSideMetro" : "FR",
     "aSideRouterName" : "FCR-FR",
@@ -193,8 +193,8 @@
     "notificationEmails" : [ "noc@example.com" ],
     "zsideServiceProfileUuid" : "a1390b22-bbe0-4e93-ad37-85beef9d254d",
     "zsideProviderLabel" : "azure",
-    "asideMetro" : "FR",
     "asideRouterName" : "FCR-FR",
+    "asideMetro" : "FR",
     "zsideCloudType" : "AZURE",
     "aSideMetro" : "FR",
     "aSideRouterName" : "FCR-FR",
@@ -239,8 +239,8 @@
     "zsideServiceProfileUuid" : "b97dacca-abe6-4e8c-8be1-fcdd1be1defe",
     "zsideProviderLabel" : "gcp",
     "zsideSellerRegion" : "asia-southeast1",
-    "asideMetro" : "SG",
     "asideRouterName" : "FCR-SG",
+    "asideMetro" : "SG",
     "zsideCloudType" : "GOOGLE_CLOUD",
     "aSideMetro" : "SG",
     "aSideRouterName" : "FCR-SG",
@@ -262,8 +262,8 @@
       "purpose" : "BACKBONE",
       "bandwidthMbps" : 10000,
       "notificationEmails" : [ "noc@example.com" ],
-      "asideMetro" : "DC",
       "asideRouterName" : "FCR-DC",
+      "asideMetro" : "DC",
       "zsideMetro" : "FR",
       "zsideRouterName" : "FCR-FR",
       "aSideMetro" : "DC",
@@ -284,8 +284,8 @@
       "purpose" : "BACKBONE",
       "bandwidthMbps" : 10000,
       "notificationEmails" : [ "noc@example.com" ],
-      "asideMetro" : "DC",
       "asideRouterName" : "FCR-DC",
+      "asideMetro" : "DC",
       "zsideMetro" : "SG",
       "zsideRouterName" : "FCR-SG",
       "aSideMetro" : "DC",
@@ -306,8 +306,8 @@
       "purpose" : "BACKBONE",
       "bandwidthMbps" : 10000,
       "notificationEmails" : [ "noc@example.com" ],
-      "asideMetro" : "FR",
       "asideRouterName" : "FCR-FR",
+      "asideMetro" : "FR",
       "zsideMetro" : "SG",
       "zsideRouterName" : "FCR-SG",
       "aSideMetro" : "FR",
@@ -461,37 +461,277 @@
     "bfdEnabled" : true,
     "bfdInterval" : 300
   } ],
+  "access" : {
+    "specFingerprint" : "a5f92102787ee30f40ab911fee6c2caf9ba279c5ead65986a92ba8d9b2a9a7da",
+    "metros" : [ {
+      "metro" : "DC",
+      "mode" : "PHYSICAL_PORTS",
+      "reason" : "the site 'Ashburn data center' is a data center in this metro and the inventory has no usable port here",
+      "items" : [ {
+        "name" : "DC-port-primary",
+        "kind" : "FABRIC_PORT",
+        "metro" : "DC",
+        "source" : "ORDER",
+        "speedMbps" : 10000,
+        "priority" : "PRIMARY",
+        "note" : "order a 10G port in one redundancy group with priority PRIMARY"
+      }, {
+        "name" : "DC-xc-primary",
+        "kind" : "CROSS_CONNECT",
+        "metro" : "DC",
+        "source" : "ORDER",
+        "priority" : "PRIMARY",
+        "attachesTo" : "DC-port-primary",
+        "note" : "from the cage to DC-port-primary"
+      }, {
+        "name" : "DC-port-secondary",
+        "kind" : "FABRIC_PORT",
+        "metro" : "DC",
+        "source" : "ORDER",
+        "speedMbps" : 10000,
+        "priority" : "SECONDARY",
+        "note" : "order a 10G port in one redundancy group with priority SECONDARY"
+      }, {
+        "name" : "DC-xc-secondary",
+        "kind" : "CROSS_CONNECT",
+        "metro" : "DC",
+        "source" : "ORDER",
+        "priority" : "SECONDARY",
+        "attachesTo" : "DC-port-secondary",
+        "note" : "from the cage to DC-port-secondary on a diverse path"
+      }, {
+        "name" : "DC-internet-access",
+        "kind" : "INTERNET_ACCESS",
+        "metro" : "DC",
+        "source" : "ORDER",
+        "note" : "general internet traffic and peers with no presence in the design leave here"
+      } ],
+      "links" : [ {
+        "name" : "DC-access-primary",
+        "metro" : "DC",
+        "item" : "DC-port-primary",
+        "kind" : "FABRIC_PORT",
+        "bandwidthMbps" : 10000,
+        "priority" : "PRIMARY",
+        "sizing" : "the 7000 Mbps of cloud traffic the placement lands here, rounded up to the 10000 Mbps Fabric tier"
+      }, {
+        "name" : "DC-access-secondary",
+        "metro" : "DC",
+        "item" : "DC-port-secondary",
+        "kind" : "FABRIC_PORT",
+        "bandwidthMbps" : 10000,
+        "priority" : "SECONDARY",
+        "sizing" : "the 7000 Mbps of cloud traffic the placement lands here, rounded up to the 10000 Mbps Fabric tier"
+      } ]
+    }, {
+      "metro" : "FR",
+      "mode" : "NETWORK_EDGE",
+      "reason" : "no data center site here and Network Edge is offered",
+      "items" : [ {
+        "name" : "FR-ne-primary",
+        "kind" : "NETWORK_EDGE_DEVICE",
+        "metro" : "FR",
+        "source" : "ORDER",
+        "priority" : "PRIMARY",
+        "note" : "create a redundant device pair (SD-WAN or router image); this is the PRIMARY device"
+      }, {
+        "name" : "FR-ne-secondary",
+        "kind" : "NETWORK_EDGE_DEVICE",
+        "metro" : "FR",
+        "source" : "ORDER",
+        "priority" : "SECONDARY",
+        "note" : "create a redundant device pair (SD-WAN or router image); this is the SECONDARY device"
+      }, {
+        "name" : "FR-internet-access",
+        "kind" : "INTERNET_ACCESS",
+        "metro" : "FR",
+        "source" : "ORDER",
+        "note" : "general internet traffic and peers with no presence in the design leave here"
+      } ],
+      "links" : [ {
+        "name" : "FR-access-primary",
+        "metro" : "FR",
+        "item" : "FR-ne-primary",
+        "kind" : "NETWORK_EDGE_DEVICE",
+        "bandwidthMbps" : 10000,
+        "priority" : "PRIMARY",
+        "sizing" : "the 7500 Mbps of cloud traffic the placement lands here, rounded up to the 10000 Mbps Fabric tier"
+      }, {
+        "name" : "FR-access-secondary",
+        "metro" : "FR",
+        "item" : "FR-ne-secondary",
+        "kind" : "NETWORK_EDGE_DEVICE",
+        "bandwidthMbps" : 10000,
+        "priority" : "SECONDARY",
+        "sizing" : "the 7500 Mbps of cloud traffic the placement lands here, rounded up to the 10000 Mbps Fabric tier"
+      } ]
+    }, {
+      "metro" : "SG",
+      "mode" : "NETWORK_EDGE",
+      "reason" : "no data center site here and Network Edge is offered",
+      "items" : [ {
+        "name" : "SG-ne-primary",
+        "kind" : "NETWORK_EDGE_DEVICE",
+        "metro" : "SG",
+        "source" : "ORDER",
+        "priority" : "PRIMARY",
+        "note" : "create a redundant device pair (SD-WAN or router image); this is the PRIMARY device"
+      }, {
+        "name" : "SG-ne-secondary",
+        "kind" : "NETWORK_EDGE_DEVICE",
+        "metro" : "SG",
+        "source" : "ORDER",
+        "priority" : "SECONDARY",
+        "note" : "create a redundant device pair (SD-WAN or router image); this is the SECONDARY device"
+      } ],
+      "links" : [ {
+        "name" : "SG-access-primary",
+        "metro" : "SG",
+        "item" : "SG-ne-primary",
+        "kind" : "NETWORK_EDGE_DEVICE",
+        "bandwidthMbps" : 500,
+        "priority" : "PRIMARY",
+        "sizing" : "the 500 Mbps of cloud traffic the placement lands here"
+      }, {
+        "name" : "SG-access-secondary",
+        "metro" : "SG",
+        "item" : "SG-ne-secondary",
+        "kind" : "NETWORK_EDGE_DEVICE",
+        "bandwidthMbps" : 500,
+        "priority" : "SECONDARY",
+        "sizing" : "the 500 Mbps of cloud traffic the placement lands here"
+      } ]
+    } ],
+    "notes" : [ "no project id was given, so existing Fabric ports were not read", "no account number was given, so existing Network Edge devices were not read" ]
+  },
+  "accessConnections" : [ {
+    "key" : "access/DC/DC-port-primary",
+    "name" : "FCR-DC-access-primary",
+    "connectionType" : "IP_VC",
+    "purpose" : "ACCESS",
+    "bandwidthMbps" : 10000,
+    "notificationEmails" : [ "noc@example.com" ],
+    "redundancyPriority" : "PRIMARY",
+    "zsideAccessItem" : "DC-port-primary",
+    "asideRouterName" : "FCR-DC",
+    "asideMetro" : "DC",
+    "zsideMetro" : "DC",
+    "aSideMetro" : "DC",
+    "aSideRouterName" : "FCR-DC",
+    "zSideMetro" : "DC",
+    "zSideAccessItem" : "DC-port-primary"
+  }, {
+    "key" : "access/DC/DC-port-secondary",
+    "name" : "FCR-DC-access-secondary",
+    "connectionType" : "IP_VC",
+    "purpose" : "ACCESS",
+    "bandwidthMbps" : 10000,
+    "notificationEmails" : [ "noc@example.com" ],
+    "redundancyPriority" : "SECONDARY",
+    "zsideAccessItem" : "DC-port-secondary",
+    "asideRouterName" : "FCR-DC",
+    "asideMetro" : "DC",
+    "zsideMetro" : "DC",
+    "aSideMetro" : "DC",
+    "aSideRouterName" : "FCR-DC",
+    "zSideMetro" : "DC",
+    "zSideAccessItem" : "DC-port-secondary"
+  }, {
+    "key" : "access/FR/FR-ne-primary",
+    "name" : "FCR-FR-access-primary",
+    "connectionType" : "IP_VC",
+    "purpose" : "ACCESS",
+    "bandwidthMbps" : 10000,
+    "notificationEmails" : [ "noc@example.com" ],
+    "redundancyPriority" : "PRIMARY",
+    "zsideAccessItem" : "FR-ne-primary",
+    "asideRouterName" : "FCR-FR",
+    "asideMetro" : "FR",
+    "zsideMetro" : "FR",
+    "aSideMetro" : "FR",
+    "aSideRouterName" : "FCR-FR",
+    "zSideMetro" : "FR",
+    "zSideAccessItem" : "FR-ne-primary"
+  }, {
+    "key" : "access/FR/FR-ne-secondary",
+    "name" : "FCR-FR-access-secondary",
+    "connectionType" : "IP_VC",
+    "purpose" : "ACCESS",
+    "bandwidthMbps" : 10000,
+    "notificationEmails" : [ "noc@example.com" ],
+    "redundancyPriority" : "SECONDARY",
+    "zsideAccessItem" : "FR-ne-secondary",
+    "asideRouterName" : "FCR-FR",
+    "asideMetro" : "FR",
+    "zsideMetro" : "FR",
+    "aSideMetro" : "FR",
+    "aSideRouterName" : "FCR-FR",
+    "zSideMetro" : "FR",
+    "zSideAccessItem" : "FR-ne-secondary"
+  }, {
+    "key" : "access/SG/SG-ne-primary",
+    "name" : "FCR-SG-access-primary",
+    "connectionType" : "IP_VC",
+    "purpose" : "ACCESS",
+    "bandwidthMbps" : 500,
+    "notificationEmails" : [ "noc@example.com" ],
+    "redundancyPriority" : "PRIMARY",
+    "zsideAccessItem" : "SG-ne-primary",
+    "asideRouterName" : "FCR-SG",
+    "asideMetro" : "SG",
+    "zsideMetro" : "SG",
+    "aSideMetro" : "SG",
+    "aSideRouterName" : "FCR-SG",
+    "zSideMetro" : "SG",
+    "zSideAccessItem" : "SG-ne-primary"
+  }, {
+    "key" : "access/SG/SG-ne-secondary",
+    "name" : "FCR-SG-access-secondary",
+    "connectionType" : "IP_VC",
+    "purpose" : "ACCESS",
+    "bandwidthMbps" : 500,
+    "notificationEmails" : [ "noc@example.com" ],
+    "redundancyPriority" : "SECONDARY",
+    "zsideAccessItem" : "SG-ne-secondary",
+    "asideRouterName" : "FCR-SG",
+    "asideMetro" : "SG",
+    "zsideMetro" : "SG",
+    "aSideMetro" : "SG",
+    "aSideRouterName" : "FCR-SG",
+    "zSideMetro" : "SG",
+    "zSideAccessItem" : "SG-ne-secondary"
+  } ],
   "pricing" : {
-    "monthlyTotal" : 6823.99,
+    "monthlyTotal" : 6818.61,
     "setupTotal" : 0.00,
     "currency" : "USD",
     "monthlyByCurrency" : {
-      "USD" : 6823.99
+      "USD" : 6818.61
     },
-    "routerMonthlyCost" : 3749.70,
+    "routerMonthlyCost" : 3746.98,
     "routerCurrency" : "USD",
     "routerMonthlyByCurrency" : {
-      "USD" : 3749.70
+      "USD" : 3746.98
     },
-    "providerConnectionMonthlyCost" : 1606.20,
+    "providerConnectionMonthlyCost" : 1604.60,
     "providerConnectionCurrency" : "USD",
     "providerConnectionMonthlyByCurrency" : {
-      "USD" : 1606.20
+      "USD" : 1604.60
     },
-    "backboneMonthlyCost" : 1468.09,
+    "backboneMonthlyCost" : 1467.03,
     "backboneCurrency" : "USD",
     "backboneMonthlyByCurrency" : {
-      "USD" : 1468.09
+      "USD" : 1467.03
     },
     "perConnectionCost" : {
       "FCR-DC-to-aws" : 375.0,
       "FCR-DC-to-azure" : 375.0,
-      "FCR-FR-to-aws" : 352.45,
-      "FCR-FR-to-azure" : 352.45,
+      "FCR-FR-to-aws" : 351.65,
+      "FCR-FR-to-azure" : 351.65,
       "FCR-SG-to-gcp" : 151.30,
       "FCR-DC-to-FR" : 500.0,
       "FCR-DC-to-SG" : 500.0,
-      "FCR-FR-to-SG" : 468.09
+      "FCR-FR-to-SG" : 467.03
     },
     "lines" : [ {
       "label" : "FCR-DC",
@@ -506,21 +746,21 @@
     }, {
       "label" : "FCR-FR",
       "metro" : "FR",
-      "monthly" : 1198.32,
+      "monthly" : 1195.60,
       "oneTime" : 0.00,
       "currency" : "USD",
       "source" : "EQUINIX_LIVE",
-      "monthlyLow" : 1174.35,
-      "monthlyHigh" : 1222.28,
-      "note" : "Equinix price ECX00014.PROD; converted from EUR 1088.0 at 1.10139437 USD/EUR (ECB reference rate via Frankfurter, 2026-11-16, as of 2026-11-16); range widened +/-2% for exchange-rate uncertainty",
+      "monthlyLow" : 1171.69,
+      "monthlyHigh" : 1219.52,
+      "note" : "Equinix price ECX00014.PROD; converted from EUR 1088.0 at 1.0989011 USD/EUR (ECB reference rate via Frankfurter, 2026-11-17, as of 2026-11-17); range widened +/-2% for exchange-rate uncertainty",
       "conversion" : {
         "originalMonthly" : 1088.0,
         "originalOneTime" : 0,
         "originalCurrency" : "EUR",
-        "rate" : 1.10139437,
+        "rate" : 1.09890110,
         "kind" : "LIVE",
-        "source" : "ECB reference rate via Frankfurter, 2026-11-16",
-        "asOf" : "2026-11-16",
+        "source" : "ECB reference rate via Frankfurter, 2026-11-17",
+        "asOf" : "2026-11-17",
         "bandPercent" : 2.0
       }
     }, {
@@ -532,15 +772,15 @@
       "source" : "EQUINIX_LIVE",
       "monthlyLow" : 1250.85,
       "monthlyHigh" : 1301.91,
-      "note" : "Equinix price ECX00014.PROD; converted from SGD 1645.0 at 0.77591558 USD/SGD (ECB reference rate via Frankfurter, 2026-11-16, as of 2026-11-16); range widened +/-2% for exchange-rate uncertainty",
+      "note" : "Equinix price ECX00014.PROD; converted from SGD 1645.0 at 0.77591558 USD/SGD (ECB reference rate via Frankfurter, 2026-11-17, as of 2026-11-17); range widened +/-2% for exchange-rate uncertainty",
       "conversion" : {
         "originalMonthly" : 1645.0,
         "originalOneTime" : 0,
         "originalCurrency" : "SGD",
         "rate" : 0.77591558,
         "kind" : "LIVE",
-        "source" : "ECB reference rate via Frankfurter, 2026-11-16",
-        "asOf" : "2026-11-16",
+        "source" : "ECB reference rate via Frankfurter, 2026-11-17",
+        "asOf" : "2026-11-17",
         "bandPercent" : 2.0
       }
     }, {
@@ -566,41 +806,41 @@
     }, {
       "label" : "FCR-FR-to-aws",
       "metro" : "FR",
-      "monthly" : 352.45,
+      "monthly" : 351.65,
       "oneTime" : 0.00,
       "currency" : "USD",
       "source" : "EQUINIX_LIVE",
-      "monthlyLow" : 345.40,
-      "monthlyHigh" : 359.50,
-      "note" : "Equinix price ECX00015.PROD; converted from EUR 320.0 at 1.10139437 USD/EUR (ECB reference rate via Frankfurter, 2026-11-16, as of 2026-11-16); range widened +/-2% for exchange-rate uncertainty",
+      "monthlyLow" : 344.62,
+      "monthlyHigh" : 358.68,
+      "note" : "Equinix price ECX00015.PROD; converted from EUR 320.0 at 1.0989011 USD/EUR (ECB reference rate via Frankfurter, 2026-11-17, as of 2026-11-17); range widened +/-2% for exchange-rate uncertainty",
       "conversion" : {
         "originalMonthly" : 320.0,
         "originalOneTime" : 0,
         "originalCurrency" : "EUR",
-        "rate" : 1.10139437,
+        "rate" : 1.09890110,
         "kind" : "LIVE",
-        "source" : "ECB reference rate via Frankfurter, 2026-11-16",
-        "asOf" : "2026-11-16",
+        "source" : "ECB reference rate via Frankfurter, 2026-11-17",
+        "asOf" : "2026-11-17",
         "bandPercent" : 2.0
       }
     }, {
       "label" : "FCR-FR-to-azure",
       "metro" : "FR",
-      "monthly" : 352.45,
+      "monthly" : 351.65,
       "oneTime" : 0.00,
       "currency" : "USD",
       "source" : "EQUINIX_LIVE",
-      "monthlyLow" : 345.40,
-      "monthlyHigh" : 359.50,
-      "note" : "Equinix price ECX00015.PROD; priced at the 5000 Mbps Fabric tier that covers 3500 Mbps; converted from EUR 320.0 at 1.10139437 USD/EUR (ECB reference rate via Frankfurter, 2026-11-16, as of 2026-11-16); range widened +/-2% for exchange-rate uncertainty",
+      "monthlyLow" : 344.62,
+      "monthlyHigh" : 358.68,
+      "note" : "Equinix price ECX00015.PROD; priced at the 5000 Mbps Fabric tier that covers 3500 Mbps; converted from EUR 320.0 at 1.0989011 USD/EUR (ECB reference rate via Frankfurter, 2026-11-17, as of 2026-11-17); range widened +/-2% for exchange-rate uncertainty",
       "conversion" : {
         "originalMonthly" : 320.0,
         "originalOneTime" : 0,
         "originalCurrency" : "EUR",
-        "rate" : 1.10139437,
+        "rate" : 1.09890110,
         "kind" : "LIVE",
-        "source" : "ECB reference rate via Frankfurter, 2026-11-16",
-        "asOf" : "2026-11-16",
+        "source" : "ECB reference rate via Frankfurter, 2026-11-17",
+        "asOf" : "2026-11-17",
         "bandPercent" : 2.0
       }
     }, {
@@ -612,15 +852,15 @@
       "source" : "EQUINIX_LIVE",
       "monthlyLow" : 148.28,
       "monthlyHigh" : 154.33,
-      "note" : "Equinix price ECX00015.PROD; converted from SGD 195.0 at 0.77591558 USD/SGD (ECB reference rate via Frankfurter, 2026-11-16, as of 2026-11-16); range widened +/-2% for exchange-rate uncertainty",
+      "note" : "Equinix price ECX00015.PROD; converted from SGD 195.0 at 0.77591558 USD/SGD (ECB reference rate via Frankfurter, 2026-11-17, as of 2026-11-17); range widened +/-2% for exchange-rate uncertainty",
       "conversion" : {
         "originalMonthly" : 195.0,
         "originalOneTime" : 0,
         "originalCurrency" : "SGD",
         "rate" : 0.77591558,
         "kind" : "LIVE",
-        "source" : "ECB reference rate via Frankfurter, 2026-11-16",
-        "asOf" : "2026-11-16",
+        "source" : "ECB reference rate via Frankfurter, 2026-11-17",
+        "asOf" : "2026-11-17",
         "bandPercent" : 2.0
       }
     }, {
@@ -646,25 +886,25 @@
     }, {
       "label" : "FCR-FR-to-SG",
       "metro" : "FR",
-      "monthly" : 468.09,
+      "monthly" : 467.03,
       "oneTime" : 0.00,
       "currency" : "USD",
       "source" : "EQUINIX_LIVE",
-      "monthlyLow" : 458.73,
-      "monthlyHigh" : 477.45,
-      "note" : "Equinix price ECX00015.PROD; converted from EUR 425.0 at 1.10139437 USD/EUR (ECB reference rate via Frankfurter, 2026-11-16, as of 2026-11-16); range widened +/-2% for exchange-rate uncertainty",
+      "monthlyLow" : 457.69,
+      "monthlyHigh" : 476.37,
+      "note" : "Equinix price ECX00015.PROD; converted from EUR 425.0 at 1.0989011 USD/EUR (ECB reference rate via Frankfurter, 2026-11-17, as of 2026-11-17); range widened +/-2% for exchange-rate uncertainty",
       "conversion" : {
         "originalMonthly" : 425.0,
         "originalOneTime" : 0,
         "originalCurrency" : "EUR",
-        "rate" : 1.10139437,
+        "rate" : 1.09890110,
         "kind" : "LIVE",
-        "source" : "ECB reference rate via Frankfurter, 2026-11-16",
-        "asOf" : "2026-11-16",
+        "source" : "ECB reference rate via Frankfurter, 2026-11-17",
+        "asOf" : "2026-11-17",
         "bandPercent" : 2.0
       }
     } ],
-    "currencyNotes" : [ "6 of 11 line(s) converted to USD: EUR at ECB reference rate via Frankfurter, 2026-11-16; SGD at ECB reference rate via Frankfurter, 2026-11-16" ],
+    "currencyNotes" : [ "6 of 11 line(s) converted to USD: EUR at ECB reference rate via Frankfurter, 2026-11-17; SGD at ECB reference rate via Frankfurter, 2026-11-17" ],
     "outsidePlanLines" : [ {
       "label" : "Provider hosted-connection fee aws 5000 Mbps in DC",
       "metro" : "DC",
@@ -744,13 +984,117 @@
       "note" : "0.0186/GB"
     } ],
     "outsidePlanMonthly" : 9124.73,
-    "designMonthly" : 15948.72,
+    "designMonthly" : 15943.34,
+    "accessConnectionMonthly" : 2236.66,
+    "accessLines" : [ {
+      "label" : "FCR-DC-access-primary",
+      "metro" : "DC",
+      "monthly" : 500.0,
+      "oneTime" : 0,
+      "currency" : "USD",
+      "source" : "EQUINIX_LIVE",
+      "monthlyLow" : 500.0,
+      "monthlyHigh" : 500.0,
+      "note" : "Equinix price ECX00015.PROD"
+    }, {
+      "label" : "FCR-DC-access-secondary",
+      "metro" : "DC",
+      "monthly" : 500.0,
+      "oneTime" : 0,
+      "currency" : "USD",
+      "source" : "EQUINIX_LIVE",
+      "monthlyLow" : 500.0,
+      "monthlyHigh" : 500.0,
+      "note" : "Equinix price ECX00015.PROD"
+    }, {
+      "label" : "FCR-FR-access-primary",
+      "metro" : "FR",
+      "monthly" : 467.03,
+      "oneTime" : 0.00,
+      "currency" : "USD",
+      "source" : "EQUINIX_LIVE",
+      "monthlyLow" : 457.69,
+      "monthlyHigh" : 476.37,
+      "note" : "Equinix price ECX00015.PROD; converted from EUR 425.0 at 1.0989011 USD/EUR (ECB reference rate via Frankfurter, 2026-11-17, as of 2026-11-17); range widened +/-2% for exchange-rate uncertainty",
+      "conversion" : {
+        "originalMonthly" : 425.0,
+        "originalOneTime" : 0,
+        "originalCurrency" : "EUR",
+        "rate" : 1.09890110,
+        "kind" : "LIVE",
+        "source" : "ECB reference rate via Frankfurter, 2026-11-17",
+        "asOf" : "2026-11-17",
+        "bandPercent" : 2.0
+      }
+    }, {
+      "label" : "FCR-FR-access-secondary",
+      "metro" : "FR",
+      "monthly" : 467.03,
+      "oneTime" : 0.00,
+      "currency" : "USD",
+      "source" : "EQUINIX_LIVE",
+      "monthlyLow" : 457.69,
+      "monthlyHigh" : 476.37,
+      "note" : "Equinix price ECX00015.PROD; converted from EUR 425.0 at 1.0989011 USD/EUR (ECB reference rate via Frankfurter, 2026-11-17, as of 2026-11-17); range widened +/-2% for exchange-rate uncertainty",
+      "conversion" : {
+        "originalMonthly" : 425.0,
+        "originalOneTime" : 0,
+        "originalCurrency" : "EUR",
+        "rate" : 1.09890110,
+        "kind" : "LIVE",
+        "source" : "ECB reference rate via Frankfurter, 2026-11-17",
+        "asOf" : "2026-11-17",
+        "bandPercent" : 2.0
+      }
+    }, {
+      "label" : "FCR-SG-access-primary",
+      "metro" : "SG",
+      "monthly" : 151.30,
+      "oneTime" : 0.00,
+      "currency" : "USD",
+      "source" : "EQUINIX_LIVE",
+      "monthlyLow" : 148.28,
+      "monthlyHigh" : 154.33,
+      "note" : "Equinix price ECX00015.PROD; converted from SGD 195.0 at 0.77591558 USD/SGD (ECB reference rate via Frankfurter, 2026-11-17, as of 2026-11-17); range widened +/-2% for exchange-rate uncertainty",
+      "conversion" : {
+        "originalMonthly" : 195.0,
+        "originalOneTime" : 0,
+        "originalCurrency" : "SGD",
+        "rate" : 0.77591558,
+        "kind" : "LIVE",
+        "source" : "ECB reference rate via Frankfurter, 2026-11-17",
+        "asOf" : "2026-11-17",
+        "bandPercent" : 2.0
+      }
+    }, {
+      "label" : "FCR-SG-access-secondary",
+      "metro" : "SG",
+      "monthly" : 151.30,
+      "oneTime" : 0.00,
+      "currency" : "USD",
+      "source" : "EQUINIX_LIVE",
+      "monthlyLow" : 148.28,
+      "monthlyHigh" : 154.33,
+      "note" : "Equinix price ECX00015.PROD; converted from SGD 195.0 at 0.77591558 USD/SGD (ECB reference rate via Frankfurter, 2026-11-17, as of 2026-11-17); range widened +/-2% for exchange-rate uncertainty",
+      "conversion" : {
+        "originalMonthly" : 195.0,
+        "originalOneTime" : 0,
+        "originalCurrency" : "SGD",
+        "rate" : 0.77591558,
+        "kind" : "LIVE",
+        "source" : "ECB reference rate via Frankfurter, 2026-11-17",
+        "asOf" : "2026-11-17",
+        "bandPercent" : 2.0
+      }
+    } ],
+    "accessUnpriced" : [ "Fabric port DC-port-primary: no rate card prices it; the cost is unknown, not zero", "cross connect DC-xc-primary: no rate card has a cross connect figure for DC; the cost is unknown, not zero", "Fabric port DC-port-secondary: no rate card prices it; the cost is unknown, not zero", "cross connect DC-xc-secondary: no rate card has a cross connect figure for DC; the cost is unknown, not zero", "Internet Access service DC-internet-access: no rate card prices it; the cost is unknown, not zero", "Network Edge device FR-ne-primary: no rate card prices it; the cost is unknown, not zero", "Network Edge device FR-ne-secondary: no rate card prices it; the cost is unknown, not zero", "Internet Access service FR-internet-access: no rate card prices it; the cost is unknown, not zero", "Network Edge device SG-ne-primary: no rate card prices it; the cost is unknown, not zero", "Network Edge device SG-ne-secondary: no rate card prices it; the cost is unknown, not zero" ],
+    "designWithAccessMonthly" : 18180.00,
     "source" : "EQUINIX_LIVE",
-    "disclaimer" : "Based on live Equinix Fabric pricing. Actual costs may vary based on contract terms, volume discounts, and promotional offers. 6 of 11 line(s) converted to USD: EUR at ECB reference rate via Frankfurter, 2026-11-16; SGD at ECB reference rate via Frankfurter, 2026-11-16; each converted line keeps its original amount, the rate and its date."
+    "disclaimer" : "Based on live Equinix Fabric pricing. Actual costs may vary based on contract terms, volume discounts, and promotional offers. 6 of 11 line(s) converted to USD: EUR at ECB reference rate via Frankfurter, 2026-11-17; SGD at ECB reference rate via Frankfurter, 2026-11-17; each converted line keeps its original amount, the rate and its date."
   },
   "valid" : true,
   "validationErrors" : [ ],
-  "deferredValidations" : [ "Connection 'FCR-DC-to-aws' (aws): endpoints validated structurally; the live endpoint dry-run runs at provisioning once Cloud Router 'FCR-DC' exists - you will need to supply AWS Account ID (12-digit), a VLAN tag", "Connection 'FCR-DC-to-azure' (azure): endpoints validated structurally; the live endpoint dry-run runs at provisioning once Cloud Router 'FCR-DC' exists - you will need to supply Azure ExpressRoute service key (GUID), a VLAN tag, an Azure peering type", "Connection 'FCR-FR-to-aws' (aws): endpoints validated structurally; the live endpoint dry-run runs at provisioning once Cloud Router 'FCR-FR' exists - you will need to supply AWS Account ID (12-digit), a VLAN tag", "Connection 'FCR-FR-to-azure' (azure): endpoints validated structurally; the live endpoint dry-run runs at provisioning once Cloud Router 'FCR-FR' exists - you will need to supply Azure ExpressRoute service key (GUID), a VLAN tag, an Azure peering type", "Connection 'FCR-SG-to-gcp' (gcp): endpoints validated structurally; the live endpoint dry-run runs at provisioning once Cloud Router 'FCR-SG' exists - you will need to supply GCP pairing key, a VLAN tag" ],
+  "deferredValidations" : [ "Connection 'FCR-DC-to-aws' (aws): endpoints validated structurally; the live endpoint dry-run runs at provisioning once Cloud Router 'FCR-DC' exists - you will need to supply AWS Account ID (12-digit), a VLAN tag", "Connection 'FCR-DC-to-azure' (azure): endpoints validated structurally; the live endpoint dry-run runs at provisioning once Cloud Router 'FCR-DC' exists - you will need to supply Azure ExpressRoute service key (GUID), a VLAN tag, an Azure peering type", "Connection 'FCR-FR-to-aws' (aws): endpoints validated structurally; the live endpoint dry-run runs at provisioning once Cloud Router 'FCR-FR' exists - you will need to supply AWS Account ID (12-digit), a VLAN tag", "Connection 'FCR-FR-to-azure' (azure): endpoints validated structurally; the live endpoint dry-run runs at provisioning once Cloud Router 'FCR-FR' exists - you will need to supply Azure ExpressRoute service key (GUID), a VLAN tag, an Azure peering type", "Connection 'FCR-SG-to-gcp' (gcp): endpoints validated structurally; the live endpoint dry-run runs at provisioning once Cloud Router 'FCR-SG' exists - you will need to supply GCP pairing key, a VLAN tag", "Access connection 'FCR-DC-access-primary': not validated, because DC-port-primary is an order to place and has no uuid yet", "Access connection 'FCR-DC-access-secondary': not validated, because DC-port-secondary is an order to place and has no uuid yet", "Access connection 'FCR-FR-access-primary': not validated, because FR-ne-primary is an order to place and has no uuid yet", "Access connection 'FCR-FR-access-secondary': not validated, because FR-ne-secondary is an order to place and has no uuid yet", "Access connection 'FCR-SG-access-primary': not validated, because SG-ne-primary is an order to place and has no uuid yet", "Access connection 'FCR-SG-access-secondary': not validated, because SG-ne-secondary is an order to place and has no uuid yet" ],
   "skippedValidations" : [ "Router dry-run skipped for 'FCR-DC': no billing account number was given. Set accountNumber(...) on the wizard to validate and to execute the plan", "Router dry-run skipped for 'FCR-FR': no billing account number was given. Set accountNumber(...) on the wizard to validate and to execute the plan", "Router dry-run skipped for 'FCR-SG': no billing account number was given. Set accountNumber(...) on the wizard to validate and to execute the plan" ],
   "requiredInputs" : [ {
     "connectionName" : "FCR-DC-to-aws",
@@ -798,6 +1142,6 @@
     "vlanTagRequired" : true,
     "peeringTypeRequired" : false
   } ],
-  "planId" : "79db6cc07eaeb79b",
+  "planId" : "ac8860df082b481c",
   "schemaVersion" : "1"
 }

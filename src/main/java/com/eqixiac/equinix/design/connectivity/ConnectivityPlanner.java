@@ -16,11 +16,16 @@
 package com.eqixiac.equinix.design.connectivity;
 
 import com.eqixiac.equinix.core.model.MetroId;
+import com.eqixiac.equinix.design.access.AccessInventory;
+import com.eqixiac.equinix.design.access.AccessPlan;
+import com.eqixiac.equinix.design.access.AccessPlanner;
+import com.eqixiac.equinix.design.access.MetroAccess;
+import com.eqixiac.equinix.design.access.PlannedAccessItem;
+import com.eqixiac.equinix.design.access.PlannedAccessLink;
 import com.eqixiac.equinix.design.connectivity.ConnectivityPlan.Access;
 import com.eqixiac.equinix.design.connectivity.ConnectivityPlan.AccessDecision;
 import com.eqixiac.equinix.design.connectivity.ConnectivityPlan.Reach;
 import com.eqixiac.equinix.design.connectivity.ConnectivityPlan.ReachDecision;
-import com.eqixiac.equinix.design.optimizer.enums.SiteRole;
 import com.eqixiac.equinix.design.optimizer.model.OptimizationResult;
 import com.eqixiac.equinix.design.peering.model.PeeringIntelligenceResult;
 import com.eqixiac.equinix.design.peering.model.UnifiedConnectivityView;
@@ -28,13 +33,11 @@ import com.eqixiac.equinix.design.placement.PlacementPlan;
 import com.eqixiac.equinix.design.spec.CloudIntent;
 import com.eqixiac.equinix.design.spec.DesignSpec;
 import com.eqixiac.equinix.design.spec.PeerIntent;
-import com.eqixiac.equinix.design.spec.SiteIntent;
 import com.eqixiac.equinix.design.spi.MetroPortfolio;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -52,17 +55,11 @@ import java.util.Set;
  *       it.</li>
  * </ol>
  *
- * <p>Access rules:</p>
- * <ol>
- *   <li>A metro with a site of role {@code DATA_CENTER} is entered through two Fabric ports in one
- *       redundancy group, each with its own cross connect from the cage.</li>
- *   <li>Any other metro is entered through a redundant pair of Network Edge devices when Network Edge is
- *       offered there. (Network Edge can also be used in a metro where you have a cage; rule 1 prefers
- *       the ports you can cross-connect to.)</li>
- *   <li>Otherwise the metro has its Cloud Router only.</li>
- * </ol>
+ * <p>Access is decided by {@link AccessPlanner}, whose rules use a port or Network Edge device the
+ * project already has before they plan an order. Give it the existing resources with {@link #inventory},
+ * or name them with {@link #usePorts} and {@link #useDevices}.</p>
  *
- * <p>The planner reads nothing and orders nothing. Pure: the same inputs give the same plan.</p>
+ * <p>The planner reads nothing and orders nothing.</p>
  */
 public final class ConnectivityPlanner {
 
@@ -70,6 +67,9 @@ public final class ConnectivityPlanner {
     private OptimizationResult optimization;
     private PeeringIntelligenceResult peering;
     private ProductAvailability availability = ProductAvailability.unknown();
+    private AccessInventory inventory = AccessInventory.empty();
+    private final java.util.Map<String, List<String>> portUuids = new java.util.LinkedHashMap<>();
+    private final java.util.Map<String, List<String>> deviceUuids = new java.util.LinkedHashMap<>();
 
     private ConnectivityPlanner(DesignSpec spec) {
         this.spec = spec;
@@ -118,6 +118,41 @@ public final class ConnectivityPlanner {
     }
 
     /**
+     * @param existing the ports and devices the project already has, used before a new order is planned;
+     *                 {@code null} means none were read
+     * @return this planner
+     */
+    public ConnectivityPlanner inventory(AccessInventory existing) {
+        this.inventory = existing == null ? AccessInventory.empty() : existing;
+        return this;
+    }
+
+    /**
+     * Names the Fabric ports to use in a metro. The first is the primary. A uuid the inventory does not
+     * hold is assumed to exist.
+     *
+     * @param metro a metro code of the design
+     * @param uuids one or more port uuids
+     * @return this planner
+     */
+    public ConnectivityPlanner usePorts(String metro, String... uuids) {
+        portUuids.put(metro, List.of(uuids));
+        return this;
+    }
+
+    /**
+     * Names the Network Edge devices to use in a metro. The first is the primary.
+     *
+     * @param metro a metro code of the design
+     * @param uuids one or more device uuids
+     * @return this planner
+     */
+    public ConnectivityPlanner useDevices(String metro, String... uuids) {
+        deviceUuids.put(metro, List.of(uuids));
+        return this;
+    }
+
+    /**
      * @return the decisions
      * @throws IllegalStateException when no optimization with a recommendation was given
      */
@@ -127,7 +162,10 @@ public final class ConnectivityPlanner {
         }
         MetroPortfolio portfolio = optimization.getRecommended().portfolio();
         List<String> notes = new ArrayList<>(availability.notes());
-        return new ConnectivityPlan(spec.fingerprint(), reach(portfolio, notes), access(portfolio), notes);
+        List<ReachDecision> reach = reach(portfolio, notes);
+        AccessPlan accessPlan = accessPlan(portfolio, internetMetros(portfolio));
+        notes.addAll(accessPlan.notes());
+        return new ConnectivityPlan(spec.fingerprint(), reach, access(accessPlan), notes, accessPlan);
     }
 
     private List<ReachDecision> reach(MetroPortfolio portfolio, List<String> notes) {
@@ -197,32 +235,32 @@ public final class ConnectivityPlanner {
         return metros;
     }
 
-    private List<AccessDecision> access(MetroPortfolio portfolio) {
+    private AccessPlan accessPlan(MetroPortfolio portfolio, List<String> internetMetros) {
+        AccessPlanner planner = AccessPlanner.forSpec(spec).portfolio(portfolio, optimization.getPlacement())
+                .availability(availability).inventory(inventory).internetAccess(internetMetros);
+        portUuids.forEach((metro, uuids) -> planner.usePorts(metro, uuids.toArray(String[]::new)));
+        deviceUuids.forEach((metro, uuids) -> planner.useDevices(metro, uuids.toArray(String[]::new)));
+        return planner.plan();
+    }
+
+    private static List<AccessDecision> access(AccessPlan plan) {
         List<AccessDecision> decisions = new ArrayList<>();
-        for (MetroId metro : portfolio.metros()) {
-            String code = metro.code();
-            Optional<SiteIntent> cage = spec.sites().stream()
-                    .filter(s -> s.role() == SiteRole.DATA_CENTER && code.equalsIgnoreCase(s.metro())).findFirst();
-            if (cage.isPresent()) {
-                decisions.add(new AccessDecision(code, Access.PHYSICAL_PORTS,
-                        "the site '" + cage.get().label() + "' is a data center in this metro",
-                        List.of("Fabric port " + code + "-primary, 10G, redundancy group with priority PRIMARY",
-                                "Fabric port " + code + "-secondary, 10G, same redundancy group with priority SECONDARY",
-                                "cross connect from the cage to " + code + "-primary",
-                                "cross connect from the cage to " + code + "-secondary on a diverse path",
-                                "virtual connections from both ports to the Cloud Router in " + code)));
-            } else if (availability.networkEdgeMetros().contains(code)) {
-                decisions.add(new AccessDecision(code, Access.NETWORK_EDGE,
-                        "no data center site here and Network Edge is offered",
-                        List.of("Network Edge device pair in " + code + " (redundant, SD-WAN or router image)",
-                                "virtual connections from both devices to the Cloud Router in " + code)));
-            } else {
-                decisions.add(new AccessDecision(code, Access.CLOUD_ROUTER_ONLY,
-                        availability.networkEdgeMetros().isEmpty()
-                                ? "no data center site here and Network Edge availability is unknown"
-                                : "no data center site here and Network Edge is not offered",
-                        List.of()));
+        for (MetroAccess metro : plan.metros()) {
+            List<String> orders = new ArrayList<>();
+            for (PlannedAccessItem item : metro.items()) {
+                String what = PlannedAccessItem.label(item.kind()) + " " + item.name();
+                orders.add(item.exists() ? "use existing " + what + " (" + item.existingUuid() + ")"
+                        : "order " + what + (item.note() == null ? "" : ": " + item.note()));
             }
+            for (PlannedAccessLink link : metro.links()) {
+                orders.add("virtual connection " + link.name() + ", " + link.bandwidthMbps() + " Mbps, from the "
+                        + "Cloud Router in " + metro.metro() + " to " + link.item());
+            }
+            decisions.add(new AccessDecision(metro.metro(), switch (metro.mode()) {
+                case PHYSICAL_PORTS -> Access.PHYSICAL_PORTS;
+                case NETWORK_EDGE -> Access.NETWORK_EDGE;
+                case CLOUD_ROUTER_ONLY -> Access.CLOUD_ROUTER_ONLY;
+            }, metro.reason(), orders));
         }
         return decisions;
     }

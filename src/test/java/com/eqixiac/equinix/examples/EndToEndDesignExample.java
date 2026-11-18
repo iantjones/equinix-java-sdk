@@ -45,6 +45,11 @@ import com.eqixiac.equinix.design.placement.PlacementPlan;
 import com.eqixiac.equinix.design.plan.ExecutionOptions;
 import com.eqixiac.equinix.design.plan.FileCheckpointStore;
 import com.eqixiac.equinix.design.record.DesignDecisionRecord;
+import com.eqixiac.equinix.design.access.AccessInventory;
+import com.eqixiac.equinix.design.access.AccessPlan;
+import com.eqixiac.equinix.design.access.MetroAccess;
+import com.eqixiac.equinix.design.access.PlannedAccessItem;
+import com.eqixiac.equinix.design.optimizer.wizard.model.PlannedConnection;
 import com.eqixiac.equinix.design.resilience.ResilienceAnalyzer;
 import com.eqixiac.equinix.design.resilience.ResilienceReport;
 import com.eqixiac.equinix.design.spec.CloudIntent;
@@ -113,8 +118,8 @@ import java.util.TreeSet;
  *   <li>Project growth and commitment terms with {@link GrowthPlanner}.</li>
  *   <li>Compare egress cost with {@link SavingsCalculator} and {@link TcoCalculator}.</li>
  *   <li>Decide how each destination is reached ({@code ConnectivityPlanner}, see {@link #connectivityFor}).</li>
- *   <li>Decide how each metro is entered ({@code ConnectivityPlanner}, see {@link #accessFor}) and list the
- *       physical orders that follow.</li>
+ *   <li>Decide how each metro is entered ({@code ConnectivityPlanner}, see {@link #accessFor}): existing
+ *       ports and devices first, then the orders to place.</li>
  *   <li>Write the {@link DesignDecisionRecord}.</li>
  *   <li>Build the deployment plan with {@link DeploymentWizard}; export Markdown, Terraform and a
  *       diagram.</li>
@@ -124,9 +129,12 @@ import java.util.TreeSet;
  *
  * <p><b>What the design layer decides and what this example decides.</b> The engines choose metros, place
  * workloads, price the design, simulate failures and plan Cloud Routers, cloud connections, backbone
- * links and routing protocols. They do not plan Network Edge devices, physical ports, cross connects,
- * Internet Access or Internet Exchange (IX) membership. For those, steps 6 and 7 print the decisions of
- * {@code ConnectivityPlanner} and what would be ordered; they send no order.</p>
+ * links and routing protocols. {@code ConnectivityPlanner} decides how each destination is reached and
+ * how each metro is entered, using the Fabric ports and Network Edge devices the project already has
+ * before it plans an order. The deployment plan lists those ports, cross connects and devices and
+ * connects each Cloud Router to them, and the failure simulation fails each of them. Nothing here
+ * orders a port, cross connect, Network Edge device or Internet Access service, and Internet Exchange
+ * (IX) membership is not planned.</p>
  *
  * <p>Cost figures are design-time estimates, not quotes. Availability figures in the resilience report
  * are planning assumptions, not SLAs.</p>
@@ -158,10 +166,14 @@ public final class EndToEndDesignExample {
      * @param projectId       the project to deploy into, or {@code null}
      * @param accountNumber   the billing account for Cloud Routers, or {@code null}
      * @param estateProjectId a project whose deployed Fabric resources are reviewed, or {@code null}
+     * @param inventory       the Fabric ports and Network Edge devices the project already has, used before
+     *                        a new order is planned; {@code null} when none were read
+     * @param portsByMetro    ports to use in a metro, named by uuid (the first is the primary); may be empty
      */
     public record Inputs(FabricGateway fabric, RateCard rateCard, Discovery discovery,
                          PeeringIntelligenceResult peering, Path outputDir, PrintStream out,
-                         boolean deployRequested, String projectId, Long accountNumber, String estateProjectId) {
+                         boolean deployRequested, String projectId, Long accountNumber, String estateProjectId,
+                         AccessInventory inventory, Map<String, List<String>> portsByMetro) {
     }
 
     /** Where products outside the design layer are available. */
@@ -322,10 +334,12 @@ public final class EndToEndDesignExample {
      * @param plan         the deployment plan
      * @param gate         the deploy gate
      * @param skipped      steps that were skipped, with the reason
+     * @param accessPlan   the ports, cross connects, devices and links behind {@code access}
      */
     public record Outcome(DesignSpec spec, OptimizationResult optimization, ResilienceReport resilience,
                           GrowthPlan growth, List<ConnectivityDecision> connectivity, List<AccessDecision> access,
-                          DesignDecisionRecord record, DeploymentPlan plan, DeployGate gate, List<String> skipped) {
+                          DesignDecisionRecord record, DeploymentPlan plan, DeployGate gate, List<String> skipped,
+                          AccessPlan accessPlan) {
     }
 
     // Step 1: the design
@@ -444,9 +458,15 @@ public final class EndToEndDesignExample {
         }
         write(in, "optimization.md", optimization.toMarkdown());
 
-        // 3. Failure simulation
+        // Connectivity and metro access are decided here, because the failure simulation in step 3 covers the
+        // ports, cross connects and Network Edge devices. Steps 6 and 7 print the decisions.
+        com.eqixiac.equinix.design.connectivity.ConnectivityPlan connectivityPlan =
+                connectivityPlan(spec, optimization, in.peering(), in.discovery(), in.inventory(), in.portsByMetro());
+        AccessPlan accessPlan = connectivityPlan.accessPlan();
+
+        // 3. Failure simulation, including the loss of each port, cross connect, device and access connection
         ResilienceReport resilience = ResilienceAnalyzer.forSpec(in.fabric(), spec).optimization(optimization)
-                .rateCard(in.rateCard()).run();
+                .rateCard(in.rateCard()).access(accessPlan).run();
         out.println("3. N-1: " + resilience.n1().statement());
         out.println("   N-2: " + resilience.n2().statement());
         resilience.remediations().stream().limit(3)
@@ -483,21 +503,29 @@ public final class EndToEndDesignExample {
         }
 
         // 6. How each destination is reached
-        List<ConnectivityDecision> connectivity = connectivityFor(spec, optimization, in.peering(), in.discovery());
+        List<ConnectivityDecision> connectivity = connectivityFor(connectivityPlan);
         out.println("6. Connectivity");
         connectivity.forEach(c -> out.printf("   %-28s %-20s %s  (%s)%n", c.destination(), c.reach(), c.metros(),
                 c.reason()));
         if (in.peering() == null) {
-            skipped.add("Peering Intelligence was not run, so peers are undecided between IX and a private connection");
+            skipped.add("Peering Intelligence was not run, so peers are undecided between IX and a private connection; "
+                    + "set PEERINGDB_API_KEY to run it");
         }
 
-        // 7. How each metro is entered, and the physical orders
-        List<AccessDecision> access = accessFor(spec, optimization, in.discovery());
+        // 7. How each metro is entered: existing ports and devices first, then the orders to place
+        List<AccessDecision> access = accessFor(connectivityPlan);
         out.println("7. Access per metro");
-        for (AccessDecision a : access) {
-            out.printf("   %s %s: %s%n", a.metro(), a.access(), a.reason());
-            a.orders().forEach(o -> out.println("      would order: " + o));
+        for (MetroAccess metro : accessPlan.metros()) {
+            out.printf("   %s %s: %s%n", metro.metro(), metro.mode(), metro.reason());
+            for (PlannedAccessItem item : metro.items()) {
+                out.printf("      %s %s %s%s%n", item.exists() ? "use  " : "order", PlannedAccessItem.label(item.kind()),
+                        item.name(), item.existingUuid() == null ? "" : " (" + item.existingUuid() + ")");
+            }
+            metro.links().forEach(l -> out.printf("      connect %s to the Cloud Router, %d Mbps%n", l.item(),
+                    l.bandwidthMbps()));
+            metro.findings().forEach(f -> out.println("      finding: " + f));
         }
+        write(in, "access.md", connectivityPlan.toMarkdown());
 
         // Existing estate, when a project is given
         if (in.estateProjectId() != null && in.fabric() instanceof com.eqixiac.equinix.Fabric live) {
@@ -521,7 +549,8 @@ public final class EndToEndDesignExample {
         DeploymentWizard.Builder wizard = Design.over(in.fabric()).deploymentWizard(optimization)
                 .designSpec(spec).deploymentName("global-interconnect").rateCard(in.rateCard())
                 .backboneTopology(BackboneTopology.FULL_MESH).bandwidthStrategy(BandwidthStrategy.PER_WORKLOAD)
-                .customerAsn(CUSTOMER_ASN).withBFD(true, 300).notifications("noc@example.com");
+                .customerAsn(CUSTOMER_ASN).withBFD(true, 300).notifications("noc@example.com")
+                .access(accessPlan);
         if (in.projectId() != null) {
             wizard.projectId(in.projectId());
         }
@@ -535,6 +564,10 @@ public final class EndToEndDesignExample {
                 plan.getProviderConnections().size(), plan.getBackboneLinks().size(),
                 plan.getRoutingProtocols().size(), pricing == null ? "unpriced" : pricing.getMonthlyTotal(),
                 pricing == null || pricing.getCurrency() == null ? "" : pricing.getCurrency());
+        long ready = plan.accessConnectionsOrEmpty().stream().filter(PlannedConnection::hasAccessEndpoint).count();
+        out.printf("   Metro access: %d item(s), %d access connection(s), of which %d can be created now and %d "
+                        + "wait for an order%n", accessPlan.items().size(), plan.accessConnectionsOrEmpty().size(),
+                ready, plan.accessConnectionsOrEmpty().size() - ready);
         write(in, "plan.md", plan.toMarkdown());
         write(in, "plan.json", plan.toJson());
         write(in, "main.tf", new TerraformExporter().export(plan));
@@ -547,74 +580,55 @@ public final class EndToEndDesignExample {
         out.println("   " + gate.summary());
         skipped.forEach(s -> out.println("   note: " + s));
         return new Outcome(spec, optimization, resilience, growth, connectivity, access, record, plan, gate,
-                List.copyOf(skipped));
+                List.copyOf(skipped), accessPlan);
     }
 
-    // Step 6 rules
+    // Steps 6 and 7
 
     /**
-     * How each destination is reached. The design layer has no engine for this choice, so the rules are
-     * stated here:
-     * <ul>
-     *   <li>A cloud is reached over a private Fabric connection from the Cloud Router in the metro the
-     *       optimizer's placement connects it in.</li>
-     *   <li>A peer is reached by public peering at an Internet Exchange (IX) when Peering Intelligence
-     *       finds it at an IX in a chosen metro; otherwise over a private Fabric connection when it
-     *       publishes a service profile there; otherwise over Internet Access. Without a Peering
-     *       Intelligence result the peer is undecided.</li>
-     *   <li>General internet traffic leaves through Internet Access in each chosen metro that offers
-     *       it.</li>
-     * </ul>
+     * How each destination is reached, as {@code ConnectivityPlanner} decided it.
      *
-     * @param spec         the design
-     * @param optimization the optimizer result
-     * @param peering      a Peering Intelligence result, or {@code null}
-     * @param discovery    product availability
+     * @param plan the connectivity plan
      * @return one decision per cloud, per peer, and one for the internet
      */
-    static List<ConnectivityDecision> connectivityFor(DesignSpec spec, OptimizationResult optimization,
-                                                     PeeringIntelligenceResult peering, Discovery discovery) {
+    static List<ConnectivityDecision> connectivityFor(com.eqixiac.equinix.design.connectivity.ConnectivityPlan plan) {
         List<ConnectivityDecision> decisions = new ArrayList<>();
-        for (com.eqixiac.equinix.design.connectivity.ConnectivityPlan.ReachDecision d
-                : connectivityPlan(spec, optimization, peering, discovery).reach()) {
+        for (com.eqixiac.equinix.design.connectivity.ConnectivityPlan.ReachDecision d : plan.reach()) {
             decisions.add(new ConnectivityDecision(d.destination(), Reach.valueOf(d.reach().name()), d.metros(),
                     d.reason()));
         }
         return decisions;
     }
 
-    /** The rules are applied by the SDK's {@code ConnectivityPlanner}; this example prints its plan. */
+    /**
+     * Runs the SDK's {@code ConnectivityPlanner}. It decides how each destination is reached and how each
+     * metro is entered. For access it uses a port or Network Edge device the project already has before
+     * it plans an order, and it uses the ports named in {@code portsByMetro} as given.
+     */
     private static com.eqixiac.equinix.design.connectivity.ConnectivityPlan connectivityPlan(
-            DesignSpec spec, OptimizationResult optimization, PeeringIntelligenceResult peering, Discovery discovery) {
-        return com.eqixiac.equinix.design.connectivity.ConnectivityPlanner.forSpec(spec).optimization(optimization)
-                .peering(peering)
-                .availability(new com.eqixiac.equinix.design.connectivity.ProductAvailability(
-                        discovery.networkEdgeMetros(), discovery.internetAccessMetros(), discovery.notes()))
-                .plan();
+            DesignSpec spec, OptimizationResult optimization, PeeringIntelligenceResult peering, Discovery discovery,
+            AccessInventory inventory, Map<String, List<String>> portsByMetro) {
+        com.eqixiac.equinix.design.connectivity.ConnectivityPlanner planner =
+                com.eqixiac.equinix.design.connectivity.ConnectivityPlanner.forSpec(spec).optimization(optimization)
+                        .peering(peering)
+                        .availability(new com.eqixiac.equinix.design.connectivity.ProductAvailability(
+                                discovery.networkEdgeMetros(), discovery.internetAccessMetros(), discovery.notes()))
+                        .inventory(inventory);
+        if (portsByMetro != null) {
+            portsByMetro.forEach((metro, uuids) -> planner.usePorts(metro, uuids.toArray(String[]::new)));
+        }
+        return planner.plan();
     }
 
-    // Step 7 rules
-
     /**
-     * How each chosen metro is entered, as decided by {@code ConnectivityPlanner}:
-     * <ul>
-     *   <li>A metro with a site of role {@code DATA_CENTER} is entered through two Fabric ports, one per
-     *       chassis group, each with its own cross connect from the cage.</li>
-     *   <li>Any other metro is entered through a redundant pair of Network Edge devices when Network
-     *       Edge is offered there, so that offices reach it over SD-WAN or IPsec without a cage.</li>
-     *   <li>Otherwise the metro has its Cloud Router only, reached over the backbone from the other
-     *       metros.</li>
-     * </ul>
+     * How each chosen metro is entered, as {@code ConnectivityPlanner} decided it.
      *
-     * @param spec         the design
-     * @param optimization the optimizer's result
-     * @param discovery    product availability
+     * @param plan the connectivity plan
      * @return one decision per metro
      */
-    static List<AccessDecision> accessFor(DesignSpec spec, OptimizationResult optimization, Discovery discovery) {
+    static List<AccessDecision> accessFor(com.eqixiac.equinix.design.connectivity.ConnectivityPlan plan) {
         List<AccessDecision> decisions = new ArrayList<>();
-        for (com.eqixiac.equinix.design.connectivity.ConnectivityPlan.AccessDecision d
-                : connectivityPlan(spec, optimization, null, discovery).access()) {
+        for (com.eqixiac.equinix.design.connectivity.ConnectivityPlan.AccessDecision d : plan.access()) {
             decisions.add(new AccessDecision(d.metro(), Access.valueOf(d.access().name()), d.reason(), d.orders()));
         }
         return decisions;
@@ -694,13 +708,31 @@ public final class EndToEndDesignExample {
      * account are given, and the gate passes.
      *
      * <p>Environment: {@code EQUINIX_ACCESS_KEY} and {@code EQUINIX_SECRET_KEY} (required);
-     * {@code EQIXIAC_EXAMPLE_PROJECT} and {@code EQIXIAC_EXAMPLE_ACCOUNT} (for the plan and deployment);
+     * {@code EQIXIAC_EXAMPLE_PROJECT} and {@code EQIXIAC_EXAMPLE_ACCOUNT} (for the plan and deployment, and
+     * to read the project's existing Fabric ports and the account's Network Edge devices);
+     * {@code EQIXIAC_EXAMPLE_PORTS} (ports to use, as {@code DC=uuid1,uuid2;FR=uuid3});
      * {@code EQIXIAC_EXAMPLE_ESTATE_PROJECT} (to review a project's deployed resources).</p>
      *
-     * @param args {@code [output directory] [--deploy] [--peering]}; {@code --peering} runs Peering
-     *             Intelligence, which calls PeeringDB (set {@code PEERINGDB_API_KEY} for more than a few
-     *             calls)
+     * <p>Peering Intelligence runs when {@code PEERINGDB_API_KEY} is set, because it calls PeeringDB and
+     * anonymous access allows about 20 requests a minute. Without the key the peers stay undecided.</p>
+     *
+     * @param args {@code [output directory] [--deploy]}
      */
+    /** Parses {@code DC=uuid1,uuid2;FR=uuid3} into the ports to use per metro. */
+    static Map<String, List<String>> portsByMetro(String value) {
+        Map<String, List<String>> ports = new LinkedHashMap<>();
+        if (value == null) {
+            return ports;
+        }
+        for (String entry : value.split(";")) {
+            String[] parts = entry.split("=", 2);
+            if (parts.length == 2 && !parts[1].isBlank()) {
+                ports.put(parts[0].trim().toUpperCase(Locale.ROOT), List.of(parts[1].trim().split("\\s*,\\s*")));
+            }
+        }
+        return ports;
+    }
+
     public static void main(String[] args) throws IOException {
         List<String> flags = List.of(args);
         Path output = flags.stream().filter(a -> !a.startsWith("--")).findFirst().map(Path::of)
@@ -711,12 +743,16 @@ public final class EndToEndDesignExample {
                 System.getenv("EQUINIX_ACCESS_KEY"), System.getenv("EQUINIX_SECRET_KEY")))) {
             FabricGateway fabric = eq.fabric();
             PeeringIntelligenceResult peering = null;
-            if (flags.contains("--peering")) {
+            if (env(PeeringIntelligence.PEERINGDB_API_KEY_ENV) != null) {
                 peering = PeeringIntelligence.forSpec(fabric, spec()).includeAll().analyze();
             }
+            // Existing ports are read for the project and devices for the account. Without them nothing is
+            // read, because an API client can see resources of other projects and accounts.
+            AccessInventory inventory = AccessInventory.read(eq, env("EQIXIAC_EXAMPLE_PROJECT"), account);
             Outcome outcome = run(new Inputs(fabric, RateCard.standardChain(fabric), Discovery.live(eq), peering,
                     output, System.out, deploy, env("EQIXIAC_EXAMPLE_PROJECT"),
-                    account == null ? null : Long.valueOf(account), env("EQIXIAC_EXAMPLE_ESTATE_PROJECT")));
+                    account == null ? null : Long.valueOf(account), env("EQIXIAC_EXAMPLE_ESTATE_PROJECT"),
+                    inventory, portsByMetro(env("EQIXIAC_EXAMPLE_PORTS"))));
             System.out.println("Documents written to " + output.toAbsolutePath());
             System.out.println(outcome.gate().summary());
         }

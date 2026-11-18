@@ -31,5 +31,9 @@ public enum NodeKind {
     /** A workload of the spec (or the placement made for a cloud no workload names). */
     WORKLOAD,
     /** A network the spec wants to peer with (a {@code PeerIntent}), where peering data was supplied. */
-    PEER
+    PEER,
+    /** A Fabric port the design enters a metro through, from an access plan. */
+    ACCESS_PORT,
+    /** A Network Edge device the design enters a metro through, from an access plan. */
+    EDGE_DEVICE
 }

@@ -236,6 +236,8 @@ final class PlanMarkdown {
             md.append("\n");
         }
 
+        appendAccess(plan, md);
+
         // Routing Protocols
         if (plan.getRoutingProtocols() != null && !plan.getRoutingProtocols().isEmpty()) {
             md.append("## Routing Protocols\n\n");
@@ -289,11 +291,31 @@ final class PlanMarkdown {
                         .append(money(plan.getPricing().getDesignMonthly(), plan.getPricing().getCurrency()))
                         .append("** |\n");
             }
+            if (plan.getPricing().getAccessConnectionMonthly() != null) {
+                md.append("| Metro access connections (created by this plan) | ")
+                        .append(money(plan.getPricing().getAccessConnectionMonthly(), plan.getPricing().getCurrency()))
+                        .append(" |\n");
+            }
+            if (plan.getPricing().getAccessItemMonthly() != null) {
+                md.append("| Metro access items to order that a rate card prices (reference figures) | ")
+                        .append(money(plan.getPricing().getAccessItemMonthly(), plan.getPricing().getCurrency()))
+                        .append(" |\n");
+            }
+            if (plan.getPricing().getDesignWithAccessMonthly() != null) {
+                md.append("| **Design total with metro access** | **")
+                        .append(money(plan.getPricing().getDesignWithAccessMonthly(), plan.getPricing().getCurrency()))
+                        .append("** |\n");
+            }
             if (plan.getPricing().getSetupTotal() != null) {
                 md.append("| Setup (one-time) | ")
                         .append(money(plan.getPricing().getSetupTotal(), plan.getPricing().getCurrency())).append(" |\n");
             }
             md.append("\n_").append(plan.getPricing().getDisclaimer()).append("_\n\n");
+            if (plan.getPricing().getAccessUnpriced() != null && !plan.getPricing().getAccessUnpriced().isEmpty()) {
+                md.append("Not priced:\n\n");
+                plan.getPricing().getAccessUnpriced().forEach(u -> md.append("- ").append(u).append("\n"));
+                md.append("\n");
+            }
             if (!plan.multicloudLinksOrEmpty().isEmpty()) {
                 md.append("_Native multicloud link charges are billed by the cloud providers and are not "
                         + "included in the table above; see Native multicloud alternatives._\n\n");
@@ -315,12 +337,48 @@ final class PlanMarkdown {
                     .append(" native multicloud link(s): they are created outside Fabric with the two cloud "
                             + "providers (create, then accept with the activation key).\n");
         }
+        if (!plan.accessConnectionsOrEmpty().isEmpty()) {
+            long ready = plan.accessConnectionsOrEmpty().stream().filter(PlannedConnection::hasAccessEndpoint).count();
+            md.append("\nAfter the Cloud Routers, execution creates the ").append(ready).append(" access connection(s) "
+                    + "whose port or device has a uuid. ").append(plan.accessConnectionsOrEmpty().size() - ready)
+                    .append(" wait for an order: put the uuid of the port or device on the plan, then run again.\n");
+        }
+        if (plan.getAccess() != null && !plan.getAccess().items().isEmpty()) {
+            md.append("\nExecution orders no port, cross connect, Network Edge device or Internet Access service. "
+                    + "It uses the ones the plan names by uuid.\n");
+        }
         if (!plan.interconnectsOrEmpty().isEmpty()) {
             md.append("\nExecution does not create the ").append(plan.interconnectsOrEmpty().size())
                     .append(" Fabric Interconnect(s): ").append(PlannedInterconnect.NOT_EXECUTABLE_REASON).append("\n");
         }
 
         return md.toString();
+    }
+
+    /** Appends the metro access: the access plan's tables and the connections to each Cloud Router. */
+    private static void appendAccess(DeploymentPlan plan, StringBuilder md) {
+        if (plan.getAccess() == null) {
+            return;
+        }
+        md.append(plan.getAccess().toMarkdown().replace("### Access connections to the Cloud Router",
+                "### Access links")).append("\n");
+        if (!plan.accessConnectionsOrEmpty().isEmpty()) {
+            md.append("### Access connections\n\n");
+            md.append("| Name | Type | A-Side (Cloud Router) | Z-Side | Bandwidth | Created by execution |\n");
+            md.append("|------|------|-----------------------|--------|-----------|----------------------|\n");
+            for (PlannedConnection conn : plan.accessConnectionsOrEmpty()) {
+                String endpoint = conn.getZSidePortUuid() != null ? "port " + conn.getZSidePortUuid()
+                        : conn.getZSideDeviceUuid() != null ? "Network Edge device " + conn.getZSideDeviceUuid()
+                        : "to order";
+                md.append("| ").append(conn.getName()).append(" | ").append(conn.getConnectionType()).append(" | ")
+                        .append(conn.getASideRouterName()).append(" (").append(conn.getASideMetro()).append(") | ")
+                        .append(conn.getZSideAccessItem()).append(" (").append(endpoint).append(") | ")
+                        .append(conn.getBandwidthMbps()).append(" Mbps | ")
+                        .append(conn.hasAccessEndpoint() ? "yes" : "no: the " + conn.getZSideAccessItem()
+                                + " does not exist yet").append(" |\n");
+            }
+            md.append("\n");
+        }
     }
 
     /**

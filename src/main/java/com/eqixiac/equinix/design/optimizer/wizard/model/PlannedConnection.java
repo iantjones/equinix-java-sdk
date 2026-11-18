@@ -155,6 +155,21 @@ public class PlannedConnection {
     @JsonProperty("aSidePortUuid")
     String aSidePortUuid;
 
+    /** For an access connection: the uuid of the Fabric port it lands on; {@code null} until the port exists. */
+    @JsonProperty("zSidePortUuid")
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+    String zSidePortUuid;
+
+    /** For an access connection: the uuid of the Network Edge device it lands on; {@code null} until it exists. */
+    @JsonProperty("zSideDeviceUuid")
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+    String zSideDeviceUuid;
+
+    /** For an access connection: the name of the plan's access item (port or device) it lands on. */
+    @JsonProperty("zSideAccessItem")
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+    String zSideAccessItem;
+
     /**
      * The Equinix project the connection is created in ({@code DeploymentWizard.Builder.projectId}),
      * or {@code null} for the caller's default project. Sent on the create body so a plan's
@@ -188,4 +203,20 @@ public class PlannedConnection {
     public boolean hasPreExistingEndpoint() {
         return aSideExistingRouterUuid != null || aSidePortUuid != null;
     }
+
+    /** @return {@code true} for a connection from a Cloud Router to a port or Network Edge device */
+    @JsonIgnore
+    public boolean isAccessConnection() {
+        return purpose == ConnectionPurpose.ACCESS;
+    }
+
+    /**
+     * @return for an access connection, {@code true} when the port or device it lands on has a uuid, so
+     *         the connection can be created
+     */
+    @JsonIgnore
+    public boolean hasAccessEndpoint() {
+        return zSidePortUuid != null || zSideDeviceUuid != null;
+    }
+
 }

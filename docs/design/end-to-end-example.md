@@ -7,12 +7,13 @@ design engine, then the API clients for the parts the design layer does not plan
   It is compiled with the tests and has a `main` method.
 - Offline test: `EndToEndDesignExampleTest` runs the same flow against a mocked Fabric catalogue and
   the reference prices, with no network.
-- Output of a live read-only run on 2026-11-16: [`examples/end-to-end/`](examples/end-to-end/).
+- Output of a live read-only run on 2026-11-17: [`examples/end-to-end/`](examples/end-to-end/).
   Every figure and excerpt below comes from that run. Prices are design-time estimates, not quotes.
   Availability figures are planning assumptions, not SLAs.
 
 The default run creates nothing. It reads the Fabric catalogue and prices, Network Edge metros and
-Internet Access availability. Building the plan also sends one Cloud Router `dryRun=true` request per
+Internet Access availability. When a project and a billing account are given it also reads that
+project's Fabric ports and that account's Network Edge devices. Building the plan also sends one Cloud Router `dryRun=true` request per
 metro when a billing account is given (see [Step 9](#step-9-build-the-deployment-plan)).
 
 ## Contents
@@ -54,11 +55,13 @@ metro when a billing account is given (see [Step 9](#step-9-build-the-deployment
 | What a failure takes down, and what fixes it | `ResilienceAnalyzer` |
 | Cloud Routers, cloud connections, backbone links, BGP | `DeploymentWizard` |
 | Cloud on-ramp, IX, private connection or Internet Access per destination | `ConnectivityPlanner` ([Step 6](#step-6-decide-how-each-destination-is-reached)), using `PeeringIntelligence` output for peers |
-| Physical ports, cross connects or Network Edge per metro | `ConnectivityPlanner` ([Step 7](#step-7-decide-how-each-metro-is-entered)) |
+| Physical ports, cross connects or Network Edge per metro, existing or to order | `ConnectivityPlanner` and `AccessPlanner` ([Step 7](#step-7-decide-how-each-metro-is-entered)) |
+| Access connections from each Cloud Router to those ports and devices | `DeploymentWizard` |
 | Whether to deploy | The gate in the example ([Step 10](#step-10-the-deploy-gate)) |
 
-`ConnectivityPlanner` applies fixed rules and lists what would be ordered. It sends no port, cross
-connect, Network Edge or Internet Access order, and a `DeploymentPlan` does not contain those items.
+The plan lists the ports, cross connects, Network Edge devices and Internet Access services, and the
+failure simulation fails each port, cross connect, device and access connection. The SDK orders none of
+them: a port or device that exists is used by UUID, and one that does not is listed as an order to place.
 
 ## Run it
 
@@ -74,12 +77,18 @@ java -cp "target/classes:target/test-classes:$(cat target/cp.txt)" com.eqixiac.e
 |---|---|
 | `EQUINIX_ACCESS_KEY`, `EQUINIX_SECRET_KEY` | Required |
 | First argument | Output directory; default `target/end-to-end-example` |
-| `--peering` | Runs Peering Intelligence, which calls PeeringDB. Set `PEERINGDB_API_KEY` for more than a few calls |
-| `EQIXIAC_EXAMPLE_PROJECT`, `EQIXIAC_EXAMPLE_ACCOUNT` | Project and billing account for the plan and for deployment |
+| `PEERINGDB_API_KEY` | When set, the program runs Peering Intelligence, which calls PeeringDB, and the peers get a decision. Without it the step is skipped, because anonymous PeeringDB access allows about 20 requests a minute |
+| `EQIXIAC_EXAMPLE_PROJECT`, `EQIXIAC_EXAMPLE_ACCOUNT` | Project and billing account for the plan and for deployment. The project's Fabric ports and the account's Network Edge devices are read and used before an order is planned |
+| `EQIXIAC_EXAMPLE_PORTS` | Ports to use, named by UUID: `DC=uuid1,uuid2;FR=uuid3`. The first is the primary |
 | `EQIXIAC_EXAMPLE_ESTATE_PROJECT` | Adds an estate review of that project's deployed Fabric resources |
 | `--deploy` with `EQIXIAC_EXAMPLE_DEPLOY=yes` | Allows deployment if the gate passes. Both are needed |
 
-In the live run the optimizer examined 814,385 portfolios in 21 seconds.
+In the live run the optimizer examined 814,385 portfolios in 16 seconds. No project or account was
+given, so no existing port or device was read.
+
+In your own code, run Peering Intelligence and give its result to the planner. The PeeringDB key is
+the second argument of `PeeringIntelligence.builder(fabric, apiKey)`; without it the SDK reads
+`PEERINGDB_API_KEY`, then falls back to anonymous access.
 
 ## Step 1: write the spec
 
@@ -138,11 +147,11 @@ Result: DC + FR + SG, weighted score 89.4 of 100, chosen from 15 feasible design
 
 | Design | Weighted | Latency (ms) | Cost (USD/month) | Resilience (%) | Carbon (gCO2e/kWh) |
 |---|---:|---:|---:|---:|---:|
-| DC+FR+SG (recommended) | 89.4 | 16.0 | 15,948.7 | 82.2 | 390.2 |
-| CH+DC+FR+SG | 87.6 | 5.4 | 19,202.0 | 82.2 | 390.2 |
-| DC+FR+SG+TR | 86.7 | 11.9 | 19,117.6 | 82.2 | 390.2 |
-| AM+DC+FR+SG | 86.3 | 14.9 | 18,984.5 | 82.2 | 390.2 |
-| DC+FR+MA+SG | 86.2 | 14.8 | 19,095.2 | 82.2 | 390.2 |
+| DC+FR+SG (recommended) | 89.4 | 16.0 | 15,943.3 | 82.2 | 390.2 |
+| CH+DC+FR+SG | 87.6 | 5.4 | 19,197.9 | 82.2 | 390.2 |
+| DC+FR+SG+TR | 86.7 | 11.9 | 19,111.6 | 82.2 | 390.2 |
+| AM+DC+FR+SG | 86.3 | 14.9 | 18,972.9 | 82.2 | 390.2 |
+| DC+FR+MA+SG | 86.2 | 14.8 | 19,087.8 | 82.2 | 390.2 |
 
 Latency is the site-weighted round trip to the nearest chosen metro. The three required and pinned
 metros were fixed by the spec. The optimizer chose whether a fourth pays for itself: none does at these
@@ -173,14 +182,18 @@ Full report: [`optimization.md`](examples/end-to-end/optimization.md).
 
 ```java
 ResilienceReport resilience = ResilienceAnalyzer.forSpec(fabric, spec)
-        .optimization(optimization).rateCard(rateCard).run();
+        .optimization(optimization).rateCard(rateCard)
+        .access(connectivity.accessPlan())       // from Step 7: ports, cross connects, devices
+        .run();
 ```
 
 | Check | Result |
 |---|---|
-| N-1 | Fails: 6 of 31 single failures cause an outage, 2 degrade service |
-| N-2 | Fails: 165 of 418 pairs cause an outage, 46 degrade service |
+| N-1 | Fails: 6 of 45 single failures cause an outage, 2 degrade service |
+| N-2 | Fails: 245 of 915 pairs cause an outage, 74 degrade service |
 
+The 45 single failures include each planned port, cross connect, Network Edge device and access
+connection. None of them causes an outage, because every metro is entered through a redundant pair.
 The outages come from the two pinned workloads, which have no standby metro. Remediation the analyzer
 re-simulated and confirmed: add a standby Google Cloud connection in DC sized for 500 Mbps, raise the
 Azure connection in DC from 3,000 to 3,500 Mbps, and add a second, redundant Azure connection in FR. For the loss
@@ -228,6 +241,7 @@ output: [`value.md`](examples/end-to-end/value.md).
 ConnectivityPlan connectivity = ConnectivityPlanner.forSpec(spec).optimization(optimization)
         .peering(peering)                                   // null when Peering Intelligence was not run
         .availability(ProductAvailability.read(equinix))    // Network Edge and Internet Access metros
+        .inventory(AccessInventory.read(equinix, projectId, accountNumber))   // existing ports and devices
         .plan();
 ```
 
@@ -248,8 +262,9 @@ ConnectivityPlan connectivity = ConnectivityPlanner.forSpec(spec).optimization(o
 | AS13335, AS20940, AS8075 | Undecided | none |
 | internet | Internet Access | DC, FR |
 
-The peers are undecided because the live run did not pass `--peering`: Peering Intelligence reads
-PeeringDB, which rate-limits anonymous callers. With a result, rule 2 reads
+The peers are undecided because `PEERINGDB_API_KEY` was not set, so the live run did not run Peering
+Intelligence.
+With a result, rule 2 reads
 `UnifiedConnectivityView.forMetro(metro)` for each peer (`isHasIxPeering()`, `isHasFabric()`).
 
 Internet Access was offered in DC and FR and not in SG, as read from
@@ -257,25 +272,47 @@ Internet Access was offered in DC and FR and not in SG, as read from
 
 ## Step 7: decide how each metro is entered
 
-The same `ConnectivityPlan` holds one access decision per metro (`connectivity.access()`). The rules:
+The same `ConnectivityPlan` holds the access of each metro (`connectivity.accessPlan()`). For each metro
+the first rule that applies wins:
 
-1. A metro with a site of role `DATA_CENTER` is entered through two Fabric ports in one redundancy
-   group, each with its own cross connect from the cage.
-2. Any other metro is entered through a redundant pair of Network Edge devices when Network Edge is
-   offered there, so that offices reach it over SD-WAN or IPsec without a cage.
-3. Otherwise the metro has its Cloud Router only, reached over the backbone.
+1. Ports you name with `usePorts(metro, uuids...)` are used. A UUID the inventory does not hold is
+   assumed to exist.
+2. Network Edge devices you name with `useDevices(metro, uuids...)` are used, in the same way.
+3. Usable ports of the inventory in the metro, with room for the access connection, are used: a pair in
+   one redundancy group, else two ports on different Fabric devices, else one port and an order for
+   the second.
+4. A metro with a site of role `DATA_CENTER` and no usable port gets an order for two ports in one
+   redundancy group, each with a cross connect.
+5. Usable Network Edge devices of the inventory in the metro are used.
+6. A metro where Network Edge is offered gets an order for a redundant device pair.
+7. Otherwise the metro has its Cloud Router only.
 
-| Metro | Entered by | Would order |
-|---|---|---|
-| DC | Physical ports | Two 10G Fabric ports (primary and secondary in one redundancy group), two cross connects on diverse paths, virtual connections from both ports to the Cloud Router |
-| FR | Network Edge | A redundant device pair, virtual connections from both devices to the Cloud Router |
-| SG | Network Edge | The same |
+The live run read no inventory, so every item is an order:
 
-Network Edge availability comes from `networkEdge().setup().listMetros()`. To validate these orders
-without placing them, use the dry-run calls the SDK has: `fabric.ports().define()...dryRun().create()`
-validates a port order, and `connections().define(...)...dryRun().create()` validates a virtual
-connection. Both need a billing account, so the example prints the planned orders and does not send them.
-The SDK has no dry run for cross connect orders or Network Edge device creates.
+| Metro | Entered by | Items | Access connections to the Cloud Router |
+|---|---|---|---|
+| DC | Physical ports | Two 10G ports to order (primary and secondary in one redundancy group), two cross connects to order, one Internet Access service to order | Two, 10,000 Mbps each |
+| FR | Network Edge | Two devices to order, one Internet Access service to order | Two, 10,000 Mbps each |
+| SG | Network Edge | Two devices to order | Two, 500 Mbps each |
+
+An access connection is sized as the cloud bandwidth the placement lands in the metro, rounded up to a
+Fabric tier: 8,000 Mbps in DC and 7,500 Mbps in FR give 10,000; 500 Mbps in SG gives 500.
+
+With existing ports the result differs. The offline test gives the planner two ports in Ashburn, in one
+redundancy group and in two IBXs. The planner uses them, plans no port order and no cross connect for DC,
+and the plan's two DC access connections name the port UUIDs, so execution can create them:
+
+```java
+AccessInventory inventory = AccessInventory.of(List.of(
+        new ExistingPort("port-uuid-a", "ashburn-cage-a", "DC", "DC2", "fabric-device-1", "cage",
+                RedundancyPriority.PRIMARY, 10_000, 10_000, "ACTIVE"),
+        new ExistingPort("port-uuid-b", "ashburn-cage-b", "DC", "DC6", "fabric-device-2", "cage",
+                RedundancyPriority.SECONDARY, 10_000, 10_000, "ACTIVE")), List.of());
+```
+
+Two existing ports in the same IBX produce a finding, and the simulation then reports the loss of that
+IBX as a shared-fate scenario. Network Edge availability comes from `networkEdge().setup().listMetros()`.
+Full output: [`access.md`](examples/end-to-end/access.md).
 
 ## Step 8: write the decision record
 
@@ -296,6 +333,7 @@ DeploymentPlan plan = Design.over(fabric).deploymentWizard(optimization)
         .designSpec(spec).deploymentName("global-interconnect").rateCard(rateCard)
         .backboneTopology(BackboneTopology.FULL_MESH).bandwidthStrategy(BandwidthStrategy.PER_WORKLOAD)
         .customerAsn(64512L).withBFD(true, 300).notifications("noc@example.com")
+        .access(connectivity.accessPlan())
         .plan();
 String hcl = new TerraformExporter().export(plan);
 String diagram = new TopologyDiagram().toMermaid(plan);
@@ -307,6 +345,8 @@ String diagram = new TopologyDiagram().toMermaid(plan);
 | Cloud connections | 5 |
 | Backbone links (full mesh) | 3 |
 | Routing protocols | 16 |
+| Access items (ports, cross connects, devices, Internet Access) | 10, all to order |
+| Access connections | 6, none created until its port or device exists |
 
 The plan connects a cloud only in a metro where the placement uses it: AWS and Azure in DC and FR,
 Google Cloud in SG. The FR to AWS row reads `aws [eu-central-1; the design names us-east-1, reached over
@@ -314,24 +354,34 @@ the provider's network]`.
 
 | Cost row in the plan | USD/month |
 |---|---:|
-| Cloud Routers | 3,749.70 |
-| Provider connections | 1,606.20 |
-| Backbone links | 1,468.09 |
-| Total monthly (created by the plan) | 6,823.99 |
+| Cloud Routers | 3,746.98 |
+| Provider connections | 1,604.60 |
+| Backbone links | 1,467.03 |
+| Total monthly | 6,818.61 |
 | Provider fees and data egress (billed by the cloud providers, reference figures) | 9,124.73 |
-| Design total monthly | 15,948.72 |
+| Design total monthly | 15,943.34 |
+| Metro access connections | 2,236.66 |
+| Design total with metro access | 18,180.00 |
 
-The design total equals the optimizer's cost for DC+FR+SG in [Step 2](#step-2-choose-metros). Five of
-the eleven Equinix lines were converted to USD from EUR or SGD at the ECB reference rate of the run
-date.
+The design total equals the optimizer's cost for DC+FR+SG in [Step 2](#step-2-choose-metros); the
+optimizer does not price metro access. Six of the eleven Equinix lines were converted to USD from EUR
+or SGD at the ECB reference rate of 2026-11-17. The ports, cross connects, Network Edge devices and
+Internet Access services are listed as not priced: no rate card has a figure for them, and the cost is
+unknown, not zero.
 
 No billing account was given, so the three Cloud Router dry runs were skipped and the plan is valid
-with no errors. Each skipped check is listed in the plan with the reason. Five connection checks are
-deferred until the routers exist and the provider keys are supplied. With an account, `plan()` sends a
-Cloud Router `dryRun=true` request for each metro.
+with no errors. Each skipped check is listed in the plan with the reason. Five cloud connection checks
+are deferred until the routers exist and the provider keys are supplied. With an account, `plan()`
+sends a Cloud Router `dryRun=true` request for each metro.
+
+Execution creates an access connection when its port or device has a UUID: A-side the Cloud Router,
+Z-side the port with the VLAN tag you pass in `ExecutionInputs`, or the device. It orders no port, cross
+connect, Network Edge device or Internet Access service. To finish this plan, place the orders, then
+build the plan again with `usePorts` and `useDevices`.
 
 Outputs: [`plan.md`](examples/end-to-end/plan.md), [`plan.json`](examples/end-to-end/plan.json),
-[`main.tf`](examples/end-to-end/main.tf), [`topology.mmd`](examples/end-to-end/topology.mmd).
+[`main.tf`](examples/end-to-end/main.tf), [`topology.mmd`](examples/end-to-end/topology.mmd),
+[`access.md`](examples/end-to-end/access.md).
 
 ## Step 10: the deploy gate
 
@@ -340,7 +390,7 @@ The example deploys only when every check passes:
 | Check | Live run |
 |---|---|
 | The plan is valid | Pass: 0 errors |
-| The estimate is within the budget | Pass: 6,823.99 of 60,000 |
+| The estimate is within the budget | Pass: 6,818.61 of 60,000 |
 | N-1 passes | Fail |
 | Provider inputs are present | Fail: 5 missing (AWS account ids, Azure service keys, a Google pairing key) |
 | A project and billing account were given | Fail |
@@ -356,10 +406,15 @@ and remove that check.
 
 ## What is not modelled
 
-- Network Edge devices, physical ports, cross connects, Internet Access services and IX membership are
-  not part of a `DeploymentPlan`. They are not priced, simulated or deployed by the design layer.
-- The resilience simulation covers metros, Cloud Routers, on-ramps, cloud connections, backbone links
-  and cloud regions. It does not model the ports, cross connects or Network Edge devices from Step 7.
+- IX membership is not a plan item.
+- Colocation is not a plan item. A cage is a site of role `DATA_CENTER` in the spec; cabinets and power
+  appear only as cost lines in the TCO comparison; the IBX of an existing port is a shared-fate scenario
+  in the failure simulation. Cages, cabinets and power are not failure elements.
+- The optimizer's cost does not include metro access. The plan shows it on separate rows.
+- Fabric ports, Network Edge devices and Internet Access services have no price in the rate cards.
+- The SDK places no order for a port, cross connect, Network Edge device or Internet Access service
+  from a plan. The create body of an access connection follows the Fabric v4 specification and has not
+  been sent to the live service.
 - The cloud side of each connection (the AWS, Azure or Google Cloud resource) is created with that
   provider's tools.
 - The carbon objective is a siting indicator from country-level grid figures. It is not an emissions
@@ -367,8 +422,7 @@ and remove that check.
 
 ## Engine changes that came from the example
 
-The first version of this example exposed six gaps in the design layer. Each is closed in the release
-after 4.0.0; see the [CHANGELOG](../../CHANGELOG.md).
+The first version of this example exposed seven gaps in the design layer. Each is closed in 4.1.0; see the [CHANGELOG](../../CHANGELOG.md).
 
 | Gap | Now |
 |---|---|
@@ -378,3 +432,4 @@ after 4.0.0; see the [CHANGELOG](../../CHANGELOG.md).
 | A standby metro could connect a cloud in a region the spec did not name, without saying so | Placement prefers the named region; a different region is a `CLOUD_REGION_NOT_LOCAL` finding and is written on the plan row |
 | The plan estimate and the optimizer cost differed for one design | The optimizer prices the backbone; the plan shows provider fees and egress and a design total |
 | No engine chose between IX, a private connection and Internet Access, or between ports and Network Edge | `ConnectivityPlanner` |
+| Ports, cross connects and Network Edge devices were not on the plan or in the failure simulation | `AccessPlanner`, `DeploymentWizard.Builder.access(...)`, `ResilienceAnalyzer.access(...)` |

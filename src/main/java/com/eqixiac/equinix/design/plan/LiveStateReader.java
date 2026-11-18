@@ -97,7 +97,7 @@ public final class LiveStateReader {
             routerNames.add(r.getName());
         }
         Set<String> connectionNames = new LinkedHashSet<>();
-        for (PlannedConnection c : nz(plan.getProviderConnections())) {
+        for (PlannedConnection c : plan.routerConnections()) {
             connectionNames.add(c.getName());
         }
         for (PlannedBackboneLink l : nz(plan.getBackboneLinks())) {

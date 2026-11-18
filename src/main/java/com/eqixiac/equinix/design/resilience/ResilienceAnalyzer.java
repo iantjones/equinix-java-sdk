@@ -79,6 +79,7 @@ public final class ResilienceAnalyzer {
     private RateCard rateCard;
     private ResilienceOptions options = ResilienceOptions.defaults();
     private PeeringIntelligenceResult peering;
+    private com.eqixiac.equinix.design.access.AccessPlan access;
 
     private ResilienceAnalyzer(FabricGateway fabric, DesignContext context, DesignSpec spec) {
         this.fabric = fabric;
@@ -151,6 +152,20 @@ public final class ResilienceAnalyzer {
     }
 
     /**
+     * Adds the metro access to the simulation: each port, cross connect, Network Edge device and access
+     * connection of the plan becomes an element that can fail, and an IBX that holds ports of the
+     * design becomes a shared-fate scenario.
+     *
+     * @param accessPlan the access plan for the same design (from {@code AccessPlanner}, or
+     *                   {@code ConnectivityPlan.accessPlan()}); {@code null} keeps the assumed attachment
+     * @return this analysis
+     */
+    public ResilienceAnalyzer access(com.eqixiac.equinix.design.access.AccessPlan accessPlan) {
+        this.access = accessPlan;
+        return this;
+    }
+
+    /**
      * @param result a peering analysis whose presence is drawn into the graph as peer nodes
      * @return this analysis
      */
@@ -210,7 +225,7 @@ public final class ResilienceAnalyzer {
             notes.add("The peering analysis was run for another spec (fingerprint "
                     + peering.getSpecFingerprint() + "); its presence is drawn as given.");
         }
-        ResilienceReport report = analyze(context, metros, plan, options, peers, source, notes, timings, t);
+        ResilienceReport report = analyze(context, metros, plan, options, peers, source, notes, timings, t, access);
         return report;
     }
 
@@ -225,14 +240,15 @@ public final class ResilienceAnalyzer {
     public static ResilienceReport analyze(DesignContext context, MetroPortfolio metros, ResilienceOptions options) {
         return analyze(context, metros, WorkloadPlacer.place(metros, context),
                 options == null ? ResilienceOptions.defaults() : options, List.of(), "given", new ArrayList<>(),
-                new LinkedHashMap<>(), System.currentTimeMillis());
+                new LinkedHashMap<>(), System.currentTimeMillis(), null);
     }
 
     private static ResilienceReport analyze(DesignContext context, MetroPortfolio metros, PlacementPlan plan,
                                             ResilienceOptions options, List<PeerPresence> peers, String source,
-                                            List<String> notes, Map<String, Long> timings, long started) {
+                                            List<String> notes, Map<String, Long> timings, long started,
+                                            com.eqixiac.equinix.design.access.AccessPlan access) {
         long t = started;
-        DesignGraph graph = DesignGraphBuilder.build(context, metros, plan, options, peers);
+        DesignGraph graph = DesignGraphBuilder.build(context, metros, plan, options, peers, access);
         timings.put("graph", System.currentTimeMillis() - t);
         t = System.currentTimeMillis();
 

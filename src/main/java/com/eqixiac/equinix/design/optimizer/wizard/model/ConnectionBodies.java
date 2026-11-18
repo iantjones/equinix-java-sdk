@@ -200,6 +200,35 @@ public final class ConnectionBodies {
         return withProject(withNotification(builder, connection), connection);
     }
 
+    /**
+     * The create body of an access connection: A-side the Cloud Router, Z-side the Fabric port (with the
+     * planned VLAN tag) or the Network Edge device the connection lands on.
+     *
+     * @param connections     the Fabric connections client
+     * @param connection      the planned access connection; it must have a port or device uuid
+     * @param aSideRouterUuid the Cloud Router uuid
+     * @return an un-terminated builder; chain {@code .dryRun().create()} or {@code .create()}
+     * @throws IllegalArgumentException when the connection has neither a port nor a device uuid
+     */
+    public static ConnectionOperator.ConnectionBuilder accessBody(
+            Connections connections, PlannedConnection connection, String aSideRouterUuid) {
+        ConnectionOperator.ConnectionBuilder builder = connections.define(connection.getConnectionType())
+                .name(connection.getName())
+                .bandwidth(connection.getBandwidthMbps())
+                .aSideAccessPointCloudRouter(aSideRouterUuid);
+        if (connection.getZSidePortUuid() != null) {
+            builder.zSideAccessPointPort(connection.getZSidePortUuid(), linkProtocol(connection.getZSideVlanTag()));
+        } else if (connection.getZSideDeviceUuid() != null) {
+            builder.zSideAccessPoint(com.eqixiac.equinix.fabric.model.implementation.SimpleAccessPoint
+                    .define(com.eqixiac.equinix.fabric.enums.AccessPointType.VD)
+                    .virtualDevice(connection.getZSideDeviceUuid()).create());
+        } else {
+            throw new IllegalArgumentException("access connection '" + connection.getName()
+                    + "' has no port or device uuid");
+        }
+        return withProject(withNotification(builder, connection), connection);
+    }
+
     private static ConnectionOperator.ConnectionBuilder withNotification(
             ConnectionOperator.ConnectionBuilder builder, PlannedConnection connection) {
         // Every configured recipient is sent, not just the first: each call appends the address to

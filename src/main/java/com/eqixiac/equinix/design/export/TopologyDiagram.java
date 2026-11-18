@@ -142,6 +142,22 @@ public class TopologyDiagram {
             }
         }
 
+        // Metro access: each port or Network Edge device, joined to its Cloud Router.
+        for (PlannedConnection conn : plan.accessConnectionsOrEmpty()) {
+            String routerId = routerNodeIds.get(conn.getASideRouterName());
+            if (routerId == null) {
+                continue;
+            }
+            String accessId = "acc" + (idSeq++);
+            mmd.append("  ").append(accessId).append("[/\"")
+                    .append(escape((conn.getZSideDeviceUuid() != null || (conn.getZSidePortUuid() == null
+                            && String.valueOf(conn.getZSideAccessItem()).contains("-ne-")) ? "Network Edge " : "Port ")
+                            + conn.getZSideAccessItem()))
+                    .append(conn.hasAccessEndpoint() ? "" : "<br/>to order").append("\"/]").append(NL);
+            mmd.append("  ").append(accessId).append(conn.hasAccessEndpoint() ? " --- " : " -.- ")
+                    .append(routerId).append(NL);
+        }
+
         // Backbone links: router <-> router across metros.
         if (plan.getBackboneLinks() != null) {
             for (PlannedBackboneLink link : plan.getBackboneLinks()) {

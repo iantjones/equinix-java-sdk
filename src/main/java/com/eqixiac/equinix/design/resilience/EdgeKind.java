@@ -31,5 +31,11 @@ public enum EdgeKind {
     /** Where a workload runs (primary) or fails over to (standby). */
     WORKLOAD_HOSTING,
     /** Where a peer network is present (IX or facility) in a portfolio metro; informational. */
-    PEERING
+    PEERING,
+    /** The cross connect from the customer's cage to a Fabric port. */
+    CROSS_CONNECT,
+    /** How sites reach a Network Edge device (SD-WAN or IPsec over their own transport); not a failure element. */
+    DEVICE_REACH,
+    /** The virtual connection from a port or Network Edge device to the Cloud Router of its metro. */
+    ACCESS_CONNECTION
 }

@@ -15,19 +15,23 @@
  */
 package com.eqixiac.equinix.design.connectivity;
 
+import com.eqixiac.equinix.design.access.AccessPlan;
+
 import java.util.List;
 
 /**
- * How each destination of a design is reached and how each metro is entered. Nothing in it is ordered,
- * priced or simulated; {@code DeploymentPlan} does not include it.
+ * How each destination of a design is reached and how each metro is entered. Nothing in it is ordered.
+ * Give {@link #accessPlan()} to the Deployment Wizard and to the resilience analyzer to put the ports,
+ * cross connects and Network Edge devices on the deployment plan and into the failure simulation.
  *
  * @param specFingerprint the fingerprint of the spec the decisions are for
  * @param reach           one decision per cloud, per peer, and one for general internet traffic
  * @param access          one decision per metro of the design
  * @param notes           what the rules could not determine
+ * @param accessPlan      the items behind {@code access}: each port, cross connect, device and link
  */
 public record ConnectivityPlan(String specFingerprint, List<ReachDecision> reach, List<AccessDecision> access,
-                               List<String> notes) {
+                               List<String> notes, AccessPlan accessPlan) {
 
     /** Makes the lists immutable. */
     public ConnectivityPlan {
@@ -52,9 +56,9 @@ public record ConnectivityPlan(String specFingerprint, List<ReachDecision> reach
 
     /** How a metro is entered. */
     public enum Access {
-        /** Redundant Fabric ports with cross connects from the customer's cage. */
+        /** Fabric ports with cross connects from the customer's cage. */
         PHYSICAL_PORTS,
-        /** A redundant pair of Network Edge virtual devices. */
+        /** Network Edge virtual devices. */
         NETWORK_EDGE,
         /** The Cloud Router only: sites reach the metro over the backbone or an existing WAN. */
         CLOUD_ROUTER_ONLY
@@ -106,8 +110,10 @@ public record ConnectivityPlan(String specFingerprint, List<ReachDecision> reach
                     .append(d.reason()).append(" | ")
                     .append(d.orders().isEmpty() ? "nothing" : String.join("; ", d.orders())).append(" |\n");
         }
-        md.append("\nThese choices are rules applied to the design. Nothing is ordered, and they are not priced, "
-                + "simulated or part of the deployment plan.\n");
+        md.append("\nThese choices are rules applied to the design. Nothing is ordered.\n");
+        if (accessPlan != null && !accessPlan.items().isEmpty()) {
+            md.append("\n").append(accessPlan.toMarkdown().replace("## Metro access", "## Access items by metro"));
+        }
         if (!notes.isEmpty()) {
             md.append("\nNotes:\n\n");
             notes.forEach(n -> md.append("- ").append(n).append("\n"));

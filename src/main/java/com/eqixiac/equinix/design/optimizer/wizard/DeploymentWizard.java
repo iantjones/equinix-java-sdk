@@ -166,6 +166,7 @@ public final class DeploymentWizard {
         private String specFingerprint;
         private DesignSpec designSpec;
         private final List<PlannedInterconnect> interconnects = new ArrayList<>();
+        private com.eqixiac.equinix.design.access.AccessPlan access;
 
         // Currency: every plan figure is restated in one currency
         private String currency;
@@ -698,6 +699,25 @@ public final class DeploymentWizard {
             return this;
         }
 
+        /**
+         * Puts the metro access on the plan: the ports, cross connects, Network Edge devices and Internet
+         * Access services of an {@code AccessPlan} (from {@code AccessPlanner}, or
+         * {@code ConnectivityPlan.accessPlan()}), and one virtual connection from each Cloud Router to
+         * each port or device, with its routing protocols.
+         *
+         * <p>The wizard uses only the resources this plan names. A port or device with a uuid is used as
+         * it is, and execution creates its connection to the Cloud Router. An item to order is listed
+         * with how to order it, and its connection is not executable until the uuid is on the plan. The
+         * wizard orders no port, cross connect, device or Internet Access service.</p>
+         *
+         * @param accessPlan the access plan for the same design, or {@code null} for none
+         * @return this builder for method chaining
+         */
+        public Builder access(com.eqixiac.equinix.design.access.AccessPlan accessPlan) {
+            this.access = accessPlan;
+            return this;
+        }
+
         // Build
 
         /**
@@ -736,8 +756,9 @@ public final class DeploymentWizard {
          */
         public DeploymentPlan reprice(DeploymentPlan plan) {
             if (plan.multicloudLinksOrEmpty().isEmpty()) {
-                PlanPricing pricing = PlanPricer.estimatePricing(
-                        this, plan.getCloudRouters(), plan.getProviderConnections(), plan.getBackboneLinks());
+                PlanPricing pricing = PlanPricer.withAccess(PlanPricer.estimatePricing(
+                        this, plan.getCloudRouters(), plan.getProviderConnections(), plan.getBackboneLinks()),
+                        this, PlanPricer.resolveRateCard(this), plan.accessConnectionsOrEmpty(), plan.getAccess());
                 return plan.toBuilder().pricing(pricing).build();
             }
             // One rate-card instance for the links and the plan, as at plan time.
@@ -746,9 +767,9 @@ public final class DeploymentWizard {
                     this, resolved, plan.getMulticloudLinks(), plan.getCloudRouters(), plan.getProviderConnections(),
                     plan.getBackboneLinks(),
                     plan.getSourceOptimization() != null ? plan.getSourceOptimization().getRequest() : null);
-            PlanPricing pricing = PlanPricer.estimatePricing(
+            PlanPricing pricing = PlanPricer.withAccess(PlanPricer.estimatePricing(
                     this, resolved, plan.getCloudRouters(), plan.getProviderConnections(), plan.getBackboneLinks(),
-                    links);
+                    links), this, resolved, plan.accessConnectionsOrEmpty(), plan.getAccess());
             return plan.toBuilder().multicloudLinks(links).pricing(pricing).build();
         }
 
@@ -779,6 +800,7 @@ public final class DeploymentWizard {
         String getDeploymentName() { return deploymentName; }
         String getSpecFingerprint() { return specFingerprint; }
         List<PlannedInterconnect> getInterconnects() { return interconnects; }
+        com.eqixiac.equinix.design.access.AccessPlan getAccess() { return access; }
 
         /** The spec behind the plan, for the pricer: {@link #designSpec}, else the optimisation result's. */
         DesignSpec getDesignSpecOrResultSpec() {

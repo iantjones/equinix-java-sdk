@@ -15,6 +15,11 @@
  */
 package com.eqixiac.equinix.design.resilience;
 
+import com.eqixiac.equinix.design.access.AccessKind;
+import com.eqixiac.equinix.design.access.AccessPlan;
+import com.eqixiac.equinix.design.access.MetroAccess;
+import com.eqixiac.equinix.design.access.PlannedAccessItem;
+import com.eqixiac.equinix.design.access.PlannedAccessLink;
 import com.eqixiac.equinix.core.enums.Region;
 import com.eqixiac.equinix.core.model.MetroId;
 import com.eqixiac.equinix.design.optimizer.context.CatalogDesignContext;
@@ -96,6 +101,27 @@ public final class DesignGraphBuilder {
      */
     public static DesignGraph build(DesignContext context, MetroPortfolio portfolio, PlacementPlan plan,
                                     ResilienceOptions options, List<PeerPresence> peers) {
+        return build(context, portfolio, plan, options, peers, null);
+    }
+
+    /**
+     * Builds the graph with the metro access of an access plan. In a metro the plan enters through
+     * ports or Network Edge devices, the metro joins its Cloud Router through them: each port is a node
+     * reached over its cross connect, each device a node the sites reach over their own transport, and
+     * each has one access connection to the Cloud Router. A port or device the plan lists as an order
+     * is drawn as planned. A metro the plan does not cover, or enters through the Cloud Router alone,
+     * keeps the assumed attachment.
+     *
+     * @param context   the facts of the run (its spec is the design)
+     * @param portfolio the metros
+     * @param plan      where every workload runs on {@code portfolio}
+     * @param options   build options; {@code null} for the defaults
+     * @param peers     peer presence to draw in; may be empty
+     * @param access    the access plan, or {@code null} for the assumed attachment in every metro
+     * @return the graph
+     */
+    public static DesignGraph build(DesignContext context, MetroPortfolio portfolio, PlacementPlan plan,
+                                    ResilienceOptions options, List<PeerPresence> peers, AccessPlan access) {
         if (context == null || portfolio == null || plan == null) {
             throw new IllegalArgumentException("A design graph needs a context, a portfolio and a placement plan");
         }
@@ -106,6 +132,7 @@ public final class DesignGraphBuilder {
         List<String> assumptions = new ArrayList<>();
 
         boolean routers = !plan.legs().isEmpty() || portfolio.size() > 1;
+        boolean accessDrawn = false;
         for (MetroId m : portfolio.metros()) {
             MetroFacts facts = context.metro(m).orElse(null);
             nodes.add(new GraphNode(metroId(m.code()), NodeKind.METRO,
@@ -118,8 +145,36 @@ public final class DesignGraphBuilder {
             for (MetroId m : portfolio.metros()) {
                 nodes.add(new GraphNode(routerId(m.code()), NodeKind.CLOUD_ROUTER, "Cloud Router " + m.code(),
                         m.code(), regionOf(context, m), null, null, null));
-                edges.add(new GraphEdge("attach:" + m.code(), EdgeKind.ROUTER_ATTACHMENT, metroId(m.code()),
-                        routerId(m.code()), null, null, 0.0, "assumed", null, "inside the metro"));
+                MetroAccess entered = access == null ? null : access.metro(m.code());
+                List<PlannedAccessLink> links = entered == null ? List.of() : entered.links();
+                if (links.isEmpty()) {
+                    edges.add(new GraphEdge("attach:" + m.code(), EdgeKind.ROUTER_ATTACHMENT, metroId(m.code()),
+                            routerId(m.code()), null, null, 0.0, "assumed", null, "inside the metro"));
+                    continue;
+                }
+                accessDrawn = true;
+                for (PlannedAccessLink link : links) {
+                    boolean port = link.kind() == AccessKind.FABRIC_PORT;
+                    PlannedAccessItem item = entered.items().stream().filter(i -> i.name().equals(link.item()))
+                            .findFirst().orElse(null);
+                    String node = accessId(m.code(), link.item());
+                    String status = item == null || item.exists() ? "" : " (to order)";
+                    nodes.add(new GraphNode(node, port ? NodeKind.ACCESS_PORT : NodeKind.EDGE_DEVICE,
+                            (port ? "port " : "Network Edge device ") + link.item() + status, m.code(),
+                            regionOf(context, m), null, null, null, null, item == null ? null : item.ibx()));
+                    edges.add(new GraphEdge((port ? "xc:" : "reach:") + m.code() + "/" + link.item(),
+                            port ? EdgeKind.CROSS_CONNECT : EdgeKind.DEVICE_REACH, metroId(m.code()), node, null, null,
+                            0.0, "assumed", null, port ? "cross connect from the cage" : "sites reach the device "
+                            + "over their own transport"));
+                    edges.add(new GraphEdge("accessconn:" + m.code() + "/" + link.item(), EdgeKind.ACCESS_CONNECTION,
+                            node, routerId(m.code()), null, (double) link.bandwidthMbps(), 0.0, "assumed", null,
+                            link.name()));
+                }
+            }
+            if (accessDrawn) {
+                assumptions.add("Metro access comes from the access plan: a metro joins its Cloud Router through "
+                        + "its ports or Network Edge devices, each with one access connection. An item to order "
+                        + "is simulated as planned.");
             }
             assumptions.add("One Fabric Cloud Router per metro carries cloud and inter-metro traffic (as the "
                     + "Deployment Wizard plans it); a router is a single element unless the design adds a second.");
@@ -351,6 +406,10 @@ public final class DesignGraphBuilder {
 
     static String cloudId(String cloud) {
         return "cloud:" + cloud;
+    }
+
+    static String accessId(String metro, String item) {
+        return "access:" + metro + "/" + item;
     }
 
     static String siteId(String label) {

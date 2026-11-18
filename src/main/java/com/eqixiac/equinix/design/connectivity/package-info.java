@@ -21,7 +21,9 @@
  * {@link com.eqixiac.equinix.design.connectivity.ProductAvailability}: a cloud over a private Fabric
  * connection from a Cloud Router, a peer over an Internet Exchange (IX), a private connection or Internet
  * Access, and each metro through redundant physical ports, a Network Edge device pair, or its Cloud
- * Router alone. It reads nothing itself and orders nothing: the result describes what would be ordered.
- * These choices are not part of a {@code DeploymentPlan}, and they are not priced or simulated.</p>
+ * Router alone. It reads nothing itself and orders nothing. Metro access is decided by
+ * {@code design.access.AccessPlanner}; give {@code ConnectivityPlan.accessPlan()} to the Deployment Wizard
+ * and to the resilience analyzer to put the ports, cross connects and devices on the plan and into the
+ * failure simulation.</p>
  */
 package com.eqixiac.equinix.design.connectivity;

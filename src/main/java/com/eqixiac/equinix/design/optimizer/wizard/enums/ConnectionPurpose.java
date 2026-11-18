@@ -24,5 +24,11 @@ public enum ConnectionPurpose {
      * A connection from a Cloud Router to an on-premises or Network Edge device.
      * Reserved for device-side planning; the wizard does not currently generate these.
      */
-    DEVICE
+    DEVICE,
+
+    /**
+     * A connection from a Cloud Router to a Fabric port or Network Edge device that brings the
+     * customer's sites into the metro. Generated from the plan's access items.
+     */
+    ACCESS
 }

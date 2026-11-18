@@ -224,6 +224,86 @@ final class PlanPricer {
     }
 
     /**
+     * Adds the metro access to a pricing: one line per access connection, one per access item to order
+     * that the card prices, and the items no card prices. The existing totals are not changed.
+     *
+     * @param pricing           the pricing of the routers, provider connections and backbone
+     * @param config            the wizard configuration
+     * @param rateCard          the resolved card, or {@code null}
+     * @param accessConnections the plan's access connections
+     * @param access            the plan's access items, or {@code null}
+     * @return the pricing with the access fields set, or {@code pricing} itself when there is no access
+     */
+    static PlanPricing withAccess(PlanPricing pricing, DeploymentWizard.Builder config, RateCard rateCard,
+                                  List<PlannedConnection> accessConnections,
+                                  com.eqixiac.equinix.design.access.AccessPlan access) {
+        if (pricing == null || ((accessConnections == null || accessConnections.isEmpty())
+                && (access == null || access.items().isEmpty()))) {
+            return pricing;
+        }
+        Term term = config.getTerm();
+        String target = config.getPlanCurrency();
+        com.eqixiac.equinix.design.cost.CurrencyConverters.Chain fx = config.getConverter();
+        List<com.eqixiac.equinix.design.spi.CostLine> lines = new ArrayList<>();
+        BigDecimal connections = BigDecimal.ZERO;
+        boolean connectionsInTarget = accessConnections != null && !accessConnections.isEmpty();
+        for (PlannedConnection conn : accessConnections == null ? List.<PlannedConnection>of() : accessConnections) {
+            com.eqixiac.equinix.design.spi.CostLine line = inPlanCurrency(conn.getName(), conn.getASideMetro(),
+                    priceConnection(rateCard, conn.getConnectionType(), conn.getBandwidthMbps(), conn.getASideMetro(),
+                            term), target, fx);
+            lines.add(line);
+            connectionsInTarget &= line.currency().equals(target);
+            connections = connections.add(line.monthly());
+        }
+        BigDecimal items = BigDecimal.ZERO;
+        boolean anyItem = false;
+        boolean itemsInTarget = true;
+        List<String> unpriced = new ArrayList<>();
+        RateCard card = rateCard != null ? rateCard : ReferenceRateCard.standard();
+        if (access != null) {
+            for (com.eqixiac.equinix.design.access.PlannedAccessItem item : access.items()) {
+                if (item.exists()) {
+                    continue;
+                }
+                String what = com.eqixiac.equinix.design.access.PlannedAccessItem.label(item.kind()) + " "
+                        + item.name();
+                if (item.kind() != com.eqixiac.equinix.design.access.AccessKind.CROSS_CONNECT) {
+                    unpriced.add(what + ": no rate card prices it; the cost is unknown, not zero");
+                    continue;
+                }
+                MetroId metro = MetroId.of(item.metro());
+                com.eqixiac.equinix.design.value.ratecard.PriceLookup<PriceQuote> quote = card.colocationLookup(
+                        com.eqixiac.equinix.design.value.ratecard.ColocationItem.CROSS_CONNECT, toMetroCode(metro),
+                        term);
+                if (!quote.isPriced()) {
+                    unpriced.add(what + ": no rate card has a cross connect figure for " + item.metro()
+                            + "; the cost is unknown, not zero");
+                    continue;
+                }
+                com.eqixiac.equinix.design.spi.CostLine line = inPlanCurrency(what, metro, quote.value(), target, fx);
+                lines.add(line);
+                anyItem = true;
+                itemsInTarget &= line.currency().equals(target);
+                items = items.add(line.monthly());
+            }
+        }
+        BigDecimal connectionMonthly = connectionsInTarget ? connections : null;
+        BigDecimal itemMonthly = anyItem && itemsInTarget ? items : null;
+        BigDecimal withAccess = null;
+        if (pricing.getDesignMonthly() != null && target.equals(pricing.getCurrency())
+                && (accessConnections == null || accessConnections.isEmpty() || connectionMonthly != null)
+                && (!anyItem || itemMonthly != null)) {
+            withAccess = pricing.getDesignMonthly()
+                    .add(connectionMonthly == null ? BigDecimal.ZERO : connectionMonthly)
+                    .add(itemMonthly == null ? BigDecimal.ZERO : itemMonthly);
+        }
+        var builder = pricing.toBuilder();
+        return builder.accessConnectionMonthly(connectionMonthly).accessLines(lines)
+                .accessItemMonthly(itemMonthly).accessUnpriced(unpriced.isEmpty() ? null : unpriced)
+                .designWithAccessMonthly(withAccess).build();
+    }
+
+    /**
      * Returns the pricing with the native-link fields filled from links that were already priced.
      * Returns the argument itself, every native field {@code null}, when there is no link. {@code REPLACEMENT} and
      * {@code ALTERNATIVE} links are totalled separately, each through its own reconciler; a role's

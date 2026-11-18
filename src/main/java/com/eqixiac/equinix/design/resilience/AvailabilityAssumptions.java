@@ -68,6 +68,10 @@ public record AvailabilityAssumptions(Map<ElementType, Double> availability, Str
         d.put(ElementType.BACKBONE_LINK, 0.9999);
         d.put(ElementType.SITE_ACCESS, 0.999);
         d.put(ElementType.CLOUD_REGION, 0.9999);
+        d.put(ElementType.ACCESS_PORT, 0.9999);
+        d.put(ElementType.CROSS_CONNECT, 0.9999);
+        d.put(ElementType.EDGE_DEVICE, 0.999);
+        d.put(ElementType.ACCESS_CONNECTION, 0.9995);
         DEFAULTS = Collections.unmodifiableMap(d);
     }
 

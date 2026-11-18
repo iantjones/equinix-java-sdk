@@ -17,6 +17,13 @@
 
 package com.eqixiac.equinix.examples;
 
+import com.eqixiac.equinix.design.access.AccessInventory;
+import com.eqixiac.equinix.design.access.AccessSource;
+import com.eqixiac.equinix.design.access.ExistingPort;
+import com.eqixiac.equinix.design.access.MetroAccess;
+import com.eqixiac.equinix.design.access.PlannedAccessItem;
+import com.eqixiac.equinix.design.optimizer.wizard.model.PlannedConnection;
+import com.eqixiac.equinix.fabric.enums.RedundancyPriority;
 import com.eqixiac.equinix.FabricGateway;
 import com.eqixiac.equinix.core.enums.MetroCode;
 import com.eqixiac.equinix.core.enums.Region;
@@ -51,6 +58,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -80,7 +88,14 @@ class EndToEndDesignExampleTest {
         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
         outcome = EndToEndDesignExample.run(new Inputs(catalogue(), ReferenceRateCard.standard(),
                 Discovery.of(Set.of("DC", "LD", "FR", "SG", "TY", "CH"), Set.of("DC", "FR", "SG", "TY", "LD")), null, output,
-                new PrintStream(buffer, true, StandardCharsets.UTF_8), false, null, null, null));
+                new PrintStream(buffer, true, StandardCharsets.UTF_8), false, null, null, null,
+                // The project already has a redundant pair of ports in Ashburn, in two IBXs.
+                AccessInventory.of(List.of(
+                        new ExistingPort("port-uuid-a", "ashburn-cage-a", "DC", "DC2", "fabric-device-1", "cage",
+                                RedundancyPriority.PRIMARY, 10_000, 10_000, "ACTIVE"),
+                        new ExistingPort("port-uuid-b", "ashburn-cage-b", "DC", "DC6", "fabric-device-2", "cage",
+                                RedundancyPriority.SECONDARY, 10_000, 10_000, "ACTIVE")), List.of()),
+                Map.of()));
         printed = buffer.toString(StandardCharsets.UTF_8);
     }
 
@@ -116,18 +131,39 @@ class EndToEndDesignExampleTest {
     }
 
     @Test
-    @DisplayName("a data center metro gets redundant ports and cross connects; other metros get Network Edge")
+    @DisplayName("the existing ports in Ashburn are used before anything is ordered; other metros get Network Edge to order")
     void access() {
         for (AccessDecision decision : outcome.access()) {
-            if (decision.metro().equals("DC")) {
-                assertEquals(Access.PHYSICAL_PORTS, decision.access());
-                assertEquals(2, decision.orders().stream().filter(o -> o.startsWith("cross connect")).count());
-            } else {
-                assertEquals(Access.NETWORK_EDGE, decision.access(), decision.metro());
-            }
+            assertEquals(decision.metro().equals("DC") ? Access.PHYSICAL_PORTS : Access.NETWORK_EDGE,
+                    decision.access(), decision.metro());
             assertFalse(decision.orders().isEmpty());
         }
         assertEquals(outcome.optimization().getRecommended().portfolio().size(), outcome.access().size());
+        MetroAccess ashburn = outcome.accessPlan().metro("DC");
+        List<PlannedAccessItem> ports = ashburn.items(com.eqixiac.equinix.design.access.AccessKind.FABRIC_PORT);
+        assertEquals(List.of("port-uuid-a", "port-uuid-b"), ports.stream().map(PlannedAccessItem::existingUuid).toList());
+        assertTrue(ports.stream().allMatch(i -> i.source() == AccessSource.EXISTING));
+        assertTrue(ashburn.items(com.eqixiac.equinix.design.access.AccessKind.CROSS_CONNECT).isEmpty());
+        assertTrue(printed.contains("use   Fabric port ashburn-cage-a (port-uuid-a)"), printed);
+    }
+
+    @Test
+    @DisplayName("the plan connects the Cloud Router to the existing ports, and the simulation fails each port")
+    void accessOnThePlanAndInTheSimulation() throws Exception {
+        List<PlannedConnection> toPorts = outcome.plan().accessConnectionsOrEmpty().stream()
+                .filter(c -> c.getZSidePortUuid() != null).toList();
+        assertEquals(List.of("port-uuid-a", "port-uuid-b"),
+                toPorts.stream().map(PlannedConnection::getZSidePortUuid).toList());
+        assertTrue(outcome.plan().accessConnectionsOrEmpty().size() > toPorts.size(),
+                "the Network Edge devices are orders, so their connections wait");
+        assertEquals(outcome.accessPlan(), outcome.plan().getAccess());
+        assertTrue(outcome.resilience().singleFailures().stream()
+                .anyMatch(o -> o.scenario().id().equals("access:DC/ashburn-cage-a")));
+        assertTrue(outcome.resilience().singleFailures().stream()
+                .noneMatch(o -> o.scenario().id().startsWith("ibx:") && o.scenario().failedNodes().size() > 1),
+                "the two ports are in different IBXs");
+        assertTrue(Files.readString(output.resolve("plan.md")).contains("### Access connections"));
+        assertTrue(Files.size(output.resolve("access.md")) > 0);
     }
 
     @Test

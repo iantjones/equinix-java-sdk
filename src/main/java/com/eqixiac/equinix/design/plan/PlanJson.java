@@ -207,6 +207,13 @@ public final class PlanJson {
         desired.put("backboneLinks", plan.getBackboneLinks());
         desired.put("routingProtocols", plan.getRoutingProtocols());
         desired.put("interconnects", plan.getInterconnects());
+        // Only when present, so a plan without access items keeps the id it had before they existed.
+        if (plan.getAccess() != null) {
+            desired.put("access", plan.getAccess());
+        }
+        if (!plan.accessConnectionsOrEmpty().isEmpty()) {
+            desired.put("accessConnections", plan.accessConnectionsOrEmpty());
+        }
         desired.put("multicloudLinks", plan.multicloudLinksOrEmpty().stream()
                 .map(l -> List.of(String.valueOf(l.getName()), String.valueOf(l.getRole()),
                         String.valueOf(l.getProviderA()), String.valueOf(l.getRegionA()),

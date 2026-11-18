@@ -34,10 +34,11 @@ import java.util.TreeSet;
  * @param weight    a site's share of the total site weight (0..1); {@code null} for other nodes
  * @param providerRegion for a cloud, {@code PROVIDER region} when the spec names its region (clouds sharing it share
  *                  fate); {@code null} otherwise
+ * @param facility       for a port, the IBX it is in when known (ports sharing it share fate); {@code null} otherwise
  */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public record GraphNode(String id, NodeKind kind, String label, String metro, Region region, String cloudId,
-                        Set<String> geoZones, Double weight, String providerRegion) {
+                        Set<String> geoZones, Double weight, String providerRegion, String facility) {
 
     /** Requires an id and a kind; makes {@code geoZones} immutable, sorted and non-null. */
     public GraphNode {
@@ -63,5 +64,23 @@ public record GraphNode(String id, NodeKind kind, String label, String metro, Re
     public GraphNode(String id, NodeKind kind, String label, String metro, Region region, String cloudId,
                      Set<String> geoZones, Double weight) {
         this(id, kind, label, metro, region, cloudId, geoZones, weight, null);
+    }
+
+    /**
+     * A node with no facility.
+     *
+     * @param id             stable id
+     * @param kind           what the node stands for
+     * @param label          display label
+     * @param metro          metro code, or {@code null}
+     * @param region         Equinix region, or {@code null}
+     * @param cloudId        cloud id, or {@code null}
+     * @param geoZones       geo zones, or {@code null}
+     * @param weight         site weight, or {@code null}
+     * @param providerRegion provider region, or {@code null}
+     */
+    public GraphNode(String id, NodeKind kind, String label, String metro, Region region, String cloudId,
+                     Set<String> geoZones, Double weight, String providerRegion) {
+        this(id, kind, label, metro, region, cloudId, geoZones, weight, providerRegion, null);
     }
 }

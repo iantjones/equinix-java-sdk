@@ -131,6 +131,39 @@ public class PlanPricing {
     BigDecimal designMonthly;
 
     /**
+     * The monthly cost of the plan's access connections (Cloud Router to port or Network Edge device).
+     * Not part of {@code monthlyTotal} or {@code designMonthly}, which keep the scope the Metro Optimizer
+     * prices. {@code null} when the plan has no access connection or they are not all in the plan currency.
+     */
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+    BigDecimal accessConnectionMonthly;
+
+    /** One cost line per access connection and per priced access item to order; {@code null} when none. */
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+    List<com.eqixiac.equinix.design.spi.CostLine> accessLines;
+
+    /**
+     * The monthly cost of the access items to order that a rate card prices (cross connects). {@code null}
+     * when none is priced or they are not all in the plan currency.
+     */
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+    BigDecimal accessItemMonthly;
+
+    /**
+     * Access items to order that no rate card prices (Fabric ports, Network Edge devices, Internet Access),
+     * each with the reason. Their cost is unknown, not zero. {@code null} when none.
+     */
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+    List<String> accessUnpriced;
+
+    /**
+     * {@code designMonthly} plus {@code accessConnectionMonthly} plus {@code accessItemMonthly}: the design
+     * with the priced part of its metro access. {@code null} when the plan has no access or a part is unknown.
+     */
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+    BigDecimal designWithAccessMonthly;
+
+    /**
      * Dominant provenance of these figures: {@link PriceSource#EQUINIX_LIVE} when every line
      * item was live-priced, {@link PriceSource#ESTIMATE} when the heuristic fallback was used,
      * or {@link PriceSource#COMPOSITE} when mixed. Read alongside {@link #disclaimer}.

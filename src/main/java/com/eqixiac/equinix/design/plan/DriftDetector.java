@@ -97,6 +97,8 @@ public final class DriftDetector {
 
         List<PlannedConnection> connections = new ArrayList<>();
         nz(plan.getProviderConnections()).forEach(connections::add);
+        plan.accessConnectionsOrEmpty().stream().filter(PlannedConnection::hasAccessEndpoint)
+                .forEach(connections::add);
         for (PlannedBackboneLink link : nz(plan.getBackboneLinks())) {
             if (link.getConnection() != null) {
                 connections.add(link.getConnection());
@@ -104,7 +106,8 @@ public final class DriftDetector {
         }
         for (PlannedConnection planned : connections) {
             String key = PlanSteps.keyOf(planned);
-            ResourceKind kind = planned.isBackboneLink() ? ResourceKind.BACKBONE_LINK : ResourceKind.PROVIDER_CONNECTION;
+            ResourceKind kind = planned.isBackboneLink() ? ResourceKind.BACKBONE_LINK
+                    : planned.isAccessConnection() ? ResourceKind.ACCESS_CONNECTION : ResourceKind.PROVIDER_CONNECTION;
             Match<LiveConnection> m = matchConnection(planned, key, plan.effectiveDeploymentName(), live, knownUuid);
             if (m == null) {
                 out.add(new ResourceDrift(key, kind, planned.getName(), DriftStatus.MISSING, null, null, List.of(), null));

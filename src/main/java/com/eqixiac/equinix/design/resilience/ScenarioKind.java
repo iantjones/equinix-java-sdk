@@ -27,6 +27,10 @@ public enum ScenarioKind {
     CONNECTION(true),
     /** One Cloud Router. */
     CLOUD_ROUTER(true),
+    /** One port or Network Edge device the design enters a metro through. */
+    ACCESS_ELEMENT(true),
+    /** An IBX: every port of the design in it. Shared fate: not counted in N-1. */
+    FACILITY(false),
     /** A cloud provider region (every on-ramp of the clouds in it becomes useless). Shared fate: not counted in N-1. */
     CLOUD_REGION(false),
     /** An entire Equinix region (AMER, EMEA or APAC). Shared fate: not counted in N-1. */

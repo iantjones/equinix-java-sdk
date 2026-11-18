@@ -110,6 +110,22 @@ public class DeploymentPlan {
      */
     List<PlannedInterconnect> interconnects;
 
+    /**
+     * How each metro is entered: the ports, cross connects, Network Edge devices and Internet Access
+     * services of the deployment, existing and to order. {@code null} when the wizard was given no
+     * access plan. The plan creates none of these items; it uses the ones that exist.
+     */
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+    com.eqixiac.equinix.design.access.AccessPlan access;
+
+    /**
+     * The virtual connections from each Cloud Router to the ports and Network Edge devices of
+     * {@link #access}. One whose port or device has a uuid is created by execution; one that waits for
+     * an order is reported as not executable. {@code null} or empty when there is none.
+     */
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY)
+    List<PlannedConnection> accessConnections;
+
     PlanPricing pricing;
 
     boolean valid;
@@ -198,13 +214,34 @@ public class DeploymentPlan {
     }
 
     /**
-     * Total number of resources execution creates: Cloud Routers, provider connections, backbone links
-     * and routing protocols. Native multicloud links and Interconnects are excluded.
+     * @return the access connections, never {@code null}
+     */
+    @JsonIgnore
+    public List<PlannedConnection> accessConnectionsOrEmpty() {
+        return accessConnections == null ? List.of() : accessConnections;
+    }
+
+    /**
+     * @return the provider connections followed by the access connections: every connection that
+     *         attaches to one Cloud Router of the plan
+     */
+    @JsonIgnore
+    public List<PlannedConnection> routerConnections() {
+        List<PlannedConnection> all = new java.util.ArrayList<>(providerConnections == null ? List.of()
+                : providerConnections);
+        all.addAll(accessConnectionsOrEmpty());
+        return all;
+    }
+
+    /**
+     * Total number of resources execution creates: Cloud Routers, provider connections, backbone links,
+     * routing protocols, and the access connections whose port or device exists. Native multicloud
+     * links, Interconnects and access items are excluded.
      *
      * @return the count
      */
     public int totalResourceCount() {
-        int count = 0;
+        int count = (int) accessConnectionsOrEmpty().stream().filter(PlannedConnection::hasAccessEndpoint).count();
         if (cloudRouters != null) count += cloudRouters.size();
         if (providerConnections != null) count += providerConnections.size();
         if (backboneLinks != null) count += backboneLinks.size();

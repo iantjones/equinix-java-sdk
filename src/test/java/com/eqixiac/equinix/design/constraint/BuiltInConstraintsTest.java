@@ -42,6 +42,7 @@ import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class BuiltInConstraintsTest {
@@ -208,5 +209,14 @@ class BuiltInConstraintsTest {
                 ctx(spec).costModel((p, c) -> partial));
         assertTrue(lowerBound.satisfied());
         assertTrue(lowerBound.reason().contains("lower bound"), lowerBound.reason());
+    }
+
+    @Test
+    @DisplayName("the eleven-argument DesignConstraints constructor still compiles and leaves access metros off")
+    void constraintsConstructorBeforeAccessMetros() {
+        DesignConstraints constraints = new DesignConstraints(List.of("DC"), List.of(), List.of(), List.of(),
+                List.of(), List.of(), null, null, 2, 3, 40.0);
+        assertEquals(List.of("DC"), constraints.requiredMetros());
+        assertNull(constraints.allowAccessMetros());
     }
 }

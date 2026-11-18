@@ -194,6 +194,7 @@ public class TerraformExporter {
         writeProviderConnections(hcl, plan, routerLabels, connectionLabels, authKeyVariables, vlanVariables,
                 peeringVariables);
         writeBackboneLinks(hcl, plan, routerLabels, connectionLabels);
+        writeAccess(hcl, plan, routerLabels, connectionLabels, usedVariableNames);
         writeRoutingProtocols(hcl, plan, connectionLabels);
         writeMulticloudLinks(hcl, plan, usedVariableNames);
 
@@ -444,6 +445,81 @@ public class TerraformExporter {
             hcl.append(INDENT).append(INDENT).append("}\n");
             hcl.append(INDENT).append("}\n");
 
+            hcl.append("}\n\n");
+        }
+    }
+
+    /**
+     * Writes the metro access: one {@code equinix_fabric_connection} per access connection whose port or
+     * Network Edge device has a uuid (A-side the Cloud Router, Z-side the port with a VLAN variable, or
+     * the device), and a comment for every access item and for every connection that waits for an order.
+     * No port, cross connect, device or Internet Access resource is written. Emits nothing when the plan
+     * has no access.
+     */
+    private void writeAccess(StringBuilder hcl, DeploymentPlan plan, Map<String, String> routerLabels,
+                             Map<String, String> connectionLabels, List<String> usedNames) {
+        if (plan.getAccess() == null && plan.accessConnectionsOrEmpty().isEmpty()) {
+            return;
+        }
+        hcl.append("# === Metro access ===\n");
+        hcl.append("# This configuration creates no port, cross connect, Network Edge device or Internet Access\n");
+        hcl.append("# service. It connects each Cloud Router to the ports and devices that exist.\n");
+        if (plan.getAccess() != null) {
+            for (com.eqixiac.equinix.design.access.PlannedAccessItem item : plan.getAccess().items()) {
+                hcl.append(comment(0, com.eqixiac.equinix.design.access.PlannedAccessItem.label(item.kind()) + " "
+                        + item.name() + " in " + item.metro() + ": " + (item.exists()
+                        ? "existing, uuid " + item.existingUuid() : "to order - " + item.notExecutableReason())));
+            }
+        }
+        hcl.append("\n");
+        for (PlannedConnection conn : plan.accessConnectionsOrEmpty()) {
+            if (!conn.hasAccessEndpoint()) {
+                hcl.append(comment(0, "Access connection " + conn.getName() + " is not written: "
+                        + conn.getZSideAccessItem() + " does not exist yet. Add its uuid to the plan and export again."));
+                hcl.append("\n");
+                continue;
+            }
+            String label = uniqueLabel(connectionLabels.values(), "conn", conn.getName());
+            connectionLabels.put(conn.getName(), label);
+            String vlanVariable = null;
+            if (conn.getZSidePortUuid() != null && conn.getZSideVlanTag() == null) {
+                vlanVariable = uniqueName(usedNames, sanitizeLabel(conn.getName()) + "_vlan");
+                hcl.append("variable \"").append(vlanVariable).append("\" {\n");
+                hcl.append(rawAttr(1, "type", "number"));
+                hcl.append(attr(1, "description", "DOT1Q VLAN tag on the port for access connection " + conn.getName()));
+                hcl.append("}\n\n");
+            }
+            hcl.append("resource \"equinix_fabric_connection\" \"").append(label).append("\" {\n");
+            hcl.append(attr(1, "name", conn.getName()));
+            if (conn.getConnectionType() != null) {
+                hcl.append(attr(1, "type", String.valueOf(conn.getConnectionType())));
+            }
+            hcl.append(rawAttr(1, "bandwidth", String.valueOf(conn.getBandwidthMbps())));
+            writeNotifications(hcl, conn.getNotificationEmails());
+            writeOrderAndProject(hcl, conn);
+            writeMarker(hcl, plan, conn);
+            writeASideRouter(hcl, conn.getASideRouterName(), routerLabels);
+            hcl.append(INDENT).append("z_side {\n");
+            hcl.append(INDENT).append(INDENT).append("access_point {\n");
+            if (conn.getZSidePortUuid() != null) {
+                hcl.append(attr(3, "type", "COLO"));
+                hcl.append(INDENT).append(INDENT).append(INDENT).append("port {\n");
+                hcl.append(attr(4, "uuid", conn.getZSidePortUuid()));
+                hcl.append(INDENT).append(INDENT).append(INDENT).append("}\n");
+                hcl.append(INDENT).append(INDENT).append(INDENT).append("link_protocol {\n");
+                hcl.append(attr(4, "type", "DOT1Q"));
+                hcl.append(rawAttr(4, "vlan_tag", conn.getZSideVlanTag() != null
+                        ? String.valueOf(conn.getZSideVlanTag()) : "var." + vlanVariable));
+                hcl.append(INDENT).append(INDENT).append(INDENT).append("}\n");
+            } else {
+                hcl.append(attr(3, "type", "VD"));
+                hcl.append(INDENT).append(INDENT).append(INDENT).append("virtual_device {\n");
+                hcl.append(attr(4, "type", "EDGE"));
+                hcl.append(attr(4, "uuid", conn.getZSideDeviceUuid()));
+                hcl.append(INDENT).append(INDENT).append(INDENT).append("}\n");
+            }
+            hcl.append(INDENT).append(INDENT).append("}\n");
+            hcl.append(INDENT).append("}\n");
             hcl.append("}\n\n");
         }
     }

@@ -1,7 +1,7 @@
 # MCP server reference
 
 The SDK jar contains an MCP server, `equinix-sdk-java-intelligence`, in
-`com.eqixiac.equinix.mcp.server`. This page is the reference for release 4.0.0; the
+`com.eqixiac.equinix.mcp.server`. This page is the reference for release 4.1.0; the
 [README](../README.md#mcp-server) has the summary. The server is a community project, unrelated to
 the Fabric MCP server Equinix hosts. All latency in tool results is round-trip milliseconds.
 
@@ -23,7 +23,7 @@ the Fabric MCP server Equinix hosts. All latency in tool results is round-trip m
 
 ```bash
 ./mvnw -q package -DskipTests
-java -jar target/equinix-sdk-java-4.0.0-mcp-server.jar --toolsets design,ibx --env-file /path/to/.env.local
+java -jar target/equinix-sdk-java-4.1.0-mcp-server.jar --toolsets design,ibx --env-file /path/to/.env.local
 ```
 
 The host starts the process and speaks JSON-RPC on its stdin and stdout. The server has no network

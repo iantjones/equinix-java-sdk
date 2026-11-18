@@ -86,6 +86,15 @@ public final class PlanSteps {
             steps.add(new PlanStep(key, ResourceKind.PROVIDER_CONNECTION, conn.getName(), deps, null));
         }
 
+        for (PlannedConnection conn : plan.accessConnectionsOrEmpty()) {
+            String key = keyOf(conn);
+            connectionKeyByName.put(conn.getName(), key);
+            List<String> deps = new ArrayList<>();
+            addIfPresent(deps, routerKeyByName.get(conn.getASideRouterName()));
+            steps.add(new PlanStep(key, ResourceKind.ACCESS_CONNECTION, conn.getName(), deps,
+                    conn.hasAccessEndpoint() ? null : "the " + conn.getZSideAccessItem() + " it lands on does not "
+                            + "exist yet: place the order, then put the uuid on the plan"));
+        }
         for (PlannedBackboneLink link : nz(plan.getBackboneLinks())) {
             PlannedConnection conn = link.getConnection();
             String key = conn != null ? keyOf(conn) : "backbone/" + link.getName();
@@ -120,6 +129,12 @@ public final class PlanSteps {
         for (PlannedInterconnect ic : plan.interconnectsOrEmpty()) {
             steps.add(new PlanStep(keyOf(ic), ResourceKind.INTERCONNECT, ic.getName(), List.of(),
                     PlannedInterconnect.NOT_EXECUTABLE_REASON));
+        }
+        if (plan.getAccess() != null) {
+            for (com.eqixiac.equinix.design.access.PlannedAccessItem item : plan.getAccess().items()) {
+                steps.add(new PlanStep("access/" + item.name(), ResourceKind.ACCESS_ITEM, item.name(), List.of(),
+                        item.notExecutableReason()));
+            }
         }
         for (PlannedMulticloudInterconnect link : plan.multicloudLinksOrEmpty()) {
             steps.add(new PlanStep("multicloud/" + link.getName(), ResourceKind.MULTICLOUD_LINK, link.getName(),

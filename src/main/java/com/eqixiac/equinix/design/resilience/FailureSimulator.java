@@ -244,18 +244,23 @@ public final class FailureSimulator {
     }
 
     private static final Set<EdgeKind> SITE_EDGES = Set.of(EdgeKind.SITE_ACCESS, EdgeKind.ROUTER_ATTACHMENT,
-            EdgeKind.BACKBONE);
+            EdgeKind.BACKBONE, EdgeKind.CROSS_CONNECT, EdgeKind.DEVICE_REACH, EdgeKind.ACCESS_CONNECTION);
     private static final Set<EdgeKind> CLOUD_EDGES = Set.of(EdgeKind.ROUTER_ATTACHMENT, EdgeKind.BACKBONE,
-            EdgeKind.CLOUD_CONNECTION, EdgeKind.PROVIDER_LINK);
+            EdgeKind.CLOUD_CONNECTION, EdgeKind.PROVIDER_LINK, EdgeKind.CROSS_CONNECT, EdgeKind.DEVICE_REACH,
+            EdgeKind.ACCESS_CONNECTION);
+
+    private static boolean accessNode(GraphNode n) {
+        return n.kind() == NodeKind.ACCESS_PORT || n.kind() == NodeKind.EDGE_DEVICE;
+    }
 
     private Path sitePath(Failure f, GraphNode site, String host) {
         return shortest(f, site.id(), DesignGraphBuilder.metroId(host),
-                n -> n.kind() == NodeKind.METRO || n.kind() == NodeKind.CLOUD_ROUTER, SITE_EDGES);
+                n -> n.kind() == NodeKind.METRO || n.kind() == NodeKind.CLOUD_ROUTER || accessNode(n), SITE_EDGES);
     }
 
     private Path cloudPath(Failure f, String host, String cloud) {
         return shortest(f, DesignGraphBuilder.metroId(host), DesignGraphBuilder.cloudId(cloud),
-                n -> n.kind() == NodeKind.CLOUD_ROUTER
+                n -> n.kind() == NodeKind.CLOUD_ROUTER || accessNode(n)
                         || (n.kind() == NodeKind.CLOUD_ONRAMP && cloud.equals(n.cloudId())), CLOUD_EDGES);
     }
 

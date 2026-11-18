@@ -33,6 +33,10 @@ public enum ResourceKind {
     INTERCONNECT,
     /** A native provider-to-provider link: planned and priced, created by the customer outside Fabric. */
     MULTICLOUD_LINK,
+    /** A virtual connection from a Cloud Router to a Fabric port or Network Edge device. */
+    ACCESS_CONNECTION,
+    /** A port, cross connect, Network Edge device or Internet Access service; never created by a plan. */
+    ACCESS_ITEM,
     /** Read-side fallback for a value this release does not know. */
     @JsonEnumDefaultValue
     UNKNOWN;
@@ -44,7 +48,7 @@ public enum ResourceKind {
      */
     public boolean isExecutable() {
         return this == CLOUD_ROUTER || this == PROVIDER_CONNECTION || this == BACKBONE_LINK
-                || this == ROUTING_PROTOCOL;
+                || this == ROUTING_PROTOCOL || this == ACCESS_CONNECTION;
     }
 
     /**
@@ -53,6 +57,6 @@ public enum ResourceKind {
      * @return {@code true} for {@link #PROVIDER_CONNECTION} and {@link #BACKBONE_LINK}
      */
     public boolean isConnection() {
-        return this == PROVIDER_CONNECTION || this == BACKBONE_LINK;
+        return this == PROVIDER_CONNECTION || this == BACKBONE_LINK || this == ACCESS_CONNECTION;
     }
 }

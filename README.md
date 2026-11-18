@@ -55,7 +55,7 @@ Java 21 or later (the build is verified on JDK 21 and JDK 27). Maven coordinates
 <dependency>
     <groupId>com.eqixiac.equinix</groupId>
     <artifactId>equinix-sdk-java</artifactId>
-    <version>4.0.0</version>
+    <version>4.1.0</version>
 </dependency>
 ```
 
@@ -69,7 +69,7 @@ These dependencies are declared `<optional>`, so they do not reach your build un
 
 Building from source needs only a JDK: `./mvnw clean verify -DskipTests` downloads the pinned
 Maven, builds the library jar, the sources and Javadoc jars and the runnable
-`target/equinix-sdk-java-4.0.0-mcp-server.jar`. GPG signing runs only with `-Prelease`.
+`target/equinix-sdk-java-4.1.0-mcp-server.jar`. GPG signing runs only with `-Prelease`.
 [CONTRIBUTING.md](CONTRIBUTING.md) has the full build and test reference.
 
 ## Authentication
@@ -550,7 +550,7 @@ Files.writeString(Path.of("decision.md"), record.toMarkdown());
 
 ## MCP server
 
-The runnable jar `target/equinix-sdk-java-4.0.0-mcp-server.jar` is an MCP server
+The runnable jar `target/equinix-sdk-java-4.1.0-mcp-server.jar` is an MCP server
 (`equinix-sdk-java-intelligence`) that an MCP host starts as a subprocess and talks to over stdio.
 It exposes the design engines and a few operations, Network Edge and IBX SmartView reads as
 tools, under the client credentials you give it. It has no network listener. Built on the MCP Java
@@ -576,7 +576,7 @@ The connect scripts merge an `equinix` entry into Claude Desktop's config (keepi
 `env`, arguments and command), back the file up first, and by default write no secret: the entry
 points `cwd` and `--env-file` at the repository's `.env.local`. `--embed-credentials`
 (`-EmbedCredentials` in PowerShell) copies the keys into the config instead. For any other host,
-run `java -jar target/equinix-sdk-java-4.0.0-mcp-server.jar [--toolsets design,ibx] [--env-file path]`.
+run `java -jar target/equinix-sdk-java-4.1.0-mcp-server.jar [--toolsets design,ibx] [--env-file path]`.
 
 The server reads `EQUINIX_ACCESS_KEY` and `EQUINIX_SECRET_KEY` from its environment, then from the
 `--env-file` file or `.env.local` in its working directory. A malformed `.env.local` line stops the

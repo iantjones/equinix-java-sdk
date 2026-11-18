@@ -51,10 +51,10 @@ Growth 30.0%/year over 36 months, amounts in USD. Spec `a5f92102787e`.
 
 | Term | Month 1 | One-time | Total over horizon | Tail | Break-even |
 |---|---:|---:|---:|---:|---:|
-| MONTH_1 | USD 352.45 | USD 0.00 | USD 15579.20 | - | - |
-| MONTH_12 | USD 352.45 | USD 0.00 | USD 15579.20 | - | month 12 |
-| MONTH_24 | USD 352.45 | USD 0.00 | USD 21196.28 | 12 mo, USD 5617.08 | month 24 |
-| MONTH_36 | USD 352.45 | USD 0.00 | USD 15579.20 | - | month 36 |
+| MONTH_1 | USD 351.65 | USD 0.00 | USD 15543.90 | - | - |
+| MONTH_12 | USD 351.65 | USD 0.00 | USD 15543.90 | - | month 12 |
+| MONTH_24 | USD 351.65 | USD 0.00 | USD 21148.26 | 12 mo, USD 5604.36 | month 24 |
+| MONTH_36 | USD 351.65 | USD 0.00 | USD 15543.90 | - | month 36 |
 
 ### Provider hosted-connection fee aws in FR
 
@@ -72,10 +72,10 @@ Growth 30.0%/year over 36 months, amounts in USD. Spec `a5f92102787e`.
 
 | Term | Month 1 | One-time | Total over horizon | Tail | Break-even |
 |---|---:|---:|---:|---:|---:|
-| MONTH_1 | USD 352.45 | USD 0.00 | USD 14885.36 | - | - |
-| MONTH_12 | USD 352.45 | USD 0.00 | USD 14885.36 | - | month 12 |
-| MONTH_24 | USD 352.45 | USD 0.00 | USD 20502.44 | 12 mo, USD 5617.08 | month 24 |
-| MONTH_36 | USD 352.45 | USD 0.00 | USD 14885.36 | - | month 36 |
+| MONTH_1 | USD 351.65 | USD 0.00 | USD 14851.62 | - | - |
+| MONTH_12 | USD 351.65 | USD 0.00 | USD 14851.62 | - | month 12 |
+| MONTH_24 | USD 351.65 | USD 0.00 | USD 20455.98 | 12 mo, USD 5604.36 | month 24 |
+| MONTH_36 | USD 351.65 | USD 0.00 | USD 14851.62 | - | month 36 |
 
 ### Provider hosted-connection fee azure in FR
 
@@ -124,10 +124,10 @@ Growth 30.0%/year over 36 months, amounts in USD. Spec `a5f92102787e`.
 
 | Term | Month 1 | One-time | Total over horizon | Tail | Break-even |
 |---|---:|---:|---:|---:|---:|
-| MONTH_1 | USD 1409.78 | USD 0.00 | USD 50752.08 | - | - |
-| MONTH_12 | USD 1198.32 | USD 0.00 | USD 43139.52 | - | month 11 |
-| MONTH_24 | USD 1127.83 | USD 0.00 | USD 54135.84 | 12 mo, USD 13533.96 | month 20 |
-| MONTH_36 | USD 1057.34 | USD 0.00 | USD 38064.24 | - | month 28 |
+| MONTH_1 | USD 1406.59 | USD 0.00 | USD 50637.24 | - | - |
+| MONTH_12 | USD 1195.60 | USD 0.00 | USD 43041.60 | - | month 11 |
+| MONTH_24 | USD 1125.27 | USD 0.00 | USD 54012.96 | 12 mo, USD 13503.24 | month 20 |
+| MONTH_36 | USD 1054.95 | USD 0.00 | USD 37978.20 | - | month 28 |
 
 ### Fabric Cloud Router STANDARD in SG
 
@@ -164,7 +164,7 @@ Growth 30.0%/year over 36 months, amounts in USD. Spec `a5f92102787e`.
 |---|---:|---:|---:|---:|---:|
 | MONTH_1 | USD 279.00 | USD 0.00 | USD 15108.42 | - | - |
 
-**On-demand total over the horizon:** USD 668978.72
+**On-demand total over the horizon:** USD 668794.84
 
 - Assumption: Month n carries today's traffic x (1 + 0.3)^((n - 1)/12); capacity is the next Fabric tier at or above the projected Mbps
 - Assumption: A term renews at the same term to the horizon; an upgrade within a term is billed at that term's price for the new tier; months committed beyond the horizon are counted at the last month's price

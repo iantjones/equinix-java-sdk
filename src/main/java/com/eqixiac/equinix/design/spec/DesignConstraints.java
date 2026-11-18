@@ -72,4 +72,29 @@ public record DesignConstraints(List<String> requiredMetros, List<String> exclud
     public static DesignConstraints none() {
         return new DesignConstraints(null, null, null, null, null, null, null, null, null, null, null, null);
     }
+
+    /**
+     * The constructor as it was before {@code allowAccessMetros} existed; access metros are not allowed.
+     *
+     * @param requiredMetros    metro codes every design must include
+     * @param excludedMetros    metro codes no design may include
+     * @param requiredRegions   regions every design must have at least one metro in
+     * @param excludedRegions   regions no design may use
+     * @param complianceZones   regulatory zones the design must stay within
+     * @param geoZones          Fabric geo scopes traffic must stay inside
+     * @param minimumRedundancy the least redundancy acceptable, or {@code null}
+     * @param maxLatencyMs      round-trip latency ceiling in ms, or {@code null}
+     * @param minMetros         fewest metros a design may use, or {@code null}
+     * @param maxMetros         most metros a design may use, or {@code null}
+     * @param minSurvivalPct    least share of service, in percent, that must survive the worst single
+     *                          failure, or {@code null}
+     */
+    public DesignConstraints(List<String> requiredMetros, List<String> excludedMetros,
+                             List<Region> requiredRegions, List<Region> excludedRegions,
+                             List<ComplianceZone> complianceZones, List<String> geoZones,
+                             RedundancyTier minimumRedundancy, Double maxLatencyMs, Integer minMetros,
+                             Integer maxMetros, Double minSurvivalPct) {
+        this(requiredMetros, excludedMetros, requiredRegions, excludedRegions, complianceZones, geoZones,
+                minimumRedundancy, maxLatencyMs, minMetros, maxMetros, minSurvivalPct, null);
+    }
 }

@@ -1,6 +1,6 @@
 # Design platform reference
 
-This page documents `com.eqixiac.equinix.design` in release 4.0.0. The [README](../../README.md#design-platform)
+This page documents `com.eqixiac.equinix.design` in release 4.1.0. The [README](../../README.md#design-platform)
 has the summary. All latency on this page is round-trip milliseconds. Prices are live Equinix list
 prices, dated reference figures copied from public pages, or estimates; every cost line states which.
 None of them is a quote. Availability figures are planning assumptions, not SLAs.
@@ -397,7 +397,15 @@ contractual figures. `toMarkdown()` includes a Mermaid diagram of the graph.
 single-element failure leaves less than that share of service. `ResiliencePlugin` adds the
 `simulated_resilience` objective and the `geo_zones_failover` constraint.
 
-Limits: failures are of whole elements, not partial degradation; backbone capacity is unknown and
+With `.access(accessPlan)` the graph also holds each Fabric port, Network Edge device, cross connect and
+access connection. A metro then joins its Cloud Router through its ports or devices, and each of them
+is a single-element failure in the N-1 set. An IBX that holds ports of the design is a shared-fate
+scenario, reported and not counted in N-1. An item to order is simulated as planned. Assumed
+availabilities: access port 0.9999, cross connect 0.9999, Network Edge device 0.999, access connection
+0.9995. Without an access plan a metro's attachment to its router is assumed and never fails on its own.
+
+Limits: failures are of whole elements, not partial degradation; cages, cabinets and power are not
+modelled; backbone capacity is unknown and
 does not constrain the simulation; a second-router remediation is not re-simulated.
 
 ## Estate analysis
@@ -506,12 +514,18 @@ the fibre floor in `rttFloorMs` and the basis in `rttBasis`.
 ## Connectivity and metro access
 
 ```java
+AccessInventory inventory = AccessInventory.read(session, projectId, accountNumber);   // GET and search only
 ConnectivityPlan connectivity = Design.over(fabric).connectivity(spec)
         .optimization(result)
         .peering(peers)                                   // optional
         .availability(ProductAvailability.read(session))  // two GET requests
+        .inventory(inventory)                             // optional: existing ports and devices
+        .usePorts("DC", portUuidA, portUuidB)             // optional: name the ports yourself
         .plan();
-System.out.println(connectivity.toMarkdown());
+AccessPlan access = connectivity.accessPlan();
+
+DeploymentPlan plan = fabric.deploymentWizard(result).designSpec(spec).access(access).plan();
+ResilienceReport report = ResilienceAnalyzer.forSpec(fabric, spec).optimization(result).access(access).run();
 ```
 
 `ConnectivityPlanner` applies fixed rules. It reads nothing itself and orders nothing.
@@ -522,16 +536,54 @@ System.out.println(connectivity.toMarkdown());
 | A peer | Public peering at an Internet Exchange (IX) when Peering Intelligence finds it at an IX in a metro of the design; otherwise a private Fabric connection when it publishes a service profile there; otherwise Internet Access. Undecided without a Peering Intelligence result |
 | General internet traffic | Internet Access in each metro of the design that offers it |
 
-| Metro | Rule |
-|---|---|
-| Has a site of role `DATA_CENTER` | Two Fabric ports in one redundancy group, each with its own cross connect from the cage |
-| Otherwise, Network Edge is offered there | A redundant pair of Network Edge devices |
-| Otherwise | The Cloud Router alone |
+Metro access is decided by `AccessPlanner` (`design.access`), which `ConnectivityPlanner` calls. For
+each metro the first rule that applies wins:
 
-Network Edge can also be used in a metro where you have a cage; the first rule prefers the ports you
-can cross-connect to. The decisions describe what would be ordered. They are not priced, simulated,
-or part of a `DeploymentPlan`: ports, cross connects, Network Edge devices, Internet Access services
-and IX membership are ordered through their own clients.
+| Order | Condition | Access |
+|---:|---|---|
+| 1 | Ports were named with `usePorts` | Those ports. A UUID the inventory does not hold is `ASSUMED` to exist |
+| 2 | Devices were named with `useDevices` | Those Network Edge devices, in the same way |
+| 3 | The inventory has usable ports in the metro with room for the access connection | A pair in one redundancy group, else two ports on different Fabric devices, else one port and an order for the second |
+| 4 | A site of role `DATA_CENTER` is in the metro | An order for two ports in one redundancy group, each with a cross connect |
+| 5 | The inventory has usable Network Edge devices in the metro | A device and its redundant partner, else any two, else one and an order for the second |
+| 6 | Network Edge is offered in the metro | An order for a redundant device pair |
+| 7 | Otherwise | The Cloud Router alone |
+
+`AccessInventory.read` reads Fabric ports for the project id and Network Edge devices for the account
+number. A scope that is not given is not read, because an API client can see resources of other
+projects and accounts. A port is usable when its state is `ACTIVE` or `PROVISIONED`; a device when its
+status is `PROVISIONED`.
+
+Each port or device gets one access connection to the Cloud Router of its metro, sized as the cloud
+bandwidth the placement lands in the metro, rounded up to a Fabric tier (1,000 Mbps when the placement
+sizes nothing there). Findings state a metro entered through one port or device, two ports in one IBX,
+and a port slower than its access connection.
+
+What the Deployment Wizard does with `access(...)`:
+
+- The plan lists every access item (`DeploymentPlan.getAccess()`): Fabric ports, cross connects,
+  Network Edge devices and Internet Access services, each `EXISTING`, `ASSUMED` or `ORDER`.
+- The plan has one access connection per port or device (`getAccessConnections()`, purpose `ACCESS`).
+  Execution creates the ones whose port or device has a UUID: A-side the Cloud Router, Z-side the port
+  with the VLAN tag from `ExecutionInputs.vlanTag(connectionName, tag)`, or the device. Each gets a
+  `DIRECT` and a `BGP` routing protocol.
+- The wizard uses only the resources the plan names. It orders no port, cross connect, Network Edge
+  device or Internet Access service; those steps are `NOT_EXECUTABLE` with the reason. An access
+  connection to an item that is still an order is `NOT_EXECUTABLE` until the UUID is on the plan.
+- Pricing: access connections are priced like any Fabric connection. Cross connects to order use the
+  rate card's colocation figure when it has one. Ports, Network Edge devices and Internet Access have
+  no rate-card price and are listed as not priced. `monthlyTotal` and `designMonthly` keep the scope
+  the optimizer prices; `accessConnectionMonthly`, `accessItemMonthly` and `designWithAccessMonthly`
+  add the access.
+- `TerraformExporter` writes one `equinix_fabric_connection` per access connection that can be created,
+  and comments for the items and for the connections that wait.
+
+IX membership is not a plan item. Colocation (cage, cabinets, power) is not a plan item either: it
+appears as a site of the spec, as cost lines in the TCO comparison, and, for ports, as the IBX in the
+failure simulation.
+
+Not verified against the live service: the create body of an access connection (Z-side `COLO` port or
+`VD` device) follows the Fabric v4 specification and is tested with WireMock only.
 
 ## Design Decision Record
 

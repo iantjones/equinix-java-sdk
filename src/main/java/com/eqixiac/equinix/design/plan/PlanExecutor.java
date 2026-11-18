@@ -277,7 +277,8 @@ public final class PlanExecutor {
             }
             switch (step.kind()) {
                 case CLOUD_ROUTER -> createRouter(step, router(step.key()));
-                case PROVIDER_CONNECTION, BACKBONE_LINK -> createConnection(step, connection(step.key()));
+                case PROVIDER_CONNECTION, BACKBONE_LINK, ACCESS_CONNECTION ->
+                        createConnection(step, connection(step.key()));
                 case ROUTING_PROTOCOL -> createProtocol(step, protocol(step.key()));
                 default -> results.add(new StepResult(step.key(), step.kind(), step.name(), StepAction.NOT_EXECUTABLE,
                         null, "not an executable kind"));
@@ -426,7 +427,9 @@ public final class PlanExecutor {
             }
         }
         final String group = liveGroup;
-        Supplier<ConnectionOperator.ConnectionBuilder> body = () -> marked(step, planned.isBackboneLink()
+        Supplier<ConnectionOperator.ConnectionBuilder> body = () -> marked(step, planned.isAccessConnection()
+                ? ConnectionBodies.accessBody(fabric.connections(), resolved, aSide)
+                : planned.isBackboneLink()
                 ? ConnectionBodies.backboneBody(fabric.connections(), resolved, aSide, zSide)
                 : onPort ? ConnectionBodies.providerBodyOnPort(fabric.connections(), resolved, resolved.getASidePortUuid(), group)
                 : ConnectionBodies.providerBody(fabric.connections(), resolved, aSide, group));
@@ -629,6 +632,18 @@ public final class PlanExecutor {
                         .recoverable(false).build());
             }
         }
+        for (PlannedConnection conn : plan.accessConnectionsOrEmpty()) {
+            if (uuidByKey.containsKey(PlanSteps.keyOf(conn)) || conn.getZSidePortUuid() == null) {
+                continue;
+            }
+            Integer vlan = conn.getZSideVlanTag() != null ? conn.getZSideVlanTag() : inputs.vlanTagFor(conn.getName());
+            if (vlan == null) {
+                missing.add(ProvisioningError.builder().resourceType("AccessConnection").resourceName(conn.getName())
+                        .reason("missing required VLAN tag for the port side - supply it via ExecutionInputs "
+                                + "before executing")
+                        .recoverable(false).build());
+            }
+        }
         return missing;
     }
 
@@ -655,7 +670,7 @@ public final class PlanExecutor {
     }
 
     private PlannedConnection connection(String key) {
-        for (PlannedConnection c : nz(plan.getProviderConnections())) {
+        for (PlannedConnection c : plan.routerConnections()) {
             if (PlanSteps.keyOf(c).equals(key)) {
                 return c;
             }
@@ -682,7 +697,7 @@ public final class PlanExecutor {
     }
 
     private String connectionKeyByName(String name) {
-        for (PlannedConnection c : nz(plan.getProviderConnections())) {
+        for (PlannedConnection c : plan.routerConnections()) {
             if (c.getName().equals(name)) {
                 return PlanSteps.keyOf(c);
             }
@@ -710,7 +725,7 @@ public final class PlanExecutor {
         for (PlannedCloudRouter r : nz(plan.getCloudRouters())) {
             routerKeys.put(r.getName(), PlanSteps.keyOf(r));
         }
-        List<PlannedConnection> all = new ArrayList<>(nz(plan.getProviderConnections()));
+        List<PlannedConnection> all = new ArrayList<>(plan.routerConnections());
         nz(plan.getBackboneLinks()).forEach(l -> {
             if (l.getConnection() != null) {
                 all.add(l.getConnection());
@@ -757,6 +772,8 @@ public final class PlanExecutor {
             case ROUTING_PROTOCOL -> "RoutingProtocol";
             case INTERCONNECT -> "Interconnect";
             case MULTICLOUD_LINK -> "MulticloudInterconnect";
+            case ACCESS_CONNECTION -> "AccessConnection";
+            case ACCESS_ITEM -> "AccessItem";
             default -> "Unknown";
         };
     }
@@ -770,6 +787,8 @@ public final class PlanExecutor {
             case "Connection" -> ResourceKind.PROVIDER_CONNECTION;
             case "BackboneLink" -> ResourceKind.BACKBONE_LINK;
             case "RoutingProtocol" -> ResourceKind.ROUTING_PROTOCOL;
+            case "AccessConnection" -> ResourceKind.ACCESS_CONNECTION;
+            case "AccessItem" -> ResourceKind.ACCESS_ITEM;
             default -> ResourceKind.UNKNOWN;
         };
     }

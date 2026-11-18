@@ -85,7 +85,18 @@ public final class ScenarioCatalog {
             list.add(new FailureScenario(onramp.id(), ScenarioKind.CLOUD_ONRAMP, "loss of the " + onramp.cloudId()
                     + " on-ramp in " + onramp.metro(), List.of(onramp.id()), null, null));
         }
-        for (EdgeKind kind : List.of(EdgeKind.CLOUD_CONNECTION, EdgeKind.SITE_ACCESS, EdgeKind.BACKBONE)) {
+        Map<String, List<String>> facilities = new TreeMap<>();
+        for (NodeKind kind : List.of(NodeKind.ACCESS_PORT, NodeKind.EDGE_DEVICE)) {
+            for (GraphNode element : graph.nodes(kind)) {
+                list.add(new FailureScenario(element.id(), ScenarioKind.ACCESS_ELEMENT, "loss of " + element.label()
+                        + " in " + element.metro(), List.of(element.id()), null, null));
+                if (element.facility() != null) {
+                    facilities.computeIfAbsent(element.facility(), k -> new ArrayList<>()).add(element.id());
+                }
+            }
+        }
+        for (EdgeKind kind : List.of(EdgeKind.CLOUD_CONNECTION, EdgeKind.SITE_ACCESS, EdgeKind.BACKBONE,
+                EdgeKind.CROSS_CONNECT, EdgeKind.ACCESS_CONNECTION)) {
             for (GraphEdge e : graph.edges(kind)) {
                 list.add(new FailureScenario(e.id(), ScenarioKind.CONNECTION, describe(graph, e), null,
                         List.of(e.id()), null));
@@ -109,6 +120,10 @@ public final class ScenarioCatalog {
                             + " (clouds " + String.join(", ",
                     r.getValue().stream().map(id -> id.substring("cloud:".length())).toList()) + ")",
                     r.getValue(), null, null));
+        }
+        for (Map.Entry<String, List<String>> f : facilities.entrySet()) {
+            list.add(new FailureScenario("ibx:" + f.getKey(), ScenarioKind.FACILITY, "loss of IBX " + f.getKey()
+                    + " (" + f.getValue().size() + " port(s) of the design)", f.getValue(), null, null));
         }
         Map<Region, List<String>> equinix = new TreeMap<>();
         for (GraphNode n : graph.nodes()) {
@@ -176,6 +191,8 @@ public final class ScenarioCatalog {
                     + e.id().substring("conn:".length());
             case SITE_ACCESS -> "loss of the access circuit " + e.id().substring("access:".length());
             case BACKBONE -> "loss of the backbone link " + e.id().substring("backbone:".length());
+            case CROSS_CONNECT -> "loss of the cross connect to " + e.id().substring("xc:".length());
+            case ACCESS_CONNECTION -> "loss of the access connection of " + e.id().substring("accessconn:".length());
             default -> "loss of " + e.id();
         };
     }

@@ -68,6 +68,11 @@ public final class AvailabilityModel {
                 }
                 double branch = assumptions.of(ElementType.METRO);
                 StringBuilder f = new StringBuilder("metro " + host);
+                Double entry = access(graph, assumptions, host);
+                if (entry != null) {
+                    branch *= entry;
+                    f.append(String.format(Locale.ROOT, " x access %.6f", entry));
+                }
                 if (!p.clouds().isEmpty()) {
                     branch *= assumptions.of(ElementType.CLOUD_ROUTER);
                     f.append(" x router ").append(host);
@@ -132,6 +137,29 @@ public final class AvailabilityModel {
         double v = a.of(ElementType.BACKBONE_LINK) * a.of(ElementType.METRO) * a.of(ElementType.CLOUD_ROUTER) * local;
         return new Leg(v, "backbone to " + m + " x metro " + m + " x router " + m + " x conn " + cloud + "@" + m
                 + " x on-ramp", true);
+    }
+
+    /**
+     * The availability of a metro's access when the graph draws it from an access plan: the parallel
+     * composition of its ports (port, cross connect, access connection in series) and Network Edge
+     * devices (device, access connection in series). {@code null} when the metro has the assumed attachment.
+     */
+    private static Double access(DesignGraph graph, AvailabilityAssumptions a, String host) {
+        double allFail = 1.0;
+        boolean any = false;
+        for (NodeKind kind : List.of(NodeKind.ACCESS_PORT, NodeKind.EDGE_DEVICE)) {
+            for (GraphNode n : graph.nodes(kind)) {
+                if (!host.equals(n.metro())) {
+                    continue;
+                }
+                any = true;
+                double path = a.of(ElementType.ACCESS_CONNECTION) * (kind == NodeKind.ACCESS_PORT
+                        ? a.of(ElementType.ACCESS_PORT) * a.of(ElementType.CROSS_CONNECT)
+                        : a.of(ElementType.EDGE_DEVICE));
+                allFail *= 1 - path;
+            }
+        }
+        return any ? 1 - allFail : null;
     }
 
     private static double siteAccess(DesignGraph graph, AvailabilityAssumptions a) {

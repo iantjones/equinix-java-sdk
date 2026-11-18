@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.1.0] - 2026-11-17
+
+No source-breaking change. Results of existing designs change as listed under Changed.
+
 ### Added
 - `EndToEndDesignExample` (test sources, with a `main` method) and `docs/design/end-to-end-example.md`:
   one design carried through every design engine, the connectivity and access decisions, the
@@ -17,8 +21,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   over Fabric and a Cloud Router, Internet Exchange (IX), private Fabric connection, or Internet
   Access) and how each metro is entered (redundant ports with cross connects, a Network Edge pair, or
   the Cloud Router alone). `ProductAvailability.read(session)` reads where Network Edge and Internet
-  Access are offered. The result (`ConnectivityPlan`) describes what would be ordered; it orders
-  nothing and is not priced, simulated, or part of a `DeploymentPlan`.
+  Access are offered. The planner orders nothing.
+- `design.access`: metro access as part of the design. `AccessInventory.read(session, projectId,
+  accountNumber)` reads the Fabric ports of a project and the Network Edge devices of an account.
+  `AccessPlanner` (also behind `ConnectivityPlanner.inventory(...)`, `usePorts(...)` and
+  `useDevices(...)`) uses a suitable existing port or device before it plans an order, and returns an
+  `AccessPlan` of ports, cross connects, devices, Internet Access services and one access connection
+  per port or device to the Cloud Router. `ConnectivityPlan.accessPlan()` carries it.
+- `DeploymentWizard.Builder.access(accessPlan)`: the plan lists the access items
+  (`DeploymentPlan.getAccess()`) and the access connections (`getAccessConnections()`, purpose
+  `ACCESS`). Execution creates the access connections whose port or device has a UUID, with their
+  routing protocols; the VLAN tag for a port comes from `ExecutionInputs`. It orders no port, cross
+  connect, device or Internet Access service: those steps and the connections that wait for an order
+  are `NOT_EXECUTABLE` with the reason. New `ResourceKind` values `ACCESS_CONNECTION` and
+  `ACCESS_ITEM`; `PlanPricing.accessConnectionMonthly`, `accessLines`, `accessItemMonthly`,
+  `accessUnpriced` and `designWithAccessMonthly`. The Terraform export and the topology diagram include
+  the access. A plan built without `access(...)` is unchanged, including its `planId`.
+- `ResilienceAnalyzer.access(accessPlan)`: each port, cross connect, Network Edge device and access
+  connection is a single-element failure, and an IBX that holds ports of the design is a shared-fate
+  scenario. New `NodeKind`, `EdgeKind`, `ElementType` and `ScenarioKind` values, and
+  `GraphNode.facility`.
 - `WorkloadIntent.sites`: the site labels that use a workload. Placement and `maxLatencyMs` then
   consider only those sites, so a regional workload can carry a regional latency limit. Omitted from
   JSON and the fingerprint when empty.
@@ -32,6 +54,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `servesRequestedRegion`, `ProviderCatalog.otherRegionOnly(cloudId)`,
   `DesignContext.servesRequestedRegion(metro, cloudId)`, `WorkloadPlacer.sitesOf(...)` and
   `accessMetros(...)`.
+- `DesignConstraints` keeps its eleven-argument constructor beside the new twelve-component record.
 
 ### Changed
 - **The optimizer's cost now includes the backbone between Cloud Routers**, priced as the full mesh

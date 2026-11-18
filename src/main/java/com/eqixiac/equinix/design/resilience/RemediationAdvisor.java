@@ -75,6 +75,12 @@ final class RemediationAdvisor {
                         topology(o);
                     }
                 }
+                case ACCESS_ELEMENT -> add("Add a second port or Network Edge device in "
+                        + graph.node(s.failedNodes().get(0)).map(GraphNode::metro).orElse("the metro")
+                        + ", in a redundant pair, with its own access connection", s.id(),
+                        "the metro is entered through one element", false);
+                case FACILITY -> add("Put the ports of the metro in two IBXs: " + s.description(), s.id(),
+                        "every port of the design in the metro is in one IBX", false);
                 case CLOUD_REGION -> add("Add a second region of the affected cloud as another cloud in the spec and "
                         + "connect to it: " + s.description() + " is outside anything the Equinix design can "
                         + "protect", s.id(), "a cloud-provider region outage takes every on-ramp to it", false);
