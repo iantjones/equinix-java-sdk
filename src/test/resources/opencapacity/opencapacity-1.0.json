@@ -1,0 +1,5014 @@
+{
+  "openapi" : "3.1.0",
+  "info" : {
+    "title" : "OpenCapacity API",
+    "version" : "1.0.0-draft.1",
+    "summary" : "A provider-neutral API for data center capacity queries, demand signals, and subscriptions.",
+    "description" : "Status: draft proposal. No provider implements this API. It is not a product or a\ncommitment of any data center provider.\n\nA customer describes the capacity it needs as a requirement and uses it in three ways:\n\n- Query: ask whether a requirement can be met. The provider returns a graded answer.\n- Signal: record a requirement with the provider as a standing need. The customer can\n  amend, withdraw, or delete it.\n- Subscription: receive an event when the answer to a requirement changes.\n\nGraded disclosure. Every answer element is one of AVAILABLE, POSSIBLE, UNAVAILABLE, or NOT_DISCLOSED.\nDensity, cabinet count, power, and timing are returned as bands, and each band is\noptional. A provider that returns only a grade per location conforms.\n\nAn answer is an indication. It is not an offer, a quote, or a reservation, and it\nexpires at `validUntil`.\n\nCompatibility rules for clients: ignore unknown properties, treat an unknown Grade\nvalue as NOT_DISCLOSED, and treat any other unknown enumeration value as unknown\nwithout failing.\n",
+    "license" : {
+      "name" : "Apache 2.0",
+      "identifier" : "Apache-2.0"
+    }
+  },
+  "servers" : [ {
+    "url" : "https://{host}/capacity/v1",
+    "description" : "Each provider hosts the API under its own host name.",
+    "variables" : {
+      "host" : {
+        "default" : "provider.example"
+      }
+    }
+  } ],
+  "tags" : [ {
+    "name" : "Discovery",
+    "description" : "What the provider supports and which locations it names."
+  }, {
+    "name" : "Queries",
+    "description" : "One-time capacity questions."
+  }, {
+    "name" : "Signals",
+    "description" : "Standing statements of need that the customer can amend or delete."
+  }, {
+    "name" : "Subscriptions",
+    "description" : "Event delivery when an answer changes."
+  } ],
+  "security" : [ {
+    "oauth2" : [ ]
+  } ],
+  "paths" : {
+    "/capabilities" : {
+      "get" : {
+        "tags" : [ "Discovery" ],
+        "operationId" : "getCapabilities",
+        "summary" : "Read what this provider supports",
+        "description" : "Discovery document. It needs no authentication so that a client can find the\ntoken endpoint. It states the conformance classes, the location levels, the\nrecognized features, and which optional answer elements the provider populates.\n",
+        "security" : [ ],
+        "responses" : {
+          "200" : {
+            "description" : "The provider's capabilities.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Capabilities"
+                },
+                "examples" : {
+                  "default" : {
+                    "$ref" : "#/components/examples/Capabilities"
+                  }
+                }
+              }
+            }
+          },
+          "default" : {
+            "$ref" : "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/locations" : {
+      "get" : {
+        "tags" : [ "Discovery" ],
+        "operationId" : "listLocations",
+        "summary" : "List the locations the provider names",
+        "description" : "Returns the regions, countries, metros, campuses, and facilities that the\nprovider accepts in a requirement. A provider can omit campuses and facilities\nit does not name publicly.\n",
+        "security" : [ {
+          "oauth2" : [ "capacity.query" ]
+        } ],
+        "parameters" : [ {
+          "name" : "level",
+          "in" : "query",
+          "schema" : {
+            "$ref" : "#/components/schemas/LocationLevel"
+          }
+        }, {
+          "name" : "within",
+          "in" : "query",
+          "description" : "Return only locations inside this location code, for example a country code.",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "$ref" : "#/components/parameters/Limit"
+        }, {
+          "$ref" : "#/components/parameters/Cursor"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "A page of locations.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/LocationPage"
+                }
+              }
+            }
+          },
+          "default" : {
+            "$ref" : "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/queries" : {
+      "post" : {
+        "tags" : [ "Queries" ],
+        "operationId" : "queryCapacity",
+        "summary" : "Ask whether a requirement can be met",
+        "description" : "Evaluates the requirement and returns a graded answer with one result per\nlocation. The provider does not keep the query as a standing need. To record a\nneed, create a signal.\n\nThe provider can answer at a coarser location level than the one requested. A\nlocation the provider does not serve returns grade UNAVAILABLE with reason\nLOCATION_NOT_SERVED. It is not an error.\n",
+        "security" : [ {
+          "oauth2" : [ "capacity.query" ]
+        } ],
+        "requestBody" : {
+          "required" : true,
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/QueryRequest"
+              },
+              "examples" : {
+                "cabinetsAndDensity" : {
+                  "$ref" : "#/components/examples/QueryCabinetsAndDensity"
+                },
+                "powerOnly" : {
+                  "$ref" : "#/components/examples/QueryPowerOnly"
+                }
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "description" : "The graded answer.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CapacityAnswer"
+                },
+                "examples" : {
+                  "gradeOnly" : {
+                    "$ref" : "#/components/examples/AnswerGradeOnly"
+                  },
+                  "banded" : {
+                    "$ref" : "#/components/examples/AnswerBanded"
+                  }
+                }
+              }
+            }
+          },
+          "422" : {
+            "$ref" : "#/components/responses/Problem"
+          },
+          "429" : {
+            "$ref" : "#/components/responses/TooManyRequests"
+          },
+          "default" : {
+            "$ref" : "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/signals" : {
+      "post" : {
+        "tags" : [ "Signals" ],
+        "operationId" : "createSignal",
+        "summary" : "Record a requirement as a standing need",
+        "security" : [ {
+          "oauth2" : [ "capacity.signal" ]
+        } ],
+        "parameters" : [ {
+          "$ref" : "#/components/parameters/IdempotencyKey"
+        } ],
+        "requestBody" : {
+          "required" : true,
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SignalRequest"
+              },
+              "examples" : {
+                "default" : {
+                  "$ref" : "#/components/examples/SignalRequest"
+                }
+              }
+            }
+          }
+        },
+        "responses" : {
+          "201" : {
+            "description" : "The signal was stored. Its state is RECEIVED.",
+            "headers" : {
+              "ETag" : {
+                "$ref" : "#/components/headers/ETag"
+              },
+              "Location" : {
+                "description" : "URL of the new signal.",
+                "schema" : {
+                  "type" : "string",
+                  "format" : "uri-reference"
+                }
+              }
+            },
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Signal"
+                }
+              }
+            }
+          },
+          "422" : {
+            "$ref" : "#/components/responses/Problem"
+          },
+          "default" : {
+            "$ref" : "#/components/responses/Problem"
+          }
+        }
+      },
+      "get" : {
+        "tags" : [ "Signals" ],
+        "operationId" : "listSignals",
+        "summary" : "List your signals",
+        "security" : [ {
+          "oauth2" : [ "capacity.signal" ]
+        } ],
+        "parameters" : [ {
+          "name" : "state",
+          "in" : "query",
+          "schema" : {
+            "$ref" : "#/components/schemas/SignalState"
+          }
+        }, {
+          "$ref" : "#/components/parameters/Limit"
+        }, {
+          "$ref" : "#/components/parameters/Cursor"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "A page of signals.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SignalPage"
+                }
+              }
+            }
+          },
+          "default" : {
+            "$ref" : "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/signals/{signalId}" : {
+      "parameters" : [ {
+        "$ref" : "#/components/parameters/SignalId"
+      } ],
+      "get" : {
+        "tags" : [ "Signals" ],
+        "operationId" : "getSignal",
+        "summary" : "Read one signal",
+        "security" : [ {
+          "oauth2" : [ "capacity.signal" ]
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "The signal.",
+            "headers" : {
+              "ETag" : {
+                "$ref" : "#/components/headers/ETag"
+              }
+            },
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Signal"
+                }
+              }
+            }
+          },
+          "404" : {
+            "$ref" : "#/components/responses/Problem"
+          },
+          "default" : {
+            "$ref" : "#/components/responses/Problem"
+          }
+        }
+      },
+      "put" : {
+        "tags" : [ "Signals" ],
+        "operationId" : "replaceSignal",
+        "summary" : "Amend a signal",
+        "description" : "Replaces the customer-supplied part of the signal. The revision increases by one\nand the state returns to RECEIVED. Amending a WITHDRAWN signal makes it active\nagain. A signal in state CLOSED or EXPIRED cannot be amended and returns 409.\n",
+        "security" : [ {
+          "oauth2" : [ "capacity.signal" ]
+        } ],
+        "parameters" : [ {
+          "$ref" : "#/components/parameters/IfMatch"
+        } ],
+        "requestBody" : {
+          "required" : true,
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SignalRequest"
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "description" : "The amended signal.",
+            "headers" : {
+              "ETag" : {
+                "$ref" : "#/components/headers/ETag"
+              }
+            },
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Signal"
+                }
+              }
+            }
+          },
+          "404" : {
+            "$ref" : "#/components/responses/Problem"
+          },
+          "409" : {
+            "$ref" : "#/components/responses/Problem"
+          },
+          "412" : {
+            "$ref" : "#/components/responses/Problem"
+          },
+          "422" : {
+            "$ref" : "#/components/responses/Problem"
+          },
+          "default" : {
+            "$ref" : "#/components/responses/Problem"
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [ "Signals" ],
+        "operationId" : "deleteSignal",
+        "summary" : "Delete a signal",
+        "description" : "Removes the signal from the API. Later reads return 404, and it no longer\nappears in lists. Subscriptions that follow the signal move to state EXPIRED. To\nend the need and keep the record, withdraw the signal instead.\n\nThis specification does not say what a provider keeps in its own records after a\ndelete. That is governed by the agreement between the provider and the customer.\n",
+        "security" : [ {
+          "oauth2" : [ "capacity.signal" ]
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "The signal was deleted."
+          },
+          "404" : {
+            "$ref" : "#/components/responses/Problem"
+          },
+          "default" : {
+            "$ref" : "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/signals/{signalId}/withdraw" : {
+      "parameters" : [ {
+        "$ref" : "#/components/parameters/SignalId"
+      } ],
+      "post" : {
+        "tags" : [ "Signals" ],
+        "operationId" : "withdrawSignal",
+        "summary" : "Withdraw a signal and keep the record",
+        "description" : "Moves the signal to state WITHDRAWN. It is no longer an active need, and it stays\nreadable and listed until it is deleted. The request has no body. Withdrawing a\nsignal that is already WITHDRAWN returns it unchanged. A signal in state CLOSED\nor EXPIRED returns 409.\n\nSubscriptions that follow the signal receive a `signal.updated` event and no\nfurther answer events while it is withdrawn. Amend the signal to make it active\nagain.\n",
+        "security" : [ {
+          "oauth2" : [ "capacity.signal" ]
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "The withdrawn signal.",
+            "headers" : {
+              "ETag" : {
+                "$ref" : "#/components/headers/ETag"
+              }
+            },
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Signal"
+                }
+              }
+            }
+          },
+          "404" : {
+            "$ref" : "#/components/responses/Problem"
+          },
+          "409" : {
+            "$ref" : "#/components/responses/Problem"
+          },
+          "default" : {
+            "$ref" : "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/subscriptions" : {
+      "post" : {
+        "tags" : [ "Subscriptions" ],
+        "operationId" : "createSubscription",
+        "summary" : "Subscribe to the answer for a requirement or a signal",
+        "description" : "Creates a subscription. With WEBHOOK delivery the state is PENDING_VERIFICATION\nuntil the endpoint echoes the verification challenge. With PULL delivery the\nstate is ACTIVE at once. The first event after activation carries the current\nanswer with reason INITIAL.\n",
+        "security" : [ {
+          "oauth2" : [ "capacity.subscribe" ]
+        } ],
+        "parameters" : [ {
+          "$ref" : "#/components/parameters/IdempotencyKey"
+        } ],
+        "requestBody" : {
+          "required" : true,
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SubscriptionRequest"
+              },
+              "examples" : {
+                "webhook" : {
+                  "$ref" : "#/components/examples/SubscriptionWebhook"
+                }
+              }
+            }
+          }
+        },
+        "responses" : {
+          "201" : {
+            "description" : "The subscription was created. For WEBHOOK delivery this response is the only\none that contains `delivery.signingSecret`.\n",
+            "headers" : {
+              "ETag" : {
+                "$ref" : "#/components/headers/ETag"
+              }
+            },
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Subscription"
+                }
+              }
+            }
+          },
+          "422" : {
+            "$ref" : "#/components/responses/Problem"
+          },
+          "default" : {
+            "$ref" : "#/components/responses/Problem"
+          }
+        }
+      },
+      "get" : {
+        "tags" : [ "Subscriptions" ],
+        "operationId" : "listSubscriptions",
+        "summary" : "List your subscriptions",
+        "security" : [ {
+          "oauth2" : [ "capacity.subscribe" ]
+        } ],
+        "parameters" : [ {
+          "$ref" : "#/components/parameters/Limit"
+        }, {
+          "$ref" : "#/components/parameters/Cursor"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "A page of subscriptions.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SubscriptionPage"
+                }
+              }
+            }
+          },
+          "default" : {
+            "$ref" : "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/subscriptions/{subscriptionId}" : {
+      "parameters" : [ {
+        "$ref" : "#/components/parameters/SubscriptionId"
+      } ],
+      "get" : {
+        "tags" : [ "Subscriptions" ],
+        "operationId" : "getSubscription",
+        "summary" : "Read one subscription",
+        "security" : [ {
+          "oauth2" : [ "capacity.subscribe" ]
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "The subscription.",
+            "headers" : {
+              "ETag" : {
+                "$ref" : "#/components/headers/ETag"
+              }
+            },
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Subscription"
+                }
+              }
+            }
+          },
+          "404" : {
+            "$ref" : "#/components/responses/Problem"
+          },
+          "default" : {
+            "$ref" : "#/components/responses/Problem"
+          }
+        }
+      },
+      "put" : {
+        "tags" : [ "Subscriptions" ],
+        "operationId" : "replaceSubscription",
+        "summary" : "Amend a subscription",
+        "description" : "Replaces the customer-supplied part of the subscription. Set `paused` to true to\nstop delivery without deleting the subscription. A change of webhook URL returns\nthe state to PENDING_VERIFICATION.\n",
+        "security" : [ {
+          "oauth2" : [ "capacity.subscribe" ]
+        } ],
+        "parameters" : [ {
+          "$ref" : "#/components/parameters/IfMatch"
+        } ],
+        "requestBody" : {
+          "required" : true,
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SubscriptionRequest"
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "description" : "The amended subscription.",
+            "headers" : {
+              "ETag" : {
+                "$ref" : "#/components/headers/ETag"
+              }
+            },
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Subscription"
+                }
+              }
+            }
+          },
+          "404" : {
+            "$ref" : "#/components/responses/Problem"
+          },
+          "412" : {
+            "$ref" : "#/components/responses/Problem"
+          },
+          "422" : {
+            "$ref" : "#/components/responses/Problem"
+          },
+          "default" : {
+            "$ref" : "#/components/responses/Problem"
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [ "Subscriptions" ],
+        "operationId" : "deleteSubscription",
+        "summary" : "Delete a subscription",
+        "security" : [ {
+          "oauth2" : [ "capacity.subscribe" ]
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "The subscription was deleted. No further events are sent."
+          },
+          "404" : {
+            "$ref" : "#/components/responses/Problem"
+          },
+          "default" : {
+            "$ref" : "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/subscriptions/{subscriptionId}/events" : {
+      "parameters" : [ {
+        "$ref" : "#/components/parameters/SubscriptionId"
+      } ],
+      "get" : {
+        "tags" : [ "Subscriptions" ],
+        "operationId" : "listSubscriptionEvents",
+        "summary" : "Read or stream the events of a subscription",
+        "description" : "Returns events in sequence order. Available for every subscription, whatever its\ndelivery type, for at least `limits.eventRetentionHours` after each event.\n\nA provider can coalesce several changes to an answer into one event. An event\nalways carries the latest answer, so no change is lost, and the sequence has no\ngaps.\n\nWith `Accept: application/json` the response is one page of events. With\n`Accept: text/event-stream` the response is a server-sent event stream that stays\nopen. Each server-sent event has the event sequence as its `id` and one Event\nobject as its `data`. Reconnect with the `Last-Event-ID` header or the `after`\nparameter.\n",
+        "security" : [ {
+          "oauth2" : [ "capacity.subscribe" ]
+        } ],
+        "parameters" : [ {
+          "name" : "after",
+          "in" : "query",
+          "description" : "Return events with a sequence greater than this value.",
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "minimum" : 0
+          }
+        }, {
+          "name" : "Last-Event-ID",
+          "in" : "header",
+          "description" : "Same meaning as `after`, sent by server-sent event clients on reconnect.",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "$ref" : "#/components/parameters/Limit"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "A page of events, or an open event stream.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/EventPage"
+                }
+              },
+              "text/event-stream" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            }
+          },
+          "404" : {
+            "$ref" : "#/components/responses/Problem"
+          },
+          "default" : {
+            "$ref" : "#/components/responses/Problem"
+          }
+        }
+      }
+    }
+  },
+  "webhooks" : {
+    "capacityEvent" : {
+      "post" : {
+        "operationId" : "receiveCapacityEvent",
+        "summary" : "An event sent to a WEBHOOK subscription",
+        "description" : "The provider sends each event as one POST. Delivery is at least once. De-duplicate\non the event `id` and order by `data.sequence`. Any 2xx response acknowledges the\nevent. The provider retries other outcomes with increasing delays for at least 24\nhours and then moves the subscription to SUSPENDED.\n\nVerify the `OpenCapacity-Signature` header before you trust the body. Its value\nis `t=<unix seconds>,v1=<hex>` where the hex string is the HMAC-SHA256 of\n`<t>.<raw body>` keyed with the subscription's signing secret.\n\nTo the verification event, respond 200 with the body\n`{\"challenge\": \"<data.challenge>\"}`.\n",
+        "parameters" : [ {
+          "name" : "OpenCapacity-Signature",
+          "in" : "header",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "required" : true,
+          "content" : {
+            "application/cloudevents+json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/Event"
+              },
+              "examples" : {
+                "answerUpdated" : {
+                  "$ref" : "#/components/examples/EventAnswerUpdated"
+                }
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "description" : "The event was accepted."
+          }
+        }
+      }
+    }
+  },
+  "components" : {
+    "securitySchemes" : {
+      "oauth2" : {
+        "type" : "oauth2",
+        "description" : "OAuth 2.0 client credentials. The token URL is provider-specific. Read it from\n`authentication.tokenUrl` in the capabilities document.\n",
+        "flows" : {
+          "clientCredentials" : {
+            "tokenUrl" : "https://provider.example/oauth2/token",
+            "scopes" : {
+              "capacity.query" : "Run queries and list locations.",
+              "capacity.signal" : "Create, read, amend, withdraw, and delete your signals.",
+              "capacity.subscribe" : "Create, read, amend, and delete your subscriptions and read their events."
+            }
+          }
+        }
+      }
+    },
+    "parameters" : {
+      "Limit" : {
+        "name" : "limit",
+        "in" : "query",
+        "description" : "Maximum number of items in the page.",
+        "schema" : {
+          "type" : "integer",
+          "minimum" : 1,
+          "maximum" : 200,
+          "default" : 50
+        }
+      },
+      "Cursor" : {
+        "name" : "cursor",
+        "in" : "query",
+        "description" : "The `pagination.next` value of the previous page.",
+        "schema" : {
+          "type" : "string"
+        }
+      },
+      "IdempotencyKey" : {
+        "name" : "Idempotency-Key",
+        "in" : "header",
+        "description" : "A client-generated key, unique per intended create. A repeat of the same key\nwithin 24 hours returns the first result and creates nothing.\n",
+        "schema" : {
+          "type" : "string",
+          "maxLength" : 128
+        }
+      },
+      "IfMatch" : {
+        "name" : "If-Match",
+        "in" : "header",
+        "required" : true,
+        "description" : "The ETag of the version you are amending. A stale value returns 412.",
+        "schema" : {
+          "type" : "string"
+        }
+      },
+      "SignalId" : {
+        "name" : "signalId",
+        "in" : "path",
+        "required" : true,
+        "schema" : {
+          "type" : "string"
+        }
+      },
+      "SubscriptionId" : {
+        "name" : "subscriptionId",
+        "in" : "path",
+        "required" : true,
+        "schema" : {
+          "type" : "string"
+        }
+      }
+    },
+    "headers" : {
+      "ETag" : {
+        "description" : "Version tag of the resource, for use in If-Match.",
+        "schema" : {
+          "type" : "string"
+        }
+      }
+    },
+    "responses" : {
+      "Problem" : {
+        "description" : "The request failed. The body is an RFC 9457 problem document.",
+        "content" : {
+          "application/problem+json" : {
+            "schema" : {
+              "$ref" : "#/components/schemas/Problem"
+            },
+            "examples" : {
+              "inconsistentDemand" : {
+                "$ref" : "#/components/examples/ProblemInconsistentDemand"
+              }
+            }
+          }
+        }
+      },
+      "TooManyRequests" : {
+        "description" : "The rate limit or the query quota was exceeded.",
+        "headers" : {
+          "Retry-After" : {
+            "description" : "Seconds to wait before the next request.",
+            "schema" : {
+              "type" : "integer"
+            }
+          }
+        },
+        "content" : {
+          "application/problem+json" : {
+            "schema" : {
+              "$ref" : "#/components/schemas/Problem"
+            }
+          }
+        }
+      }
+    },
+    "schemas" : {
+      "Grade" : {
+        "type" : "string",
+        "description" : "The graded answer used for availability, feature support, and interconnection\npresence.\n\n- AVAILABLE (green): the requirement is met or will be met by the date it is needed for service.\n- POSSIBLE (yellow): it can be met with conditions, or the provider has to review it.\n- UNAVAILABLE (red): it is not met and will not be met by the date it is needed for service.\n- NOT_DISCLOSED: the provider does not answer this through the API.\n",
+        "enum" : [ "AVAILABLE", "POSSIBLE", "UNAVAILABLE", "NOT_DISCLOSED" ]
+      },
+      "LocationLevel" : {
+        "type" : "string",
+        "description" : "From coarsest to finest.",
+        "enum" : [ "REGION", "COUNTRY", "METRO", "CAMPUS", "FACILITY" ]
+      },
+      "LocationRef" : {
+        "description" : "A location in a requirement or an answer. Either a named location at one level,\nor an area given as a point and a radius.\n",
+        "oneOf" : [ {
+          "$ref" : "#/components/schemas/NamedLocationRef"
+        }, {
+          "$ref" : "#/components/schemas/AreaLocationRef"
+        } ]
+      },
+      "AreaLocationRef" : {
+        "type" : "object",
+        "description" : "Everything within `radiusKm` of a point. A provider that lists `areaLocations`\nas false in its capabilities returns 422 with code UNSUPPORTED_LOCATION_LEVEL.\nThe provider answers an area with one result per named location that it chooses\nto report inside the area, or with one result for the area as a whole. It does\nnot have to reveal where its facilities are.\n",
+        "required" : [ "level", "center", "radiusKm" ],
+        "properties" : {
+          "level" : {
+            "type" : "string",
+            "const" : "AREA"
+          },
+          "center" : {
+            "type" : "object",
+            "required" : [ "latitude", "longitude" ],
+            "properties" : {
+              "latitude" : {
+                "type" : "number",
+                "minimum" : -90,
+                "maximum" : 90
+              },
+              "longitude" : {
+                "type" : "number",
+                "minimum" : -180,
+                "maximum" : 180
+              }
+            }
+          },
+          "radiusKm" : {
+            "type" : "number",
+            "exclusiveMinimum" : 0,
+            "maximum" : 1000,
+            "description" : "Distance from the center in kilometers."
+          }
+        }
+      },
+      "NamedLocationRef" : {
+        "type" : "object",
+        "description" : "A location at one level. REGION uses AMER, EMEA, or APAC. COUNTRY uses ISO\n3166-1 alpha-2. METRO, CAMPUS, and FACILITY use the provider's own codes, as\nlisted by `/locations`, for example FR for a Frankfurt metro. A campus is a group\nof facilities on one site.\n\nTo name a metro without knowing the provider's code, set `scheme` to STANDARD and\nsend the UN/LOCODE without a space, for example DEFRA.\n",
+        "required" : [ "level", "code" ],
+        "properties" : {
+          "level" : {
+            "$ref" : "#/components/schemas/LocationLevel"
+          },
+          "code" : {
+            "type" : "string",
+            "minLength" : 2,
+            "maxLength" : 32
+          },
+          "scheme" : {
+            "type" : "string",
+            "description" : "Applies to METRO only. Absent means PROVIDER.",
+            "enum" : [ "PROVIDER", "STANDARD" ],
+            "default" : "PROVIDER"
+          }
+        }
+      },
+      "Location" : {
+        "type" : "object",
+        "required" : [ "level", "code", "name" ],
+        "properties" : {
+          "level" : {
+            "$ref" : "#/components/schemas/LocationLevel"
+          },
+          "code" : {
+            "type" : "string",
+            "description" : "The code to send in a requirement. For a metro, a campus, or a facility it is the provider's own code."
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "standardCode" : {
+            "type" : "string",
+            "description" : "For a metro, the UN/LOCODE without a space. It lets a customer match metros across providers."
+          },
+          "parent" : {
+            "$ref" : "#/components/schemas/LocationRef"
+          }
+        }
+      },
+      "PowerUnit" : {
+        "type" : "string",
+        "description" : "kVA and MVA are apparent power. kW and MW are real power.",
+        "enum" : [ "KW", "MW", "KVA", "MVA" ]
+      },
+      "DensityUnit" : {
+        "type" : "string",
+        "enum" : [ "KW", "KVA" ]
+      },
+      "Power" : {
+        "type" : "object",
+        "required" : [ "value", "unit" ],
+        "properties" : {
+          "value" : {
+            "type" : "number",
+            "exclusiveMinimum" : 0
+          },
+          "unit" : {
+            "$ref" : "#/components/schemas/PowerUnit"
+          }
+        }
+      },
+      "DensityRange" : {
+        "type" : "object",
+        "description" : "Power per cabinet as a minimum, a target, and a maximum. Any subset is valid, and\nat least one of the three is present. Where more than one is present, min is not\ngreater than target and target is not greater than max.\n",
+        "required" : [ "unit" ],
+        "anyOf" : [ {
+          "required" : [ "min" ]
+        }, {
+          "required" : [ "target" ]
+        }, {
+          "required" : [ "max" ]
+        } ],
+        "properties" : {
+          "min" : {
+            "type" : "number",
+            "exclusiveMinimum" : 0
+          },
+          "target" : {
+            "type" : "number",
+            "exclusiveMinimum" : 0
+          },
+          "max" : {
+            "type" : "number",
+            "exclusiveMinimum" : 0
+          },
+          "unit" : {
+            "$ref" : "#/components/schemas/DensityUnit"
+          }
+        }
+      },
+      "CabinetDemand" : {
+        "type" : "object",
+        "required" : [ "count" ],
+        "properties" : {
+          "count" : {
+            "type" : "integer",
+            "minimum" : 1,
+            "description" : "The number of cabinets needed."
+          },
+          "minimum" : {
+            "type" : "integer",
+            "minimum" : 1,
+            "description" : "The smallest number worth an answer. Absent means only the full count is useful."
+          }
+        }
+      },
+      "Demand" : {
+        "type" : "object",
+        "description" : "How much capacity is needed. Three forms are valid:\n\n1. `cabinets` and `density`. Total power is derived as the cabinet count times\n   the density target, or the max when no target is given, or the min when only\n   the min is given.\n2. `power`, `cabinets`, and `density`. `power` is the total and `density`\n   constrains each cabinet.\n3. `power` alone, for a need that is not yet expressed in cabinets.\n\nIn form 2 the provider returns 422 with code INCONSISTENT_DEMAND when the total\ncannot fit: `power` is greater than count times density max, or less than count\ntimes density min.\n",
+        "anyOf" : [ {
+          "required" : [ "power" ]
+        }, {
+          "required" : [ "cabinets", "density" ]
+        } ],
+        "properties" : {
+          "power" : {
+            "$ref" : "#/components/schemas/Power"
+          },
+          "powerBasis" : {
+            "type" : "string",
+            "description" : "What `power` measures. IT_LOAD is the power drawn by the equipment. CIRCUIT_CAPACITY is the rated capacity of the circuits.",
+            "enum" : [ "IT_LOAD", "CIRCUIT_CAPACITY" ],
+            "default" : "IT_LOAD"
+          },
+          "powerFactor" : {
+            "type" : "number",
+            "exclusiveMinimum" : 0,
+            "maximum" : 1,
+            "description" : "Used to convert between apparent and real power. Absent means the provider's default from the capabilities document."
+          },
+          "cabinets" : {
+            "$ref" : "#/components/schemas/CabinetDemand"
+          },
+          "density" : {
+            "$ref" : "#/components/schemas/DensityRange"
+          },
+          "spaceType" : {
+            "type" : "string",
+            "description" : "The form of space wanted.",
+            "enum" : [ "CABINET", "CAGE", "SUITE", "HALL", "BUILDING" ]
+          },
+          "contiguous" : {
+            "type" : "boolean",
+            "description" : "True when the cabinets must be adjacent in one space."
+          }
+        }
+      },
+      "FlexibleDate" : {
+        "type" : "string",
+        "description" : "A point in time at the precision the sender chooses: a day (`2027-06-15`), a\nmonth (`2027-06`), a quarter (`2027-Q2`), or a year (`2027`). A value coarser\nthan a day is a period. In a request, \"needed in a period\" means needed by the\nlast day of the period. In an answer, \"available in a period\" means available on\nsome day in the period and no later than its last day. Two values are compared\nby the last day of each.\n",
+        "pattern" : "^[0-9]{4}(-(0[1-9]|1[0-2])(-(0[1-9]|[12][0-9]|3[01]))?|-Q[1-4])?$",
+        "examples" : [ "2027-06-15", "2027-06", "2027-Q2", "2027" ]
+      },
+      "AnswerDate" : {
+        "description" : "A date in an answer. A FlexibleDate, or NOW when it is already the case, or\nNOT_DISCLOSED when the provider does not give the date through the API. An\nabsent answer date means NOT_DISCLOSED. It never means now.\n",
+        "oneOf" : [ {
+          "$ref" : "#/components/schemas/FlexibleDate"
+        }, {
+          "type" : "string",
+          "enum" : [ "NOW", "NOT_DISCLOSED" ]
+        } ]
+      },
+      "RampStep" : {
+        "type" : "object",
+        "required" : [ "by", "percent" ],
+        "properties" : {
+          "by" : {
+            "$ref" : "#/components/schemas/FlexibleDate"
+          },
+          "percent" : {
+            "type" : "number",
+            "exclusiveMinimum" : 0,
+            "maximum" : 100,
+            "description" : "Cumulative share of the demand needed by this date."
+          }
+        }
+      },
+      "Timeframe" : {
+        "type" : "object",
+        "description" : "When the capacity is needed. Every property is optional. A requirement with no\n`neededForService` states an immediate need. That default applies to requests only.\n",
+        "properties" : {
+          "neededForSale" : {
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/FlexibleDate"
+            } ],
+            "description" : "When you need to be able to contract for the capacity."
+          },
+          "neededForService" : {
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/FlexibleDate"
+            } ],
+            "description" : "When the capacity must be usable. Absent means now."
+          },
+          "latestAcceptable" : {
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/FlexibleDate"
+            } ],
+            "description" : "The last service date that still works. Absent means `neededForService` is firm."
+          },
+          "termMonths" : {
+            "type" : "integer",
+            "minimum" : 1,
+            "description" : "Intended length of the commitment in months."
+          },
+          "ramp" : {
+            "type" : "array",
+            "description" : "Phased need, in date order. The last step is 100 percent. Absent means the full demand at `neededForService`.",
+            "items" : {
+              "$ref" : "#/components/schemas/RampStep"
+            }
+          }
+        }
+      },
+      "RedundancyLevel" : {
+        "type" : "string",
+        "enum" : [ "N", "N_PLUS_1", "N_PLUS_2", "TWO_N", "TWO_N_PLUS_1", "DISTRIBUTED" ]
+      },
+      "Redundancy" : {
+        "type" : "object",
+        "description" : "Minimum redundancy of the power and cooling systems. A hard constraint when present.",
+        "properties" : {
+          "power" : {
+            "$ref" : "#/components/schemas/RedundancyLevel"
+          },
+          "cooling" : {
+            "$ref" : "#/components/schemas/RedundancyLevel"
+          }
+        }
+      },
+      "PowerFeed" : {
+        "type" : "object",
+        "description" : "Electrical delivery to the cabinet. A hard constraint when present.",
+        "properties" : {
+          "current" : {
+            "type" : "string",
+            "enum" : [ "AC", "DC" ]
+          },
+          "phase" : {
+            "type" : "string",
+            "enum" : [ "SINGLE", "THREE" ]
+          },
+          "voltage" : {
+            "type" : "integer",
+            "minimum" : 1,
+            "description" : "Nominal voltage in volts."
+          }
+        }
+      },
+      "PartyRef" : {
+        "type" : "object",
+        "description" : "A network, cloud, or other organization to connect to. Give an autonomous system\nnumber where one exists, because names are ambiguous.\n",
+        "anyOf" : [ {
+          "required" : [ "name" ]
+        }, {
+          "required" : [ "asn" ]
+        } ],
+        "properties" : {
+          "name" : {
+            "type" : "string"
+          },
+          "asn" : {
+            "type" : "integer",
+            "format" : "int64",
+            "minimum" : 1
+          },
+          "type" : {
+            "type" : "string",
+            "enum" : [ "NETWORK", "CLOUD", "AI_PROVIDER", "INTERNET_EXCHANGE", "ENTERPRISE", "OTHER" ]
+          }
+        }
+      },
+      "InterconnectionScope" : {
+        "type" : "string",
+        "description" : "How close the party must be.",
+        "enum" : [ "FACILITY", "CAMPUS", "METRO" ],
+        "default" : "METRO"
+      },
+      "InterconnectionRequirement" : {
+        "type" : "object",
+        "required" : [ "party", "required" ],
+        "properties" : {
+          "party" : {
+            "$ref" : "#/components/schemas/PartyRef"
+          },
+          "within" : {
+            "$ref" : "#/components/schemas/InterconnectionScope"
+          },
+          "maxRoundTripMs" : {
+            "type" : "number",
+            "exclusiveMinimum" : 0,
+            "description" : "Upper limit on round-trip latency to the party, in milliseconds."
+          },
+          "required" : {
+            "type" : "boolean",
+            "description" : "True for a hard constraint. False for a preference."
+          }
+        }
+      },
+      "Feature" : {
+        "type" : "string",
+        "description" : "A feature name from the registry, or a provider extension that starts with `X_`.\nRegistry 1.0: LIQUID_COOLING (any liquid cooling method), DIRECT_TO_CHIP_COOLING,\nIMMERSION_COOLING, REAR_DOOR_HEAT_EXCHANGER, PRIVATE_CAGE, PRIVATE_SUITE,\nHIGH_FLOOR_LOADING, RENEWABLE_ENERGY_MATCHED, CLOUD_ON_RAMP, INTERNET_EXCHANGE,\nREMOTE_HANDS, EXPANSION_OPTION, BUILD_TO_SUIT.\n",
+        "pattern" : "^[A-Z][A-Z0-9_]{1,63}$",
+        "examples" : [ "LIQUID_COOLING" ]
+      },
+      "DesiredFeature" : {
+        "type" : "object",
+        "required" : [ "feature", "required" ],
+        "properties" : {
+          "feature" : {
+            "$ref" : "#/components/schemas/Feature"
+          },
+          "required" : {
+            "type" : "boolean",
+            "description" : "True for a hard constraint. False for a preference."
+          }
+        }
+      },
+      "CapacityRequirement" : {
+        "type" : "object",
+        "description" : "The capacity a customer needs. Queries, signals, and subscriptions all carry it.",
+        "required" : [ "locations", "demand" ],
+        "properties" : {
+          "locations" : {
+            "type" : "array",
+            "description" : "Alternatives. The answer has a result for each. Levels can be mixed.",
+            "minItems" : 1,
+            "items" : {
+              "$ref" : "#/components/schemas/LocationRef"
+            }
+          },
+          "demand" : {
+            "$ref" : "#/components/schemas/Demand"
+          },
+          "timeframe" : {
+            "$ref" : "#/components/schemas/Timeframe"
+          },
+          "interconnection" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/InterconnectionRequirement"
+            }
+          },
+          "desiredFeatures" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/DesiredFeature"
+            }
+          },
+          "redundancy" : {
+            "$ref" : "#/components/schemas/Redundancy"
+          },
+          "powerFeed" : {
+            "$ref" : "#/components/schemas/PowerFeed"
+          },
+          "offering" : {
+            "type" : "string",
+            "description" : "The commercial form wanted.",
+            "enum" : [ "RETAIL_COLOCATION", "WHOLESALE", "BUILD_TO_SUIT", "POWERED_SHELL" ]
+          }
+        }
+      },
+      "QueryRequest" : {
+        "type" : "object",
+        "required" : [ "requirement" ],
+        "properties" : {
+          "requirement" : {
+            "$ref" : "#/components/schemas/CapacityRequirement"
+          },
+          "reference" : {
+            "type" : "string",
+            "maxLength" : 128,
+            "description" : "Your own reference, echoed in the answer."
+          }
+        }
+      },
+      "CabinetBand" : {
+        "type" : "object",
+        "description" : "A band for the number of cabinets. `min` alone reads as \"at least\". `max` alone\nreads as \"up to\". A provider that does not want to reveal inventory returns `min`\nno greater than the requested count and omits `max`.\n",
+        "properties" : {
+          "min" : {
+            "type" : "integer",
+            "minimum" : 0
+          },
+          "max" : {
+            "type" : "integer",
+            "minimum" : 0
+          }
+        }
+      },
+      "PowerBand" : {
+        "type" : "object",
+        "required" : [ "unit" ],
+        "properties" : {
+          "min" : {
+            "type" : "number",
+            "minimum" : 0
+          },
+          "max" : {
+            "type" : "number",
+            "minimum" : 0
+          },
+          "unit" : {
+            "$ref" : "#/components/schemas/PowerUnit"
+          }
+        }
+      },
+      "Timing" : {
+        "type" : "object",
+        "description" : "When the capacity is usable.",
+        "required" : [ "status" ],
+        "properties" : {
+          "status" : {
+            "type" : "string",
+            "description" : "IN_SERVICE means the capacity exists today. PLANNED means it is expected later.",
+            "enum" : [ "IN_SERVICE", "PLANNED", "NOT_DISCLOSED" ]
+          },
+          "availableForSale" : {
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/AnswerDate"
+            } ],
+            "description" : "When the provider can contract for the capacity."
+          },
+          "availableForService" : {
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/AnswerDate"
+            } ],
+            "description" : "When the capacity is usable. A coarser value discloses less."
+          }
+        }
+      },
+      "SupportedFeature" : {
+        "type" : "object",
+        "required" : [ "feature", "support" ],
+        "properties" : {
+          "feature" : {
+            "$ref" : "#/components/schemas/Feature"
+          },
+          "support" : {
+            "$ref" : "#/components/schemas/Grade"
+          },
+          "required" : {
+            "type" : "boolean",
+            "description" : "Echo of the request flag, for a feature that was asked for."
+          },
+          "availableForService" : {
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/AnswerDate"
+            } ],
+            "description" : "For a feature that is planned."
+          }
+        }
+      },
+      "InterconnectionResult" : {
+        "type" : "object",
+        "description" : "Whether a party is reachable. Saying that a named party is present discloses\nsomething about that party. A provider grades presence AVAILABLE only for a\nparty whose presence is already public or that has agreed to be listed, and\nNOT_DISCLOSED otherwise.\n",
+        "required" : [ "party", "presence" ],
+        "properties" : {
+          "party" : {
+            "$ref" : "#/components/schemas/PartyRef"
+          },
+          "within" : {
+            "$ref" : "#/components/schemas/InterconnectionScope"
+          },
+          "presence" : {
+            "$ref" : "#/components/schemas/Grade"
+          },
+          "required" : {
+            "type" : "boolean"
+          },
+          "roundTripMs" : {
+            "type" : "object",
+            "description" : "Band for round-trip latency to the party, in milliseconds.",
+            "properties" : {
+              "min" : {
+                "type" : "number",
+                "minimum" : 0
+              },
+              "max" : {
+                "type" : "number",
+                "minimum" : 0
+              }
+            }
+          }
+        }
+      },
+      "Reason" : {
+        "type" : "string",
+        "description" : "Why a result is not AVAILABLE.",
+        "enum" : [ "POWER", "SPACE", "COOLING", "DENSITY", "TIMING", "TERM", "FEATURE", "INTERCONNECTION", "REDUNDANCY", "POWER_FEED", "OFFERING", "LOCATION_NOT_SERVED", "REVIEW_REQUIRED", "OTHER" ]
+      },
+      "LocationResult" : {
+        "type" : "object",
+        "description" : "The answer for one location. Only `location`, `grade`, and `supportedFeatures`\nare required. `supportedFeatures` has one entry for each desired feature.\n\nWhen `grade` is AVAILABLE or POSSIBLE, the entry for each feature that the\nrequest marked `required` is AVAILABLE or POSSIBLE. The location grade already\nstates that the required features can be met. An entry for a required feature\ncan be NOT_DISCLOSED only when `grade` is NOT_DISCLOSED or UNAVAILABLE. An entry\nfor a feature that is not required can be NOT_DISCLOSED with any grade.\n",
+        "required" : [ "location", "grade", "supportedFeatures" ],
+        "properties" : {
+          "location" : {
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/LocationRef"
+            } ],
+            "description" : "The location answered. It can be coarser than the one requested."
+          },
+          "requested" : {
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/LocationRef"
+            } ],
+            "description" : "The requested location, where the answer is at a coarser level."
+          },
+          "grade" : {
+            "$ref" : "#/components/schemas/Grade"
+          },
+          "timing" : {
+            "$ref" : "#/components/schemas/Timing"
+          },
+          "density" : {
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/DensityRange"
+            } ],
+            "description" : "The per-cabinet density the location supports for this requirement."
+          },
+          "cabinets" : {
+            "$ref" : "#/components/schemas/CabinetBand"
+          },
+          "power" : {
+            "$ref" : "#/components/schemas/PowerBand"
+          },
+          "supportedFeatures" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/SupportedFeature"
+            }
+          },
+          "interconnection" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/InterconnectionResult"
+            }
+          },
+          "reasons" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/Reason"
+            }
+          },
+          "nextStepUrl" : {
+            "type" : "string",
+            "format" : "uri",
+            "description" : "Where to continue the conversation with the provider."
+          }
+        }
+      },
+      "CapacityAnswer" : {
+        "type" : "object",
+        "required" : [ "answerId", "generatedAt", "validUntil", "grade", "results" ],
+        "properties" : {
+          "answerId" : {
+            "type" : "string"
+          },
+          "reference" : {
+            "type" : "string"
+          },
+          "generatedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "validUntil" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "After this time the answer says nothing about availability."
+          },
+          "grade" : {
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/Grade"
+            } ],
+            "description" : "The best grade among the results."
+          },
+          "results" : {
+            "type" : "array",
+            "minItems" : 1,
+            "items" : {
+              "$ref" : "#/components/schemas/LocationResult"
+            }
+          }
+        }
+      },
+      "SignalState" : {
+        "type" : "string",
+        "description" : "RECEIVED: stored, not yet taken into planning. ACKNOWLEDGED: the provider has\ntaken it into planning. WITHDRAWN: the customer ended the need and kept the\nrecord; not an active need. CLOSED: the provider ended it, see `closeReason`.\nEXPIRED: `expiresAt` passed. RECEIVED and ACKNOWLEDGED are the active states.\n\nAllowed transitions: RECEIVED to ACKNOWLEDGED. ACKNOWLEDGED or WITHDRAWN to\nRECEIVED on amend. RECEIVED or ACKNOWLEDGED to WITHDRAWN on withdraw. RECEIVED,\nACKNOWLEDGED, or WITHDRAWN to EXPIRED. RECEIVED or ACKNOWLEDGED to CLOSED.\nCLOSED and EXPIRED are final. Delete removes the signal from any state.\n",
+        "enum" : [ "RECEIVED", "ACKNOWLEDGED", "WITHDRAWN", "CLOSED", "EXPIRED" ]
+      },
+      "Confidentiality" : {
+        "type" : "object",
+        "description" : "What the provider can do with the signal. Absent values take the most restrictive default.",
+        "properties" : {
+          "sharing" : {
+            "type" : "string",
+            "description" : "NONE: the provider uses the signal only for its own capacity planning.\nAGGREGATED: the provider can also include it in totals that do not identify\nthe customer, for example a load forecast given to a utility.\n",
+            "enum" : [ "NONE", "AGGREGATED" ],
+            "default" : "NONE"
+          },
+          "contactPermitted" : {
+            "type" : "boolean",
+            "default" : false,
+            "description" : "True when the provider can contact you about the signal. Requires `contact`."
+          }
+        }
+      },
+      "Contact" : {
+        "type" : "object",
+        "required" : [ "email" ],
+        "properties" : {
+          "name" : {
+            "type" : "string"
+          },
+          "email" : {
+            "type" : "string",
+            "format" : "email"
+          }
+        }
+      },
+      "SignalRequest" : {
+        "type" : "object",
+        "required" : [ "requirement" ],
+        "properties" : {
+          "requirement" : {
+            "$ref" : "#/components/schemas/CapacityRequirement"
+          },
+          "reference" : {
+            "type" : "string",
+            "maxLength" : 128
+          },
+          "confidence" : {
+            "type" : "string",
+            "description" : "How firm the need is.",
+            "enum" : [ "EXPLORATORY", "PLANNED", "FUNDED", "COMMITTED" ]
+          },
+          "confidentiality" : {
+            "$ref" : "#/components/schemas/Confidentiality"
+          },
+          "contact" : {
+            "$ref" : "#/components/schemas/Contact"
+          },
+          "expiresAt" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Absent means the provider's maximum signal lifetime."
+          }
+        }
+      },
+      "Signal" : {
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/SignalRequest"
+        }, {
+          "type" : "object",
+          "required" : [ "signalId", "state", "revision", "createdAt", "updatedAt", "expiresAt" ],
+          "properties" : {
+            "signalId" : {
+              "type" : "string",
+              "readOnly" : true
+            },
+            "state" : {
+              "allOf" : [ {
+                "$ref" : "#/components/schemas/SignalState"
+              } ],
+              "readOnly" : true
+            },
+            "revision" : {
+              "type" : "integer",
+              "minimum" : 1,
+              "readOnly" : true
+            },
+            "createdAt" : {
+              "type" : "string",
+              "format" : "date-time",
+              "readOnly" : true
+            },
+            "updatedAt" : {
+              "type" : "string",
+              "format" : "date-time",
+              "readOnly" : true
+            },
+            "closeReason" : {
+              "type" : "string",
+              "enum" : [ "FULFILLED", "DECLINED", "DUPLICATE", "OTHER" ],
+              "readOnly" : true
+            },
+            "answer" : {
+              "allOf" : [ {
+                "$ref" : "#/components/schemas/CapacityAnswer"
+              } ],
+              "readOnly" : true,
+              "description" : "The provider's current answer to the signal, where it gives one."
+            }
+          }
+        } ]
+      },
+      "WebhookDelivery" : {
+        "type" : "object",
+        "required" : [ "type", "url" ],
+        "properties" : {
+          "type" : {
+            "type" : "string",
+            "const" : "WEBHOOK"
+          },
+          "url" : {
+            "type" : "string",
+            "format" : "uri",
+            "pattern" : "^https://"
+          },
+          "signingSecret" : {
+            "type" : "string",
+            "readOnly" : true,
+            "description" : "Returned once, in the create response."
+          }
+        }
+      },
+      "PullDelivery" : {
+        "type" : "object",
+        "required" : [ "type" ],
+        "properties" : {
+          "type" : {
+            "type" : "string",
+            "const" : "PULL"
+          }
+        }
+      },
+      "Delivery" : {
+        "oneOf" : [ {
+          "$ref" : "#/components/schemas/WebhookDelivery"
+        }, {
+          "$ref" : "#/components/schemas/PullDelivery"
+        } ],
+        "discriminator" : {
+          "propertyName" : "type",
+          "mapping" : {
+            "WEBHOOK" : "#/components/schemas/WebhookDelivery",
+            "PULL" : "#/components/schemas/PullDelivery"
+          }
+        }
+      },
+      "SubscriptionState" : {
+        "type" : "string",
+        "description" : "PENDING_VERIFICATION: waiting for the webhook endpoint to echo the challenge.\nACTIVE: events are delivered. PAUSED: stopped by the customer. SUSPENDED: stopped\nby the provider after repeated delivery failures; amend the subscription to\nreturn to PENDING_VERIFICATION. EXPIRED: `expiresAt` passed or the followed\nsignal ended. EXPIRED is final.\n",
+        "enum" : [ "PENDING_VERIFICATION", "ACTIVE", "PAUSED", "SUSPENDED", "EXPIRED" ]
+      },
+      "SubscriptionRequest" : {
+        "type" : "object",
+        "description" : "Exactly one of `requirement` and `signalId` is present.",
+        "required" : [ "delivery" ],
+        "oneOf" : [ {
+          "required" : [ "requirement" ]
+        }, {
+          "required" : [ "signalId" ]
+        } ],
+        "properties" : {
+          "name" : {
+            "type" : "string",
+            "maxLength" : 128
+          },
+          "requirement" : {
+            "$ref" : "#/components/schemas/CapacityRequirement"
+          },
+          "signalId" : {
+            "type" : "string",
+            "description" : "Follow the answer and the state of one of your signals."
+          },
+          "notifyOn" : {
+            "type" : "string",
+            "description" : "GRADE_CHANGE sends an event when a grade changes. ANY_CHANGE also sends one when a band, a date, or a feature entry changes.",
+            "enum" : [ "GRADE_CHANGE", "ANY_CHANGE" ],
+            "default" : "GRADE_CHANGE"
+          },
+          "delivery" : {
+            "$ref" : "#/components/schemas/Delivery"
+          },
+          "paused" : {
+            "type" : "boolean",
+            "default" : false
+          },
+          "expiresAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }
+      },
+      "Subscription" : {
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/SubscriptionRequest"
+        }, {
+          "type" : "object",
+          "required" : [ "subscriptionId", "state", "createdAt", "updatedAt" ],
+          "properties" : {
+            "subscriptionId" : {
+              "type" : "string",
+              "readOnly" : true
+            },
+            "state" : {
+              "allOf" : [ {
+                "$ref" : "#/components/schemas/SubscriptionState"
+              } ],
+              "readOnly" : true
+            },
+            "createdAt" : {
+              "type" : "string",
+              "format" : "date-time",
+              "readOnly" : true
+            },
+            "updatedAt" : {
+              "type" : "string",
+              "format" : "date-time",
+              "readOnly" : true
+            },
+            "lastSequence" : {
+              "type" : "integer",
+              "format" : "int64",
+              "readOnly" : true,
+              "description" : "Sequence of the most recent event."
+            }
+          }
+        } ]
+      },
+      "EventData" : {
+        "type" : "object",
+        "required" : [ "subscriptionId", "sequence" ],
+        "properties" : {
+          "subscriptionId" : {
+            "type" : "string"
+          },
+          "sequence" : {
+            "type" : "integer",
+            "format" : "int64",
+            "minimum" : 1,
+            "description" : "Increases by one per event within a subscription."
+          },
+          "reason" : {
+            "type" : "string",
+            "description" : "For answer events. REFRESH means the previous answer expired and nothing else changed.",
+            "enum" : [ "INITIAL", "GRADE_CHANGE", "DETAIL_CHANGE", "REFRESH" ]
+          },
+          "answer" : {
+            "$ref" : "#/components/schemas/CapacityAnswer"
+          },
+          "signalId" : {
+            "type" : "string"
+          },
+          "signalState" : {
+            "$ref" : "#/components/schemas/SignalState"
+          },
+          "subscriptionState" : {
+            "$ref" : "#/components/schemas/SubscriptionState"
+          },
+          "challenge" : {
+            "type" : "string",
+            "description" : "For the verification event."
+          }
+        }
+      },
+      "Event" : {
+        "type" : "object",
+        "description" : "A CloudEvents 1.0 envelope in structured JSON mode.",
+        "required" : [ "specversion", "id", "source", "type", "time", "data" ],
+        "properties" : {
+          "specversion" : {
+            "type" : "string",
+            "const" : "1.0"
+          },
+          "id" : {
+            "type" : "string",
+            "description" : "Unique per event. De-duplicate on this value."
+          },
+          "source" : {
+            "type" : "string",
+            "format" : "uri-reference",
+            "description" : "The provider's API base URL."
+          },
+          "type" : {
+            "type" : "string",
+            "enum" : [ "org.opencapacity.answer.updated", "org.opencapacity.signal.updated", "org.opencapacity.subscription.updated", "org.opencapacity.subscription.verification" ]
+          },
+          "subject" : {
+            "type" : "string",
+            "description" : "The subscription identifier."
+          },
+          "time" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "datacontenttype" : {
+            "type" : "string",
+            "const" : "application/json"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/EventData"
+          }
+        }
+      },
+      "DisclosureLevel" : {
+        "type" : "string",
+        "description" : "How often the provider populates an optional answer element.",
+        "enum" : [ "ALWAYS", "CASE_BY_CASE", "NEVER" ]
+      },
+      "Capabilities" : {
+        "type" : "object",
+        "required" : [ "specVersion", "provider", "conformance", "authentication", "locationLevels", "finestAnswerLevel", "features", "disclosure" ],
+        "properties" : {
+          "specVersion" : {
+            "type" : "string",
+            "description" : "The version of this specification that the provider implements.",
+            "examples" : [ "1.0.0" ]
+          },
+          "provider" : {
+            "type" : "object",
+            "required" : [ "name" ],
+            "properties" : {
+              "name" : {
+                "type" : "string"
+              },
+              "url" : {
+                "type" : "string",
+                "format" : "uri"
+              }
+            }
+          },
+          "conformance" : {
+            "type" : "array",
+            "description" : "CORE covers capabilities, locations, and queries.",
+            "items" : {
+              "type" : "string",
+              "enum" : [ "CORE", "SIGNALS", "SUBSCRIPTIONS" ]
+            }
+          },
+          "authentication" : {
+            "type" : "object",
+            "required" : [ "tokenUrl" ],
+            "properties" : {
+              "tokenUrl" : {
+                "type" : "string",
+                "format" : "uri"
+              }
+            }
+          },
+          "locationLevels" : {
+            "type" : "array",
+            "description" : "The levels accepted in a requirement.",
+            "items" : {
+              "$ref" : "#/components/schemas/LocationLevel"
+            }
+          },
+          "areaLocations" : {
+            "type" : "boolean",
+            "default" : false,
+            "description" : "True when the provider accepts a point and a radius as a location."
+          },
+          "finestAnswerLevel" : {
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/LocationLevel"
+            } ],
+            "description" : "The finest level at which the provider answers."
+          },
+          "features" : {
+            "type" : "array",
+            "description" : "The features the provider recognizes. Any other feature is answered NOT_DISCLOSED.",
+            "items" : {
+              "$ref" : "#/components/schemas/Feature"
+            }
+          },
+          "defaultPowerFactor" : {
+            "type" : "number",
+            "exclusiveMinimum" : 0,
+            "maximum" : 1
+          },
+          "deliveryTypes" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "enum" : [ "WEBHOOK", "PULL" ]
+            }
+          },
+          "disclosure" : {
+            "type" : "object",
+            "description" : "Which optional answer elements the provider populates.",
+            "required" : [ "timing", "density", "cabinets", "power", "interconnection", "reasons" ],
+            "properties" : {
+              "timing" : {
+                "$ref" : "#/components/schemas/DisclosureLevel"
+              },
+              "density" : {
+                "$ref" : "#/components/schemas/DisclosureLevel"
+              },
+              "cabinets" : {
+                "$ref" : "#/components/schemas/DisclosureLevel"
+              },
+              "power" : {
+                "$ref" : "#/components/schemas/DisclosureLevel"
+              },
+              "interconnection" : {
+                "$ref" : "#/components/schemas/DisclosureLevel"
+              },
+              "reasons" : {
+                "$ref" : "#/components/schemas/DisclosureLevel"
+              }
+            }
+          },
+          "limits" : {
+            "type" : "object",
+            "properties" : {
+              "maxLocationsPerRequirement" : {
+                "type" : "integer",
+                "minimum" : 1
+              },
+              "answerValiditySeconds" : {
+                "type" : "integer",
+                "minimum" : 1
+              },
+              "maxSignalLifetimeDays" : {
+                "type" : "integer",
+                "minimum" : 1
+              },
+              "maxSubscriptions" : {
+                "type" : "integer",
+                "minimum" : 0
+              },
+              "minNotificationIntervalSeconds" : {
+                "type" : "integer",
+                "minimum" : 0,
+                "description" : "The provider sends at most one answer event per subscription in this interval. Changes inside the interval are coalesced into one event that carries the latest answer."
+              },
+              "eventRetentionHours" : {
+                "type" : "integer",
+                "minimum" : 24
+              }
+            }
+          }
+        }
+      },
+      "Pagination" : {
+        "type" : "object",
+        "required" : [ "limit" ],
+        "properties" : {
+          "limit" : {
+            "type" : "integer"
+          },
+          "next" : {
+            "type" : "string",
+            "description" : "Cursor for the next page. Absent on the last page."
+          }
+        }
+      },
+      "LocationPage" : {
+        "type" : "object",
+        "required" : [ "data", "pagination" ],
+        "properties" : {
+          "data" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/Location"
+            }
+          },
+          "pagination" : {
+            "$ref" : "#/components/schemas/Pagination"
+          }
+        }
+      },
+      "SignalPage" : {
+        "type" : "object",
+        "required" : [ "data", "pagination" ],
+        "properties" : {
+          "data" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/Signal"
+            }
+          },
+          "pagination" : {
+            "$ref" : "#/components/schemas/Pagination"
+          }
+        }
+      },
+      "SubscriptionPage" : {
+        "type" : "object",
+        "required" : [ "data", "pagination" ],
+        "properties" : {
+          "data" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/Subscription"
+            }
+          },
+          "pagination" : {
+            "$ref" : "#/components/schemas/Pagination"
+          }
+        }
+      },
+      "EventPage" : {
+        "type" : "object",
+        "required" : [ "data", "pagination" ],
+        "properties" : {
+          "data" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/Event"
+            }
+          },
+          "pagination" : {
+            "$ref" : "#/components/schemas/Pagination"
+          }
+        }
+      },
+      "Problem" : {
+        "type" : "object",
+        "description" : "RFC 9457 problem details with a stable `code` and field-level errors.",
+        "required" : [ "type", "title", "status", "code" ],
+        "properties" : {
+          "type" : {
+            "type" : "string",
+            "format" : "uri-reference"
+          },
+          "title" : {
+            "type" : "string"
+          },
+          "status" : {
+            "type" : "integer"
+          },
+          "detail" : {
+            "type" : "string"
+          },
+          "instance" : {
+            "type" : "string",
+            "format" : "uri-reference"
+          },
+          "code" : {
+            "type" : "string",
+            "description" : "Stable, machine-readable error code.",
+            "enum" : [ "INVALID_REQUEST", "INCONSISTENT_DEMAND", "UNSUPPORTED_LOCATION_LEVEL", "UNKNOWN_LOCATION", "TOO_MANY_LOCATIONS", "UNAUTHENTICATED", "FORBIDDEN", "NOT_FOUND", "STATE_CONFLICT", "PRECONDITION_FAILED", "NOT_IMPLEMENTED", "RATE_LIMITED", "QUOTA_EXCEEDED", "INTERNAL_ERROR" ]
+          },
+          "errors" : {
+            "type" : "array",
+            "items" : {
+              "type" : "object",
+              "required" : [ "pointer", "detail" ],
+              "properties" : {
+                "pointer" : {
+                  "type" : "string",
+                  "description" : "JSON Pointer to the field in the request body."
+                },
+                "detail" : {
+                  "type" : "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "examples" : {
+      "Capabilities" : {
+        "summary" : "A provider that answers at metro level and discloses little",
+        "value" : {
+          "specVersion" : "1.0.0",
+          "provider" : {
+            "name" : "Example Data Centers",
+            "url" : "https://provider.example"
+          },
+          "conformance" : [ "CORE", "SIGNALS", "SUBSCRIPTIONS" ],
+          "authentication" : {
+            "tokenUrl" : "https://provider.example/oauth2/token"
+          },
+          "locationLevels" : [ "REGION", "COUNTRY", "METRO", "CAMPUS", "FACILITY" ],
+          "areaLocations" : true,
+          "finestAnswerLevel" : "METRO",
+          "features" : [ "LIQUID_COOLING", "DIRECT_TO_CHIP_COOLING", "REAR_DOOR_HEAT_EXCHANGER", "PRIVATE_CAGE" ],
+          "defaultPowerFactor" : 0.95,
+          "deliveryTypes" : [ "WEBHOOK", "PULL" ],
+          "disclosure" : {
+            "timing" : "CASE_BY_CASE",
+            "density" : "ALWAYS",
+            "cabinets" : "CASE_BY_CASE",
+            "power" : "NEVER",
+            "interconnection" : "CASE_BY_CASE",
+            "reasons" : "CASE_BY_CASE"
+          },
+          "limits" : {
+            "maxLocationsPerRequirement" : 10,
+            "answerValiditySeconds" : 86400,
+            "maxSignalLifetimeDays" : 365,
+            "maxSubscriptions" : 25,
+            "minNotificationIntervalSeconds" : 3600,
+            "eventRetentionHours" : 168
+          }
+        }
+      },
+      "QueryCabinetsAndDensity" : {
+        "summary" : "40 cabinets at a density range, liquid cooling required, one network in the metro",
+        "value" : {
+          "reference" : "example-query-1",
+          "requirement" : {
+            "locations" : [ {
+              "level" : "METRO",
+              "code" : "FR"
+            }, {
+              "level" : "COUNTRY",
+              "code" : "NL"
+            } ],
+            "demand" : {
+              "cabinets" : {
+                "count" : 40
+              },
+              "density" : {
+                "min" : 5,
+                "target" : 8,
+                "max" : 100,
+                "unit" : "KVA"
+              },
+              "contiguous" : true
+            },
+            "timeframe" : {
+              "neededForSale" : "2026-Q4",
+              "neededForService" : "2027-06",
+              "latestAcceptable" : "2027-Q3",
+              "termMonths" : 60
+            },
+            "interconnection" : [ {
+              "party" : {
+                "name" : "Example Cloud",
+                "asn" : 64500,
+                "type" : "CLOUD"
+              },
+              "within" : "METRO",
+              "required" : true
+            } ],
+            "desiredFeatures" : [ {
+              "feature" : "LIQUID_COOLING",
+              "required" : true
+            }, {
+              "feature" : "PRIVATE_CAGE",
+              "required" : false
+            } ],
+            "redundancy" : {
+              "power" : "TWO_N"
+            }
+          }
+        }
+      },
+      "QueryPowerOnly" : {
+        "summary" : "12 MW in a region or within 50 km of a point, not yet expressed in cabinets",
+        "value" : {
+          "requirement" : {
+            "locations" : [ {
+              "level" : "REGION",
+              "code" : "EMEA"
+            }, {
+              "level" : "AREA",
+              "center" : {
+                "latitude" : 50.11,
+                "longitude" : 8.68
+              },
+              "radiusKm" : 50
+            } ],
+            "demand" : {
+              "power" : {
+                "value" : 12,
+                "unit" : "MW"
+              }
+            },
+            "timeframe" : {
+              "neededForService" : "2028",
+              "ramp" : [ {
+                "by" : "2028-01-01",
+                "percent" : 50
+              }, {
+                "by" : "2028-07-01",
+                "percent" : 100
+              } ]
+            },
+            "desiredFeatures" : [ {
+              "feature" : "DIRECT_TO_CHIP_COOLING",
+              "required" : true
+            } ]
+          }
+        }
+      },
+      "AnswerGradeOnly" : {
+        "summary" : "The least a conforming provider returns",
+        "value" : {
+          "answerId" : "ans-0001",
+          "reference" : "example-query-1",
+          "generatedAt" : "2026-11-18T10:00:00Z",
+          "validUntil" : "2026-11-19T10:00:00Z",
+          "grade" : "POSSIBLE",
+          "results" : [ {
+            "location" : {
+              "level" : "METRO",
+              "code" : "FR"
+            },
+            "grade" : "POSSIBLE",
+            "supportedFeatures" : [ {
+              "feature" : "LIQUID_COOLING",
+              "support" : "POSSIBLE",
+              "required" : true
+            }, {
+              "feature" : "PRIVATE_CAGE",
+              "support" : "NOT_DISCLOSED",
+              "required" : false
+            } ]
+          }, {
+            "location" : {
+              "level" : "COUNTRY",
+              "code" : "NL"
+            },
+            "grade" : "NOT_DISCLOSED",
+            "supportedFeatures" : [ {
+              "feature" : "LIQUID_COOLING",
+              "support" : "NOT_DISCLOSED",
+              "required" : true
+            }, {
+              "feature" : "PRIVATE_CAGE",
+              "support" : "NOT_DISCLOSED",
+              "required" : false
+            } ]
+          } ]
+        }
+      },
+      "AnswerBanded" : {
+        "summary" : "A provider that returns bands, timing, and reasons",
+        "value" : {
+          "answerId" : "ans-0002",
+          "reference" : "example-query-1",
+          "generatedAt" : "2026-11-18T10:00:00Z",
+          "validUntil" : "2026-11-19T10:00:00Z",
+          "grade" : "AVAILABLE",
+          "results" : [ {
+            "location" : {
+              "level" : "METRO",
+              "code" : "FR"
+            },
+            "grade" : "AVAILABLE",
+            "timing" : {
+              "status" : "PLANNED",
+              "availableForSale" : "2026-12",
+              "availableForService" : "2027-Q2"
+            },
+            "density" : {
+              "min" : 5,
+              "target" : 10,
+              "max" : 80,
+              "unit" : "KVA"
+            },
+            "cabinets" : {
+              "min" : 40
+            },
+            "supportedFeatures" : [ {
+              "feature" : "LIQUID_COOLING",
+              "support" : "AVAILABLE",
+              "required" : true
+            }, {
+              "feature" : "PRIVATE_CAGE",
+              "support" : "POSSIBLE",
+              "required" : false
+            } ],
+            "interconnection" : [ {
+              "party" : {
+                "name" : "Example Cloud",
+                "asn" : 64500,
+                "type" : "CLOUD"
+              },
+              "within" : "METRO",
+              "presence" : "AVAILABLE",
+              "required" : true
+            } ],
+            "nextStepUrl" : "https://provider.example/contact"
+          }, {
+            "location" : {
+              "level" : "COUNTRY",
+              "code" : "NL"
+            },
+            "grade" : "UNAVAILABLE",
+            "timing" : {
+              "status" : "PLANNED",
+              "availableForSale" : "NOT_DISCLOSED",
+              "availableForService" : "2028"
+            },
+            "supportedFeatures" : [ {
+              "feature" : "LIQUID_COOLING",
+              "support" : "UNAVAILABLE",
+              "required" : true
+            }, {
+              "feature" : "PRIVATE_CAGE",
+              "support" : "AVAILABLE",
+              "required" : false
+            } ],
+            "reasons" : [ "FEATURE", "TIMING" ]
+          } ]
+        }
+      },
+      "SignalRequest" : {
+        "summary" : "A standing need the provider can use for planning only",
+        "value" : {
+          "reference" : "example-signal-1",
+          "confidence" : "PLANNED",
+          "confidentiality" : {
+            "sharing" : "NONE",
+            "contactPermitted" : true
+          },
+          "contact" : {
+            "name" : "Network Operations",
+            "email" : "noc@example.com"
+          },
+          "requirement" : {
+            "locations" : [ {
+              "level" : "METRO",
+              "code" : "FR"
+            } ],
+            "demand" : {
+              "power" : {
+                "value" : 800,
+                "unit" : "KVA"
+              },
+              "cabinets" : {
+                "count" : 40
+              },
+              "density" : {
+                "target" : 20,
+                "unit" : "KVA"
+              }
+            },
+            "timeframe" : {
+              "neededForService" : "2027-06-01"
+            },
+            "desiredFeatures" : [ {
+              "feature" : "LIQUID_COOLING",
+              "required" : true
+            } ]
+          }
+        }
+      },
+      "SubscriptionWebhook" : {
+        "summary" : "Follow a signal and deliver events to a webhook",
+        "value" : {
+          "name" : "Frankfurt 2027",
+          "signalId" : "sig-0001",
+          "notifyOn" : "GRADE_CHANGE",
+          "delivery" : {
+            "type" : "WEBHOOK",
+            "url" : "https://customer.example/hooks/capacity"
+          }
+        }
+      },
+      "EventAnswerUpdated" : {
+        "summary" : "The grade for a subscribed requirement changed",
+        "value" : {
+          "specversion" : "1.0",
+          "id" : "evt-000017",
+          "source" : "https://provider.example/capacity/v1",
+          "type" : "org.opencapacity.answer.updated",
+          "subject" : "sub-0001",
+          "time" : "2026-12-02T08:15:00Z",
+          "datacontenttype" : "application/json",
+          "data" : {
+            "subscriptionId" : "sub-0001",
+            "sequence" : 17,
+            "reason" : "GRADE_CHANGE",
+            "answer" : {
+              "answerId" : "ans-0042",
+              "generatedAt" : "2026-12-02T08:15:00Z",
+              "validUntil" : "2026-12-03T08:15:00Z",
+              "grade" : "AVAILABLE",
+              "results" : [ {
+                "location" : {
+                  "level" : "METRO",
+                  "code" : "FR"
+                },
+                "grade" : "AVAILABLE",
+                "supportedFeatures" : [ {
+                  "feature" : "LIQUID_COOLING",
+                  "support" : "AVAILABLE",
+                  "required" : true
+                } ]
+              } ]
+            }
+          }
+        }
+      },
+      "ProblemInconsistentDemand" : {
+        "summary" : "Total power does not fit the cabinet count and density",
+        "value" : {
+          "type" : "https://opencapacity.example/problems/inconsistent-demand",
+          "title" : "Demand is inconsistent",
+          "status" : 422,
+          "code" : "INCONSISTENT_DEMAND",
+          "detail" : "power of 5 MW is greater than 40 cabinets at a density max of 100 kVA.",
+          "errors" : [ {
+            "pointer" : "/requirement/demand/power",
+            "detail" : "Must not exceed cabinets.count times density.max."
+          } ]
+        }
+      },
+      "CapabilitiesCoreOnly" : {
+        "summary" : "A provider that implements queries only, answers at facility level, and returns bands",
+        "value" : {
+          "specVersion" : "1.0.0",
+          "provider" : {
+            "name" : "Example Colocation",
+            "url" : "https://provider.example"
+          },
+          "conformance" : [ "CORE" ],
+          "authentication" : {
+            "tokenUrl" : "https://provider.example/oauth2/token"
+          },
+          "locationLevels" : [ "COUNTRY", "METRO", "CAMPUS", "FACILITY" ],
+          "areaLocations" : false,
+          "finestAnswerLevel" : "FACILITY",
+          "features" : [ "LIQUID_COOLING", "DIRECT_TO_CHIP_COOLING", "IMMERSION_COOLING", "PRIVATE_CAGE", "PRIVATE_SUITE" ],
+          "defaultPowerFactor" : 0.9,
+          "disclosure" : {
+            "timing" : "ALWAYS",
+            "density" : "ALWAYS",
+            "cabinets" : "ALWAYS",
+            "power" : "CASE_BY_CASE",
+            "interconnection" : "CASE_BY_CASE",
+            "reasons" : "ALWAYS"
+          },
+          "limits" : {
+            "maxLocationsPerRequirement" : 5,
+            "answerValiditySeconds" : 3600
+          }
+        }
+      },
+      "LocationsPage" : {
+        "summary" : "One page of locations with a cursor for the next page",
+        "value" : {
+          "data" : [ {
+            "level" : "METRO",
+            "code" : "FR",
+            "name" : "Frankfurt",
+            "standardCode" : "DEFRA",
+            "parent" : {
+              "level" : "COUNTRY",
+              "code" : "DE"
+            }
+          }, {
+            "level" : "CAMPUS",
+            "code" : "FR-CAMPUS-1",
+            "name" : "Frankfurt East Campus",
+            "parent" : {
+              "level" : "METRO",
+              "code" : "FR"
+            }
+          }, {
+            "level" : "FACILITY",
+            "code" : "FR-A",
+            "name" : "Frankfurt A",
+            "parent" : {
+              "level" : "CAMPUS",
+              "code" : "FR-CAMPUS-1"
+            }
+          }, {
+            "level" : "FACILITY",
+            "code" : "FR-B",
+            "name" : "Frankfurt B",
+            "parent" : {
+              "level" : "CAMPUS",
+              "code" : "FR-CAMPUS-1"
+            }
+          }, {
+            "level" : "METRO",
+            "code" : "AM",
+            "name" : "Amsterdam",
+            "standardCode" : "NLAMS",
+            "parent" : {
+              "level" : "COUNTRY",
+              "code" : "NL"
+            }
+          } ],
+          "pagination" : {
+            "limit" : 5,
+            "next" : "bG9jLTAwMDY"
+          }
+        }
+      },
+      "QueryPowerCabinetsDensity" : {
+        "summary" : "Total power with a cabinet count and a density range, as circuit capacity in kVA",
+        "value" : {
+          "reference" : "example-query-2",
+          "requirement" : {
+            "locations" : [ {
+              "level" : "METRO",
+              "code" : "FR"
+            } ],
+            "demand" : {
+              "power" : {
+                "value" : 600,
+                "unit" : "KVA"
+              },
+              "powerBasis" : "CIRCUIT_CAPACITY",
+              "powerFactor" : 0.95,
+              "cabinets" : {
+                "count" : 30
+              },
+              "density" : {
+                "min" : 10,
+                "target" : 20,
+                "max" : 40,
+                "unit" : "KVA"
+              }
+            },
+            "timeframe" : {
+              "neededForService" : "2027-Q1",
+              "termMonths" : 36
+            }
+          }
+        }
+      },
+      "AnswerPowerCabinetsDensity" : {
+        "summary" : "An answer with a power band and a cabinet band",
+        "value" : {
+          "answerId" : "ans-0101",
+          "reference" : "example-query-2",
+          "generatedAt" : "2026-11-18T10:05:00Z",
+          "validUntil" : "2026-11-19T10:05:00Z",
+          "grade" : "AVAILABLE",
+          "results" : [ {
+            "location" : {
+              "level" : "METRO",
+              "code" : "FR"
+            },
+            "grade" : "AVAILABLE",
+            "timing" : {
+              "status" : "IN_SERVICE",
+              "availableForSale" : "NOW",
+              "availableForService" : "2027-01"
+            },
+            "density" : {
+              "min" : 5,
+              "max" : 40,
+              "unit" : "KVA"
+            },
+            "cabinets" : {
+              "min" : 30
+            },
+            "power" : {
+              "min" : 600,
+              "unit" : "KVA"
+            },
+            "supportedFeatures" : [ ]
+          } ]
+        }
+      },
+      "QueryFacility" : {
+        "summary" : "A question about one facility",
+        "value" : {
+          "requirement" : {
+            "locations" : [ {
+              "level" : "FACILITY",
+              "code" : "FR-A"
+            } ],
+            "demand" : {
+              "cabinets" : {
+                "count" : 12
+              },
+              "density" : {
+                "target" : 15,
+                "unit" : "KW"
+              }
+            },
+            "timeframe" : {
+              "neededForService" : "2027-03"
+            },
+            "desiredFeatures" : [ {
+              "feature" : "LIQUID_COOLING",
+              "required" : true
+            } ]
+          }
+        }
+      },
+      "AnswerCoarserThanRequested" : {
+        "summary" : "The provider answers for the metro and says which location was requested",
+        "value" : {
+          "answerId" : "ans-0102",
+          "generatedAt" : "2026-11-18T10:06:00Z",
+          "validUntil" : "2026-11-19T10:06:00Z",
+          "grade" : "AVAILABLE",
+          "results" : [ {
+            "location" : {
+              "level" : "METRO",
+              "code" : "FR"
+            },
+            "requested" : {
+              "level" : "FACILITY",
+              "code" : "FR-A"
+            },
+            "grade" : "AVAILABLE",
+            "supportedFeatures" : [ {
+              "feature" : "LIQUID_COOLING",
+              "support" : "AVAILABLE",
+              "required" : true
+            } ]
+          } ]
+        }
+      },
+      "QueryArea" : {
+        "summary" : "Everything within 400 km of a point",
+        "value" : {
+          "requirement" : {
+            "locations" : [ {
+              "level" : "AREA",
+              "center" : {
+                "latitude" : 50.11,
+                "longitude" : 8.68
+              },
+              "radiusKm" : 400
+            } ],
+            "demand" : {
+              "power" : {
+                "value" : 2,
+                "unit" : "MW"
+              }
+            },
+            "timeframe" : {
+              "neededForService" : "2027"
+            }
+          }
+        }
+      },
+      "AnswerArea" : {
+        "summary" : "One result for each named location the provider reports inside the area",
+        "value" : {
+          "answerId" : "ans-0103",
+          "generatedAt" : "2026-11-18T10:07:00Z",
+          "validUntil" : "2026-11-19T10:07:00Z",
+          "grade" : "AVAILABLE",
+          "results" : [ {
+            "location" : {
+              "level" : "METRO",
+              "code" : "FR"
+            },
+            "requested" : {
+              "level" : "AREA",
+              "center" : {
+                "latitude" : 50.11,
+                "longitude" : 8.68
+              },
+              "radiusKm" : 400
+            },
+            "grade" : "POSSIBLE",
+            "timing" : {
+              "status" : "PLANNED",
+              "availableForService" : "2027-Q4"
+            },
+            "supportedFeatures" : [ ],
+            "reasons" : [ "TIMING" ]
+          }, {
+            "location" : {
+              "level" : "METRO",
+              "code" : "AM"
+            },
+            "requested" : {
+              "level" : "AREA",
+              "center" : {
+                "latitude" : 50.11,
+                "longitude" : 8.68
+              },
+              "radiusKm" : 400
+            },
+            "grade" : "AVAILABLE",
+            "timing" : {
+              "status" : "PLANNED",
+              "availableForService" : "2027-Q2"
+            },
+            "supportedFeatures" : [ ]
+          } ]
+        }
+      },
+      "QueryNotServed" : {
+        "summary" : "Two metros, one of which the provider does not serve",
+        "value" : {
+          "requirement" : {
+            "locations" : [ {
+              "level" : "METRO",
+              "code" : "FR"
+            }, {
+              "level" : "METRO",
+              "code" : "USNYC",
+              "scheme" : "STANDARD"
+            } ],
+            "demand" : {
+              "cabinets" : {
+                "count" : 4
+              },
+              "density" : {
+                "max" : 8,
+                "unit" : "KVA"
+              }
+            }
+          }
+        }
+      },
+      "AnswerNotServed" : {
+        "summary" : "UNAVAILABLE with reason LOCATION_NOT_SERVED for the metro the provider does not serve",
+        "value" : {
+          "answerId" : "ans-0104",
+          "generatedAt" : "2026-11-18T10:08:00Z",
+          "validUntil" : "2026-11-19T10:08:00Z",
+          "grade" : "AVAILABLE",
+          "results" : [ {
+            "location" : {
+              "level" : "METRO",
+              "code" : "FR"
+            },
+            "grade" : "AVAILABLE",
+            "timing" : {
+              "status" : "IN_SERVICE",
+              "availableForSale" : "NOW",
+              "availableForService" : "NOW"
+            },
+            "supportedFeatures" : [ ]
+          }, {
+            "location" : {
+              "level" : "METRO",
+              "code" : "USNYC",
+              "scheme" : "STANDARD"
+            },
+            "grade" : "UNAVAILABLE",
+            "supportedFeatures" : [ ],
+            "reasons" : [ "LOCATION_NOT_SERVED" ]
+          } ]
+        }
+      },
+      "QueryPartialFit" : {
+        "summary" : "60 adjacent cabinets, of which at least 40 are worth an answer",
+        "value" : {
+          "requirement" : {
+            "locations" : [ {
+              "level" : "METRO",
+              "code" : "LD"
+            } ],
+            "demand" : {
+              "cabinets" : {
+                "count" : 60,
+                "minimum" : 40
+              },
+              "density" : {
+                "target" : 12,
+                "max" : 20,
+                "unit" : "KW"
+              },
+              "spaceType" : "CAGE",
+              "contiguous" : true
+            },
+            "timeframe" : {
+              "neededForService" : "2027-Q2"
+            },
+            "desiredFeatures" : [ {
+              "feature" : "PRIVATE_CAGE",
+              "required" : false
+            } ]
+          }
+        }
+      },
+      "AnswerPartialFit" : {
+        "summary" : "POSSIBLE with a cabinet band below the requested count and the reason",
+        "value" : {
+          "answerId" : "ans-0105",
+          "generatedAt" : "2026-11-18T10:09:00Z",
+          "validUntil" : "2026-11-19T10:09:00Z",
+          "grade" : "POSSIBLE",
+          "results" : [ {
+            "location" : {
+              "level" : "METRO",
+              "code" : "LD"
+            },
+            "grade" : "POSSIBLE",
+            "timing" : {
+              "status" : "IN_SERVICE",
+              "availableForService" : "2027-Q2"
+            },
+            "density" : {
+              "max" : 20,
+              "unit" : "KW"
+            },
+            "cabinets" : {
+              "min" : 40,
+              "max" : 50
+            },
+            "supportedFeatures" : [ {
+              "feature" : "PRIVATE_CAGE",
+              "support" : "AVAILABLE",
+              "required" : false
+            } ],
+            "reasons" : [ "SPACE" ]
+          } ]
+        }
+      },
+      "QueryInterconnectionLatency" : {
+        "summary" : "Two parties in the metro, one with a latency limit",
+        "value" : {
+          "requirement" : {
+            "locations" : [ {
+              "level" : "METRO",
+              "code" : "FR"
+            } ],
+            "demand" : {
+              "cabinets" : {
+                "count" : 8
+              },
+              "density" : {
+                "target" : 10,
+                "unit" : "KW"
+              }
+            },
+            "timeframe" : {
+              "neededForService" : "2027-06"
+            },
+            "interconnection" : [ {
+              "party" : {
+                "name" : "Example Cloud",
+                "asn" : 64500,
+                "type" : "CLOUD"
+              },
+              "within" : "METRO",
+              "maxRoundTripMs" : 2,
+              "required" : true
+            }, {
+              "party" : {
+                "name" : "Example Network",
+                "asn" : 64501,
+                "type" : "NETWORK"
+              },
+              "within" : "FACILITY",
+              "required" : false
+            } ]
+          }
+        }
+      },
+      "AnswerInterconnectionLatency" : {
+        "summary" : "A latency band for one party and NOT_DISCLOSED for the other",
+        "value" : {
+          "answerId" : "ans-0106",
+          "generatedAt" : "2026-11-18T10:10:00Z",
+          "validUntil" : "2026-11-19T10:10:00Z",
+          "grade" : "AVAILABLE",
+          "results" : [ {
+            "location" : {
+              "level" : "METRO",
+              "code" : "FR"
+            },
+            "grade" : "AVAILABLE",
+            "supportedFeatures" : [ ],
+            "interconnection" : [ {
+              "party" : {
+                "name" : "Example Cloud",
+                "asn" : 64500,
+                "type" : "CLOUD"
+              },
+              "within" : "METRO",
+              "presence" : "AVAILABLE",
+              "required" : true,
+              "roundTripMs" : {
+                "min" : 0.4,
+                "max" : 1.2
+              }
+            }, {
+              "party" : {
+                "name" : "Example Network",
+                "asn" : 64501,
+                "type" : "NETWORK"
+              },
+              "within" : "FACILITY",
+              "presence" : "NOT_DISCLOSED",
+              "required" : false
+            } ]
+          } ]
+        }
+      },
+      "QueryRamp" : {
+        "summary" : "20 MW that ramps over 18 months, with a sale date and a service date",
+        "value" : {
+          "requirement" : {
+            "locations" : [ {
+              "level" : "COUNTRY",
+              "code" : "DE"
+            } ],
+            "demand" : {
+              "power" : {
+                "value" : 20,
+                "unit" : "MW"
+              },
+              "spaceType" : "HALL"
+            },
+            "timeframe" : {
+              "neededForSale" : "2027-Q1",
+              "neededForService" : "2028-Q1",
+              "latestAcceptable" : "2028-06",
+              "termMonths" : 120,
+              "ramp" : [ {
+                "by" : "2028-Q1",
+                "percent" : 25
+              }, {
+                "by" : "2028-Q4",
+                "percent" : 60
+              }, {
+                "by" : "2029-06",
+                "percent" : 100
+              } ]
+            },
+            "desiredFeatures" : [ {
+              "feature" : "DIRECT_TO_CHIP_COOLING",
+              "required" : true
+            } ],
+            "offering" : "WHOLESALE"
+          }
+        }
+      },
+      "AnswerRampPlanned" : {
+        "summary" : "Planned capacity with a sale date to the month and a service date to the year",
+        "value" : {
+          "answerId" : "ans-0107",
+          "generatedAt" : "2026-11-18T10:11:00Z",
+          "validUntil" : "2026-11-19T10:11:00Z",
+          "grade" : "POSSIBLE",
+          "results" : [ {
+            "location" : {
+              "level" : "METRO",
+              "code" : "FR"
+            },
+            "requested" : {
+              "level" : "COUNTRY",
+              "code" : "DE"
+            },
+            "grade" : "POSSIBLE",
+            "timing" : {
+              "status" : "PLANNED",
+              "availableForSale" : "2027-03",
+              "availableForService" : "2028"
+            },
+            "supportedFeatures" : [ {
+              "feature" : "DIRECT_TO_CHIP_COOLING",
+              "support" : "AVAILABLE",
+              "required" : true,
+              "availableForService" : "2028"
+            } ],
+            "reasons" : [ "TIMING", "REVIEW_REQUIRED" ],
+            "nextStepUrl" : "https://provider.example/contact"
+          } ]
+        }
+      },
+      "QueryImmediate" : {
+        "summary" : "No timeframe, which states an immediate need",
+        "value" : {
+          "requirement" : {
+            "locations" : [ {
+              "level" : "METRO",
+              "code" : "AM"
+            } ],
+            "demand" : {
+              "cabinets" : {
+                "count" : 2
+              },
+              "density" : {
+                "max" : 6,
+                "unit" : "KVA"
+              }
+            }
+          }
+        }
+      },
+      "AnswerAvailableNow" : {
+        "summary" : "In service, for sale now and usable now",
+        "value" : {
+          "answerId" : "ans-0108",
+          "generatedAt" : "2026-11-18T10:12:00Z",
+          "validUntil" : "2026-11-19T10:12:00Z",
+          "grade" : "AVAILABLE",
+          "results" : [ {
+            "location" : {
+              "level" : "METRO",
+              "code" : "AM"
+            },
+            "grade" : "AVAILABLE",
+            "timing" : {
+              "status" : "IN_SERVICE",
+              "availableForSale" : "NOW",
+              "availableForService" : "NOW"
+            },
+            "density" : {
+              "max" : 10,
+              "unit" : "KVA"
+            },
+            "cabinets" : {
+              "min" : 2
+            },
+            "supportedFeatures" : [ ]
+          } ]
+        }
+      },
+      "QueryRedundancyPowerFeed" : {
+        "summary" : "Redundancy, a DC power feed, and a commercial offering as hard constraints",
+        "value" : {
+          "requirement" : {
+            "locations" : [ {
+              "level" : "METRO",
+              "code" : "FR"
+            }, {
+              "level" : "METRO",
+              "code" : "AM"
+            } ],
+            "demand" : {
+              "cabinets" : {
+                "count" : 16
+              },
+              "density" : {
+                "target" : 30,
+                "unit" : "KW"
+              }
+            },
+            "timeframe" : {
+              "neededForService" : "2027-09"
+            },
+            "redundancy" : {
+              "power" : "TWO_N",
+              "cooling" : "N_PLUS_1"
+            },
+            "powerFeed" : {
+              "current" : "DC",
+              "voltage" : 400
+            },
+            "offering" : "RETAIL_COLOCATION"
+          }
+        }
+      },
+      "AnswerRedundancyUnavailable" : {
+        "summary" : "UNAVAILABLE in one metro with the reasons, and POSSIBLE in the other",
+        "value" : {
+          "answerId" : "ans-0109",
+          "generatedAt" : "2026-11-18T10:13:00Z",
+          "validUntil" : "2026-11-19T10:13:00Z",
+          "grade" : "POSSIBLE",
+          "results" : [ {
+            "location" : {
+              "level" : "METRO",
+              "code" : "FR"
+            },
+            "grade" : "UNAVAILABLE",
+            "supportedFeatures" : [ ],
+            "reasons" : [ "REDUNDANCY", "POWER_FEED" ]
+          }, {
+            "location" : {
+              "level" : "METRO",
+              "code" : "AM"
+            },
+            "grade" : "POSSIBLE",
+            "timing" : {
+              "status" : "PLANNED",
+              "availableForService" : "NOT_DISCLOSED"
+            },
+            "supportedFeatures" : [ ],
+            "reasons" : [ "POWER_FEED", "REVIEW_REQUIRED" ]
+          } ]
+        }
+      },
+      "AnswerPowerOnly" : {
+        "summary" : "A region answered as a whole and an area answered with one named location",
+        "value" : {
+          "answerId" : "ans-0110",
+          "generatedAt" : "2026-11-18T10:14:00Z",
+          "validUntil" : "2026-11-19T10:14:00Z",
+          "grade" : "POSSIBLE",
+          "results" : [ {
+            "location" : {
+              "level" : "REGION",
+              "code" : "EMEA"
+            },
+            "grade" : "POSSIBLE",
+            "supportedFeatures" : [ {
+              "feature" : "DIRECT_TO_CHIP_COOLING",
+              "support" : "POSSIBLE",
+              "required" : true
+            } ],
+            "reasons" : [ "REVIEW_REQUIRED" ]
+          }, {
+            "location" : {
+              "level" : "METRO",
+              "code" : "FR"
+            },
+            "requested" : {
+              "level" : "AREA",
+              "center" : {
+                "latitude" : 50.11,
+                "longitude" : 8.68
+              },
+              "radiusKm" : 50
+            },
+            "grade" : "POSSIBLE",
+            "timing" : {
+              "status" : "PLANNED",
+              "availableForService" : "2028"
+            },
+            "supportedFeatures" : [ {
+              "feature" : "DIRECT_TO_CHIP_COOLING",
+              "support" : "AVAILABLE",
+              "required" : true
+            } ],
+            "reasons" : [ "TIMING" ]
+          } ]
+        }
+      },
+      "ProblemUnsupportedLocationLevel" : {
+        "summary" : "An area sent to a provider that does not accept areas",
+        "value" : {
+          "type" : "https://opencapacity.example/problems/unsupported-location-level",
+          "title" : "Location level is not supported",
+          "status" : 422,
+          "code" : "UNSUPPORTED_LOCATION_LEVEL",
+          "detail" : "This provider does not accept a point and a radius as a location.",
+          "errors" : [ {
+            "pointer" : "/requirement/locations/0",
+            "detail" : "Use a REGION, COUNTRY, METRO, CAMPUS, or FACILITY location."
+          } ]
+        }
+      },
+      "ProblemTooManyLocations" : {
+        "summary" : "More locations than the provider accepts in one requirement",
+        "value" : {
+          "type" : "https://opencapacity.example/problems/too-many-locations",
+          "title" : "Too many locations",
+          "status" : 422,
+          "code" : "TOO_MANY_LOCATIONS",
+          "detail" : "A requirement can name at most 10 locations. This one names 14.",
+          "errors" : [ {
+            "pointer" : "/requirement/locations",
+            "detail" : "Send 10 locations or fewer."
+          } ]
+        }
+      },
+      "ProblemQuotaExceeded" : {
+        "summary" : "The query quota for the period is used up",
+        "value" : {
+          "type" : "https://opencapacity.example/problems/quota-exceeded",
+          "title" : "Query quota exceeded",
+          "status" : 429,
+          "code" : "QUOTA_EXCEEDED",
+          "detail" : "The daily query quota for this client is used up. Retry after the time in the Retry-After header."
+        }
+      },
+      "SignalCreated" : {
+        "summary" : "The stored signal: state RECEIVED, revision 1",
+        "value" : {
+          "reference" : "example-signal-1",
+          "confidence" : "PLANNED",
+          "confidentiality" : {
+            "sharing" : "NONE",
+            "contactPermitted" : true
+          },
+          "contact" : {
+            "name" : "Network Operations",
+            "email" : "noc@example.com"
+          },
+          "requirement" : {
+            "locations" : [ {
+              "level" : "METRO",
+              "code" : "FR"
+            } ],
+            "demand" : {
+              "power" : {
+                "value" : 800,
+                "unit" : "KVA"
+              },
+              "cabinets" : {
+                "count" : 40
+              },
+              "density" : {
+                "target" : 20,
+                "unit" : "KVA"
+              }
+            },
+            "timeframe" : {
+              "neededForService" : "2027-06-01"
+            },
+            "desiredFeatures" : [ {
+              "feature" : "LIQUID_COOLING",
+              "required" : true
+            } ]
+          },
+          "signalId" : "sig-0001",
+          "state" : "RECEIVED",
+          "revision" : 1,
+          "createdAt" : "2026-11-18T10:00:00Z",
+          "updatedAt" : "2026-11-18T10:00:00Z",
+          "expiresAt" : "2027-11-18T10:00:00Z"
+        }
+      },
+      "SignalAcknowledged" : {
+        "summary" : "After the provider took the signal into planning, with its current answer",
+        "value" : {
+          "reference" : "example-signal-1",
+          "confidence" : "PLANNED",
+          "confidentiality" : {
+            "sharing" : "NONE",
+            "contactPermitted" : true
+          },
+          "contact" : {
+            "name" : "Network Operations",
+            "email" : "noc@example.com"
+          },
+          "requirement" : {
+            "locations" : [ {
+              "level" : "METRO",
+              "code" : "FR"
+            } ],
+            "demand" : {
+              "power" : {
+                "value" : 800,
+                "unit" : "KVA"
+              },
+              "cabinets" : {
+                "count" : 40
+              },
+              "density" : {
+                "target" : 20,
+                "unit" : "KVA"
+              }
+            },
+            "timeframe" : {
+              "neededForService" : "2027-06-01"
+            },
+            "desiredFeatures" : [ {
+              "feature" : "LIQUID_COOLING",
+              "required" : true
+            } ]
+          },
+          "signalId" : "sig-0001",
+          "state" : "ACKNOWLEDGED",
+          "revision" : 1,
+          "createdAt" : "2026-11-18T10:00:00Z",
+          "updatedAt" : "2026-11-19T09:30:00Z",
+          "expiresAt" : "2027-11-18T10:00:00Z",
+          "answer" : {
+            "answerId" : "ans-0201",
+            "generatedAt" : "2026-11-19T09:30:00Z",
+            "validUntil" : "2026-11-20T09:30:00Z",
+            "grade" : "POSSIBLE",
+            "results" : [ {
+              "location" : {
+                "level" : "METRO",
+                "code" : "FR"
+              },
+              "grade" : "POSSIBLE",
+              "timing" : {
+                "status" : "PLANNED",
+                "availableForService" : "2027-Q3"
+              },
+              "supportedFeatures" : [ {
+                "feature" : "LIQUID_COOLING",
+                "support" : "AVAILABLE",
+                "required" : true
+              } ],
+              "reasons" : [ "TIMING" ]
+            } ]
+          }
+        }
+      },
+      "SignalAmendRequest" : {
+        "summary" : "The whole signal with a larger demand, a later date, and a firmer confidence",
+        "value" : {
+          "reference" : "example-signal-1",
+          "confidence" : "FUNDED",
+          "confidentiality" : {
+            "sharing" : "NONE",
+            "contactPermitted" : true
+          },
+          "contact" : {
+            "name" : "Network Operations",
+            "email" : "noc@example.com"
+          },
+          "requirement" : {
+            "locations" : [ {
+              "level" : "METRO",
+              "code" : "FR"
+            } ],
+            "demand" : {
+              "power" : {
+                "value" : 1200,
+                "unit" : "KVA"
+              },
+              "cabinets" : {
+                "count" : 60
+              },
+              "density" : {
+                "target" : 20,
+                "unit" : "KVA"
+              }
+            },
+            "timeframe" : {
+              "neededForService" : "2027-Q3"
+            },
+            "desiredFeatures" : [ {
+              "feature" : "LIQUID_COOLING",
+              "required" : true
+            } ]
+          }
+        }
+      },
+      "SignalAmended" : {
+        "summary" : "Revision 2, back in state RECEIVED",
+        "value" : {
+          "reference" : "example-signal-1",
+          "confidence" : "FUNDED",
+          "confidentiality" : {
+            "sharing" : "NONE",
+            "contactPermitted" : true
+          },
+          "contact" : {
+            "name" : "Network Operations",
+            "email" : "noc@example.com"
+          },
+          "requirement" : {
+            "locations" : [ {
+              "level" : "METRO",
+              "code" : "FR"
+            } ],
+            "demand" : {
+              "power" : {
+                "value" : 1200,
+                "unit" : "KVA"
+              },
+              "cabinets" : {
+                "count" : 60
+              },
+              "density" : {
+                "target" : 20,
+                "unit" : "KVA"
+              }
+            },
+            "timeframe" : {
+              "neededForService" : "2027-Q3"
+            },
+            "desiredFeatures" : [ {
+              "feature" : "LIQUID_COOLING",
+              "required" : true
+            } ]
+          },
+          "signalId" : "sig-0001",
+          "state" : "RECEIVED",
+          "revision" : 2,
+          "createdAt" : "2026-11-18T10:00:00Z",
+          "updatedAt" : "2026-11-25T14:00:00Z",
+          "expiresAt" : "2027-11-18T10:00:00Z"
+        }
+      },
+      "ProblemPreconditionFailed" : {
+        "summary" : "An amend sent with the ETag of an older revision",
+        "value" : {
+          "type" : "https://opencapacity.example/problems/precondition-failed",
+          "title" : "The resource has changed",
+          "status" : 412,
+          "code" : "PRECONDITION_FAILED",
+          "detail" : "The If-Match value does not match the current version. Read the signal again and repeat the amend."
+        }
+      },
+      "SignalWithdrawn" : {
+        "summary" : "State WITHDRAWN: no longer an active need, still readable",
+        "value" : {
+          "reference" : "example-signal-1",
+          "confidence" : "FUNDED",
+          "confidentiality" : {
+            "sharing" : "NONE",
+            "contactPermitted" : true
+          },
+          "contact" : {
+            "name" : "Network Operations",
+            "email" : "noc@example.com"
+          },
+          "requirement" : {
+            "locations" : [ {
+              "level" : "METRO",
+              "code" : "FR"
+            } ],
+            "demand" : {
+              "power" : {
+                "value" : 1200,
+                "unit" : "KVA"
+              },
+              "cabinets" : {
+                "count" : 60
+              },
+              "density" : {
+                "target" : 20,
+                "unit" : "KVA"
+              }
+            },
+            "timeframe" : {
+              "neededForService" : "2027-Q3"
+            },
+            "desiredFeatures" : [ {
+              "feature" : "LIQUID_COOLING",
+              "required" : true
+            } ]
+          },
+          "signalId" : "sig-0001",
+          "state" : "WITHDRAWN",
+          "revision" : 2,
+          "createdAt" : "2026-11-18T10:00:00Z",
+          "updatedAt" : "2026-12-10T08:00:00Z",
+          "expiresAt" : "2027-11-18T10:00:00Z"
+        }
+      },
+      "SignalReactivated" : {
+        "summary" : "An amend of a withdrawn signal: revision 3, state RECEIVED",
+        "value" : {
+          "reference" : "example-signal-1",
+          "confidence" : "FUNDED",
+          "confidentiality" : {
+            "sharing" : "NONE",
+            "contactPermitted" : true
+          },
+          "contact" : {
+            "name" : "Network Operations",
+            "email" : "noc@example.com"
+          },
+          "requirement" : {
+            "locations" : [ {
+              "level" : "METRO",
+              "code" : "FR"
+            } ],
+            "demand" : {
+              "power" : {
+                "value" : 1200,
+                "unit" : "KVA"
+              },
+              "cabinets" : {
+                "count" : 60
+              },
+              "density" : {
+                "target" : 20,
+                "unit" : "KVA"
+              }
+            },
+            "timeframe" : {
+              "neededForService" : "2027-Q3"
+            },
+            "desiredFeatures" : [ {
+              "feature" : "LIQUID_COOLING",
+              "required" : true
+            } ]
+          },
+          "signalId" : "sig-0001",
+          "state" : "RECEIVED",
+          "revision" : 3,
+          "createdAt" : "2026-11-18T10:00:00Z",
+          "updatedAt" : "2026-12-15T11:00:00Z",
+          "expiresAt" : "2027-11-18T10:00:00Z"
+        }
+      },
+      "SignalClosed" : {
+        "summary" : "A signal the provider closed, with the reason",
+        "value" : {
+          "reference" : "example-signal-1",
+          "confidence" : "FUNDED",
+          "confidentiality" : {
+            "sharing" : "NONE",
+            "contactPermitted" : true
+          },
+          "contact" : {
+            "name" : "Network Operations",
+            "email" : "noc@example.com"
+          },
+          "requirement" : {
+            "locations" : [ {
+              "level" : "METRO",
+              "code" : "FR"
+            } ],
+            "demand" : {
+              "power" : {
+                "value" : 1200,
+                "unit" : "KVA"
+              },
+              "cabinets" : {
+                "count" : 60
+              },
+              "density" : {
+                "target" : 20,
+                "unit" : "KVA"
+              }
+            },
+            "timeframe" : {
+              "neededForService" : "2027-Q3"
+            },
+            "desiredFeatures" : [ {
+              "feature" : "LIQUID_COOLING",
+              "required" : true
+            } ]
+          },
+          "signalId" : "sig-0001",
+          "state" : "CLOSED",
+          "revision" : 3,
+          "createdAt" : "2026-11-18T10:00:00Z",
+          "updatedAt" : "2027-02-01T16:00:00Z",
+          "expiresAt" : "2027-11-18T10:00:00Z",
+          "closeReason" : "FULFILLED"
+        }
+      },
+      "ProblemStateConflict" : {
+        "summary" : "An amend of a signal in state CLOSED",
+        "value" : {
+          "type" : "https://opencapacity.example/problems/state-conflict",
+          "title" : "The signal cannot be changed in its current state",
+          "status" : 409,
+          "code" : "STATE_CONFLICT",
+          "detail" : "The signal is CLOSED. Create a new signal."
+        }
+      },
+      "ProblemNotFound" : {
+        "summary" : "A read of a signal that was deleted",
+        "value" : {
+          "type" : "https://opencapacity.example/problems/not-found",
+          "title" : "Not found",
+          "status" : 404,
+          "code" : "NOT_FOUND",
+          "detail" : "No signal with this identifier exists."
+        }
+      },
+      "SignalAggregatedRequest" : {
+        "summary" : "A funded need that can be counted in anonymous totals, with no contact",
+        "value" : {
+          "reference" : "example-signal-2",
+          "confidence" : "FUNDED",
+          "confidentiality" : {
+            "sharing" : "AGGREGATED",
+            "contactPermitted" : false
+          },
+          "expiresAt" : "2027-06-30T00:00:00Z",
+          "requirement" : {
+            "locations" : [ {
+              "level" : "REGION",
+              "code" : "EMEA"
+            } ],
+            "demand" : {
+              "power" : {
+                "value" : 12,
+                "unit" : "MW"
+              }
+            },
+            "timeframe" : {
+              "neededForService" : "2028"
+            },
+            "desiredFeatures" : [ {
+              "feature" : "DIRECT_TO_CHIP_COOLING",
+              "required" : true
+            } ]
+          }
+        }
+      },
+      "SignalAggregatedCreated" : {
+        "summary" : "The stored signal with the expiry the customer set",
+        "value" : {
+          "reference" : "example-signal-2",
+          "confidence" : "FUNDED",
+          "confidentiality" : {
+            "sharing" : "AGGREGATED",
+            "contactPermitted" : false
+          },
+          "expiresAt" : "2027-06-30T00:00:00Z",
+          "requirement" : {
+            "locations" : [ {
+              "level" : "REGION",
+              "code" : "EMEA"
+            } ],
+            "demand" : {
+              "power" : {
+                "value" : 12,
+                "unit" : "MW"
+              }
+            },
+            "timeframe" : {
+              "neededForService" : "2028"
+            },
+            "desiredFeatures" : [ {
+              "feature" : "DIRECT_TO_CHIP_COOLING",
+              "required" : true
+            } ]
+          },
+          "signalId" : "sig-0002",
+          "state" : "RECEIVED",
+          "revision" : 1,
+          "createdAt" : "2026-11-20T12:00:00Z",
+          "updatedAt" : "2026-11-20T12:00:00Z"
+        }
+      },
+      "SignalsPage" : {
+        "summary" : "A page with two signals",
+        "value" : {
+          "data" : [ {
+            "reference" : "example-signal-1",
+            "confidence" : "FUNDED",
+            "confidentiality" : {
+              "sharing" : "NONE",
+              "contactPermitted" : true
+            },
+            "contact" : {
+              "name" : "Network Operations",
+              "email" : "noc@example.com"
+            },
+            "requirement" : {
+              "locations" : [ {
+                "level" : "METRO",
+                "code" : "FR"
+              } ],
+              "demand" : {
+                "power" : {
+                  "value" : 1200,
+                  "unit" : "KVA"
+                },
+                "cabinets" : {
+                  "count" : 60
+                },
+                "density" : {
+                  "target" : 20,
+                  "unit" : "KVA"
+                }
+              },
+              "timeframe" : {
+                "neededForService" : "2027-Q3"
+              },
+              "desiredFeatures" : [ {
+                "feature" : "LIQUID_COOLING",
+                "required" : true
+              } ]
+            },
+            "signalId" : "sig-0001",
+            "state" : "ACKNOWLEDGED",
+            "revision" : 2,
+            "createdAt" : "2026-11-18T10:00:00Z",
+            "updatedAt" : "2026-11-26T09:00:00Z",
+            "expiresAt" : "2027-11-18T10:00:00Z"
+          }, {
+            "reference" : "example-signal-2",
+            "confidence" : "FUNDED",
+            "confidentiality" : {
+              "sharing" : "AGGREGATED",
+              "contactPermitted" : false
+            },
+            "expiresAt" : "2027-06-30T00:00:00Z",
+            "requirement" : {
+              "locations" : [ {
+                "level" : "REGION",
+                "code" : "EMEA"
+              } ],
+              "demand" : {
+                "power" : {
+                  "value" : 12,
+                  "unit" : "MW"
+                }
+              },
+              "timeframe" : {
+                "neededForService" : "2028"
+              },
+              "desiredFeatures" : [ {
+                "feature" : "DIRECT_TO_CHIP_COOLING",
+                "required" : true
+              } ]
+            },
+            "signalId" : "sig-0002",
+            "state" : "RECEIVED",
+            "revision" : 1,
+            "createdAt" : "2026-11-20T12:00:00Z",
+            "updatedAt" : "2026-11-20T12:00:00Z"
+          } ],
+          "pagination" : {
+            "limit" : 50
+          }
+        }
+      },
+      "SubscriptionWebhookRequirementRequest" : {
+        "summary" : "Follow a requirement, report any change, deliver to a webhook",
+        "value" : {
+          "name" : "Frankfurt liquid cooling",
+          "notifyOn" : "ANY_CHANGE",
+          "requirement" : {
+            "locations" : [ {
+              "level" : "METRO",
+              "code" : "FR"
+            } ],
+            "demand" : {
+              "cabinets" : {
+                "count" : 20
+              },
+              "density" : {
+                "target" : 40,
+                "unit" : "KW"
+              }
+            },
+            "timeframe" : {
+              "neededForService" : "2027-Q4"
+            },
+            "desiredFeatures" : [ {
+              "feature" : "LIQUID_COOLING",
+              "required" : true
+            } ]
+          },
+          "delivery" : {
+            "type" : "WEBHOOK",
+            "url" : "https://customer.example/hooks/capacity"
+          }
+        }
+      },
+      "SubscriptionPendingVerification" : {
+        "summary" : "The new subscription with its signing secret, waiting for verification",
+        "value" : {
+          "name" : "Frankfurt liquid cooling",
+          "notifyOn" : "ANY_CHANGE",
+          "requirement" : {
+            "locations" : [ {
+              "level" : "METRO",
+              "code" : "FR"
+            } ],
+            "demand" : {
+              "cabinets" : {
+                "count" : 20
+              },
+              "density" : {
+                "target" : 40,
+                "unit" : "KW"
+              }
+            },
+            "timeframe" : {
+              "neededForService" : "2027-Q4"
+            },
+            "desiredFeatures" : [ {
+              "feature" : "LIQUID_COOLING",
+              "required" : true
+            } ]
+          },
+          "delivery" : {
+            "type" : "WEBHOOK",
+            "url" : "https://customer.example/hooks/capacity",
+            "signingSecret" : "whsec_example_0123456789abcdef"
+          },
+          "subscriptionId" : "sub-0002",
+          "state" : "PENDING_VERIFICATION",
+          "createdAt" : "2026-11-18T11:00:00Z",
+          "updatedAt" : "2026-11-18T11:00:00Z"
+        }
+      },
+      "EventVerification" : {
+        "summary" : "The verification event sent to a new webhook endpoint",
+        "value" : {
+          "specversion" : "1.0",
+          "id" : "evt-sub-0002-000001",
+          "source" : "https://provider.example/capacity/v1",
+          "type" : "org.opencapacity.subscription.verification",
+          "subject" : "sub-0002",
+          "time" : "2026-11-18T11:00:01Z",
+          "datacontenttype" : "application/json",
+          "data" : {
+            "subscriptionId" : "sub-0002",
+            "sequence" : 1,
+            "challenge" : "c7f3a1d09b2e4f58"
+          }
+        }
+      },
+      "EventAnswerInitial" : {
+        "summary" : "The first answer event after activation",
+        "value" : {
+          "specversion" : "1.0",
+          "id" : "evt-sub-0002-000002",
+          "source" : "https://provider.example/capacity/v1",
+          "type" : "org.opencapacity.answer.updated",
+          "subject" : "sub-0002",
+          "time" : "2026-11-18T11:00:05Z",
+          "datacontenttype" : "application/json",
+          "data" : {
+            "subscriptionId" : "sub-0002",
+            "sequence" : 2,
+            "reason" : "INITIAL",
+            "answer" : {
+              "answerId" : "ans-0301",
+              "generatedAt" : "2026-11-18T11:00:05Z",
+              "validUntil" : "2026-11-19T11:00:05Z",
+              "grade" : "POSSIBLE",
+              "results" : [ {
+                "location" : {
+                  "level" : "METRO",
+                  "code" : "FR"
+                },
+                "grade" : "POSSIBLE",
+                "timing" : {
+                  "status" : "PLANNED",
+                  "availableForService" : "2028-Q1"
+                },
+                "supportedFeatures" : [ {
+                  "feature" : "LIQUID_COOLING",
+                  "support" : "POSSIBLE",
+                  "required" : true
+                } ],
+                "reasons" : [ "TIMING" ]
+              } ]
+            }
+          }
+        }
+      },
+      "EventAnswerDetailChange" : {
+        "summary" : "The service date moved earlier and the grade did not change",
+        "value" : {
+          "specversion" : "1.0",
+          "id" : "evt-sub-0002-000003",
+          "source" : "https://provider.example/capacity/v1",
+          "type" : "org.opencapacity.answer.updated",
+          "subject" : "sub-0002",
+          "time" : "2026-12-04T09:20:00Z",
+          "datacontenttype" : "application/json",
+          "data" : {
+            "subscriptionId" : "sub-0002",
+            "sequence" : 3,
+            "reason" : "DETAIL_CHANGE",
+            "answer" : {
+              "answerId" : "ans-0318",
+              "generatedAt" : "2026-12-04T09:20:00Z",
+              "validUntil" : "2026-12-05T09:20:00Z",
+              "grade" : "POSSIBLE",
+              "results" : [ {
+                "location" : {
+                  "level" : "METRO",
+                  "code" : "FR"
+                },
+                "grade" : "POSSIBLE",
+                "timing" : {
+                  "status" : "PLANNED",
+                  "availableForService" : "2027-Q4"
+                },
+                "supportedFeatures" : [ {
+                  "feature" : "LIQUID_COOLING",
+                  "support" : "AVAILABLE",
+                  "required" : true
+                } ],
+                "reasons" : [ "TIMING" ]
+              } ]
+            }
+          }
+        }
+      },
+      "EventAnswerRefresh" : {
+        "summary" : "The previous answer expired and nothing else changed",
+        "value" : {
+          "specversion" : "1.0",
+          "id" : "evt-sub-0002-000004",
+          "source" : "https://provider.example/capacity/v1",
+          "type" : "org.opencapacity.answer.updated",
+          "subject" : "sub-0002",
+          "time" : "2026-12-05T09:20:00Z",
+          "datacontenttype" : "application/json",
+          "data" : {
+            "subscriptionId" : "sub-0002",
+            "sequence" : 4,
+            "reason" : "REFRESH",
+            "answer" : {
+              "answerId" : "ans-0325",
+              "generatedAt" : "2026-12-05T09:20:00Z",
+              "validUntil" : "2026-12-06T09:20:00Z",
+              "grade" : "POSSIBLE",
+              "results" : [ {
+                "location" : {
+                  "level" : "METRO",
+                  "code" : "FR"
+                },
+                "grade" : "POSSIBLE",
+                "timing" : {
+                  "status" : "PLANNED",
+                  "availableForService" : "2027-Q4"
+                },
+                "supportedFeatures" : [ {
+                  "feature" : "LIQUID_COOLING",
+                  "support" : "AVAILABLE",
+                  "required" : true
+                } ],
+                "reasons" : [ "TIMING" ]
+              } ]
+            }
+          }
+        }
+      },
+      "EventAnswerGradeChange" : {
+        "summary" : "The grade changed from POSSIBLE to AVAILABLE",
+        "value" : {
+          "specversion" : "1.0",
+          "id" : "evt-sub-0002-000005",
+          "source" : "https://provider.example/capacity/v1",
+          "type" : "org.opencapacity.answer.updated",
+          "subject" : "sub-0002",
+          "time" : "2026-12-12T15:45:00Z",
+          "datacontenttype" : "application/json",
+          "data" : {
+            "subscriptionId" : "sub-0002",
+            "sequence" : 5,
+            "reason" : "GRADE_CHANGE",
+            "answer" : {
+              "answerId" : "ans-0340",
+              "generatedAt" : "2026-12-12T15:45:00Z",
+              "validUntil" : "2026-12-13T15:45:00Z",
+              "grade" : "AVAILABLE",
+              "results" : [ {
+                "location" : {
+                  "level" : "METRO",
+                  "code" : "FR"
+                },
+                "grade" : "AVAILABLE",
+                "timing" : {
+                  "status" : "PLANNED",
+                  "availableForSale" : "NOW",
+                  "availableForService" : "2027-Q4"
+                },
+                "supportedFeatures" : [ {
+                  "feature" : "LIQUID_COOLING",
+                  "support" : "AVAILABLE",
+                  "required" : true
+                } ]
+              } ]
+            }
+          }
+        }
+      },
+      "EventSignalWithdrawn" : {
+        "summary" : "Sent to a subscription that follows a signal, when the customer withdraws the signal",
+        "value" : {
+          "specversion" : "1.0",
+          "id" : "evt-sub-0001-000018",
+          "source" : "https://provider.example/capacity/v1",
+          "type" : "org.opencapacity.signal.updated",
+          "subject" : "sub-0001",
+          "time" : "2026-12-10T08:00:01Z",
+          "datacontenttype" : "application/json",
+          "data" : {
+            "subscriptionId" : "sub-0001",
+            "sequence" : 18,
+            "signalId" : "sig-0001",
+            "signalState" : "WITHDRAWN"
+          }
+        }
+      },
+      "EventSubscriptionSuspended" : {
+        "summary" : "The provider stopped delivery after repeated failures",
+        "value" : {
+          "specversion" : "1.0",
+          "id" : "evt-sub-0002-000006",
+          "source" : "https://provider.example/capacity/v1",
+          "type" : "org.opencapacity.subscription.updated",
+          "subject" : "sub-0002",
+          "time" : "2026-12-20T03:10:00Z",
+          "datacontenttype" : "application/json",
+          "data" : {
+            "subscriptionId" : "sub-0002",
+            "sequence" : 6,
+            "subscriptionState" : "SUSPENDED"
+          }
+        }
+      },
+      "SubscriptionPauseRequest" : {
+        "summary" : "The whole subscription with paused set to true",
+        "value" : {
+          "name" : "Frankfurt liquid cooling",
+          "notifyOn" : "ANY_CHANGE",
+          "requirement" : {
+            "locations" : [ {
+              "level" : "METRO",
+              "code" : "FR"
+            } ],
+            "demand" : {
+              "cabinets" : {
+                "count" : 20
+              },
+              "density" : {
+                "target" : 40,
+                "unit" : "KW"
+              }
+            },
+            "timeframe" : {
+              "neededForService" : "2027-Q4"
+            },
+            "desiredFeatures" : [ {
+              "feature" : "LIQUID_COOLING",
+              "required" : true
+            } ]
+          },
+          "delivery" : {
+            "type" : "WEBHOOK",
+            "url" : "https://customer.example/hooks/capacity"
+          },
+          "paused" : true
+        }
+      },
+      "SubscriptionPaused" : {
+        "summary" : "State PAUSED: no events are delivered",
+        "value" : {
+          "name" : "Frankfurt liquid cooling",
+          "notifyOn" : "ANY_CHANGE",
+          "requirement" : {
+            "locations" : [ {
+              "level" : "METRO",
+              "code" : "FR"
+            } ],
+            "demand" : {
+              "cabinets" : {
+                "count" : 20
+              },
+              "density" : {
+                "target" : 40,
+                "unit" : "KW"
+              }
+            },
+            "timeframe" : {
+              "neededForService" : "2027-Q4"
+            },
+            "desiredFeatures" : [ {
+              "feature" : "LIQUID_COOLING",
+              "required" : true
+            } ]
+          },
+          "delivery" : {
+            "type" : "WEBHOOK",
+            "url" : "https://customer.example/hooks/capacity"
+          },
+          "paused" : true,
+          "subscriptionId" : "sub-0002",
+          "state" : "PAUSED",
+          "createdAt" : "2026-11-18T11:00:00Z",
+          "updatedAt" : "2026-12-13T10:00:00Z",
+          "lastSequence" : 5
+        }
+      },
+      "SubscriptionUrlChangeRequest" : {
+        "summary" : "The whole subscription with a new webhook URL",
+        "value" : {
+          "name" : "Frankfurt liquid cooling",
+          "notifyOn" : "ANY_CHANGE",
+          "requirement" : {
+            "locations" : [ {
+              "level" : "METRO",
+              "code" : "FR"
+            } ],
+            "demand" : {
+              "cabinets" : {
+                "count" : 20
+              },
+              "density" : {
+                "target" : 40,
+                "unit" : "KW"
+              }
+            },
+            "timeframe" : {
+              "neededForService" : "2027-Q4"
+            },
+            "desiredFeatures" : [ {
+              "feature" : "LIQUID_COOLING",
+              "required" : true
+            } ]
+          },
+          "delivery" : {
+            "type" : "WEBHOOK",
+            "url" : "https://customer.example/hooks/capacity-v2"
+          }
+        }
+      },
+      "SubscriptionReverification" : {
+        "summary" : "A changed URL returns the subscription to PENDING_VERIFICATION",
+        "value" : {
+          "name" : "Frankfurt liquid cooling",
+          "notifyOn" : "ANY_CHANGE",
+          "requirement" : {
+            "locations" : [ {
+              "level" : "METRO",
+              "code" : "FR"
+            } ],
+            "demand" : {
+              "cabinets" : {
+                "count" : 20
+              },
+              "density" : {
+                "target" : 40,
+                "unit" : "KW"
+              }
+            },
+            "timeframe" : {
+              "neededForService" : "2027-Q4"
+            },
+            "desiredFeatures" : [ {
+              "feature" : "LIQUID_COOLING",
+              "required" : true
+            } ]
+          },
+          "delivery" : {
+            "type" : "WEBHOOK",
+            "url" : "https://customer.example/hooks/capacity-v2"
+          },
+          "subscriptionId" : "sub-0002",
+          "state" : "PENDING_VERIFICATION",
+          "createdAt" : "2026-11-18T11:00:00Z",
+          "updatedAt" : "2026-12-21T09:00:00Z",
+          "lastSequence" : 6
+        }
+      },
+      "SubscriptionPullRequest" : {
+        "summary" : "Follow a requirement and read the events yourself",
+        "value" : {
+          "name" : "Amsterdam small footprint",
+          "notifyOn" : "GRADE_CHANGE",
+          "requirement" : {
+            "locations" : [ {
+              "level" : "METRO",
+              "code" : "AM"
+            } ],
+            "demand" : {
+              "cabinets" : {
+                "count" : 6
+              },
+              "density" : {
+                "max" : 10,
+                "unit" : "KVA"
+              }
+            },
+            "timeframe" : {
+              "neededForService" : "2027-02"
+            }
+          },
+          "delivery" : {
+            "type" : "PULL"
+          }
+        }
+      },
+      "SubscriptionPullActive" : {
+        "summary" : "A PULL subscription is ACTIVE at once",
+        "value" : {
+          "name" : "Amsterdam small footprint",
+          "notifyOn" : "GRADE_CHANGE",
+          "requirement" : {
+            "locations" : [ {
+              "level" : "METRO",
+              "code" : "AM"
+            } ],
+            "demand" : {
+              "cabinets" : {
+                "count" : 6
+              },
+              "density" : {
+                "max" : 10,
+                "unit" : "KVA"
+              }
+            },
+            "timeframe" : {
+              "neededForService" : "2027-02"
+            }
+          },
+          "delivery" : {
+            "type" : "PULL"
+          },
+          "subscriptionId" : "sub-0003",
+          "state" : "ACTIVE",
+          "createdAt" : "2026-11-18T12:00:00Z",
+          "updatedAt" : "2026-11-18T12:00:00Z",
+          "lastSequence" : 1
+        }
+      },
+      "EventsPage" : {
+        "summary" : "Two events and a cursor",
+        "value" : {
+          "data" : [ {
+            "specversion" : "1.0",
+            "id" : "evt-sub-0003-000001",
+            "source" : "https://provider.example/capacity/v1",
+            "type" : "org.opencapacity.answer.updated",
+            "subject" : "sub-0003",
+            "time" : "2026-11-18T12:00:02Z",
+            "datacontenttype" : "application/json",
+            "data" : {
+              "subscriptionId" : "sub-0003",
+              "sequence" : 1,
+              "reason" : "INITIAL",
+              "answer" : {
+                "answerId" : "ans-0401",
+                "generatedAt" : "2026-11-18T12:00:02Z",
+                "validUntil" : "2026-11-19T12:00:02Z",
+                "grade" : "UNAVAILABLE",
+                "results" : [ {
+                  "location" : {
+                    "level" : "METRO",
+                    "code" : "AM"
+                  },
+                  "grade" : "UNAVAILABLE",
+                  "supportedFeatures" : [ ],
+                  "reasons" : [ "SPACE" ]
+                } ]
+              }
+            }
+          }, {
+            "specversion" : "1.0",
+            "id" : "evt-sub-0003-000002",
+            "source" : "https://provider.example/capacity/v1",
+            "type" : "org.opencapacity.answer.updated",
+            "subject" : "sub-0003",
+            "time" : "2026-11-27T07:30:00Z",
+            "datacontenttype" : "application/json",
+            "data" : {
+              "subscriptionId" : "sub-0003",
+              "sequence" : 2,
+              "reason" : "GRADE_CHANGE",
+              "answer" : {
+                "answerId" : "ans-0422",
+                "generatedAt" : "2026-11-27T07:30:00Z",
+                "validUntil" : "2026-11-28T07:30:00Z",
+                "grade" : "POSSIBLE",
+                "results" : [ {
+                  "location" : {
+                    "level" : "METRO",
+                    "code" : "AM"
+                  },
+                  "grade" : "POSSIBLE",
+                  "supportedFeatures" : [ ],
+                  "reasons" : [ "SPACE" ]
+                } ]
+              }
+            }
+          } ],
+          "pagination" : {
+            "limit" : 2,
+            "next" : "ZXZ0LTAwMDM"
+          }
+        }
+      }
+    }
+  },
+  "x-exchanges" : [ {
+    "id" : "discover",
+    "title" : "Discover what a provider supports",
+    "steps" : [ {
+      "title" : "Read the capabilities",
+      "operationId" : "getCapabilities",
+      "request" : {
+        "method" : "GET",
+        "path" : "/capabilities"
+      },
+      "response" : {
+        "status" : 200,
+        "example" : "Capabilities"
+      }
+    }, {
+      "title" : "Read the capabilities of a provider that implements queries only",
+      "operationId" : "getCapabilities",
+      "request" : {
+        "method" : "GET",
+        "path" : "/capabilities"
+      },
+      "response" : {
+        "status" : 200,
+        "example" : "CapabilitiesCoreOnly"
+      }
+    }, {
+      "title" : "List locations",
+      "operationId" : "listLocations",
+      "request" : {
+        "method" : "GET",
+        "path" : "/locations?limit=5",
+        "headers" : {
+          "Authorization" : "Bearer ACCESS_TOKEN"
+        }
+      },
+      "response" : {
+        "status" : 200,
+        "example" : "LocationsPage"
+      }
+    } ]
+  }, {
+    "id" : "query",
+    "title" : "Query capacity",
+    "steps" : [ {
+      "title" : "Cabinets and a density range",
+      "operationId" : "queryCapacity",
+      "request" : {
+        "method" : "POST",
+        "path" : "/queries",
+        "headers" : {
+          "Authorization" : "Bearer ACCESS_TOKEN",
+          "Content-Type" : "application/json"
+        },
+        "example" : "QueryCabinetsAndDensity"
+      },
+      "response" : {
+        "status" : 200,
+        "example" : "AnswerBanded"
+      }
+    }, {
+      "title" : "The same query answered with grades only",
+      "operationId" : "queryCapacity",
+      "request" : {
+        "method" : "POST",
+        "path" : "/queries",
+        "headers" : {
+          "Authorization" : "Bearer ACCESS_TOKEN",
+          "Content-Type" : "application/json"
+        },
+        "example" : "QueryCabinetsAndDensity"
+      },
+      "response" : {
+        "status" : 200,
+        "example" : "AnswerGradeOnly"
+      }
+    }, {
+      "title" : "Power alone, in a region or an area",
+      "operationId" : "queryCapacity",
+      "request" : {
+        "method" : "POST",
+        "path" : "/queries",
+        "headers" : {
+          "Authorization" : "Bearer ACCESS_TOKEN",
+          "Content-Type" : "application/json"
+        },
+        "example" : "QueryPowerOnly"
+      },
+      "response" : {
+        "status" : 200,
+        "example" : "AnswerPowerOnly"
+      }
+    }, {
+      "title" : "Total power, cabinets, and density together",
+      "operationId" : "queryCapacity",
+      "request" : {
+        "method" : "POST",
+        "path" : "/queries",
+        "headers" : {
+          "Authorization" : "Bearer ACCESS_TOKEN",
+          "Content-Type" : "application/json"
+        },
+        "example" : "QueryPowerCabinetsDensity"
+      },
+      "response" : {
+        "status" : 200,
+        "example" : "AnswerPowerCabinetsDensity"
+      }
+    }, {
+      "title" : "A facility question answered at metro level",
+      "operationId" : "queryCapacity",
+      "request" : {
+        "method" : "POST",
+        "path" : "/queries",
+        "headers" : {
+          "Authorization" : "Bearer ACCESS_TOKEN",
+          "Content-Type" : "application/json"
+        },
+        "example" : "QueryFacility"
+      },
+      "response" : {
+        "status" : 200,
+        "example" : "AnswerCoarserThanRequested"
+      }
+    }, {
+      "title" : "An area answered with named locations",
+      "operationId" : "queryCapacity",
+      "request" : {
+        "method" : "POST",
+        "path" : "/queries",
+        "headers" : {
+          "Authorization" : "Bearer ACCESS_TOKEN",
+          "Content-Type" : "application/json"
+        },
+        "example" : "QueryArea"
+      },
+      "response" : {
+        "status" : 200,
+        "example" : "AnswerArea"
+      }
+    }, {
+      "title" : "A metro the provider does not serve",
+      "operationId" : "queryCapacity",
+      "request" : {
+        "method" : "POST",
+        "path" : "/queries",
+        "headers" : {
+          "Authorization" : "Bearer ACCESS_TOKEN",
+          "Content-Type" : "application/json"
+        },
+        "example" : "QueryNotServed"
+      },
+      "response" : {
+        "status" : 200,
+        "example" : "AnswerNotServed"
+      }
+    }, {
+      "title" : "A partial fit",
+      "operationId" : "queryCapacity",
+      "request" : {
+        "method" : "POST",
+        "path" : "/queries",
+        "headers" : {
+          "Authorization" : "Bearer ACCESS_TOKEN",
+          "Content-Type" : "application/json"
+        },
+        "example" : "QueryPartialFit"
+      },
+      "response" : {
+        "status" : 200,
+        "example" : "AnswerPartialFit"
+      }
+    }, {
+      "title" : "Interconnection parties and latency",
+      "operationId" : "queryCapacity",
+      "request" : {
+        "method" : "POST",
+        "path" : "/queries",
+        "headers" : {
+          "Authorization" : "Bearer ACCESS_TOKEN",
+          "Content-Type" : "application/json"
+        },
+        "example" : "QueryInterconnectionLatency"
+      },
+      "response" : {
+        "status" : 200,
+        "example" : "AnswerInterconnectionLatency"
+      }
+    }, {
+      "title" : "A ramp with a sale date and a service date",
+      "operationId" : "queryCapacity",
+      "request" : {
+        "method" : "POST",
+        "path" : "/queries",
+        "headers" : {
+          "Authorization" : "Bearer ACCESS_TOKEN",
+          "Content-Type" : "application/json"
+        },
+        "example" : "QueryRamp"
+      },
+      "response" : {
+        "status" : 200,
+        "example" : "AnswerRampPlanned"
+      }
+    }, {
+      "title" : "An immediate need",
+      "operationId" : "queryCapacity",
+      "request" : {
+        "method" : "POST",
+        "path" : "/queries",
+        "headers" : {
+          "Authorization" : "Bearer ACCESS_TOKEN",
+          "Content-Type" : "application/json"
+        },
+        "example" : "QueryImmediate"
+      },
+      "response" : {
+        "status" : 200,
+        "example" : "AnswerAvailableNow"
+      }
+    }, {
+      "title" : "Redundancy and power feed constraints",
+      "operationId" : "queryCapacity",
+      "request" : {
+        "method" : "POST",
+        "path" : "/queries",
+        "headers" : {
+          "Authorization" : "Bearer ACCESS_TOKEN",
+          "Content-Type" : "application/json"
+        },
+        "example" : "QueryRedundancyPowerFeed"
+      },
+      "response" : {
+        "status" : 200,
+        "example" : "AnswerRedundancyUnavailable"
+      }
+    } ]
+  }, {
+    "id" : "query-errors",
+    "title" : "Query errors",
+    "steps" : [ {
+      "title" : "Total power that does not fit the cabinets and density",
+      "operationId" : "queryCapacity",
+      "request" : {
+        "method" : "POST",
+        "path" : "/queries",
+        "headers" : {
+          "Authorization" : "Bearer ACCESS_TOKEN",
+          "Content-Type" : "application/json"
+        }
+      },
+      "response" : {
+        "status" : 422,
+        "example" : "ProblemInconsistentDemand"
+      }
+    }, {
+      "title" : "An area sent to a provider that does not accept areas",
+      "operationId" : "queryCapacity",
+      "request" : {
+        "method" : "POST",
+        "path" : "/queries",
+        "headers" : {
+          "Authorization" : "Bearer ACCESS_TOKEN",
+          "Content-Type" : "application/json"
+        },
+        "example" : "QueryArea"
+      },
+      "response" : {
+        "status" : 422,
+        "example" : "ProblemUnsupportedLocationLevel"
+      }
+    }, {
+      "title" : "Too many locations",
+      "operationId" : "queryCapacity",
+      "request" : {
+        "method" : "POST",
+        "path" : "/queries",
+        "headers" : {
+          "Authorization" : "Bearer ACCESS_TOKEN",
+          "Content-Type" : "application/json"
+        }
+      },
+      "response" : {
+        "status" : 422,
+        "example" : "ProblemTooManyLocations"
+      }
+    }, {
+      "title" : "Query quota used up",
+      "operationId" : "queryCapacity",
+      "request" : {
+        "method" : "POST",
+        "path" : "/queries",
+        "headers" : {
+          "Authorization" : "Bearer ACCESS_TOKEN",
+          "Content-Type" : "application/json"
+        },
+        "example" : "QueryImmediate"
+      },
+      "response" : {
+        "status" : 429,
+        "headers" : {
+          "Retry-After" : "3600"
+        },
+        "example" : "ProblemQuotaExceeded"
+      }
+    } ]
+  }, {
+    "id" : "signal-lifecycle",
+    "title" : "Register, amend, withdraw, and delete a signal",
+    "steps" : [ {
+      "title" : "Register a signal",
+      "operationId" : "createSignal",
+      "request" : {
+        "method" : "POST",
+        "path" : "/signals",
+        "headers" : {
+          "Authorization" : "Bearer ACCESS_TOKEN",
+          "Content-Type" : "application/json",
+          "Idempotency-Key" : "7d3f2a9c-1b6e-4f0a-9c55-0e2d8a41b7f3"
+        },
+        "example" : "SignalRequest"
+      },
+      "response" : {
+        "status" : 201,
+        "headers" : {
+          "Location" : "/capacity/v1/signals/sig-0001",
+          "ETag" : "\"sig-0001-1\""
+        },
+        "example" : "SignalCreated"
+      }
+    }, {
+      "title" : "Read the signal after the provider acknowledged it",
+      "operationId" : "getSignal",
+      "request" : {
+        "method" : "GET",
+        "path" : "/signals/sig-0001",
+        "headers" : {
+          "Authorization" : "Bearer ACCESS_TOKEN"
+        }
+      },
+      "response" : {
+        "status" : 200,
+        "headers" : {
+          "ETag" : "\"sig-0001-1\""
+        },
+        "example" : "SignalAcknowledged"
+      }
+    }, {
+      "title" : "Amend the signal",
+      "operationId" : "replaceSignal",
+      "request" : {
+        "method" : "PUT",
+        "path" : "/signals/sig-0001",
+        "headers" : {
+          "Authorization" : "Bearer ACCESS_TOKEN",
+          "Content-Type" : "application/json",
+          "If-Match" : "\"sig-0001-1\""
+        },
+        "example" : "SignalAmendRequest"
+      },
+      "response" : {
+        "status" : 200,
+        "headers" : {
+          "ETag" : "\"sig-0001-2\""
+        },
+        "example" : "SignalAmended"
+      }
+    }, {
+      "title" : "Amend with a stale ETag",
+      "operationId" : "replaceSignal",
+      "request" : {
+        "method" : "PUT",
+        "path" : "/signals/sig-0001",
+        "headers" : {
+          "Authorization" : "Bearer ACCESS_TOKEN",
+          "Content-Type" : "application/json",
+          "If-Match" : "\"sig-0001-1\""
+        },
+        "example" : "SignalAmendRequest"
+      },
+      "response" : {
+        "status" : 412,
+        "example" : "ProblemPreconditionFailed"
+      }
+    }, {
+      "title" : "Withdraw the signal",
+      "operationId" : "withdrawSignal",
+      "request" : {
+        "method" : "POST",
+        "path" : "/signals/sig-0001/withdraw",
+        "headers" : {
+          "Authorization" : "Bearer ACCESS_TOKEN"
+        }
+      },
+      "response" : {
+        "status" : 200,
+        "headers" : {
+          "ETag" : "\"sig-0001-3\""
+        },
+        "example" : "SignalWithdrawn"
+      }
+    }, {
+      "title" : "Amend the withdrawn signal to make it active again",
+      "operationId" : "replaceSignal",
+      "request" : {
+        "method" : "PUT",
+        "path" : "/signals/sig-0001",
+        "headers" : {
+          "Authorization" : "Bearer ACCESS_TOKEN",
+          "Content-Type" : "application/json",
+          "If-Match" : "\"sig-0001-3\""
+        },
+        "example" : "SignalAmendRequest"
+      },
+      "response" : {
+        "status" : 200,
+        "headers" : {
+          "ETag" : "\"sig-0001-4\""
+        },
+        "example" : "SignalReactivated"
+      }
+    }, {
+      "title" : "Delete the signal",
+      "operationId" : "deleteSignal",
+      "request" : {
+        "method" : "DELETE",
+        "path" : "/signals/sig-0001",
+        "headers" : {
+          "Authorization" : "Bearer ACCESS_TOKEN"
+        }
+      },
+      "response" : {
+        "status" : 204
+      }
+    }, {
+      "title" : "Read the deleted signal",
+      "operationId" : "getSignal",
+      "request" : {
+        "method" : "GET",
+        "path" : "/signals/sig-0001",
+        "headers" : {
+          "Authorization" : "Bearer ACCESS_TOKEN"
+        }
+      },
+      "response" : {
+        "status" : 404,
+        "example" : "ProblemNotFound"
+      }
+    } ]
+  }, {
+    "id" : "signal-other",
+    "title" : "Other signal exchanges",
+    "steps" : [ {
+      "title" : "Register a signal that can be counted in anonymous totals",
+      "operationId" : "createSignal",
+      "request" : {
+        "method" : "POST",
+        "path" : "/signals",
+        "headers" : {
+          "Authorization" : "Bearer ACCESS_TOKEN",
+          "Content-Type" : "application/json",
+          "Idempotency-Key" : "b41c7e02-55aa-4d1f-8e3b-6f9d2c7a1e90"
+        },
+        "example" : "SignalAggregatedRequest"
+      },
+      "response" : {
+        "status" : 201,
+        "headers" : {
+          "Location" : "/capacity/v1/signals/sig-0002",
+          "ETag" : "\"sig-0002-1\""
+        },
+        "example" : "SignalAggregatedCreated"
+      }
+    }, {
+      "title" : "List signals",
+      "operationId" : "listSignals",
+      "request" : {
+        "method" : "GET",
+        "path" : "/signals",
+        "headers" : {
+          "Authorization" : "Bearer ACCESS_TOKEN"
+        }
+      },
+      "response" : {
+        "status" : 200,
+        "example" : "SignalsPage"
+      }
+    }, {
+      "title" : "Read a signal the provider closed",
+      "operationId" : "getSignal",
+      "request" : {
+        "method" : "GET",
+        "path" : "/signals/sig-0001",
+        "headers" : {
+          "Authorization" : "Bearer ACCESS_TOKEN"
+        }
+      },
+      "response" : {
+        "status" : 200,
+        "headers" : {
+          "ETag" : "\"sig-0001-5\""
+        },
+        "example" : "SignalClosed"
+      }
+    }, {
+      "title" : "Amend a closed signal",
+      "operationId" : "replaceSignal",
+      "request" : {
+        "method" : "PUT",
+        "path" : "/signals/sig-0001",
+        "headers" : {
+          "Authorization" : "Bearer ACCESS_TOKEN",
+          "Content-Type" : "application/json",
+          "If-Match" : "\"sig-0001-5\""
+        },
+        "example" : "SignalAmendRequest"
+      },
+      "response" : {
+        "status" : 409,
+        "example" : "ProblemStateConflict"
+      }
+    } ]
+  }, {
+    "id" : "subscribe-webhook",
+    "title" : "Subscribe with webhook delivery",
+    "steps" : [ {
+      "title" : "Create the subscription",
+      "operationId" : "createSubscription",
+      "request" : {
+        "method" : "POST",
+        "path" : "/subscriptions",
+        "headers" : {
+          "Authorization" : "Bearer ACCESS_TOKEN",
+          "Content-Type" : "application/json",
+          "Idempotency-Key" : "2f8e6b1d-90c4-4a7e-b3d2-5c1a9e7f0d46"
+        },
+        "example" : "SubscriptionWebhookRequirementRequest"
+      },
+      "response" : {
+        "status" : 201,
+        "headers" : {
+          "ETag" : "\"sub-0002-1\""
+        },
+        "example" : "SubscriptionPendingVerification"
+      }
+    }, {
+      "title" : "Receive the verification event and echo the challenge",
+      "operationId" : "receiveCapacityEvent",
+      "request" : {
+        "method" : "POST",
+        "path" : "https://customer.example/hooks/capacity",
+        "headers" : {
+          "Content-Type" : "application/cloudevents+json",
+          "OpenCapacity-Signature" : "t=<unix seconds>,v1=<hex>"
+        },
+        "example" : "EventVerification"
+      },
+      "response" : {
+        "status" : 200,
+        "body" : {
+          "challenge" : "c7f3a1d09b2e4f58"
+        }
+      }
+    }, {
+      "title" : "Receive the first answer",
+      "operationId" : "receiveCapacityEvent",
+      "request" : {
+        "method" : "POST",
+        "path" : "https://customer.example/hooks/capacity",
+        "headers" : {
+          "Content-Type" : "application/cloudevents+json",
+          "OpenCapacity-Signature" : "t=<unix seconds>,v1=<hex>"
+        },
+        "example" : "EventAnswerInitial"
+      },
+      "response" : {
+        "status" : 200
+      }
+    }, {
+      "title" : "Receive a change of detail",
+      "operationId" : "receiveCapacityEvent",
+      "request" : {
+        "method" : "POST",
+        "path" : "https://customer.example/hooks/capacity",
+        "headers" : {
+          "Content-Type" : "application/cloudevents+json",
+          "OpenCapacity-Signature" : "t=<unix seconds>,v1=<hex>"
+        },
+        "example" : "EventAnswerDetailChange"
+      },
+      "response" : {
+        "status" : 200
+      }
+    }, {
+      "title" : "Receive a refresh",
+      "operationId" : "receiveCapacityEvent",
+      "request" : {
+        "method" : "POST",
+        "path" : "https://customer.example/hooks/capacity",
+        "headers" : {
+          "Content-Type" : "application/cloudevents+json",
+          "OpenCapacity-Signature" : "t=<unix seconds>,v1=<hex>"
+        },
+        "example" : "EventAnswerRefresh"
+      },
+      "response" : {
+        "status" : 200
+      }
+    }, {
+      "title" : "Receive a grade change and verify its signature",
+      "operationId" : "receiveCapacityEvent",
+      "request" : {
+        "method" : "POST",
+        "path" : "https://customer.example/hooks/capacity",
+        "headers" : {
+          "Content-Type" : "application/cloudevents+json",
+          "OpenCapacity-Signature" : "t=1797090300,v1=7da0d91c52ad8495a2987048f83a553177ffa5d31bb3864c3a3244e20a344991"
+        },
+        "example" : "EventAnswerGradeChange",
+        "rawBody" : "{\"specversion\":\"1.0\",\"id\":\"evt-sub-0002-000005\",\"source\":\"https://provider.example/capacity/v1\",\"type\":\"org.opencapacity.answer.updated\",\"subject\":\"sub-0002\",\"time\":\"2026-12-12T15:45:00Z\",\"datacontenttype\":\"application/json\",\"data\":{\"subscriptionId\":\"sub-0002\",\"sequence\":5,\"reason\":\"GRADE_CHANGE\",\"answer\":{\"answerId\":\"ans-0340\",\"generatedAt\":\"2026-12-12T15:45:00Z\",\"validUntil\":\"2026-12-13T15:45:00Z\",\"grade\":\"AVAILABLE\",\"results\":[{\"location\":{\"level\":\"METRO\",\"code\":\"FR\"},\"grade\":\"AVAILABLE\",\"timing\":{\"status\":\"PLANNED\",\"availableForSale\":\"NOW\",\"availableForService\":\"2027-Q4\"},\"supportedFeatures\":[{\"feature\":\"LIQUID_COOLING\",\"support\":\"AVAILABLE\",\"required\":true}]}]}}}",
+        "signature" : {
+          "signingSecret" : "whsec_example_0123456789abcdef",
+          "timestamp" : 1797090300,
+          "signedString" : "1797090300.<raw body>",
+          "algorithm" : "HMAC-SHA256, hex",
+          "value" : "7da0d91c52ad8495a2987048f83a553177ffa5d31bb3864c3a3244e20a344991"
+        }
+      },
+      "response" : {
+        "status" : 200
+      }
+    }, {
+      "title" : "Pause the subscription",
+      "operationId" : "replaceSubscription",
+      "request" : {
+        "method" : "PUT",
+        "path" : "/subscriptions/sub-0002",
+        "headers" : {
+          "Authorization" : "Bearer ACCESS_TOKEN",
+          "Content-Type" : "application/json",
+          "If-Match" : "\"sub-0002-2\""
+        },
+        "example" : "SubscriptionPauseRequest"
+      },
+      "response" : {
+        "status" : 200,
+        "headers" : {
+          "ETag" : "\"sub-0002-3\""
+        },
+        "example" : "SubscriptionPaused"
+      }
+    }, {
+      "title" : "Receive notice that the provider suspended delivery",
+      "operationId" : "receiveCapacityEvent",
+      "request" : {
+        "method" : "POST",
+        "path" : "https://customer.example/hooks/capacity",
+        "headers" : {
+          "Content-Type" : "application/cloudevents+json",
+          "OpenCapacity-Signature" : "t=<unix seconds>,v1=<hex>"
+        },
+        "example" : "EventSubscriptionSuspended"
+      },
+      "response" : {
+        "status" : 200
+      }
+    }, {
+      "title" : "Change the webhook URL",
+      "operationId" : "replaceSubscription",
+      "request" : {
+        "method" : "PUT",
+        "path" : "/subscriptions/sub-0002",
+        "headers" : {
+          "Authorization" : "Bearer ACCESS_TOKEN",
+          "Content-Type" : "application/json",
+          "If-Match" : "\"sub-0002-4\""
+        },
+        "example" : "SubscriptionUrlChangeRequest"
+      },
+      "response" : {
+        "status" : 200,
+        "headers" : {
+          "ETag" : "\"sub-0002-5\""
+        },
+        "example" : "SubscriptionReverification"
+      }
+    }, {
+      "title" : "Delete the subscription",
+      "operationId" : "deleteSubscription",
+      "request" : {
+        "method" : "DELETE",
+        "path" : "/subscriptions/sub-0002",
+        "headers" : {
+          "Authorization" : "Bearer ACCESS_TOKEN"
+        }
+      },
+      "response" : {
+        "status" : 204
+      }
+    } ]
+  }, {
+    "id" : "subscribe-signal",
+    "title" : "Follow a signal",
+    "steps" : [ {
+      "title" : "Create a subscription that follows a signal",
+      "operationId" : "createSubscription",
+      "request" : {
+        "method" : "POST",
+        "path" : "/subscriptions",
+        "headers" : {
+          "Authorization" : "Bearer ACCESS_TOKEN",
+          "Content-Type" : "application/json"
+        },
+        "example" : "SubscriptionWebhook"
+      },
+      "response" : {
+        "status" : 201
+      }
+    }, {
+      "title" : "Receive a grade change for the signal",
+      "operationId" : "receiveCapacityEvent",
+      "request" : {
+        "method" : "POST",
+        "path" : "https://customer.example/hooks/capacity",
+        "headers" : {
+          "Content-Type" : "application/cloudevents+json",
+          "OpenCapacity-Signature" : "t=<unix seconds>,v1=<hex>"
+        },
+        "example" : "EventAnswerUpdated"
+      },
+      "response" : {
+        "status" : 200
+      }
+    }, {
+      "title" : "Receive notice that the signal was withdrawn",
+      "operationId" : "receiveCapacityEvent",
+      "request" : {
+        "method" : "POST",
+        "path" : "https://customer.example/hooks/capacity",
+        "headers" : {
+          "Content-Type" : "application/cloudevents+json",
+          "OpenCapacity-Signature" : "t=<unix seconds>,v1=<hex>"
+        },
+        "example" : "EventSignalWithdrawn"
+      },
+      "response" : {
+        "status" : 200
+      }
+    } ]
+  }, {
+    "id" : "subscribe-pull",
+    "title" : "Subscribe and read or stream the events",
+    "steps" : [ {
+      "title" : "Create the subscription",
+      "operationId" : "createSubscription",
+      "request" : {
+        "method" : "POST",
+        "path" : "/subscriptions",
+        "headers" : {
+          "Authorization" : "Bearer ACCESS_TOKEN",
+          "Content-Type" : "application/json"
+        },
+        "example" : "SubscriptionPullRequest"
+      },
+      "response" : {
+        "status" : 201,
+        "headers" : {
+          "ETag" : "\"sub-0003-1\""
+        },
+        "example" : "SubscriptionPullActive"
+      }
+    }, {
+      "title" : "Read events as a page",
+      "operationId" : "listSubscriptionEvents",
+      "request" : {
+        "method" : "GET",
+        "path" : "/subscriptions/sub-0003/events?limit=2",
+        "headers" : {
+          "Authorization" : "Bearer ACCESS_TOKEN",
+          "Accept" : "application/json"
+        }
+      },
+      "response" : {
+        "status" : 200,
+        "example" : "EventsPage"
+      }
+    }, {
+      "title" : "Stream events",
+      "operationId" : "listSubscriptionEvents",
+      "request" : {
+        "method" : "GET",
+        "path" : "/subscriptions/sub-0003/events",
+        "headers" : {
+          "Authorization" : "Bearer ACCESS_TOKEN",
+          "Accept" : "text/event-stream"
+        }
+      },
+      "response" : {
+        "status" : 200,
+        "headers" : {
+          "Content-Type" : "text/event-stream"
+        },
+        "text" : "id: 1\nevent: org.opencapacity.answer.updated\ndata: {\"specversion\":\"1.0\",\"id\":\"evt-sub-0003-000001\",\"source\":\"https://provider.example/capacity/v1\",\"type\":\"org.opencapacity.answer.updated\",\"subject\":\"sub-0003\",\"time\":\"2026-11-18T12:00:02Z\",\"datacontenttype\":\"application/json\",\"data\":{\"subscriptionId\":\"sub-0003\",\"sequence\":1,\"reason\":\"INITIAL\",\"answer\":{\"answerId\":\"ans-0401\",\"generatedAt\":\"2026-11-18T12:00:02Z\",\"validUntil\":\"2026-11-19T12:00:02Z\",\"grade\":\"UNAVAILABLE\",\"results\":[{\"location\":{\"level\":\"METRO\",\"code\":\"AM\"},\"grade\":\"UNAVAILABLE\",\"supportedFeatures\":[],\"reasons\":[\"SPACE\"]}]}}}\n\nid: 2\nevent: org.opencapacity.answer.updated\ndata: {\"specversion\":\"1.0\",\"id\":\"evt-sub-0003-000002\",\"source\":\"https://provider.example/capacity/v1\",\"type\":\"org.opencapacity.answer.updated\",\"subject\":\"sub-0003\",\"time\":\"2026-11-27T07:30:00Z\",\"datacontenttype\":\"application/json\",\"data\":{\"subscriptionId\":\"sub-0003\",\"sequence\":2,\"reason\":\"GRADE_CHANGE\",\"answer\":{\"answerId\":\"ans-0422\",\"generatedAt\":\"2026-11-27T07:30:00Z\",\"validUntil\":\"2026-11-28T07:30:00Z\",\"grade\":\"POSSIBLE\",\"results\":[{\"location\":{\"level\":\"METRO\",\"code\":\"AM\"},\"grade\":\"POSSIBLE\",\"supportedFeatures\":[],\"reasons\":[\"SPACE\"]}]}}}\n"
+      }
+    }, {
+      "title" : "Reconnect after the stream dropped",
+      "operationId" : "listSubscriptionEvents",
+      "request" : {
+        "method" : "GET",
+        "path" : "/subscriptions/sub-0003/events",
+        "headers" : {
+          "Authorization" : "Bearer ACCESS_TOKEN",
+          "Accept" : "text/event-stream",
+          "Last-Event-ID" : "2"
+        }
+      },
+      "response" : {
+        "status" : 200,
+        "headers" : {
+          "Content-Type" : "text/event-stream"
+        },
+        "text" : "id: 3\nevent: org.opencapacity.answer.updated\ndata: {\"specversion\":\"1.0\",\"id\":\"evt-sub-0003-000003\",\"source\":\"https://provider.example/capacity/v1\",\"type\":\"org.opencapacity.answer.updated\",\"subject\":\"sub-0003\",\"time\":\"2026-12-03T13:10:00Z\",\"datacontenttype\":\"application/json\",\"data\":{\"subscriptionId\":\"sub-0003\",\"sequence\":3,\"reason\":\"GRADE_CHANGE\",\"answer\":{\"answerId\":\"ans-0437\",\"generatedAt\":\"2026-12-03T13:10:00Z\",\"validUntil\":\"2026-12-04T13:10:00Z\",\"grade\":\"AVAILABLE\",\"results\":[{\"location\":{\"level\":\"METRO\",\"code\":\"AM\"},\"grade\":\"AVAILABLE\",\"supportedFeatures\":[]}]}}}\n"
+      }
+    } ]
+  } ]
+}
