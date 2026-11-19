@@ -144,8 +144,8 @@ public final class SubscriptionUpdater {
                 name, requirement, signalId, notifyOn, delivery, paused, expiresAt);
         String etag = subscription.currentEtag();
         Map<String, String> headers = etag == null ? Map.of() : Map.of("If-Match", etag);
-        subscription.replace(subscription.transport().send(
-                "PUT", "/subscriptions/" + Transport.encode(subscription.id()), body, headers, true));
+        subscription.replace(subscription.transport().call(
+                "ReplaceSubscription", Map.of("subscriptionId", subscription.id()), null, body, headers));
         return subscription;
     }
 }

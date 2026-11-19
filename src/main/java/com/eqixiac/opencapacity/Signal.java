@@ -47,8 +47,8 @@ public final class Signal {
         this.etag = etag;
     }
 
-    private String path() {
-        return "/signals/" + Transport.encode(body.signalId());
+    private Map<String, String> self() {
+        return Map.of("signalId", body.signalId());
     }
 
     void replace(Transport.Reply reply) {
@@ -209,7 +209,7 @@ public final class Signal {
      * @throws OpenCapacityException with status 404 if the signal no longer exists
      */
     public Signal refresh() {
-        replace(transport.send("GET", path(), null, Map.of(), true));
+        replace(transport.call("GetSignal", self(), null, null, Map.of()));
         return this;
     }
 
@@ -230,7 +230,7 @@ public final class Signal {
      * @throws OpenCapacityException with status 409 if the signal is closed or expired
      */
     public Signal withdraw() {
-        replace(transport.send("POST", path() + "/withdraw", null, Map.of(), true));
+        replace(transport.call("WithdrawSignal", self(), null, null, Map.of()));
         return this;
     }
 
@@ -240,7 +240,7 @@ public final class Signal {
      * @throws OpenCapacityException if the request fails
      */
     public void delete() {
-        transport.send("DELETE", path(), null, Map.of(), true);
+        transport.call("DeleteSignal", self(), null, null, Map.of());
         deleted = true;
     }
 }

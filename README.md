@@ -654,13 +654,16 @@ center capacity queries, demand signals and subscriptions
 (https://github.com/Open-Capacity/opencapacity). No provider implements the specification. It is not
 an Equinix API and it can change before version 1.0 is final.
 
-The client is separate from the Equinix clients. It has no default host and takes credentials for
-one provider. It never sends an Equinix token to that provider, and it refuses an endpoint that is
+The client is separate from the Equinix clients. Its endpoints are declared in
+`json/apiParams_OpenCapacity.json`, in the format of the other endpoint catalogs. That catalog names
+no host, because no provider implements the specification: `endpoint(...)` takes the provider's host,
+and the client takes credentials for that one provider. Until a provider implements OpenCapacity, the
+client can reach only a test provider. It never sends an Equinix token to that provider, and it refuses an endpoint that is
 not HTTPS, except on localhost.
 
 ```java
 OpenCapacity capacity = OpenCapacity.builder()
-    .endpoint("https://provider.example/capacity/v1")
+    .endpoint("https://provider.example")
     .credentials(CLIENT_ID, CLIENT_SECRET)
     .build();
 

@@ -111,8 +111,8 @@ public final class SignalBuilder {
                 : new Confidentiality(sharing, contact != null ? Boolean.TRUE : null);
         Wire.SignalBody body = Wire.SignalBody.request(
                 reference, confidence, confidentiality, contact, requirement, expiresAt);
-        Transport.Reply reply = transport.send(
-                "POST", "/signals", body, Map.of("Idempotency-Key", UUID.randomUUID().toString()), true);
+        Transport.Reply reply = transport.call(
+                "CreateSignal", Map.of(), null, body, Map.of("Idempotency-Key", UUID.randomUUID().toString()));
         return new Signal(transport, transport.read(reply, Transport.type(Wire.SignalBody.class)), reply.etag());
     }
 }

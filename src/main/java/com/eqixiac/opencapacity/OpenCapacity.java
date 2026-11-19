@@ -62,7 +62,7 @@ public final class OpenCapacity {
      * @throws OpenCapacityException if the request fails
      */
     public Capabilities capabilities() {
-        Transport.Reply reply = transport.send("GET", "/capabilities", null, Map.of(), false);
+        Transport.Reply reply = transport.call("GetCapabilities", Map.of(), null, null, Map.of());
         return transport.read(reply, Transport.type(Capabilities.class));
     }
 
@@ -115,14 +115,19 @@ public final class OpenCapacity {
         }
 
         /**
-         * Sets the provider's API base URL, including the version path, for example
-         * {@code https://provider.example/capacity/v1}.
+         * Sets the provider's host, for example {@code https://provider.example}. The paths come
+         * from the endpoint catalog {@code json/apiParams_OpenCapacity.json}, as they do for the
+         * Equinix clients. A URL that already ends in the catalog's base path
+         * ({@code /capacity/v1}) is accepted as well.
          *
-         * @param url the base URL
+         * @param url the provider's host URL
          * @return this builder
          */
         public Builder endpoint(String url) {
             String trimmed = Objects.requireNonNull(url, "url").replaceAll("/+$", "");
+            if (trimmed.endsWith(Endpoints.basePath())) {
+                trimmed = trimmed.substring(0, trimmed.length() - Endpoints.basePath().length());
+            }
             this.endpoint = URI.create(trimmed);
             return this;
         }

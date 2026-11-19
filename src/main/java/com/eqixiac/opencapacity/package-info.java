@@ -22,13 +22,16 @@
  * <p><strong>Proposal.</strong> No provider implements this specification. It is not an Equinix
  * API, and it can change before version 1.0 is final.
  *
- * <p>The client is separate from the Equinix clients of this SDK. It has no default host: you give
- * it the provider's endpoint and credentials for that provider, and it never sends a token to any
- * other host.
+ * <p>The client is separate from the Equinix clients of this SDK. Its endpoints are declared in
+ * {@code json/apiParams_OpenCapacity.json}, in the format the Equinix clients use. That catalog
+ * names no host, because no provider implements the specification: you give the client the
+ * provider's host and credentials for that provider, and it never sends a token to any other host.
+ * Until a provider implements OpenCapacity, the only endpoint the client can reach is a test
+ * provider such as the in-memory reference provider in the specification's repository.
  *
  * <pre>{@code
  * OpenCapacity capacity = OpenCapacity.builder()
- *     .endpoint("https://provider.example/capacity/v1")
+ *     .endpoint("https://provider.example")
  *     .credentials(CLIENT_ID, CLIENT_SECRET)
  *     .build();
  *

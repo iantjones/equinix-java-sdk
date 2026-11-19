@@ -145,8 +145,8 @@ public final class SignalUpdater {
                 reference, confidence, confidentiality, contact, requirement, expiresAt);
         String etag = signal.currentEtag();
         Map<String, String> headers = etag == null ? Map.of() : Map.of("If-Match", etag);
-        signal.replace(signal.transport().send(
-                "PUT", "/signals/" + Transport.encode(signal.id()), body, headers, true));
+        signal.replace(signal.transport().call(
+                "ReplaceSignal", Map.of("signalId", signal.id()), null, body, headers));
         return signal;
     }
 }

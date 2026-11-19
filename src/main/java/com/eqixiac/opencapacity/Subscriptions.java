@@ -64,8 +64,8 @@ public final class Subscriptions {
      */
     public Subscription get(String subscriptionId) {
         Objects.requireNonNull(subscriptionId, "subscriptionId");
-        Transport.Reply reply = transport.send(
-                "GET", "/subscriptions/" + Transport.encode(subscriptionId), null, Map.of(), true);
+        Transport.Reply reply = transport.call(
+                "GetSubscription", Map.of("subscriptionId", subscriptionId), null, null, Map.of());
         return new Subscription(
                 transport, transport.read(reply, Transport.type(Wire.SubscriptionBody.class)), reply.etag(), null);
     }
@@ -80,8 +80,8 @@ public final class Subscriptions {
         List<Subscription> all = new ArrayList<>();
         String cursor = null;
         do {
-            String path = "/subscriptions?limit=200" + (cursor == null ? "" : "&cursor=" + Transport.encode(cursor));
-            Transport.Reply reply = transport.send("GET", path, null, Map.of(), true);
+            String paged = "limit=200" + (cursor == null ? "" : "&cursor=" + Transport.encode(cursor));
+            Transport.Reply reply = transport.call("ListSubscriptions", Map.of(), paged, null, Map.of());
             Wire.Page<Wire.SubscriptionBody> page =
                     transport.read(reply, Transport.type(Wire.Page.class, Wire.SubscriptionBody.class));
             for (Wire.SubscriptionBody body : page.items()) {
