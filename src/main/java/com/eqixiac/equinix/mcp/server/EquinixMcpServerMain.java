@@ -70,6 +70,10 @@ public final class EquinixMcpServerMain {
     static final String ENV_SANDBOX = "EQUINIX_SANDBOX";
     static final String ENV_LOG_LEVEL = "EQUINIX_MCP_LOG_LEVEL";
     static final String DOT_ENV_FILE = ".env.local";
+    static final String ENV_CAPACITY_ENDPOINT = "OPENCAPACITY_ENDPOINT";
+    static final String ENV_CAPACITY_CLIENT_ID = "OPENCAPACITY_CLIENT_ID";
+    static final String ENV_CAPACITY_CLIENT_SECRET = "OPENCAPACITY_CLIENT_SECRET";
+    static final String ENV_CAPACITY_TOKEN_URL = "OPENCAPACITY_TOKEN_URL";
 
     /** Exit status when credentials cannot be resolved. */
     static final int EXIT_NO_CREDENTIALS = 2;
@@ -114,17 +118,54 @@ public final class EquinixMcpServerMain {
         String toolsets = resolveToolsets(args, env);
         boolean sandbox = "true".equalsIgnoreCase(env.get(ENV_SANDBOX));
 
-        EquinixMcpServer server = EquinixMcpServer.builder()
+        EquinixMcpServer.Builder builder = EquinixMcpServer.builder()
                 .credentials(credentials.get())
                 .sandbox(sandbox)
-                .toolsets(toolsets)
-                .build();
+                .toolsets(toolsets);
+        try {
+            if (Toolset.parse(toolsets).contains(Toolset.CAPACITY)) {
+                builder.openCapacity(openCapacityFrom(env));
+            }
+        }
+        catch (IllegalArgumentException | IllegalStateException e) {
+            System.err.println("equinix-sdk-java-intelligence: " + e.getMessage());
+            System.exit(EXIT_NO_CREDENTIALS);
+            return;
+        }
+        EquinixMcpServer server = builder.build();
 
         System.err.println("equinix-sdk-java-intelligence v" + EquinixMcpServer.serverVersion()
                 + " ready on stdio with " + server.getRegistrations().size() + " tools"
                 + (sandbox ? " (sandbox)" : "") + ".");
         // The stdio transport's non-daemon reader thread keeps the JVM alive; when the MCP
         // host closes stdin the transport winds down and the process exits on its own.
+    }
+
+    /**
+     * Builds the OpenCapacity client for the {@code capacity} toolset from the environment.
+     *
+     * @param env the process environment
+     * @return the client for the configured provider
+     * @throws IllegalArgumentException if the endpoint or a credential is missing; the message names
+     *     the variable and never a value
+     */
+    static com.eqixiac.opencapacity.OpenCapacity openCapacityFrom(Map<String, String> env) {
+        for (String name : new String[] {ENV_CAPACITY_ENDPOINT, ENV_CAPACITY_CLIENT_ID, ENV_CAPACITY_CLIENT_SECRET}) {
+            String value = env.get(name);
+            if (value == null || value.trim().isEmpty()) {
+                throw new IllegalArgumentException("the capacity toolset needs " + name
+                        + " in the environment (with " + ENV_CAPACITY_ENDPOINT + ", " + ENV_CAPACITY_CLIENT_ID
+                        + " and " + ENV_CAPACITY_CLIENT_SECRET + ").");
+            }
+        }
+        com.eqixiac.opencapacity.OpenCapacity.Builder builder = com.eqixiac.opencapacity.OpenCapacity.builder()
+                .endpoint(env.get(ENV_CAPACITY_ENDPOINT).trim())
+                .credentials(env.get(ENV_CAPACITY_CLIENT_ID).trim(), env.get(ENV_CAPACITY_CLIENT_SECRET).trim());
+        String tokenUrl = env.get(ENV_CAPACITY_TOKEN_URL);
+        if (tokenUrl != null && !tokenUrl.trim().isEmpty()) {
+            builder.tokenUrl(tokenUrl.trim());
+        }
+        return builder.build();
     }
 
     /**

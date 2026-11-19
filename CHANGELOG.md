@@ -55,6 +55,19 @@ No source-breaking change. Results of existing designs change as listed under Ch
   `DesignContext.servesRequestedRegion(metro, cloudId)`, `WorkloadPlacer.sitesOf(...)` and
   `accessMetros(...)`.
 - `DesignConstraints` keeps its eleven-argument constructor beside the new twelve-component record.
+- `com.eqixiac.opencapacity`: a client for OpenCapacity, a proposed open specification for data center
+  capacity queries, demand signals and subscriptions (https://github.com/Open-Capacity/opencapacity).
+  No provider implements the specification and it is not an Equinix API. `OpenCapacity.builder()`
+  takes the provider's endpoint and credentials and has no default host; it shares nothing with the
+  Equinix session. `queries().ask(requirement)` returns a graded answer (`AVAILABLE`, `POSSIBLE`,
+  `UNAVAILABLE`, `NOT_DISCLOSED`); `signals()` creates, amends, withdraws and deletes standing needs;
+  `subscriptions()` delivers answer changes to a webhook or as pages and server-sent events;
+  `WebhookSignature` verifies deliveries. Types are in `com.eqixiac.opencapacity.model`. No new
+  dependency.
+- MCP: toolset `capacity` with one read-only tool, `capacity_query`. Off by default. It needs
+  `OPENCAPACITY_ENDPOINT`, `OPENCAPACITY_CLIENT_ID` and `OPENCAPACITY_CLIENT_SECRET`
+  (`OPENCAPACITY_TOKEN_URL` optional), or `EquinixMcpServer.Builder.openCapacity(client)`. The default
+  selection is unchanged at 22 tools.
 
 ### Changed
 - **The optimizer's cost now includes the backbone between Cloud Routers**, priced as the full mesh

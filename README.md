@@ -38,6 +38,7 @@ is the reference summary, and the [CHANGELOG](CHANGELOG.md) and
 - [Paging, errors and retries](#paging-errors-and-retries)
 - [Design platform](#design-platform)
 - [MCP server](#mcp-server)
+- [OpenCapacity client (proposal)](#opencapacity-client-proposal)
 - [Hosts the SDK contacts](#hosts-the-sdk-contacts)
 - [Testing](#testing)
 - [Limitations and known gaps](#limitations-and-known-gaps)
@@ -586,8 +587,8 @@ credentials exit with status 2. stdout carries only JSON-RPC; all logging goes t
 ### Toolsets and tools
 
 `EQUINIX_MCP_TOOLSETS` or `--toolsets` selects toolsets by id: `design`, `estate`, `fabric`
-(`design` plus `estate`), `ops`, `ne`, `ibx`, `mutate`. The default is every toolset except
-`mutate`: 22 tools, all read-only. `--toolsets design` serves 16.
+(`design` plus `estate`), `ops`, `ne`, `ibx`, `mutate`, `capacity`. The default is every toolset
+except `mutate` and `capacity`: 22 tools, all read-only. `--toolsets design` serves 16.
 
 | Tool | Toolset | Contacts remote hosts | What it returns |
 |---|---|---|---|
@@ -615,6 +616,7 @@ credentials exit with status 2. stdout carries only JSON-RPC; all logging goes t
 | `ibx_list_power_events` | ibx | yes | IBX power events |
 | `fabric_propose_change` | mutate | yes | Dry-run of a billable Fabric create, a single-use token bound to the request |
 | `fabric_confirm_change` | mutate | yes | Executes a proposed create after a human confirms |
+| `capacity_query` | capacity | yes | A graded answer from one OpenCapacity provider (proposal, not an Equinix API). Served only with `--toolsets capacity` and `OPENCAPACITY_ENDPOINT` |
 
 Design tools take `spec` (a JSON object or a JSON or YAML string) or `spec_fingerprint` (a stored
 `design_optimize` result); `design_optimize` and `design_validate_spec` need `spec`. Results carry
@@ -645,6 +647,49 @@ Prompts: `design_from_requirements`, `review_existing_estate` (with the `estate`
 [docs/mcp-server.md](docs/mcp-server.md) has the full settings list, tool arguments, output shapes and
 security guidance.
 
+## OpenCapacity client (proposal)
+
+`com.eqixiac.opencapacity` is a client for OpenCapacity, a proposed open specification for data
+center capacity queries, demand signals and subscriptions
+(https://github.com/Open-Capacity/opencapacity). No provider implements the specification. It is not
+an Equinix API and it can change before version 1.0 is final.
+
+The client is separate from the Equinix clients. It has no default host and takes credentials for
+one provider. It never sends an Equinix token to that provider, and it refuses an endpoint that is
+not HTTPS, except on localhost.
+
+```java
+OpenCapacity capacity = OpenCapacity.builder()
+    .endpoint("https://provider.example/capacity/v1")
+    .credentials(CLIENT_ID, CLIENT_SECRET)
+    .build();
+
+CapacityRequirement requirement = CapacityRequirement.define()
+    .addLocation(Location.metro("FR"))
+    .cabinets(40)
+    .density(DensityRange.kva().min(5).target(8).max(100).create())   // kVA per cabinet
+    .neededForService(FlexibleDate.quarter(2027, 2))
+    .addFeature(Feature.LIQUID_COOLING, true)                         // required
+    .create();
+
+CapacityAnswer answer = capacity.queries().ask(requirement);          // creates nothing
+Signal signal = capacity.signals().define(requirement).create();      // a standing need
+Subscription subscription = capacity.subscriptions().define(signal).pull().create();
+```
+
+| Call | Effect |
+|---|---|
+| `queries().ask(requirement)` | A graded answer per location: `AVAILABLE`, `POSSIBLE`, `UNAVAILABLE` or `NOT_DISCLOSED`. Density, cabinets, power and dates are bands and are `null` when the provider does not disclose them |
+| `signals().define(requirement)...create()` | Records the requirement with the provider. `signal.update()...save()` amends it with `PUT` and `If-Match`, `withdraw()` keeps it as a non-active record, `delete()` removes it |
+| `subscriptions().define(requirement or signal)` | `webhook(url)` or `pull()`, then `create()`. `events(after, limit)` reads a page, `stream(after, handler)` reads server-sent events, `pause()` and `resume()` stop and start delivery |
+| `WebhookSignature.verify(...)`, `Events.parse(...)` | Checks the `OpenCapacity-Signature` header of a webhook delivery and reads the event |
+| `capabilities()`, `locations().list()` | What the provider supports and the locations it names |
+
+A failed request throws `OpenCapacityException` with the HTTP status and the provider's problem
+document. Requests are not retried, except once after a 401 with a new token. The tests run the
+client against an in-memory provider with invented data (`org.opencapacity.reference`, test sources
+only).
+
 ## Hosts the SDK contacts
 
 | Host | When |
@@ -659,6 +704,7 @@ security guidance.
 | `apexapps.oracle.com` | Oracle Cloud price list: `OracleCloudPriceListRateCard` and the same two MCP tools |
 | `cloudbilling.googleapis.com` | Google Cloud Billing Catalog: `GcpBillingCatalogRateCard`, and the same two MCP tools only when `GCP_BILLING_API_KEY` is set |
 | Your Azure Service Bus namespace | `ServiceBusEmgReceiver` |
+| The OpenCapacity endpoint you configure, and that provider's token endpoint | `OpenCapacity` and the MCP tool `capacity_query` |
 
 The library contacts the cloud price lists only when your code creates those rate cards. Nothing
 else is contacted; the MCP server sends no telemetry.
