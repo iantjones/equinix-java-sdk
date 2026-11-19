@@ -95,6 +95,19 @@ final class Transport {
         }
     }
 
+    /** Sends the request of one endpoint of the catalog. */
+    Reply call(String operation, Map<String, String> variables, String query, Object body,
+            Map<String, String> headers) {
+        Endpoints.Operation endpoint = Endpoints.operation(operation);
+        String path = endpoint.path(variables) + (query == null || query.isEmpty() ? "" : "?" + query);
+        return send(endpoint.method(), path, body, headers, endpoint.authenticated());
+    }
+
+    /** Opens the response of one endpoint of the catalog as a stream, for server-sent events. */
+    InputStream stream(String operation, Map<String, String> variables, Map<String, String> headers) {
+        return stream(Endpoints.operation(operation).path(variables), headers);
+    }
+
     Reply send(String method, String path, Object body, Map<String, String> headers, boolean authenticated) {
         Reply reply = exchange(method, path, body, headers, authenticated);
         if (reply.status() == 401 && authenticated && tokens != null) {
@@ -229,7 +242,7 @@ final class Transport {
 
         private void fetch() {
             if (tokenUrl == null) {
-                Transport.Reply reply = transport.send("GET", "/capabilities", null, Map.of(), false);
+                Transport.Reply reply = transport.call("GetCapabilities", Map.of(), null, null, Map.of());
                 JsonNode url = transport.<JsonNode>read(reply, type(JsonNode.class)).path("authentication").path("tokenUrl");
                 if (!url.isTextual()) {
                     throw new OpenCapacityException(

@@ -54,7 +54,7 @@ public final class Signals {
      */
     public Signal get(String signalId) {
         Objects.requireNonNull(signalId, "signalId");
-        Transport.Reply reply = transport.send("GET", "/signals/" + Transport.encode(signalId), null, Map.of(), true);
+        Transport.Reply reply = transport.call("GetSignal", Map.of("signalId", signalId), null, null, Map.of());
         return new Signal(transport, transport.read(reply, Transport.type(Wire.SignalBody.class)), reply.etag());
     }
 
@@ -76,12 +76,12 @@ public final class Signals {
      * @throws OpenCapacityException if a request fails
      */
     public List<Signal> list(SignalState state) {
-        String query = "/signals?limit=200" + (state == null ? "" : "&state=" + state.name());
+        String query = "limit=200" + (state == null ? "" : "&state=" + state.name());
         List<Signal> all = new ArrayList<>();
         String cursor = null;
         do {
-            String path = cursor == null ? query : query + "&cursor=" + Transport.encode(cursor);
-            Transport.Reply reply = transport.send("GET", path, null, Map.of(), true);
+            String paged = cursor == null ? query : query + "&cursor=" + Transport.encode(cursor);
+            Transport.Reply reply = transport.call("ListSignals", Map.of(), paged, null, Map.of());
             Wire.Page<Wire.SignalBody> page =
                     transport.read(reply, Transport.type(Wire.Page.class, Wire.SignalBody.class));
             for (Wire.SignalBody body : page.items()) {

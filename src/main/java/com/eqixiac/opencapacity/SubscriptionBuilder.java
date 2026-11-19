@@ -114,8 +114,8 @@ public final class SubscriptionBuilder {
         }
         Wire.SubscriptionBody body = Wire.SubscriptionBody.request(
                 name, requirement, signalId, notifyOn, delivery, null, expiresAt);
-        Transport.Reply reply = transport.send(
-                "POST", "/subscriptions", body, Map.of("Idempotency-Key", UUID.randomUUID().toString()), true);
+        Transport.Reply reply = transport.call(
+                "CreateSubscription", Map.of(), null, body, Map.of("Idempotency-Key", UUID.randomUUID().toString()));
         Wire.SubscriptionBody created = transport.read(reply, Transport.type(Wire.SubscriptionBody.class));
         String secret = created.delivery() == null ? null : created.delivery().signingSecret();
         return new Subscription(transport, created, reply.etag(), secret);

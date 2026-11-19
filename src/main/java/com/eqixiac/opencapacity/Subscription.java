@@ -55,8 +55,8 @@ public final class Subscription {
         this.signingSecret = signingSecret;
     }
 
-    private String path() {
-        return "/subscriptions/" + Transport.encode(body.subscriptionId());
+    private Map<String, String> self() {
+        return Map.of("subscriptionId", body.subscriptionId());
     }
 
     void replace(Transport.Reply reply) {
@@ -210,7 +210,7 @@ public final class Subscription {
      * @throws OpenCapacityException with status 404 if the subscription no longer exists
      */
     public Subscription refresh() {
-        replace(transport.send("GET", path(), null, Map.of(), true));
+        replace(transport.call("GetSubscription", self(), null, null, Map.of()));
         return this;
     }
 
@@ -249,7 +249,7 @@ public final class Subscription {
      * @throws OpenCapacityException if the request fails
      */
     public void delete() {
-        transport.send("DELETE", path(), null, Map.of(), true);
+        transport.call("DeleteSubscription", self(), null, null, Map.of());
         deleted = true;
     }
 
@@ -262,8 +262,8 @@ public final class Subscription {
      * @throws OpenCapacityException if the request fails
      */
     public List<Event> events(long afterSequence, int limit) {
-        String query = path() + "/events?after=" + afterSequence + "&limit=" + limit;
-        Transport.Reply reply = transport.send("GET", query, null, Map.of(), true);
+        String query = "after=" + afterSequence + "&limit=" + limit;
+        Transport.Reply reply = transport.call("ListSubscriptionEvents", self(), query, null, Map.of());
         Wire.Page<Event> page = transport.read(reply, Transport.type(Wire.Page.class, Event.class));
         return List.copyOf(page.items());
     }
@@ -285,7 +285,7 @@ public final class Subscription {
             headers.put("Last-Event-ID", Long.toString(afterSequence));
         }
         long last = afterSequence;
-        try (InputStream in = transport.stream(path() + "/events", headers);
+        try (InputStream in = transport.stream("ListSubscriptionEvents", self(), headers);
                 BufferedReader reader = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8))) {
             StringBuilder data = new StringBuilder();
             String line;

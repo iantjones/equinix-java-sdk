@@ -61,7 +61,7 @@ public final class Locations {
      * @throws OpenCapacityException if a request fails
      */
     public List<LocationInfo> list(LocationLevel level, String within) {
-        StringBuilder query = new StringBuilder("/locations?limit=200");
+        StringBuilder query = new StringBuilder("limit=200");
         if (level != null) {
             query.append("&level=").append(level.name());
         }
@@ -71,8 +71,8 @@ public final class Locations {
         List<LocationInfo> all = new ArrayList<>();
         String cursor = null;
         do {
-            String path = cursor == null ? query.toString() : query + "&cursor=" + Transport.encode(cursor);
-            Transport.Reply reply = transport.send("GET", path, null, Map.of(), true);
+            String paged = cursor == null ? query.toString() : query + "&cursor=" + Transport.encode(cursor);
+            Transport.Reply reply = transport.call("ListLocations", Map.of(), paged, null, Map.of());
             Wire.Page<LocationInfo> page = transport.read(reply, Transport.type(Wire.Page.class, LocationInfo.class));
             all.addAll(page.items());
             cursor = page.next();

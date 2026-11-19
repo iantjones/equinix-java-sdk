@@ -1,0 +1,49 @@
+{
+  "functionalAreas": {
+    "OpenCapacity": {
+      "uriFormat": "/capacity/v{$version}/{$rootUri}/{$requestUri}",
+      "defaultVersion": 1,
+      "Capabilities": {
+        "rootUri": "capabilities",
+        "unauthenticated": true,
+        "serviceEndpoints": {
+          "GetCapabilities": { "httpMethod": "GET" }
+        }
+      },
+      "Locations": {
+        "rootUri": "locations",
+        "serviceEndpoints": {
+          "ListLocations": { "httpMethod": "GET" }
+        }
+      },
+      "Queries": {
+        "rootUri": "queries",
+        "serviceEndpoints": {
+          "QueryCapacity": { "httpMethod": "POST" }
+        }
+      },
+      "Signals": {
+        "rootUri": "signals",
+        "serviceEndpoints": {
+          "CreateSignal": { "httpMethod": "POST" },
+          "ListSignals": { "httpMethod": "GET" },
+          "GetSignal": { "httpMethod": "GET", "requestUri": "{$signalId}" },
+          "ReplaceSignal": { "httpMethod": "PUT", "requestUri": "{$signalId}" },
+          "DeleteSignal": { "httpMethod": "DELETE", "requestUri": "{$signalId}" },
+          "WithdrawSignal": { "httpMethod": "POST", "requestUri": "{$signalId}/withdraw" }
+        }
+      },
+      "Subscriptions": {
+        "rootUri": "subscriptions",
+        "serviceEndpoints": {
+          "CreateSubscription": { "httpMethod": "POST" },
+          "ListSubscriptions": { "httpMethod": "GET" },
+          "GetSubscription": { "httpMethod": "GET", "requestUri": "{$subscriptionId}" },
+          "ReplaceSubscription": { "httpMethod": "PUT", "requestUri": "{$subscriptionId}" },
+          "DeleteSubscription": { "httpMethod": "DELETE", "requestUri": "{$subscriptionId}" },
+          "ListSubscriptionEvents": { "httpMethod": "GET", "requestUri": "{$subscriptionId}/events" }
+        }
+      }
+    }
+  }
+}

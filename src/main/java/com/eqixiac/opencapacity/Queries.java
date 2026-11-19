@@ -55,8 +55,8 @@ public final class Queries {
      */
     public CapacityAnswer ask(CapacityRequirement requirement, String reference) {
         Objects.requireNonNull(requirement, "requirement");
-        Transport.Reply reply = transport.send(
-                "POST", "/queries", new Wire.Query(requirement, reference), Map.of(), true);
+        Transport.Reply reply = transport.call(
+                "QueryCapacity", Map.of(), null, new Wire.Query(requirement, reference), Map.of());
         return transport.read(reply, Transport.type(CapacityAnswer.class));
     }
 }
