@@ -3065,6 +3065,86 @@
           } ]
         }
       },
+      "QueryInconsistentDemand" : {
+        "summary" : "Total power that 40 cabinets cannot hold at the density max",
+        "value" : {
+          "requirement" : {
+            "locations" : [ {
+              "level" : "METRO",
+              "code" : "FR"
+            } ],
+            "demand" : {
+              "power" : {
+                "value" : 5,
+                "unit" : "MW"
+              },
+              "cabinets" : {
+                "count" : 40
+              },
+              "density" : {
+                "max" : 100,
+                "unit" : "KVA"
+              }
+            }
+          }
+        }
+      },
+      "QueryTooManyLocations" : {
+        "summary" : "14 countries sent to a provider that accepts 10 locations",
+        "value" : {
+          "requirement" : {
+            "locations" : [ {
+              "level" : "COUNTRY",
+              "code" : "DE"
+            }, {
+              "level" : "COUNTRY",
+              "code" : "NL"
+            }, {
+              "level" : "COUNTRY",
+              "code" : "GB"
+            }, {
+              "level" : "COUNTRY",
+              "code" : "FR"
+            }, {
+              "level" : "COUNTRY",
+              "code" : "IE"
+            }, {
+              "level" : "COUNTRY",
+              "code" : "ES"
+            }, {
+              "level" : "COUNTRY",
+              "code" : "IT"
+            }, {
+              "level" : "COUNTRY",
+              "code" : "SE"
+            }, {
+              "level" : "COUNTRY",
+              "code" : "CH"
+            }, {
+              "level" : "COUNTRY",
+              "code" : "AT"
+            }, {
+              "level" : "COUNTRY",
+              "code" : "BE"
+            }, {
+              "level" : "COUNTRY",
+              "code" : "DK"
+            }, {
+              "level" : "COUNTRY",
+              "code" : "PL"
+            }, {
+              "level" : "COUNTRY",
+              "code" : "PT"
+            } ],
+            "demand" : {
+              "power" : {
+                "value" : 1,
+                "unit" : "MW"
+              }
+            }
+          }
+        }
+      },
       "ProblemUnsupportedLocationLevel" : {
         "summary" : "An area sent to a provider that does not accept areas",
         "value" : {
@@ -4435,7 +4515,8 @@
         "headers" : {
           "Authorization" : "Bearer ACCESS_TOKEN",
           "Content-Type" : "application/json"
-        }
+        },
+        "example" : "QueryInconsistentDemand"
       },
       "response" : {
         "status" : 422,
@@ -4466,7 +4547,8 @@
         "headers" : {
           "Authorization" : "Bearer ACCESS_TOKEN",
           "Content-Type" : "application/json"
-        }
+        },
+        "example" : "QueryTooManyLocations"
       },
       "response" : {
         "status" : 422,

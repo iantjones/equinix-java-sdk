@@ -68,7 +68,14 @@ public enum Toolset {
      * default</strong> - excluded from {@link #defaults()}, so it is served only when the
      * operator names it explicitly in the toolset selection.
      */
-    MUTATE("mutate");
+    MUTATE("mutate"),
+
+    /**
+     * The OpenCapacity query tool ({@code capacity_query}). OpenCapacity is a proposed specification
+     * and not an Equinix API, and the tool contacts the provider host the operator configures.
+     * <strong>Off by default</strong> - excluded from {@link #defaults()}.
+     */
+    CAPACITY("capacity");
 
     private final String id;
 
@@ -90,7 +97,7 @@ public enum Toolset {
      * @return all read-only toolsets
      */
     public static Set<Toolset> defaults() {
-        return EnumSet.complementOf(EnumSet.of(MUTATE));
+        return EnumSet.complementOf(EnumSet.of(MUTATE, CAPACITY));
     }
 
     /**
@@ -107,7 +114,7 @@ public enum Toolset {
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException(
                         "Unknown toolset '" + value + "'. Valid toolsets: design, estate, fabric, "
-                                + "ops, ne, ibx, mutate."));
+                                + "ops, ne, ibx, mutate, capacity."));
     }
 
     /**

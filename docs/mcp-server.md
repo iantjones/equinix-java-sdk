@@ -55,7 +55,7 @@ every other setting must be a real environment variable.
 | Variable | Default | Meaning |
 |---|---|---|
 | `EQUINIX_ACCESS_KEY`, `EQUINIX_SECRET_KEY` | none | Client credentials. Missing: exit status 2 |
-| `EQUINIX_MCP_TOOLSETS` (or `--toolsets`) | every toolset except `mutate` | Comma-separated toolset ids |
+| `EQUINIX_MCP_TOOLSETS` (or `--toolsets`) | every toolset except `mutate` and `capacity` | Comma-separated toolset ids |
 | `EQUINIX_SANDBOX` | `false` | `true` targets the sandbox environment |
 | `EQUINIX_MCP_LOG_LEVEL` | `info` | slf4j-simple level, written to stderr |
 | `EQUINIX_PEERINGDB_KEY` | none | PeeringDB key for `design_analyze_peering`; anonymous access otherwise |
@@ -63,6 +63,8 @@ every other setting must be a real environment variable.
 | `EQUINIX_MCP_PRICING_TIMEOUT_MS` | 12000 | Live-pricing budget of one tool call, shared by every lookup in it, Equinix included. Accepted 100 to 120000; other values are clipped or replaced with a warning |
 | `EQUINIX_MCP_ELICIT_TIMEOUT_MS` | 300000 | Hard timeout of one prompt to a person (account and service-profile choices in `design_plan_deployment`, confirmation in `fabric_confirm_change`). Accepted 100 to 3600000 |
 | `EQUINIX_MCP_ALLOW_UNCONFIRMED_MUTATIONS` | `false` | `true` lets `fabric_confirm_change` execute on a client that cannot show a prompt |
+| `OPENCAPACITY_ENDPOINT`, `OPENCAPACITY_CLIENT_ID`, `OPENCAPACITY_CLIENT_SECRET` | none | Base URL and client credentials of one OpenCapacity provider. Required with the `capacity` toolset. Missing: exit status 2 |
+| `OPENCAPACITY_TOKEN_URL` | from the provider's capabilities document | OAuth 2.0 token endpoint of that provider |
 
 `.env.local` syntax: `KEY=value`, an optional `export ` prefix, single-quoted literal values,
 double-quoted values with `\"`, `\\`, `\n`, `\r` and `\t` escapes, and a `#` comment after
@@ -87,9 +89,16 @@ per month) and took 45.7 s. Set 60000 to 120000 when live prices matter.
 | `ne` | `ne_list_devices` |
 | `ibx` | `ibx_get_environmentals`, `ibx_list_power_events` |
 | `mutate` | `fabric_propose_change`, `fabric_confirm_change`. Never selected by default |
+| `capacity` | `capacity_query`: asks one OpenCapacity provider whether a capacity requirement can be met. Never selected by default |
 
-The default selection is every id except `mutate`: 22 tools. `estate` is separate from `design` so a
+The default selection is every id except `mutate` and `capacity`: 22 tools. `estate` is separate from `design` so a
 deployment can serve design tools without giving the model read access to the account's inventory.
+
+OpenCapacity is a proposed specification (https://github.com/Open-Capacity/opencapacity). No provider
+implements it and it is not an Equinix API. `capacity_query` is read-only. It sends the requirement to
+the host in `OPENCAPACITY_ENDPOINT` with that provider's own token, and never sends an Equinix token
+there. Its arguments are `locations` (required), `cabinets`, `density_min`, `density_target`,
+`density_max`, `density_unit`, `power`, `power_unit`, `needed_for_service` and `features`.
 
 ## Tool arguments
 
@@ -230,4 +239,5 @@ the static catalogue without starting a server.
 - Keep credentials in `.env.local` (ignored by git) or per-user host configuration, not in a shared
   repository, and rotate them like any other credential.
 - The server contacts the hosts listed in the [README](../README.md#hosts-the-sdk-contacts) and
-  nothing else.
+  nothing else, except that the `capacity` toolset contacts the host you set in `OPENCAPACITY_ENDPOINT`
+  and that provider's token endpoint.

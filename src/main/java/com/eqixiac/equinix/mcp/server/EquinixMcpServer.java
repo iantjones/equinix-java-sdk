@@ -195,6 +195,7 @@ public final class EquinixMcpServer implements AutoCloseable {
         private ServerContext context;
         private Set<Toolset> toolsets = Toolset.defaults();
         private final List<ToolRegistration> additionalTools = new ArrayList<>();
+        private com.eqixiac.opencapacity.OpenCapacity openCapacity;
         private McpServerTransportProvider transportProvider;
         private InputStream stdin;
         private OutputStream stdout;
@@ -299,6 +300,20 @@ public final class EquinixMcpServer implements AutoCloseable {
         }
 
         /**
+         * Sets the OpenCapacity client that the {@link Toolset#CAPACITY} toolset queries. The
+         * toolset is served only when it is selected and this client is set. OpenCapacity is a
+         * proposed specification and not an Equinix API; the client holds its own endpoint and
+         * credentials and shares nothing with the Equinix session.
+         *
+         * @param client the client for one OpenCapacity provider
+         * @return this builder
+         */
+        public Builder openCapacity(com.eqixiac.opencapacity.OpenCapacity client) {
+            this.openCapacity = client;
+            return this;
+        }
+
+        /**
          * Serves stdio over the given streams instead of the process's stdin/stdout, with the same
          * {@code notifications/cancelled} handling as the default transport. Tests use this with
          * piped streams.
@@ -367,6 +382,14 @@ public final class EquinixMcpServer implements AutoCloseable {
                 // The Safe Mutation Broker: strictly opt-in, and per-instance because its two
                 // tools share this server's own proposal store (single-use confirm tokens).
                 selected.addAll(BrokerToolFactory.tools());
+            }
+            if (toolsets.contains(Toolset.CAPACITY)) {
+                if (openCapacity == null) {
+                    throw new IllegalStateException("The capacity toolset needs an OpenCapacity provider. "
+                            + "Call openCapacity(client) on the builder, or set OPENCAPACITY_ENDPOINT, "
+                            + "OPENCAPACITY_CLIENT_ID and OPENCAPACITY_CLIENT_SECRET for the stdio server.");
+                }
+                selected.addAll(CapacityToolFactory.tools(openCapacity));
             }
             selected.addAll(additionalTools);
 
